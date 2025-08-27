@@ -26,6 +26,11 @@
     };
   </script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  
   <style>
     :root{
       --md-mustard:#E0B14A; --md-slate:#7B8E9E; --md-coral:#E9867D;
@@ -666,7 +671,7 @@
       };
       
       // Save Changes button
-      document.getElementById('saveChangesBtn').onclick = saveChangesToSheet;
+      document.getElementById('saveChangesBtn').onclick = saveChangesToFirestore;
     });
     
     // Track original values for change detection
@@ -827,7 +832,7 @@
       return data;
     }
     
-    async function saveChangesToSheet() {
+    async function saveChangesToFirestore() {
       const saveBtn = document.getElementById('saveChangesBtn');
       const originalText = saveBtn.textContent;
       
@@ -839,25 +844,15 @@
         // Collect all editable field data
         const data = collectEditableFieldData();
         
-        // POST to Google Sheets
-        const response = await fetch(GOOGLE_SHEETS_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data)
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        // Save to Firestore
+        await db.collection('classData').doc('current').set(data, { merge: true });
         
         // Show success state
         saveBtn.textContent = '✅ Saved!';
         
-        // Reload data from Google Sheets
+        // Reload data from Firestore
         setTimeout(async () => {
-          const updatedData = await fetchSheetData();
+          const updatedData = await fetchFirestoreData();
           populateDataFromSheet(updatedData);
           
           // Hide save button and reset original values
@@ -968,10 +963,21 @@
     }
   </script>
 
-  <!-- Google Sheets Live Data Integration Script -->
+  <!-- Firebase Firestore Integration Script -->
   <script>
-  // Google Sheets Apps Script Web App URL
-const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzhCbhcBPFOYX5V8XfdStRob7Y0Pq2FbPhoSUmSyTRAVUe7lQQ9NYXicdR0YpnO46Yo9Q/exec';
+  // Firebase Configuration
+  const firebaseConfig = {
+    apiKey: "demo-key", // Replace with your Firebase config
+    authDomain: "demo-project.firebaseapp.com",
+    projectId: "demo-project", 
+    storageBucket: "demo-project.appspot.com",
+    messagingSenderId: "123456789",
+    appId: "demo-app-id"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
 // Utility: Parse JSON fields from string or array
 function parseArray(val) {
@@ -1167,24 +1173,28 @@ function populateDataFromSheet(data) {
     if (cal) cal.href = data.calendar_url;
   }
 }
-async function fetchSheetData() {
+async function fetchFirestoreData() {
   try {
-    const response = await fetch(GOOGLE_SHEETS_URL);
-    if (!response.ok) throw new Error(response.status);
-    return await response.json();
+    const doc = await db.collection('classData').doc('current').get();
+    if (doc.exists) {
+      return doc.data();
+    } else {
+      console.log('No document found, using defaults');
+      return null;
+    }
   } catch (e) {
-    console.error('Failed to fetch sheet data:', e);
+    console.error('Failed to fetch Firestore data:', e);
     return null;
   }
 }
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(async () => {
-    const data = await fetchSheetData();
+    const data = await fetchFirestoreData();
     populateDataFromSheet(data);
   }, 350);
 });
 setInterval(async () => {
-  const data = await fetchSheetData();
+  const data = await fetchFirestoreData();
   populateDataFromSheet(data);
 }, 300000);
   </script>
