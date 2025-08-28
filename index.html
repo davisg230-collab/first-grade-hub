@@ -84,6 +84,12 @@
       background-color: white; color: var(--md-ink); cursor: text;
       outline: 2px dashed color-mix(in oklab,var(--md-slate) 55%,transparent); outline-offset: 2px;
     }
+    /* Snack message textarea styling */
+    #snackMessage:disabled { background-color: transparent; color: var(--md-ink); cursor: default; border: none; }
+    body.editing #snackMessage:not(:disabled) {
+      background-color: rgba(255,255,255,0.7); cursor: text;
+      outline: 2px dashed color-mix(in oklab,var(--md-slate) 55%,transparent); outline-offset: 2px;
+    }
     /* Photo card and gallery cursor only in edit mode */
     .photo-card{cursor: default;}
     body.editing .photo-card{cursor: pointer;}
@@ -240,37 +246,63 @@
           </div>
           <button id="snackAdd" class="px-3 py-2 rounded-lg text-white" style="background: var(--md-coral);" onclick="addSnackItem()">+ Add other snack</button>
         </div>
+        <!-- Snack importance message -->
+        <div class="mb-4 p-3 rounded-lg" style="background: color-mix(in oklab, var(--md-mustard) 20%, var(--md-white) 80%); border: 1px solid color-mix(in oklab, var(--md-mustard) 40%, var(--md-white) 60%);">
+          <textarea 
+            id="snackMessage" 
+            class="w-full text-sm border-0 resize-none" 
+            style="background: transparent; outline: none;" 
+            placeholder="Click to add a message about why snacks are important..."
+            disabled 
+            readonly
+            rows="2">Snacks help keep our energy up during learning time and teach us about sharing and community!</textarea>
+        </div>
         <div id="snacksGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div class="p-4 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
             <div class="flex items-center gap-3 mb-3">
-              <span class="text-xl">🍎</span>
-              <span class="font-medium">Apple slices</span>
+              <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="1">
+              <span class="text-xl">🍪</span>
+              <span class="font-medium">Cookies</span>
             </div>
             <div class="flex items-center gap-2">
-              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" tabindex="1">
-              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" tabindex="2">Save</button>
+              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="2">
+              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="3">Save</button>
               <button class="text-gray-400 hover:text-red-500" onclick="this.closest('.p-4').remove()">✖</button>
             </div>
           </div>
           <div class="p-4 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
             <div class="flex items-center gap-3 mb-3">
-              <span class="text-xl">🥨</span>
-              <span class="font-medium">Pretzels</span>
+              <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="4">
+              <span class="text-xl">🍬</span>
+              <span class="font-medium">Gummies</span>
             </div>
             <div class="flex items-center gap-2">
-              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" tabindex="3">
-              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" tabindex="4">Save</button>
+              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="5">
+              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="6">Save</button>
               <button class="text-gray-400 hover:text-red-500" onclick="this.closest('.p-4').remove()">✖</button>
             </div>
           </div>
           <div class="p-4 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
             <div class="flex items-center gap-3 mb-3">
-              <span class="text-xl">🧀</span>
-              <span class="font-medium">Cheese sticks</span>
+              <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="7">
+              <span class="text-xl">🍚</span>
+              <span class="font-medium">Rice krispy treats</span>
             </div>
             <div class="flex items-center gap-2">
-              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" tabindex="5">
-              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" tabindex="6">Save</button>
+              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="8">
+              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="9">Save</button>
+              <button class="text-gray-400 hover:text-red-500" onclick="this.closest('.p-4').remove()">✖</button>
+            </div>
+          </div>
+          <div class="p-4 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
+            <div class="flex items-center gap-3 mb-3">
+              <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="10">
+              <span class="text-xl">🧃</span>
+              <span class="font-medium">Juice</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="11">
+              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="12">Save</button>
               <button class="text-gray-400 hover:text-red-500" onclick="this.closest('.p-4').remove()">✖</button>
             </div>
           </div>
@@ -768,6 +800,12 @@ Bus Number"></textarea>
       document.body.classList.add('editing');
       document.querySelectorAll('[data-edit="teacher"]').forEach(el=>el.contentEditable=true);
       document.querySelectorAll('.teacher-only-edit').forEach(el=>{el.disabled=false;el.readOnly=false;});
+      // Enable snack message textarea
+      const snackMessage = document.getElementById('snackMessage');
+      if (snackMessage) {
+        snackMessage.disabled = false;
+        snackMessage.readOnly = false;
+      }
       document.getElementById('editModeBtn').textContent = '💾 Exit Edit Mode';
       document.getElementById('editModeBtn').onclick = exitEditMode;
     }
@@ -775,6 +813,12 @@ Bus Number"></textarea>
       document.body.classList.remove('editing');
       document.querySelectorAll('[data-edit="teacher"]').forEach(el=>el.contentEditable=false);
       document.querySelectorAll('.teacher-only-edit').forEach(el=>{el.disabled=true;el.readOnly=true;});
+      // Disable snack message textarea
+      const snackMessage = document.getElementById('snackMessage');
+      if (snackMessage) {
+        snackMessage.disabled = true;
+        snackMessage.readOnly = true;
+      }
       document.getElementById('editModeBtn').textContent = '✏️ Edit Mode';
       document.getElementById('editModeBtn').onclick = function(){
         document.getElementById('pinOverlay').classList.add('show');
@@ -826,7 +870,7 @@ Bus Number"></textarea>
         }
       }
       
-      // Snacks grid - collect snack items  
+      // Snacks grid - collect snack items with checkbox states
       const snacksGrid = document.getElementById('snacksGrid');
       if (snacksGrid) {
         const snacks = [];
@@ -834,12 +878,17 @@ Bus Number"></textarea>
           const emoji = card.querySelector('.text-xl')?.textContent || '';
           const item = card.querySelector('.font-medium')?.textContent || '';
           const claimedBy = card.querySelector('.snack-name')?.value || '';
+          const checked = card.querySelector('.snack-checkbox')?.checked || false;
           if (item) {
-            snacks.push({ emoji: emoji, item: item, claimed_by: claimedBy });
+            snacks.push({ emoji: emoji, item: item, claimed_by: claimedBy, checked: checked });
           }
         });
         data.snacks_json = JSON.stringify(snacks);
       }
+      
+      // Snack message
+      const snackMessageEl = document.getElementById('snackMessage');
+      if (snackMessageEl) data.snack_message = snackMessageEl.value || '';
       
       // Scholar info
       const scholarNameEl = document.querySelector('[data-page-panel="scholar"] h3[data-edit="teacher"]');
@@ -964,18 +1013,24 @@ Bus Number"></textarea>
     }
     // Home tab: Add snack
     function addSnackItem() {
-      // Create new snack card instantly without prompts
+      // Create new snack card instantly with checkbox requirement
       const newSnack = document.createElement('div');
       newSnack.className = 'p-4 rounded-xl bg-white';
       newSnack.style.border = '1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%)';
+      
+      // Get the highest current tabindex to continue sequence
+      const existingCheckboxes = document.querySelectorAll('.snack-checkbox');
+      let nextTabIndex = (existingCheckboxes.length * 3) + 1;
+      
       newSnack.innerHTML = `
         <div class="flex items-center gap-3 mb-3">
+          <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="${nextTabIndex}">
           <span class="text-xl" contenteditable="true" style="cursor: text;">🍎</span>
           <span class="font-medium" contenteditable="true" style="cursor: text;">New snack</span>
         </div>
         <div class="flex items-center gap-2">
-          <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" tabindex="1">
-          <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" tabindex="2">Save</button>
+          <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="${nextTabIndex + 1}">
+          <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="${nextTabIndex + 2}">Save</button>
           <button class="text-gray-400 hover:text-red-500" onclick="this.closest('.p-4').remove()">✖</button>
         </div>
       `;
@@ -993,11 +1048,40 @@ Bus Number"></textarea>
         sel.addRange(range);
       }
     }
+    
+    // Toggle snack input based on checkbox state
+    function toggleSnackInput(checkbox) {
+      const card = checkbox.closest('.p-4');
+      const nameInput = card.querySelector('.snack-name');
+      const saveButton = card.querySelector('button[onclick*="claimSnack"]');
+      
+      if (checkbox.checked) {
+        nameInput.disabled = false;
+        saveButton.disabled = false;
+        nameInput.focus();
+        // Add visual feedback that it's now active
+        card.style.backgroundColor = 'rgba(224, 177, 74, 0.1)';
+      } else {
+        nameInput.disabled = true;
+        saveButton.disabled = true;
+        nameInput.value = '';
+        // Remove claimed styling and reset background
+        card.classList.remove('snack-claimed');
+        card.style.backgroundColor = 'white';
+      }
+      
+      // Show save button if there are changes
+      const saveBtn = document.getElementById('saveChangesBtn');
+      if (saveBtn) saveBtn.style.display = 'block';
+    }
     // Snack claim
     function claimSnack(btn) {
       const card = btn.closest('.p-4');
+      const checkbox = card.querySelector('.snack-checkbox');
       const name = card.querySelector('.snack-name').value.trim();
-      if (name) {
+      
+      // Only allow claiming if checkbox is checked and name is provided
+      if (checkbox && checkbox.checked && name) {
         card.classList.add('snack-claimed');
         btn.textContent = 'Saved!';
         setTimeout(()=>{btn.textContent='Save';},1800);
@@ -1005,8 +1089,10 @@ Bus Number"></textarea>
         // Show save button since we have changes
         const saveBtn = document.getElementById('saveChangesBtn');
         if (saveBtn) saveBtn.style.display = 'block';
-      } else {
-        card.classList.remove('snack-claimed');
+      } else if (!checkbox || !checkbox.checked) {
+        alert('Please check the box first to claim this snack.');
+      } else if (!name) {
+        alert('Please enter your name to claim this snack.');
       }
     }
     // Extras tab: Add card
@@ -1241,28 +1327,41 @@ function updateSnacksGrid(snacks_json) {
     const emoji = snack.emoji || '🍎';
     const item = snack.item || '';
     const claimed = snack.claimed_by || '';
+    const checked = snack.checked || false;
     const div = document.createElement('div');
     div.className = 'p-4 rounded-xl bg-white';
     div.style.border = '1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%)';
-    const tabIndexBase = (index * 2) + 1;
+    const tabIndexBase = (index * 3) + 1;
     div.innerHTML = `
       <div class="flex items-center gap-3 mb-3">
+        <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="${tabIndexBase}" ${checked ? 'checked' : ''}>
         <span class="text-xl">${emoji}</span>
         <span class="font-medium">${item}</span>
       </div>
       <div class="flex items-center gap-2">
-        <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" value="${claimed}" tabindex="${tabIndexBase}">
-        <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" tabindex="${tabIndexBase + 1}">Save</button>
+        <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" value="${claimed}" ${checked ? '' : 'disabled'} tabindex="${tabIndexBase + 1}">
+        <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" ${checked ? '' : 'disabled'} tabindex="${tabIndexBase + 2}">Save</button>
         <button class="text-gray-400 hover:text-red-500" onclick="this.closest('.p-4').remove()">✖</button>
       </div>
     `;
     snacksContainer.appendChild(div);
     
-    // Add claimed styling if there's a name
-    if (claimed) {
+    // Add claimed styling if there's a name and it's checked
+    if (claimed && checked) {
       div.classList.add('snack-claimed');
     }
+    
+    // Set background color based on checkbox state
+    if (checked) {
+      div.style.backgroundColor = 'rgba(224, 177, 74, 0.1)';
+    }
   });
+}
+function updateSnackMessage(snack_message) {
+  const messageEl = document.getElementById('snackMessage');
+  if (messageEl && snack_message) {
+    messageEl.value = snack_message;
+  }
 }
 function updateScholarInfo(scholar_name, scholar_blurb) {
   const nameEl = document.querySelector('[data-page-panel="scholar"] h3[data-edit="teacher"]');
@@ -1368,6 +1467,7 @@ function populateDataFromSheet(data) {
   updateEventsList(data.dates_json);
   updateLookingAhead(data.looking_ahead);
   updateSnacksGrid(data.snacks_json);
+  updateSnackMessage(data.snack_message);
   updateScholarInfo(data.scholar_name, data.scholar_blurb);
   updateSkillsSection(data.skills_text, data.sounds_json);
   updateListeningSection(data.listening_text, data.ask_json);
