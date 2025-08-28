@@ -1402,7 +1402,14 @@ function updateGalleryPhotos(galleryUrlsJson) {
 
 // Error display functions
 function showDataLoadError(message) {
-  // Create or update error banner
+  // Only show error banner to users in edit mode (teachers/admins)
+  // Regular visitors (parents/students) should not see Firebase connection issues
+  if (!document.body.classList.contains('editing')) {
+    console.log(`Data load notice (hidden from visitors): ${message}`);
+    return;
+  }
+  
+  // Create or update error banner for teachers/admins only
   let errorBanner = document.getElementById('dataLoadError');
   if (!errorBanner) {
     errorBanner = document.createElement('div');
