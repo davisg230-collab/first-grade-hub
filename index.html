@@ -95,6 +95,9 @@
       background-color: white; color: var(--md-ink); cursor: text;
       outline: 2px dashed color-mix(in oklab,var(--md-slate) 55%,transparent); outline-offset: 2px;
     }
+    /* Hide Practice Website URL inputs when not in edit mode */
+    .website-url-input { display: none; }
+    body.editing .website-url-input { display: block; }
     /* Snack message textarea styling */
     #snackMessage:disabled { background-color: transparent; color: var(--md-ink); cursor: default; border: none; }
     body.editing #snackMessage:not(:disabled) {
