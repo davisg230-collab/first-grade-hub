@@ -1352,8 +1352,24 @@
       // Only allow claiming if checkbox is checked and name is provided
       if (checkbox && checkbox.checked && name) {
         card.classList.add('snack-claimed');
-        btn.textContent = 'Saved!';
-        setTimeout(()=>{btn.textContent='Save';},1800);
+        btn.textContent = 'Saving...';
+        btn.disabled = true;
+        
+        // Save to Firestore immediately
+        saveSnackDataToFirestore().then(() => {
+          btn.textContent = 'Saved!';
+          setTimeout(() => {
+            btn.textContent = 'Save';
+            btn.disabled = false;
+          }, 1800);
+        }).catch((error) => {
+          console.error('Failed to save snack data:', error);
+          btn.textContent = 'Save Failed';
+          setTimeout(() => {
+            btn.textContent = 'Save';
+            btn.disabled = false;
+          }, 2000);
+        });
         
         // Only show global save button for teachers/admins in edit mode
         // Parents get individual card saves only
@@ -1367,6 +1383,80 @@
         alert('Please enter your name to claim this snack.');
       }
     }
+    
+    // Function to save snack data to Firestore
+    async function saveSnackDataToFirestore() {
+      try {
+        // Collect current snack data
+        const snacksGrid = document.getElementById('snacksGrid');
+        if (!snacksGrid) return;
+        
+        const snacks = [];
+        snacksGrid.querySelectorAll('.p-4').forEach(card => {
+          const emoji = card.querySelector('.text-xl')?.textContent || '';
+          const item = card.querySelector('.snack-title')?.textContent || '';
+          const claimedBy = card.querySelector('.snack-name')?.value || '';
+          const checked = card.querySelector('.snack-checkbox')?.checked || false;
+          const isDefault = card.getAttribute('data-default-snack') === 'true';
+          if (item) {
+            snacks.push({ 
+              emoji: emoji, 
+              item: item, 
+              claimed_by: claimedBy, 
+              checked: checked,
+              is_default: isDefault
+            });
+          }
+        });
+        
+        const snacksData = JSON.stringify(snacks);
+        
+        // Try to save to Firestore first
+        if (typeof db !== 'undefined') {
+          await db.collection('classData').doc('current').set(
+            { snacks_json: snacksData }, 
+            { merge: true }
+          );
+          console.log('Snack data saved to Firestore successfully');
+        } else {
+          // Fallback to localStorage for testing when Firebase is not available
+          localStorage.setItem('classData_snacks_json', snacksData);
+          console.log('Snack data saved to localStorage (Firebase not available)');
+        }
+        
+      } catch (error) {
+        console.error('Failed to save snack data:', error);
+        // Fallback to localStorage on Firestore error
+        try {
+          const snacksGrid = document.getElementById('snacksGrid');
+          if (snacksGrid) {
+            const snacks = [];
+            snacksGrid.querySelectorAll('.p-4').forEach(card => {
+              const emoji = card.querySelector('.text-xl')?.textContent || '';
+              const item = card.querySelector('.snack-title')?.textContent || '';
+              const claimedBy = card.querySelector('.snack-name')?.value || '';
+              const checked = card.querySelector('.snack-checkbox')?.checked || false;
+              const isDefault = card.getAttribute('data-default-snack') === 'true';
+              if (item) {
+                snacks.push({ 
+                  emoji: emoji, 
+                  item: item, 
+                  claimed_by: claimedBy, 
+                  checked: checked,
+                  is_default: isDefault
+                });
+              }
+            });
+            localStorage.setItem('classData_snacks_json', JSON.stringify(snacks));
+            console.log('Snack data saved to localStorage as fallback');
+          }
+        } catch (localError) {
+          console.error('Failed to save to localStorage as well:', localError);
+          throw error;
+        }
+      }
+    }
+    
     // Extras tab: Add card
     function addExtrasCard() {
       // Create card directly editable on the page instead of using prompts
@@ -2320,10 +2410,10 @@ function getDefaultFallbackData() {
       "Winter concert practice begins"
     ],
     snacks_json: JSON.stringify([
-      { item: "🥯 Breakfast Bars", claimed: "", checked: false },
-      { item: "🍬 Gummies", claimed: "", checked: false },
-      { item: "🍚 Rice Krispy Treats", claimed: "", checked: false },
-      { item: "🧃 Juice", claimed: "", checked: false }
+      { emoji: "🥯", item: "Breakfast Bars", claimed_by: "", checked: false, is_default: true },
+      { emoji: "🍬", item: "Gummies", claimed_by: "", checked: false, is_default: true },
+      { emoji: "🍚", item: "Rice Krispy Treats", claimed_by: "", checked: false, is_default: true },
+      { emoji: "🧃", item: "Juice", claimed_by: "", checked: false, is_default: true }
     ]),
     snack_message: "Snacks help keep our energy up during learning time and teach us about sharing and community!",
     scholar_name: "Scholar of the Week",
@@ -2347,9 +2437,19 @@ async function fetchFirestoreData() {
   try {
     // Check if Firebase is available
     if (typeof db === 'undefined') {
-      console.error('Firebase not available - using fallback content');
-      showDataLoadError('Firebase connection not available');
-      return null;
+      console.error('Firebase not available - checking localStorage fallback');
+      // Check if we have saved snack data in localStorage
+      const savedSnacksData = localStorage.getItem('classData_snacks_json');
+      if (savedSnacksData) {
+        const fallbackData = getDefaultFallbackData();
+        fallbackData.snacks_json = savedSnacksData;
+        console.log('Using localStorage fallback data for snacks');
+        showDataLoadError('Firebase connection not available - using saved local data');
+        return fallbackData;
+      } else {
+        showDataLoadError('Firebase connection not available');
+        return null;
+      }
     }
     
     const doc = await db.collection('classData').doc('current').get();
