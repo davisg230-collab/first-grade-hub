@@ -598,7 +598,7 @@
                 <h3 class="font-semibold">About Me</h3>
                 <button id="saveAboutMeDescBtn" class="px-3 py-1 rounded-lg text-white text-xs font-semibold" style="background: var(--md-coral);" onclick="saveAboutMeField('aboutMeDesc')">💾 Save</button>
               </div>
-              <p id="aboutMeDescText" class="leading-relaxed" contenteditable="true" style="min-height: 60px; padding: 8px; border: 1px solid #e5e7eb; border-radius: 6px;">
+              <p id="aboutMeDescText" class="leading-relaxed" contenteditable="false" style="min-height: 60px; padding: 8px; border: 1px solid #e5e7eb; border-radius: 6px;">
                 I've been teaching first grade for 8 years and absolutely love working with young learners! I believe every child can succeed with the right support and encouragement.
               </p>
             </div>
@@ -607,7 +607,7 @@
                 <h3 class="font-semibold">Fun Facts</h3>
                 <button id="saveFunFactsBtn" class="px-3 py-1 rounded-lg text-white text-xs font-semibold" style="background: var(--md-coral);" onclick="saveAboutMeField('funFacts')">💾 Save</button>
               </div>
-              <ul id="funFactsList" class="list-disc pl-5 space-y-1" contenteditable="true" style="min-height: 80px; padding: 8px; border: 1px solid #e5e7eb; border-radius: 6px;">
+              <ul id="funFactsList" class="list-disc pl-5 space-y-1" contenteditable="false" style="min-height: 80px; padding: 8px; border: 1px solid #e5e7eb; border-radius: 6px;">
                 <li>I love reading mystery novels</li>
                 <li>I have two cats named Whiskers and Mittens</li>
                 <li>I enjoy hiking on weekends</li>
@@ -618,25 +618,25 @@
               <div class="bg-white rounded-xl p-4 text-center">
                 <div class="text-2xl mb-2">🎨</div>
                 <h4 class="font-semibold text-sm mb-1">Favorite Color</h4>
-                <p id="favoriteColorText" class="text-xs" contenteditable="true" style="min-height: 20px; padding: 4px; border: 1px solid #e5e7eb; border-radius: 4px;">Blue</p>
+                <p id="favoriteColorText" class="text-xs" contenteditable="false" style="min-height: 20px; padding: 4px; border: 1px solid #e5e7eb; border-radius: 4px;">Blue</p>
                 <button id="saveFavoriteColorBtn" class="mt-2 px-2 py-1 rounded text-white text-xs" style="background: var(--md-coral);" onclick="saveAboutMeField('favoriteColor')">💾</button>
               </div>
               <div class="bg-white rounded-xl p-4 text-center">
                 <div class="text-2xl mb-2">🍪</div>
                 <h4 class="font-semibold text-sm mb-1">Favorite Snack</h4>
-                <p id="favoriteSnackText" class="text-xs" contenteditable="true" style="min-height: 20px; padding: 4px; border: 1px solid #e5e7eb; border-radius: 4px;">Cookies</p>
+                <p id="favoriteSnackText" class="text-xs" contenteditable="false" style="min-height: 20px; padding: 4px; border: 1px solid #e5e7eb; border-radius: 4px;">Cookies</p>
                 <button id="saveFavoriteSnackBtn" class="mt-2 px-2 py-1 rounded text-white text-xs" style="background: var(--md-coral);" onclick="saveAboutMeField('favoriteSnack')">💾</button>
               </div>
               <div class="bg-white rounded-xl p-4 text-center">
                 <div class="text-2xl mb-2">🥤</div>
                 <h4 class="font-semibold text-sm mb-1">Favorite Drink</h4>
-                <p id="favoriteDrinkText" class="text-xs" contenteditable="true" style="min-height: 20px; padding: 4px; border: 1px solid #e5e7eb; border-radius: 4px;">Coffee</p>
+                <p id="favoriteDrinkText" class="text-xs" contenteditable="false" style="min-height: 20px; padding: 4px; border: 1px solid #e5e7eb; border-radius: 4px;">Coffee</p>
                 <button id="saveFavoriteDrinkBtn" class="mt-2 px-2 py-1 rounded text-white text-xs" style="background: var(--md-coral);" onclick="saveAboutMeField('favoriteDrink')">💾</button>
               </div>
               <div class="bg-white rounded-xl p-4 text-center">
                 <div class="text-2xl mb-2">📺</div>
                 <h4 class="font-semibold text-sm mb-1">Favorite Show</h4>
-                <p id="favoriteShowText" class="text-xs" contenteditable="true" style="min-height: 20px; padding: 4px; border: 1px solid #e5e7eb; border-radius: 4px;">The Office</p>
+                <p id="favoriteShowText" class="text-xs" contenteditable="false" style="min-height: 20px; padding: 4px; border: 1px solid #e5e7eb; border-radius: 4px;">The Office</p>
                 <button id="saveFavoriteShowBtn" class="mt-2 px-2 py-1 rounded text-white text-xs" style="background: var(--md-coral);" onclick="saveAboutMeField('favoriteShow')">💾</button>
               </div>
             </div>
@@ -852,6 +852,16 @@
       // Disable About Me section
       const aboutMeDescText = document.getElementById('aboutMeDescText');
       if (aboutMeDescText) aboutMeDescText.contentEditable = false;
+      const funFactsList = document.getElementById('funFactsList');
+      if (funFactsList) funFactsList.contentEditable = false;
+      const favoriteColorText = document.getElementById('favoriteColorText');
+      if (favoriteColorText) favoriteColorText.contentEditable = false;
+      const favoriteSnackText = document.getElementById('favoriteSnackText');
+      if (favoriteSnackText) favoriteSnackText.contentEditable = false;
+      const favoriteDrinkText = document.getElementById('favoriteDrinkText');
+      if (favoriteDrinkText) favoriteDrinkText.contentEditable = false;
+      const favoriteShowText = document.getElementById('favoriteShowText');
+      if (favoriteShowText) favoriteShowText.contentEditable = false;
       const aboutMeSaveButtons = ['saveAboutMeDescBtn', 'saveFunFactsBtn', 'saveFavoriteColorBtn', 'saveFavoriteSnackBtn', 'saveFavoriteDrinkBtn', 'saveFavoriteShowBtn'];
       aboutMeSaveButtons.forEach(id => {
         const btn = document.getElementById(id);
@@ -912,6 +922,16 @@
       // Enable About Me section
       const aboutMeDescText = document.getElementById('aboutMeDescText');
       if (aboutMeDescText) aboutMeDescText.contentEditable = true;
+      const funFactsList = document.getElementById('funFactsList');
+      if (funFactsList) funFactsList.contentEditable = true;
+      const favoriteColorText = document.getElementById('favoriteColorText');
+      if (favoriteColorText) favoriteColorText.contentEditable = true;
+      const favoriteSnackText = document.getElementById('favoriteSnackText');
+      if (favoriteSnackText) favoriteSnackText.contentEditable = true;
+      const favoriteDrinkText = document.getElementById('favoriteDrinkText');
+      if (favoriteDrinkText) favoriteDrinkText.contentEditable = true;
+      const favoriteShowText = document.getElementById('favoriteShowText');
+      if (favoriteShowText) favoriteShowText.contentEditable = true;
       const aboutMeSaveButtons = ['saveAboutMeDescBtn', 'saveFunFactsBtn', 'saveFavoriteColorBtn', 'saveFavoriteSnackBtn', 'saveFavoriteDrinkBtn', 'saveFavoriteShowBtn'];
       aboutMeSaveButtons.forEach(id => {
         const btn = document.getElementById(id);
@@ -973,6 +993,16 @@
       // Disable About Me section
       const aboutMeDescText = document.getElementById('aboutMeDescText');
       if (aboutMeDescText) aboutMeDescText.contentEditable = false;
+      const funFactsList = document.getElementById('funFactsList');
+      if (funFactsList) funFactsList.contentEditable = false;
+      const favoriteColorText = document.getElementById('favoriteColorText');
+      if (favoriteColorText) favoriteColorText.contentEditable = false;
+      const favoriteSnackText = document.getElementById('favoriteSnackText');
+      if (favoriteSnackText) favoriteSnackText.contentEditable = false;
+      const favoriteDrinkText = document.getElementById('favoriteDrinkText');
+      if (favoriteDrinkText) favoriteDrinkText.contentEditable = false;
+      const favoriteShowText = document.getElementById('favoriteShowText');
+      if (favoriteShowText) favoriteShowText.contentEditable = false;
       const aboutMeSaveButtons = ['saveAboutMeDescBtn', 'saveFunFactsBtn', 'saveFavoriteColorBtn', 'saveFavoriteSnackBtn', 'saveFavoriteDrinkBtn', 'saveFavoriteShowBtn'];
       aboutMeSaveButtons.forEach(id => {
         const btn = document.getElementById(id);
@@ -1236,6 +1266,13 @@
         }
       });
       data.websites_json = JSON.stringify(websites);
+      
+      // Profile photos URLs
+      const scholarProfileEl = document.querySelector('[onclick*="scholar"]');
+      if (scholarProfileEl) data.scholar_profile_url = scholarProfileEl.getAttribute('data-profile-url') || '';
+      
+      const aboutMeProfileEl = document.querySelector('[onclick*="aboutme"]');
+      if (aboutMeProfileEl) data.about_me_profile_url = aboutMeProfileEl.getAttribute('data-profile-url') || '';
       
       return data;
     }
@@ -1908,6 +1945,19 @@ function updateAboutMeSection(data) {
       factsUl.innerHTML = data.fun_facts_html;
     }
   }
+  
+  // Update profile photos
+  const scholarProfileEl = document.querySelector('[onclick*="scholar"]');
+  if (scholarProfileEl && data.scholar_profile_url) {
+    scholarProfileEl.innerHTML = `<img src="${data.scholar_profile_url}" alt="Scholar Profile" style="width:100%; height:100%; object-fit:cover;">`;
+    scholarProfileEl.setAttribute('data-profile-url', data.scholar_profile_url);
+  }
+  
+  const aboutMeProfileEl = document.querySelector('[onclick*="aboutme"]');
+  if (aboutMeProfileEl && data.about_me_profile_url) {
+    aboutMeProfileEl.innerHTML = `<img src="${data.about_me_profile_url}" alt="About Me Profile" style="width:100%; height:100%; object-fit:cover;">`;
+    aboutMeProfileEl.setAttribute('data-profile-url', data.about_me_profile_url);
+  }
 }
 function populateDataFromSheet(data) {
   // Always populate with either real data or fallback content
@@ -2519,10 +2569,10 @@ setInterval(async () => {
 
 // Profile photo upload functionality
 function editProfilePhoto(el, section) {
-  // Allow editing without edit mode for improved UX
-  // if (!document.body.classList.contains('editing')) {
-  //   return;
-  // }
+  // Only allow editing in edit mode with PIN
+  if (!document.body.classList.contains('editing')) {
+    return;
+  }
   
   // Create file input
   const fileInput = document.createElement('input');
