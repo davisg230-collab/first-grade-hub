@@ -43,11 +43,22 @@
       appId: "1:472215115326:web:0d1f2cb7c1d5615676636f",
       measurementId: "G-5SF4RE6KLS"
     };
-    firebase.initializeApp(firebaseConfig);
-    try { firebase.analytics(); } catch (e) {}
-    const db = firebase.firestore();
-    const auth = firebase.auth();
-    const storage = firebase.storage();
+    // Initialize Firebase with error handling
+    let db, auth, storage;
+    try {
+      firebase.initializeApp(firebaseConfig);
+      try { firebase.analytics(); } catch (e) { console.warn('Firebase analytics failed:', e); }
+      db = firebase.firestore();
+      auth = firebase.auth();
+      storage = firebase.storage();
+      console.log('Firebase initialized successfully');
+    } catch (e) {
+      console.error('Firebase initialization failed:', e);
+      // Set db to undefined so we can check for it later
+      db = undefined;
+      auth = undefined;
+      storage = undefined;
+    }
   </script>
   
   <style>
@@ -1313,7 +1324,12 @@ function updateAboutMeSection(data) {
   }
 }
 function populateDataFromSheet(data) {
-  if (!data) return;
+  // Always populate with either real data or fallback content
+  if (!data) {
+    console.log('Using fallback content due to missing data');
+    data = getDefaultFallbackData();
+  }
+  
   updateWeekText(data.week);
   updateRecapText(data.recap);
   updateEventsList(data.dates_json);
@@ -1384,29 +1400,120 @@ function updateGalleryPhotos(galleryUrlsJson) {
   });
 }
 
+// Error display functions
+function showDataLoadError(message) {
+  // Create or update error banner
+  let errorBanner = document.getElementById('dataLoadError');
+  if (!errorBanner) {
+    errorBanner = document.createElement('div');
+    errorBanner.id = 'dataLoadError';
+    errorBanner.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: #f56565;
+      color: white;
+      padding: 10px;
+      text-align: center;
+      z-index: 1000;
+      font-weight: bold;
+    `;
+    document.body.insertBefore(errorBanner, document.body.firstChild);
+  }
+  errorBanner.textContent = `⚠️ ${message}`;
+  errorBanner.style.display = 'block';
+}
+
+function hideDataLoadError() {
+  const errorBanner = document.getElementById('dataLoadError');
+  if (errorBanner) {
+    errorBanner.style.display = 'none';
+  }
+}
+
+// Default fallback data when Firestore is unavailable
+function getDefaultFallbackData() {
+  return {
+    week: "Week of September 1–5",
+    recap: "This week we explored magical stories and practiced our sight words. The students loved reading about brave characters and sharing their favorite parts! We also worked on counting by 5s and 10s using fun games and manipulatives. Our art projects focused on fall colors and textures - the students created beautiful leaf collages and practiced writing descriptive words.",
+    dates_json: JSON.stringify([
+      { icon: "🎃", text: "Halloween Party - October 31st at 2pm" },
+      { icon: "🦃", text: "Thanksgiving Break - November 23-27" }
+    ]),
+    looking_ahead: [
+      "Field trip permission slips due",
+      "Parent-teacher conferences", 
+      "Winter concert practice begins"
+    ],
+    snacks_json: JSON.stringify([
+      { item: "🥯 Breakfast Bars", claimed: "", checked: false },
+      { item: "🍬 Gummies", claimed: "", checked: false },
+      { item: "🍚 Rice Krispy Treats", claimed: "", checked: false },
+      { item: "🧃 Juice", claimed: "", checked: false }
+    ]),
+    snack_message: "Snacks help keep our energy up during learning time and teach us about sharing and community!",
+    scholar_name: "Scholar of the Week",
+    scholar_blurb: "Our scholar will be announced soon!",
+    skills_text: "This week we focused on phonics and reading skills.",
+    sounds_json: JSON.stringify(["ch", "sh", "th", "wh"]),
+    listening_text: "We practiced active listening and following directions.",
+    ask_json: JSON.stringify(["What is the main idea?", "How do you know?", "What evidence supports this?"]),
+    math_text: "We explored numbers and counting patterns.",
+    math_vocab_json: JSON.stringify(["add", "subtract", "count", "pattern"]),
+    extras_json: JSON.stringify([]),
+    about_me_html: "Welcome to our classroom!",
+    fun_facts_html: ["I love teaching first grade!", "Reading is my favorite subject", "I enjoy outdoor activities"],
+    photo_urls_json: JSON.stringify([]),
+    gallery_urls_json: JSON.stringify({}),
+    calendar_url: "#"
+  };
+}
+
 async function fetchFirestoreData() {
   try {
+    // Check if Firebase is available
+    if (typeof db === 'undefined') {
+      console.error('Firebase not available - using fallback content');
+      showDataLoadError('Firebase connection not available');
+      return null;
+    }
+    
     const doc = await db.collection('classData').doc('current').get();
     if (doc.exists) {
+      hideDataLoadError(); // Hide any previous error messages
       return doc.data();
     } else {
       console.log('No document found, using defaults');
+      showDataLoadError('No saved data found - showing default content');
       return null;
     }
   } catch (e) {
     console.error('Failed to fetch Firestore data:', e);
+    showDataLoadError('Unable to load data from server - showing default content');
     return null;
   }
 }
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(async () => {
-    const data = await fetchFirestoreData();
-    populateDataFromSheet(data);
+    try {
+      const data = await fetchFirestoreData();
+      populateDataFromSheet(data);
+    } catch (error) {
+      console.error('Error during initial data load:', error);
+      showDataLoadError('Failed to load content - showing default content');
+      populateDataFromSheet(null); // This will trigger fallback data
+    }
   }, 350);
 });
 setInterval(async () => {
-  const data = await fetchFirestoreData();
-  populateDataFromSheet(data);
+  try {
+    const data = await fetchFirestoreData();
+    populateDataFromSheet(data);
+  } catch (error) {
+    console.error('Error during periodic data refresh:', error);
+    // Don't show error for periodic refreshes, just log it
+  }
 }, 300000);
   </script>
 </body>
