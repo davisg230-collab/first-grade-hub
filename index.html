@@ -101,6 +101,18 @@
       background-color: rgba(255,255,255,0.7); cursor: text;
       outline: 2px dashed color-mix(in oklab,var(--md-slate) 55%,transparent); outline-offset: 2px;
     }
+    /* Styling for disabled about me, class roster, birthday, and website fields */
+    #aboutMeDescText[contenteditable="false"] { background-color: transparent; border: none; cursor: default; }
+    body.editing #aboutMeDescText[contenteditable="true"] { 
+      outline: 2px dashed color-mix(in oklab,var(--md-slate) 55%,transparent); outline-offset: 2px;
+    }
+    #classRosterTextarea:disabled, .website-url-input:disabled, textarea[id*="BirthdaysTextarea"]:disabled { 
+      background-color: #f3f4f6; color: #9ca3af; cursor: not-allowed; border-color: #e5e7eb;
+    }
+    body.editing #classRosterTextarea:not(:disabled), body.editing .website-url-input:not(:disabled), body.editing textarea[id*="BirthdaysTextarea"]:not(:disabled) {
+      background-color: white; color: var(--md-ink); cursor: text;
+      outline: 2px dashed color-mix(in oklab,var(--md-slate) 55%,transparent); outline-offset: 2px;
+    }
     /* Photo card and gallery cursor only in edit mode */
     .photo-card{cursor: default;}
     body.editing .photo-card{cursor: pointer;}
@@ -773,6 +785,10 @@
       });
       // Edit Mode PIN overlay logic
       const TEACHER_PIN = '2213';
+      
+      // Initialize read-only state on page load
+      initializeReadOnlyState();
+      
       document.getElementById('editModeBtn').onclick = function() {
         document.getElementById('pinOverlay').classList.add('show');
         document.getElementById('pinInput').focus();
@@ -837,6 +853,47 @@
       return hasChanges;
     }
     
+    
+    function initializeReadOnlyState() {
+      // Disable About Me section
+      const aboutMeDescText = document.getElementById('aboutMeDescText');
+      if (aboutMeDescText) aboutMeDescText.contentEditable = false;
+      const aboutMeSaveButtons = ['saveAboutMeDescBtn', 'saveFunFactsBtn', 'saveFavoriteColorBtn', 'saveFavoriteSnackBtn', 'saveFavoriteDrinkBtn', 'saveFavoriteShowBtn'];
+      aboutMeSaveButtons.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.style.display = 'none';
+      });
+      
+      // Disable Class Roster section
+      const classRosterTextarea = document.getElementById('classRosterTextarea');
+      if (classRosterTextarea) { classRosterTextarea.disabled = true; classRosterTextarea.readOnly = true; }
+      const saveClassRosterBtn = document.getElementById('saveClassRosterBtn');
+      if (saveClassRosterBtn) saveClassRosterBtn.style.display = 'none';
+      
+      // Disable Birthday sections
+      const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+      months.forEach(month => {
+        const monthTextarea = document.getElementById(`${month}BirthdaysTextarea`);
+        if (monthTextarea) { monthTextarea.disabled = true; monthTextarea.readOnly = true; }
+      });
+      const saveAllBirthdaysBtn = document.getElementById('saveAllBirthdaysBtn');
+      if (saveAllBirthdaysBtn) saveAllBirthdaysBtn.style.display = 'none';
+      
+      // Disable Practice Websites section  
+      document.querySelectorAll('.website-url-input').forEach(input => {
+        input.disabled = true;
+        input.readOnly = true;
+      });
+      const saveWebsitesBtn = document.getElementById('saveWebsitesBtn');
+      if (saveWebsitesBtn) saveWebsitesBtn.style.display = 'none';
+      
+      // Disable Extras section
+      const saveExtrasBtn = document.getElementById('saveExtrasBtn');
+      if (saveExtrasBtn) saveExtrasBtn.style.display = 'none';
+      const addExtrasCardBtn = document.getElementById('addExtrasCardBtn');
+      if (addExtrasCardBtn) addExtrasCardBtn.style.display = 'none';
+    }
+    
     function enterEditMode(){
       storeOriginalValues();
       document.body.classList.add('editing');
@@ -848,6 +905,45 @@
         snackMessage.disabled = false;
         snackMessage.readOnly = false;
       }
+      
+      // Enable About Me section
+      const aboutMeDescText = document.getElementById('aboutMeDescText');
+      if (aboutMeDescText) aboutMeDescText.contentEditable = true;
+      const aboutMeSaveButtons = ['saveAboutMeDescBtn', 'saveFunFactsBtn', 'saveFavoriteColorBtn', 'saveFavoriteSnackBtn', 'saveFavoriteDrinkBtn', 'saveFavoriteShowBtn'];
+      aboutMeSaveButtons.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.style.display = 'inline-block';
+      });
+      
+      // Enable Class Roster section
+      const classRosterTextarea = document.getElementById('classRosterTextarea');
+      if (classRosterTextarea) { classRosterTextarea.disabled = false; classRosterTextarea.readOnly = false; }
+      const saveClassRosterBtn = document.getElementById('saveClassRosterBtn');
+      if (saveClassRosterBtn) saveClassRosterBtn.style.display = 'inline-block';
+      
+      // Enable Birthday sections
+      const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+      months.forEach(month => {
+        const monthTextarea = document.getElementById(`${month}BirthdaysTextarea`);
+        if (monthTextarea) { monthTextarea.disabled = false; monthTextarea.readOnly = false; }
+      });
+      const saveAllBirthdaysBtn = document.getElementById('saveAllBirthdaysBtn');
+      if (saveAllBirthdaysBtn) saveAllBirthdaysBtn.style.display = 'inline-block';
+      
+      // Enable Practice Websites section  
+      document.querySelectorAll('.website-url-input').forEach(input => {
+        input.disabled = false;
+        input.readOnly = false;
+      });
+      const saveWebsitesBtn = document.getElementById('saveWebsitesBtn');
+      if (saveWebsitesBtn) saveWebsitesBtn.style.display = 'inline-block';
+      
+      // Enable Extras section
+      const saveExtrasBtn = document.getElementById('saveExtrasBtn');
+      if (saveExtrasBtn) saveExtrasBtn.style.display = 'inline-block';
+      const addExtrasCardBtn = document.getElementById('addExtrasCardBtn');
+      if (addExtrasCardBtn) addExtrasCardBtn.style.display = 'inline-block';
+      
       document.getElementById('editModeBtn').textContent = '💾 Exit Edit Mode';
       document.getElementById('editModeBtn').onclick = exitEditMode;
     }
@@ -861,6 +957,45 @@
         snackMessage.disabled = true;
         snackMessage.readOnly = true;
       }
+      
+      // Disable About Me section
+      const aboutMeDescText = document.getElementById('aboutMeDescText');
+      if (aboutMeDescText) aboutMeDescText.contentEditable = false;
+      const aboutMeSaveButtons = ['saveAboutMeDescBtn', 'saveFunFactsBtn', 'saveFavoriteColorBtn', 'saveFavoriteSnackBtn', 'saveFavoriteDrinkBtn', 'saveFavoriteShowBtn'];
+      aboutMeSaveButtons.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.style.display = 'none';
+      });
+      
+      // Disable Class Roster section
+      const classRosterTextarea = document.getElementById('classRosterTextarea');
+      if (classRosterTextarea) { classRosterTextarea.disabled = true; classRosterTextarea.readOnly = true; }
+      const saveClassRosterBtn = document.getElementById('saveClassRosterBtn');
+      if (saveClassRosterBtn) saveClassRosterBtn.style.display = 'none';
+      
+      // Disable Birthday sections
+      const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+      months.forEach(month => {
+        const monthTextarea = document.getElementById(`${month}BirthdaysTextarea`);
+        if (monthTextarea) { monthTextarea.disabled = true; monthTextarea.readOnly = true; }
+      });
+      const saveAllBirthdaysBtn = document.getElementById('saveAllBirthdaysBtn');
+      if (saveAllBirthdaysBtn) saveAllBirthdaysBtn.style.display = 'none';
+      
+      // Disable Practice Websites section  
+      document.querySelectorAll('.website-url-input').forEach(input => {
+        input.disabled = true;
+        input.readOnly = true;
+      });
+      const saveWebsitesBtn = document.getElementById('saveWebsitesBtn');
+      if (saveWebsitesBtn) saveWebsitesBtn.style.display = 'none';
+      
+      // Disable Extras section
+      const saveExtrasBtn = document.getElementById('saveExtrasBtn');
+      if (saveExtrasBtn) saveExtrasBtn.style.display = 'none';
+      const addExtrasCardBtn = document.getElementById('addExtrasCardBtn');
+      if (addExtrasCardBtn) addExtrasCardBtn.style.display = 'none';
+      
       document.getElementById('editModeBtn').textContent = '✏️ Edit Mode';
       document.getElementById('editModeBtn').onclick = function(){
         document.getElementById('pinOverlay').classList.add('show');
@@ -1217,8 +1352,24 @@
       // Only allow claiming if checkbox is checked and name is provided
       if (checkbox && checkbox.checked && name) {
         card.classList.add('snack-claimed');
-        btn.textContent = 'Saved!';
-        setTimeout(()=>{btn.textContent='Save';},1800);
+        btn.textContent = 'Saving...';
+        btn.disabled = true;
+        
+        // Save to Firestore immediately
+        saveSnackDataToFirestore().then(() => {
+          btn.textContent = 'Saved!';
+          setTimeout(() => {
+            btn.textContent = 'Save';
+            btn.disabled = false;
+          }, 1800);
+        }).catch((error) => {
+          console.error('Failed to save snack data:', error);
+          btn.textContent = 'Save Failed';
+          setTimeout(() => {
+            btn.textContent = 'Save';
+            btn.disabled = false;
+          }, 2000);
+        });
         
         // Only show global save button for teachers/admins in edit mode
         // Parents get individual card saves only
@@ -1232,6 +1383,80 @@
         alert('Please enter your name to claim this snack.');
       }
     }
+    
+    // Function to save snack data to Firestore
+    async function saveSnackDataToFirestore() {
+      try {
+        // Collect current snack data
+        const snacksGrid = document.getElementById('snacksGrid');
+        if (!snacksGrid) return;
+        
+        const snacks = [];
+        snacksGrid.querySelectorAll('.p-4').forEach(card => {
+          const emoji = card.querySelector('.text-xl')?.textContent || '';
+          const item = card.querySelector('.snack-title')?.textContent || '';
+          const claimedBy = card.querySelector('.snack-name')?.value || '';
+          const checked = card.querySelector('.snack-checkbox')?.checked || false;
+          const isDefault = card.getAttribute('data-default-snack') === 'true';
+          if (item) {
+            snacks.push({ 
+              emoji: emoji, 
+              item: item, 
+              claimed_by: claimedBy, 
+              checked: checked,
+              is_default: isDefault
+            });
+          }
+        });
+        
+        const snacksData = JSON.stringify(snacks);
+        
+        // Try to save to Firestore first
+        if (typeof db !== 'undefined') {
+          await db.collection('classData').doc('current').set(
+            { snacks_json: snacksData }, 
+            { merge: true }
+          );
+          console.log('Snack data saved to Firestore successfully');
+        } else {
+          // Fallback to localStorage for testing when Firebase is not available
+          localStorage.setItem('classData_snacks_json', snacksData);
+          console.log('Snack data saved to localStorage (Firebase not available)');
+        }
+        
+      } catch (error) {
+        console.error('Failed to save snack data:', error);
+        // Fallback to localStorage on Firestore error
+        try {
+          const snacksGrid = document.getElementById('snacksGrid');
+          if (snacksGrid) {
+            const snacks = [];
+            snacksGrid.querySelectorAll('.p-4').forEach(card => {
+              const emoji = card.querySelector('.text-xl')?.textContent || '';
+              const item = card.querySelector('.snack-title')?.textContent || '';
+              const claimedBy = card.querySelector('.snack-name')?.value || '';
+              const checked = card.querySelector('.snack-checkbox')?.checked || false;
+              const isDefault = card.getAttribute('data-default-snack') === 'true';
+              if (item) {
+                snacks.push({ 
+                  emoji: emoji, 
+                  item: item, 
+                  claimed_by: claimedBy, 
+                  checked: checked,
+                  is_default: isDefault
+                });
+              }
+            });
+            localStorage.setItem('classData_snacks_json', JSON.stringify(snacks));
+            console.log('Snack data saved to localStorage as fallback');
+          }
+        } catch (localError) {
+          console.error('Failed to save to localStorage as well:', localError);
+          throw error;
+        }
+      }
+    }
+    
     // Extras tab: Add card
     function addExtrasCard() {
       // Create card directly editable on the page instead of using prompts
@@ -2185,10 +2410,10 @@ function getDefaultFallbackData() {
       "Winter concert practice begins"
     ],
     snacks_json: JSON.stringify([
-      { item: "🥯 Breakfast Bars", claimed: "", checked: false },
-      { item: "🍬 Gummies", claimed: "", checked: false },
-      { item: "🍚 Rice Krispy Treats", claimed: "", checked: false },
-      { item: "🧃 Juice", claimed: "", checked: false }
+      { emoji: "🥯", item: "Breakfast Bars", claimed_by: "", checked: false, is_default: true },
+      { emoji: "🍬", item: "Gummies", claimed_by: "", checked: false, is_default: true },
+      { emoji: "🍚", item: "Rice Krispy Treats", claimed_by: "", checked: false, is_default: true },
+      { emoji: "🧃", item: "Juice", claimed_by: "", checked: false, is_default: true }
     ]),
     snack_message: "Snacks help keep our energy up during learning time and teach us about sharing and community!",
     scholar_name: "Scholar of the Week",
@@ -2212,9 +2437,19 @@ async function fetchFirestoreData() {
   try {
     // Check if Firebase is available
     if (typeof db === 'undefined') {
-      console.error('Firebase not available - using fallback content');
-      showDataLoadError('Firebase connection not available');
-      return null;
+      console.error('Firebase not available - checking localStorage fallback');
+      // Check if we have saved snack data in localStorage
+      const savedSnacksData = localStorage.getItem('classData_snacks_json');
+      if (savedSnacksData) {
+        const fallbackData = getDefaultFallbackData();
+        fallbackData.snacks_json = savedSnacksData;
+        console.log('Using localStorage fallback data for snacks');
+        showDataLoadError('Firebase connection not available - using saved local data');
+        return fallbackData;
+      } else {
+        showDataLoadError('Firebase connection not available');
+        return null;
+      }
     }
     
     const doc = await db.collection('classData').doc('current').get();
