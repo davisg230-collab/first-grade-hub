@@ -535,17 +535,31 @@
         <h2 class="text-2xl font-display font-bold mb-6" style="color: #f59e0b;">🚌 Transportation</h2>
         <div class="space-y-6">
           <div class="bg-white rounded-xl p-6" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
-            <h3 class="text-lg font-semibold mb-4">🚌 Bus Riders</h3>
-            <textarea class="w-full h-32 p-3 text-sm border rounded-lg resize-none" placeholder="Student Name
-Bus Number"></textarea>
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold">🚌 Bus Riders</h3>
+              <button id="saveBusRidersBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveTransportationField('busRiders')">💾 Save</button>
+            </div>
+            <textarea id="busRidersTextarea" class="w-full h-32 p-3 text-sm border rounded-lg resize-none" placeholder="• Type your bullet points here...
+• One student per line
+• Use bullet points or dashes"></textarea>
           </div>
           <div class="bg-white rounded-xl p-6" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
-            <h3 class="text-lg font-semibold mb-4">🚗 Car Riders</h3>
-            <textarea class="w-full h-32 p-3 text-sm border rounded-lg resize-none"></textarea>
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold">🚗 Car Riders</h3>
+              <button id="saveCarRidersBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveTransportationField('carRiders')">💾 Save</button>
+            </div>
+            <textarea id="carRidersTextarea" class="w-full h-32 p-3 text-sm border rounded-lg resize-none" placeholder="• Type your bullet points here...
+• One student per line
+• Use bullet points or dashes"></textarea>
           </div>
           <div class="bg-white rounded-xl p-6" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
-            <h3 class="text-lg font-semibold mb-4">🏠 Porch Pickup</h3>
-            <textarea class="w-full h-32 p-3 text-sm border rounded-lg resize-none"></textarea>
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold">🏠 Porch Pickup</h3>
+              <button id="savePorchPickupBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveTransportationField('porchPickup')">💾 Save</button>
+            </div>
+            <textarea id="porchPickupTextarea" class="w-full h-32 p-3 text-sm border rounded-lg resize-none" placeholder="• Type your bullet points here...
+• One student per line
+• Use bullet points or dashes"></textarea>
           </div>
         </div>
       </div>
@@ -603,8 +617,11 @@ Bus Number"></textarea>
     <section data-page-panel="birthdays" class="pagePanel fade-in">
       <h2 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">🎂 Class Roster & Birthdays</h2>
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8 bg-white" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
-        <h3 class="text-xl font-semibold mb-5">👥 Class Roster</h3>
-        <textarea class="w-full h-40 p-4 text-sm border rounded-lg resize-none teacher-only-edit" disabled placeholder="• Type your student names here...
+        <div class="flex justify-between items-center mb-5">
+          <h3 class="text-xl font-semibold">👥 Class Roster</h3>
+          <button id="saveClassRosterBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveBirthdayField('classRoster')">💾 Save</button>
+        </div>
+        <textarea id="classRosterTextarea" class="w-full h-40 p-4 text-sm border rounded-lg resize-none" placeholder="• Type your student names here...
 • One student per line
 • Use bullet points or dashes">• Emma S.
 • Jake M.
@@ -614,57 +631,60 @@ Bus Number"></textarea>
 • Noah T.</textarea>
       </div>
       <div class="rounded-2xl shadow-soft p-6 sm:p-8" style="background: var(--md-cream);">
-        <h3 class="text-xl font-semibold mb-5">🎂 Birthday Calendar</h3>
+        <div class="flex justify-between items-center mb-5">
+          <h3 class="text-xl font-semibold">🎂 Birthday Calendar</h3>
+          <button id="saveAllBirthdaysBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveAllBirthdays()">💾 Save All Birthdays</button>
+        </div>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div class="birthday-month bg-white rounded-xl p-4" style="border: 1px solid color-mix(in oklab, var(--md-blush) 60%, var(--md-white) 40%);">
             <h4 class="font-semibold mb-3">❄️ January</h4>
-            <textarea class="w-full h-20 p-2 text-sm border rounded resize-none teacher-only-edit" disabled placeholder="Enter birthdays..."></textarea>
+            <textarea id="januaryBirthdaysTextarea" class="w-full h-20 p-2 text-sm border rounded resize-none" placeholder="Enter birthdays..."></textarea>
           </div>
           <div class="birthday-month bg-white rounded-xl p-4" style="border: 1px solid color-mix(in oklab, var(--md-coral) 60%, var(--md-white) 40%);">
             <h4 class="font-semibold mb-3">💕 February</h4>
-            <textarea class="w-full h-20 p-2 text-sm border rounded resize-none teacher-only-edit" disabled placeholder="Enter birthdays..."></textarea>
+            <textarea id="februaryBirthdaysTextarea" class="w-full h-20 p-2 text-sm border rounded resize-none" placeholder="Enter birthdays..."></textarea>
           </div>
           <div class="birthday-month bg-white rounded-xl p-4" style="border: 1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%);">
             <h4 class="font-semibold mb-3">🌸 March</h4>
-            <textarea class="w-full h-20 p-2 text-sm border rounded resize-none teacher-only-edit" disabled placeholder="Enter birthdays..."></textarea>
+            <textarea id="marchBirthdaysTextarea" class="w-full h-20 p-2 text-sm border rounded resize-none" placeholder="Enter birthdays..."></textarea>
           </div>
           <div class="birthday-month bg-white rounded-xl p-4" style="border: 1px solid color-mix(in oklab, var(--md-slate) 60%, var(--md-white) 40%);">
             <h4 class="font-semibold mb-3">🌷 April</h4>
-            <textarea class="w-full h-20 p-2 text-sm border rounded resize-none teacher-only-edit" disabled placeholder="Enter birthdays..."></textarea>
+            <textarea id="aprilBirthdaysTextarea" class="w-full h-20 p-2 text-sm border rounded resize-none" placeholder="Enter birthdays..."></textarea>
           </div>
           <div class="birthday-month bg-white rounded-xl p-4" style="border: 1px solid color-mix(in oklab, var(--md-pebble) 60%, var(--md-white) 40%);">
             <h4 class="font-semibold mb-3">🌺 May</h4>
-            <textarea class="w-full h-20 p-2 text-sm border rounded resize-none teacher-only-edit" disabled placeholder="Enter birthdays..."></textarea>
+            <textarea id="mayBirthdaysTextarea" class="w-full h-20 p-2 text-sm border rounded resize-none" placeholder="Enter birthdays..."></textarea>
           </div>
           <div class="birthday-month bg-white rounded-xl p-4" style="border: 1px solid color-mix(in oklab, var(--md-coral) 60%, var(--md-white) 40%);">
             <h4 class="font-semibold mb-3">☀️ June</h4>
-            <textarea class="w-full h-20 p-2 text-sm border rounded resize-none teacher-only-edit" disabled placeholder="Enter birthdays..."></textarea>
+            <textarea id="juneBirthdaysTextarea" class="w-full h-20 p-2 text-sm border rounded resize-none" placeholder="Enter birthdays..."></textarea>
           </div>
           <div class="birthday-month bg-white rounded-xl p-4" style="border: 1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%);">
             <h4 class="font-semibold mb-3">🏖️ July</h4>
-            <textarea class="w-full h-20 p-2 text-sm border rounded resize-none teacher-only-edit" disabled placeholder="Enter birthdays..."></textarea>
+            <textarea id="julyBirthdaysTextarea" class="w-full h-20 p-2 text-sm border rounded resize-none" placeholder="Enter birthdays..."></textarea>
           </div>
           <div class="birthday-month bg-white rounded-xl p-4" style="border: 1px solid color-mix(in oklab, var(--md-blush) 60%, var(--md-white) 40%);">
             <h4 class="font-semibold mb-3">🌻 August</h4>
-            <textarea class="w-full h-20 p-2 text-sm border rounded resize-none teacher-only-edit" disabled placeholder="Enter birthdays..."></textarea>
+            <textarea id="augustBirthdaysTextarea" class="w-full h-20 p-2 text-sm border rounded resize-none" placeholder="Enter birthdays..."></textarea>
           </div>
           <div class="birthday-month bg-white rounded-xl p-4" style="border: 1px solid color-mix(in oklab, var(--md-slate) 60%, var(--md-white) 40%);">
             <h4 class="font-semibold mb-3">🍎 September</h4>
-            <textarea class="w-full h-20 p-2 text-sm border rounded resize-none teacher-only-edit" disabled placeholder="Enter birthdays..."></textarea>
+            <textarea id="septemberBirthdaysTextarea" class="w-full h-20 p-2 text-sm border rounded resize-none" placeholder="Enter birthdays..."></textarea>
           </div>
           <div class="birthday-month bg-white rounded-xl p-4" style="border: 1px solid color-mix(in oklab, var(--md-pebble) 60%, var(--md-white) 40%);">
             <h4 class="font-semibold mb-3">🍂 October</h4>
-            <textarea class="w-full h-20 p-2 text-sm border rounded resize-none teacher-only-edit" disabled placeholder="Enter birthdays...">15th – Emma S.
+            <textarea id="octoberBirthdaysTextarea" class="w-full h-20 p-2 text-sm border rounded resize-none" placeholder="Enter birthdays...">15th – Emma S.
 28th – Jake M.</textarea>
           </div>
           <div class="birthday-month bg-white rounded-xl p-4" style="border: 1px solid color-mix(in oklab, var(--md-coral) 60%, var(--md-white) 40%);">
             <h4 class="font-semibold mb-3">🦃 November</h4>
-            <textarea class="w-full h-20 p-2 text-sm border rounded resize-none teacher-only-edit" disabled placeholder="Enter birthdays...">12th – Sarah L.
+            <textarea id="novemberBirthdaysTextarea" class="w-full h-20 p-2 text-sm border rounded resize-none" placeholder="Enter birthdays...">12th – Sarah L.
 25th – Alex R.</textarea>
           </div>
           <div class="birthday-month bg-white rounded-xl p-4" style="border: 1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%);">
             <h4 class="font-semibold mb-3">🎄 December</h4>
-            <textarea class="w-full h-20 p-2 text-sm border rounded resize-none teacher-only-edit" disabled placeholder="Enter birthdays...">8th – Mia K.
+            <textarea id="decemberBirthdaysTextarea" class="w-full h-20 p-2 text-sm border rounded resize-none" placeholder="Enter birthdays...">8th – Mia K.
 22nd – Noah T.</textarea>
           </div>
         </div>
@@ -953,6 +973,28 @@ Bus Number"></textarea>
         }
       });
       data.gallery_urls_json = JSON.stringify(galleries);
+      
+      // Transportation fields
+      const busRidersEl = document.getElementById('busRidersTextarea');
+      if (busRidersEl) data.bus_riders = busRidersEl.value || '';
+      
+      const carRidersEl = document.getElementById('carRidersTextarea');
+      if (carRidersEl) data.car_riders = carRidersEl.value || '';
+      
+      const porchPickupEl = document.getElementById('porchPickupTextarea');
+      if (porchPickupEl) data.porch_pickup = porchPickupEl.value || '';
+      
+      // Birthday fields
+      const classRosterEl = document.getElementById('classRosterTextarea');
+      if (classRosterEl) data.class_roster = classRosterEl.value || '';
+      
+      // Monthly birthday fields
+      const months = ['january', 'february', 'march', 'april', 'may', 'june', 
+                      'july', 'august', 'september', 'october', 'november', 'december'];
+      months.forEach(month => {
+        const monthEl = document.getElementById(`${month}BirthdaysTextarea`);
+        if (monthEl) data[`${month}_birthdays`] = monthEl.value || '';
+      });
       
       return data;
     }
@@ -1535,6 +1577,12 @@ function populateDataFromSheet(data) {
   // Load gallery photos
   updateGalleryPhotos(data.gallery_urls_json);
   
+  // Load transportation data
+  updateTransportationFields(data);
+  
+  // Load birthday data
+  updateBirthdayFields(data);
+  
   if (data.calendar_url) {
     const cal = document.getElementById('schoolCalendarLink');
     if (cal) cal.href = data.calendar_url;
@@ -1585,6 +1633,193 @@ function updateGalleryPhotos(galleryUrlsJson) {
       }
     }
   });
+}
+
+// Function to update transportation fields with saved data
+function updateTransportationFields(data) {
+  if (!data) return;
+  
+  const busRidersEl = document.getElementById('busRidersTextarea');
+  if (busRidersEl && data.bus_riders) {
+    busRidersEl.value = data.bus_riders;
+  }
+  
+  const carRidersEl = document.getElementById('carRidersTextarea');
+  if (carRidersEl && data.car_riders) {
+    carRidersEl.value = data.car_riders;
+  }
+  
+  const porchPickupEl = document.getElementById('porchPickupTextarea');
+  if (porchPickupEl && data.porch_pickup) {
+    porchPickupEl.value = data.porch_pickup;
+  }
+}
+
+// Function to save individual transportation fields
+async function saveTransportationField(fieldType) {
+  const buttonMap = {
+    'busRiders': 'saveBusRidersBtn',
+    'carRiders': 'saveCarRidersBtn', 
+    'porchPickup': 'savePorchPickupBtn'
+  };
+  
+  const textareaMap = {
+    'busRiders': 'busRidersTextarea',
+    'carRiders': 'carRidersTextarea',
+    'porchPickup': 'porchPickupTextarea'
+  };
+  
+  const dataMap = {
+    'busRiders': 'bus_riders',
+    'carRiders': 'car_riders',
+    'porchPickup': 'porch_pickup'
+  };
+  
+  const saveBtn = document.getElementById(buttonMap[fieldType]);
+  const textarea = document.getElementById(textareaMap[fieldType]);
+  
+  if (!saveBtn || !textarea) return;
+  
+  const originalText = saveBtn.textContent;
+  
+  try {
+    // Show saving state
+    saveBtn.textContent = '⏳ Saving...';
+    saveBtn.disabled = true;
+    
+    // Prepare data for saving
+    const data = {};
+    data[dataMap[fieldType]] = textarea.value || '';
+    
+    // Save to Firestore
+    await db.collection('classData').doc('current').set(data, { merge: true });
+    
+    // Show success state
+    saveBtn.textContent = '✅ Saved!';
+    
+    // Reset button after 1 second
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 1000);
+    
+  } catch (error) {
+    console.error('Failed to save transportation field:', error);
+    saveBtn.textContent = '❌ Save Failed';
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 2000);
+  }
+}
+
+// Function to update birthday fields with saved data
+function updateBirthdayFields(data) {
+  if (!data) return;
+  
+  // Update class roster
+  const classRosterEl = document.getElementById('classRosterTextarea');
+  if (classRosterEl && data.class_roster) {
+    classRosterEl.value = data.class_roster;
+  }
+  
+  // Update monthly birthdays
+  const months = ['january', 'february', 'march', 'april', 'may', 'june', 
+                  'july', 'august', 'september', 'october', 'november', 'december'];
+  months.forEach(month => {
+    const monthEl = document.getElementById(`${month}BirthdaysTextarea`);
+    if (monthEl && data[`${month}_birthdays`]) {
+      monthEl.value = data[`${month}_birthdays`];
+    }
+  });
+}
+
+// Function to save individual birthday fields
+async function saveBirthdayField(fieldType) {
+  const saveBtn = document.getElementById('saveClassRosterBtn');
+  const textarea = document.getElementById('classRosterTextarea');
+  
+  if (!saveBtn || !textarea) return;
+  
+  const originalText = saveBtn.textContent;
+  
+  try {
+    // Show saving state
+    saveBtn.textContent = '⏳ Saving...';
+    saveBtn.disabled = true;
+    
+    // Prepare data for saving
+    const data = {};
+    data.class_roster = textarea.value || '';
+    
+    // Save to Firestore
+    await db.collection('classData').doc('current').set(data, { merge: true });
+    
+    // Show success state
+    saveBtn.textContent = '✅ Saved!';
+    
+    // Reset button after 1 second
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 1000);
+    
+  } catch (error) {
+    console.error('Failed to save birthday field:', error);
+    saveBtn.textContent = '❌ Save Failed';
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 2000);
+  }
+}
+
+// Function to save all birthday fields at once
+async function saveAllBirthdays() {
+  const saveBtn = document.getElementById('saveAllBirthdaysBtn');
+  
+  if (!saveBtn) return;
+  
+  const originalText = saveBtn.textContent;
+  
+  try {
+    // Show saving state
+    saveBtn.textContent = '⏳ Saving...';
+    saveBtn.disabled = true;
+    
+    // Prepare data for saving
+    const data = {};
+    
+    // Collect all monthly birthday data
+    const months = ['january', 'february', 'march', 'april', 'may', 'june', 
+                    'july', 'august', 'september', 'october', 'november', 'december'];
+    months.forEach(month => {
+      const monthEl = document.getElementById(`${month}BirthdaysTextarea`);
+      if (monthEl) {
+        data[`${month}_birthdays`] = monthEl.value || '';
+      }
+    });
+    
+    // Save to Firestore
+    await db.collection('classData').doc('current').set(data, { merge: true });
+    
+    // Show success state
+    saveBtn.textContent = '✅ Saved!';
+    
+    // Reset button after 1 second
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 1000);
+    
+  } catch (error) {
+    console.error('Failed to save birthday fields:', error);
+    saveBtn.textContent = '❌ Save Failed';
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 2000);
+  }
 }
 
 async function fetchFirestoreData() {
