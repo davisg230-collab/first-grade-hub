@@ -2519,10 +2519,10 @@ setInterval(async () => {
 
 // Profile photo upload functionality
 function editProfilePhoto(el, section) {
-  // Allow editing without edit mode for improved UX
-  // if (!document.body.classList.contains('editing')) {
-  //   return;
-  // }
+  // Only allow editing in edit mode
+  if (!document.body.classList.contains('editing')) {
+    return;
+  }
   
   // Create file input
   const fileInput = document.createElement('input');
