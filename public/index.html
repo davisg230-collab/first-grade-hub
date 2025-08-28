@@ -99,6 +99,42 @@
   </style>
 </head>
 <body class="bg-[color:var(--md-cream)] text-[color:var(--md-ink)] font-body">
+  <!-- Live Image Upload Section -->
+  <div id="imageUploadSection" class="max-w-6xl mx-auto px-6 py-4">
+    <div class="rounded-xl shadow-soft p-4" style="background: var(--card-bg); border: 2px dashed #E0B14A;">
+      <div class="flex flex-col sm:flex-row items-center gap-4">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">📸</span>
+          <div>
+            <h3 class="font-semibold text-lg">Live Image Upload</h3>
+            <p class="text-sm text-gray-600">Upload images directly to Firebase Storage</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <input type="file" id="liveImageInput" accept="image/*" class="hidden">
+          <button id="selectImageBtn" class="px-4 py-2 rounded-lg font-semibold text-white hover:opacity-90" style="background: var(--md-coral);">
+            Select Image
+          </button>
+          <button id="uploadImageBtn" class="px-4 py-2 rounded-lg font-semibold text-white hover:opacity-90 opacity-50 cursor-not-allowed" style="background: var(--md-mustard);" disabled>
+            Upload
+          </button>
+        </div>
+      </div>
+      <div id="uploadStatus" class="mt-3 text-sm hidden"></div>
+      <div id="uploadedImageContainer" class="mt-4 hidden">
+        <h4 class="font-semibold mb-2">Uploaded Image:</h4>
+        <img id="uploadedImage" class="max-w-xs rounded-lg shadow-md" alt="Uploaded image">
+        <div id="downloadUrlContainer" class="mt-2">
+          <p class="text-sm font-medium">Download URL:</p>
+          <div class="flex items-center gap-2 mt-1">
+            <input id="downloadUrlInput" type="text" readonly class="flex-1 px-2 py-1 text-xs bg-gray-100 border rounded" placeholder="Download URL will appear here">
+            <button id="copyUrlBtn" class="px-2 py-1 text-xs rounded bg-gray-200 hover:bg-gray-300">Copy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
   <!-- HEADER -->
   <header class="relative w-full" style="background: var(--hdr-bg);">
     <div class="max-w-6xl mx-auto px-6 py-10 sm:py-12">
@@ -1003,6 +1039,140 @@
     function nextGalleryImg(btn) {
       alert("Gallery swipe feature coming soon!");
     }
+    
+    // Live Image Upload Functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const liveImageInput = document.getElementById('liveImageInput');
+      const selectImageBtn = document.getElementById('selectImageBtn');
+      const uploadImageBtn = document.getElementById('uploadImageBtn');
+      const uploadStatus = document.getElementById('uploadStatus');
+      const uploadedImageContainer = document.getElementById('uploadedImageContainer');
+      const uploadedImage = document.getElementById('uploadedImage');
+      const downloadUrlInput = document.getElementById('downloadUrlInput');
+      const copyUrlBtn = document.getElementById('copyUrlBtn');
+
+      // Select image button click handler
+      selectImageBtn.addEventListener('click', function() {
+        liveImageInput.click();
+      });
+
+      // File input change handler
+      liveImageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          // Validate file type
+          if (!file.type.startsWith('image/')) {
+            showStatus('Please select a valid image file', 'error');
+            liveImageInput.value = '';
+            return;
+          }
+          
+          // Validate file size (limit to 10MB)
+          const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+          if (file.size > maxSize) {
+            showStatus('File size too large. Please select an image under 10MB', 'error');
+            liveImageInput.value = '';
+            return;
+          }
+          
+          uploadImageBtn.disabled = false;
+          uploadImageBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+          showStatus(`Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`, 'info');
+        } else {
+          uploadImageBtn.disabled = true;
+          uploadImageBtn.classList.add('opacity-50', 'cursor-not-allowed');
+          hideStatus();
+        }
+      });
+
+      // Upload button click handler
+      uploadImageBtn.addEventListener('click', async function() {
+        const file = liveImageInput.files[0];
+        if (!file) return;
+
+        // Check if Firebase Storage is available
+        if (typeof storage === 'undefined' || !storage) {
+          showStatus('Firebase Storage not available - please check your connection', 'error');
+          alert('Firebase Storage is not available. Please check your internet connection and try again.');
+          return;
+        }
+
+        try {
+          // Show loading state
+          uploadImageBtn.disabled = true;
+          uploadImageBtn.innerHTML = '⏳ Uploading...';
+          showStatus('Uploading image to Firebase Storage...', 'loading');
+
+          // Use original filename as requested (store at /uploads/filename)
+          const fileName = file.name;
+          
+          // Upload to Firebase Storage at /uploads/filename path
+          const storageRef = storage.ref(`uploads/${fileName}`);
+          const uploadTask = await storageRef.put(file);
+          const downloadURL = await uploadTask.ref.getDownloadURL();
+          
+          // Show success and display results
+          showStatus('Upload successful!', 'success');
+          displayUploadedImage(downloadURL);
+          
+          // Alert with download URL as requested
+          alert(`Upload successful!\nDownload URL: ${downloadURL}`);
+
+          // Reset form
+          liveImageInput.value = '';
+          uploadImageBtn.disabled = true;
+          uploadImageBtn.classList.add('opacity-50', 'cursor-not-allowed');
+          uploadImageBtn.innerHTML = 'Upload';
+
+        } catch (error) {
+          console.error('Failed to upload image:', error);
+          showStatus('Upload failed. Please try again.', 'error');
+          alert('Failed to upload image. Please try again.');
+        }
+
+        // Reset button state
+        uploadImageBtn.disabled = false;
+        uploadImageBtn.innerHTML = 'Upload';
+      });
+
+      // Copy URL button handler
+      copyUrlBtn.addEventListener('click', function() {
+        downloadUrlInput.select();
+        document.execCommand('copy');
+        copyUrlBtn.textContent = 'Copied!';
+        setTimeout(() => {
+          copyUrlBtn.textContent = 'Copy';
+        }, 2000);
+      });
+
+      // Helper functions
+      function showStatus(message, type) {
+        uploadStatus.textContent = message;
+        uploadStatus.className = `mt-3 text-sm ${getStatusClass(type)}`;
+        uploadStatus.classList.remove('hidden');
+      }
+
+      function hideStatus() {
+        uploadStatus.classList.add('hidden');
+      }
+
+      function getStatusClass(type) {
+        switch(type) {
+          case 'success': return 'text-green-600';
+          case 'error': return 'text-red-600';
+          case 'loading': return 'text-blue-600';
+          case 'info': return 'text-gray-600';
+          default: return 'text-gray-600';
+        }
+      }
+
+      function displayUploadedImage(downloadURL) {
+        uploadedImage.src = downloadURL;
+        downloadUrlInput.value = downloadURL;
+        uploadedImageContainer.classList.remove('hidden');
+      }
+    });
+
     // Editable photo cards: file upload functionality
     function editPhoto(el) {
       // Only allow editing in edit mode
