@@ -243,37 +243,34 @@
         <div id="snacksGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div class="p-4 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
             <div class="flex items-center gap-3 mb-3">
-              <input type="checkbox" class="w-4 h-4 snack-check">
               <span class="text-xl">🍎</span>
               <span class="font-medium">Apple slices</span>
             </div>
             <div class="flex items-center gap-2">
-              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);">
-              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)">Save</button>
+              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" tabindex="1">
+              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" tabindex="2">Save</button>
               <button class="text-gray-400 hover:text-red-500" onclick="this.closest('.p-4').remove()">✖</button>
             </div>
           </div>
           <div class="p-4 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
             <div class="flex items-center gap-3 mb-3">
-              <input type="checkbox" class="w-4 h-4 snack-check">
               <span class="text-xl">🥨</span>
               <span class="font-medium">Pretzels</span>
             </div>
             <div class="flex items-center gap-2">
-              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);">
-              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)">Save</button>
+              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" tabindex="3">
+              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" tabindex="4">Save</button>
               <button class="text-gray-400 hover:text-red-500" onclick="this.closest('.p-4').remove()">✖</button>
             </div>
           </div>
           <div class="p-4 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
             <div class="flex items-center gap-3 mb-3">
-              <input type="checkbox" class="w-4 h-4 snack-check">
               <span class="text-xl">🧀</span>
               <span class="font-medium">Cheese sticks</span>
             </div>
             <div class="flex items-center gap-2">
-              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);">
-              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)">Save</button>
+              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" tabindex="5">
+              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" tabindex="6">Save</button>
               <button class="text-gray-400 hover:text-red-500" onclick="this.closest('.p-4').remove()">✖</button>
             </div>
           </div>
@@ -830,14 +827,15 @@ Bus Number"></textarea>
       }
       
       // Snacks grid - collect snack items  
-      const snacksGrid = document.querySelector('.grid.grid-cols-1.gap-3');
+      const snacksGrid = document.getElementById('snacksGrid');
       if (snacksGrid) {
         const snacks = [];
-        snacksGrid.querySelectorAll('.grid.grid-cols-\\[auto_1fr\\].gap-2').forEach(item => {
-          const emoji = item.querySelector('span:first-child')?.textContent || '';
-          const name = item.querySelector('span:nth-child(2)')?.textContent || '';
-          if (name) {
-            snacks.push({ emoji: emoji, name: name });
+        snacksGrid.querySelectorAll('.p-4').forEach(card => {
+          const emoji = card.querySelector('.text-xl')?.textContent || '';
+          const item = card.querySelector('.font-medium')?.textContent || '';
+          const claimedBy = card.querySelector('.snack-name')?.value || '';
+          if (item) {
+            snacks.push({ emoji: emoji, item: item, claimed_by: claimedBy });
           }
         });
         data.snacks_json = JSON.stringify(snacks);
@@ -966,25 +964,33 @@ Bus Number"></textarea>
     }
     // Home tab: Add snack
     function addSnackItem() {
-      const snackName = prompt('Enter snack name:');
-      const emoji = prompt('Enter emoji (optional):') || '🍎';
-      if (snackName) {
-        const newSnack = document.createElement('div');
-        newSnack.className = 'p-4 rounded-xl bg-white';
-        newSnack.style.border = '1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%)';
-        newSnack.innerHTML = `
-          <div class="flex items-center gap-3 mb-3">
-            <input type="checkbox" class="w-4 h-4 snack-check">
-            <span class="text-xl">${emoji}</span>
-            <span class="font-medium">${snackName}</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);">
-            <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)">Save</button>
-            <button class="text-gray-400 hover:text-red-500" onclick="this.closest('.p-4').remove()">✖</button>
-          </div>
-        `;
-        document.getElementById('snacksGrid').appendChild(newSnack);
+      // Create new snack card instantly without prompts
+      const newSnack = document.createElement('div');
+      newSnack.className = 'p-4 rounded-xl bg-white';
+      newSnack.style.border = '1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%)';
+      newSnack.innerHTML = `
+        <div class="flex items-center gap-3 mb-3">
+          <span class="text-xl" contenteditable="true" style="cursor: text;">🍎</span>
+          <span class="font-medium" contenteditable="true" style="cursor: text;">New snack</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" tabindex="1">
+          <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" tabindex="2">Save</button>
+          <button class="text-gray-400 hover:text-red-500" onclick="this.closest('.p-4').remove()">✖</button>
+        </div>
+      `;
+      document.getElementById('snacksGrid').appendChild(newSnack);
+      
+      // Focus on the snack name for editing
+      const snackNameSpan = newSnack.querySelector('.font-medium');
+      snackNameSpan.focus();
+      // Select all text for contenteditable elements
+      if (window.getSelection && document.createRange) {
+        const range = document.createRange();
+        range.selectNodeContents(snackNameSpan);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
       }
     }
     // Snack claim
@@ -995,6 +1001,10 @@ Bus Number"></textarea>
         card.classList.add('snack-claimed');
         btn.textContent = 'Saved!';
         setTimeout(()=>{btn.textContent='Save';},1800);
+        
+        // Show save button since we have changes
+        const saveBtn = document.getElementById('saveChangesBtn');
+        if (saveBtn) saveBtn.style.display = 'block';
       } else {
         card.classList.remove('snack-claimed');
       }
@@ -1028,10 +1038,10 @@ Bus Number"></textarea>
     }
     // Editable photo cards: file upload functionality
     function editPhoto(el) {
-      // Only allow editing in edit mode
-      if (!document.body.classList.contains('editing')) {
-        return;
-      }
+      // Allow editing without edit mode for improved UX
+      // if (!document.body.classList.contains('editing')) {
+      //   return;
+      // }
       
       // Create file input
       const fileInput = document.createElement('input');
@@ -1089,10 +1099,10 @@ Bus Number"></textarea>
     
     // Gallery photo upload functionality
     function editGalleryPhoto(el, galleryType) {
-      // Only allow editing in edit mode
-      if (!document.body.classList.contains('editing')) {
-        return;
-      }
+      // Allow editing without edit mode for improved UX
+      // if (!document.body.classList.contains('editing')) {
+      //   return;
+      // }
       
       // Create file input
       const fileInput = document.createElement('input');
@@ -1227,26 +1237,31 @@ function updateSnacksGrid(snacks_json) {
   if (!snacksContainer) return;
   const arr = parseArray(snacks_json);
   snacksContainer.innerHTML = '';
-  arr.forEach(snack => {
+  arr.forEach((snack, index) => {
     const emoji = snack.emoji || '🍎';
     const item = snack.item || '';
     const claimed = snack.claimed_by || '';
     const div = document.createElement('div');
     div.className = 'p-4 rounded-xl bg-white';
     div.style.border = '1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%)';
+    const tabIndexBase = (index * 2) + 1;
     div.innerHTML = `
       <div class="flex items-center gap-3 mb-3">
-        <input type="checkbox" class="w-4 h-4 snack-check" ${claimed ? 'checked' : ''}>
         <span class="text-xl">${emoji}</span>
         <span class="font-medium">${item}</span>
       </div>
       <div class="flex items-center gap-2">
-        <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" value="${claimed}">
-        <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)">Save</button>
+        <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" value="${claimed}" tabindex="${tabIndexBase}">
+        <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" tabindex="${tabIndexBase + 1}">Save</button>
         <button class="text-gray-400 hover:text-red-500" onclick="this.closest('.p-4').remove()">✖</button>
       </div>
     `;
     snacksContainer.appendChild(div);
+    
+    // Add claimed styling if there's a name
+    if (claimed) {
+      div.classList.add('snack-claimed');
+    }
   });
 }
 function updateScholarInfo(scholar_name, scholar_blurb) {
@@ -1447,10 +1462,10 @@ setInterval(async () => {
 
 // Profile photo upload functionality
 function editProfilePhoto(el, section) {
-  // Only allow editing in edit mode
-  if (!document.body.classList.contains('editing')) {
-    return;
-  }
+  // Allow editing without edit mode for improved UX
+  // if (!document.body.classList.contains('editing')) {
+  //   return;
+  // }
   
   // Create file input
   const fileInput = document.createElement('input');
@@ -1514,21 +1529,31 @@ function triggerConfetti() {
   confettiContainer.style.pointerEvents = 'none';
   confettiContainer.style.zIndex = '9999';
   
-  // Create multiple confetti pieces
-  const colors = ['#E0B14A', '#E9867D', '#F2C9BE', '#7B8E9E'];
-  const emojis = ['🎉', '🌟', '✨', '🎊', '🎈'];
+  // Create multiple confetti pieces with more variety and flow
+  const colors = ['#E0B14A', '#E9867D', '#F2C9BE', '#7B8E9E', '#F7EFE2'];
+  const emojis = ['🎉', '🌟', '✨', '🎊', '🎈', '🏆', '⭐', '💫', '🎯'];
   
-  for (let i = 0; i < 50; i++) {
+  // Create more confetti pieces for a fuller effect
+  for (let i = 0; i < 80; i++) {
     const confetti = document.createElement('div');
     confetti.style.position = 'absolute';
-    confetti.style.fontSize = '20px';
+    confetti.style.fontSize = Math.random() * 10 + 15 + 'px'; // Vary sizes
     confetti.style.left = Math.random() * 100 + '%';
-    confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
-    confetti.style.animationDelay = Math.random() * 2 + 's';
+    confetti.style.top = '-50px'; // Start above the screen
+    
+    // Add random horizontal drift for more flowy movement
+    const drift = (Math.random() - 0.5) * 200; // -100px to +100px drift
+    const fallDuration = Math.random() * 2 + 3; // 3-5 seconds fall time
+    const rotationSpeed = Math.random() * 720 + 360; // 360-1080 degrees
+    
+    confetti.style.animationDuration = fallDuration + 's';
+    confetti.style.animationDelay = Math.random() * 1.5 + 's'; // Stagger the start
     confetti.textContent = emojis[Math.floor(Math.random() * emojis.length)];
     
-    // Add falling animation
-    confetti.style.animation = 'confettiFall 3s linear forwards';
+    // Enhanced falling animation with drift and rotation
+    confetti.style.animation = `confettiFlowFall ${fallDuration}s ease-in forwards`;
+    confetti.style.setProperty('--drift', drift + 'px');
+    confetti.style.setProperty('--rotation', rotationSpeed + 'deg');
     
     confettiContainer.appendChild(confetti);
   }
@@ -1537,8 +1562,10 @@ function triggerConfetti() {
   
   // Remove confetti after animation
   setTimeout(() => {
-    document.body.removeChild(confettiContainer);
-  }, 5000);
+    if (document.body.contains(confettiContainer)) {
+      document.body.removeChild(confettiContainer);
+    }
+  }, 7000);
 }
 
 // Website URL update functionality  
@@ -1557,6 +1584,23 @@ function updateWebsiteUrl(input) {
 // Add CSS for confetti animation
 const style = document.createElement('style');
 style.textContent = `
+  @keyframes confettiFlowFall {
+    0% {
+      transform: translateY(-100vh) translateX(0) rotate(0deg);
+      opacity: 1;
+    }
+    25% {
+      opacity: 1;
+    }
+    75% {
+      opacity: 0.8;
+    }
+    100% {
+      transform: translateY(100vh) translateX(var(--drift)) rotate(var(--rotation));
+      opacity: 0;
+    }
+  }
+  
   @keyframes confettiFall {
     0% {
       transform: translateY(-100vh) rotate(0deg);
