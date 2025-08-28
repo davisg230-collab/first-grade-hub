@@ -573,14 +573,20 @@
           <div>
             <h2 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">👋 About Mr. Davis</h2>
             <div class="mb-6">
-              <h3 class="font-semibold mb-3">About Me</h3>
-              <p class="leading-relaxed" data-edit="teacher" contenteditable="false">
+              <div class="flex justify-between items-center mb-3">
+                <h3 class="font-semibold">About Me</h3>
+                <button id="saveAboutMeDescBtn" class="px-3 py-1 rounded-lg text-white text-xs font-semibold" style="background: var(--md-coral);" onclick="saveAboutMeField('aboutMeDesc')">💾 Save</button>
+              </div>
+              <p id="aboutMeDescText" class="leading-relaxed" contenteditable="true" style="min-height: 60px; padding: 8px; border: 1px solid #e5e7eb; border-radius: 6px;">
                 I've been teaching first grade for 8 years and absolutely love working with young learners! I believe every child can succeed with the right support and encouragement.
               </p>
             </div>
             <div class="mb-6">
-              <h3 class="font-semibold mb-3">Fun Facts</h3>
-              <ul class="list-disc pl-5 space-y-1" data-edit="teacher" contenteditable="false">
+              <div class="flex justify-between items-center mb-3">
+                <h3 class="font-semibold">Fun Facts</h3>
+                <button id="saveFunFactsBtn" class="px-3 py-1 rounded-lg text-white text-xs font-semibold" style="background: var(--md-coral);" onclick="saveAboutMeField('funFacts')">💾 Save</button>
+              </div>
+              <ul id="funFactsList" class="list-disc pl-5 space-y-1" contenteditable="true" style="min-height: 80px; padding: 8px; border: 1px solid #e5e7eb; border-radius: 6px;">
                 <li>I love reading mystery novels</li>
                 <li>I have two cats named Whiskers and Mittens</li>
                 <li>I enjoy hiking on weekends</li>
@@ -591,22 +597,26 @@
               <div class="bg-white rounded-xl p-4 text-center">
                 <div class="text-2xl mb-2">🎨</div>
                 <h4 class="font-semibold text-sm mb-1">Favorite Color</h4>
-                <p class="text-xs" data-edit="teacher" contenteditable="false">Blue</p>
+                <p id="favoriteColorText" class="text-xs" contenteditable="true" style="min-height: 20px; padding: 4px; border: 1px solid #e5e7eb; border-radius: 4px;">Blue</p>
+                <button id="saveFavoriteColorBtn" class="mt-2 px-2 py-1 rounded text-white text-xs" style="background: var(--md-coral);" onclick="saveAboutMeField('favoriteColor')">💾</button>
               </div>
               <div class="bg-white rounded-xl p-4 text-center">
                 <div class="text-2xl mb-2">🍪</div>
                 <h4 class="font-semibold text-sm mb-1">Favorite Snack</h4>
-                <p class="text-xs" data-edit="teacher" contenteditable="false">Cookies</p>
+                <p id="favoriteSnackText" class="text-xs" contenteditable="true" style="min-height: 20px; padding: 4px; border: 1px solid #e5e7eb; border-radius: 4px;">Cookies</p>
+                <button id="saveFavoriteSnackBtn" class="mt-2 px-2 py-1 rounded text-white text-xs" style="background: var(--md-coral);" onclick="saveAboutMeField('favoriteSnack')">💾</button>
               </div>
               <div class="bg-white rounded-xl p-4 text-center">
                 <div class="text-2xl mb-2">🥤</div>
                 <h4 class="font-semibold text-sm mb-1">Favorite Drink</h4>
-                <p class="text-xs" data-edit="teacher" contenteditable="false">Coffee</p>
+                <p id="favoriteDrinkText" class="text-xs" contenteditable="true" style="min-height: 20px; padding: 4px; border: 1px solid #e5e7eb; border-radius: 4px;">Coffee</p>
+                <button id="saveFavoriteDrinkBtn" class="mt-2 px-2 py-1 rounded text-white text-xs" style="background: var(--md-coral);" onclick="saveAboutMeField('favoriteDrink')">💾</button>
               </div>
               <div class="bg-white rounded-xl p-4 text-center">
                 <div class="text-2xl mb-2">📺</div>
                 <h4 class="font-semibold text-sm mb-1">Favorite Show</h4>
-                <p class="text-xs" data-edit="teacher" contenteditable="false">The Office</p>
+                <p id="favoriteShowText" class="text-xs" contenteditable="true" style="min-height: 20px; padding: 4px; border: 1px solid #e5e7eb; border-radius: 4px;">The Office</p>
+                <button id="saveFavoriteShowBtn" class="mt-2 px-2 py-1 rounded text-white text-xs" style="background: var(--md-coral);" onclick="saveAboutMeField('favoriteShow')">💾</button>
               </div>
             </div>
           </div>
@@ -995,6 +1005,29 @@
         const monthEl = document.getElementById(`${month}BirthdaysTextarea`);
         if (monthEl) data[`${month}_birthdays`] = monthEl.value || '';
       });
+      
+      // About Me fields
+      const aboutMeDescEl = document.getElementById('aboutMeDescText');
+      if (aboutMeDescEl) data.about_me_html = aboutMeDescEl.innerHTML || '';
+      
+      const funFactsEl = document.getElementById('funFactsList');
+      if (funFactsEl) {
+        // Extract list items from the contenteditable ul
+        const listItems = Array.from(funFactsEl.querySelectorAll('li')).map(li => li.textContent || '');
+        data.fun_facts_html = listItems;
+      }
+      
+      const favoriteColorEl = document.getElementById('favoriteColorText');
+      if (favoriteColorEl) data.favorite_color = favoriteColorEl.textContent || '';
+      
+      const favoriteSnackEl = document.getElementById('favoriteSnackText');
+      if (favoriteSnackEl) data.favorite_snack = favoriteSnackEl.textContent || '';
+      
+      const favoriteDrinkEl = document.getElementById('favoriteDrinkText');
+      if (favoriteDrinkEl) data.favorite_drink = favoriteDrinkEl.textContent || '';
+      
+      const favoriteShowEl = document.getElementById('favoriteShowText');
+      if (favoriteShowEl) data.favorite_show = favoriteShowEl.textContent || '';
       
       return data;
     }
@@ -1531,18 +1564,28 @@ function updateExtrasSection(extras_json) {
 }
 function updateAboutMeSection(data) {
   if (!data) return;
-  const cards = document.querySelectorAll('[data-page-panel="aboutme"] .text-xs[data-edit="teacher"]');
-  if (cards.length >= 4) {
-    if (data.favorite_color) cards[0].textContent = data.favorite_color;
-    if (data.favorite_snack) cards[1].textContent = data.favorite_snack;
-    if (data.favorite_drink) cards[2].textContent = data.favorite_drink;
-    if (data.favorite_show)  cards[3].textContent = data.favorite_show;
+  
+  // Update favorite fields by ID
+  const favoriteColorEl = document.getElementById('favoriteColorText');
+  if (favoriteColorEl && data.favorite_color) favoriteColorEl.textContent = data.favorite_color;
+  
+  const favoriteSnackEl = document.getElementById('favoriteSnackText');
+  if (favoriteSnackEl && data.favorite_snack) favoriteSnackEl.textContent = data.favorite_snack;
+  
+  const favoriteDrinkEl = document.getElementById('favoriteDrinkText');
+  if (favoriteDrinkEl && data.favorite_drink) favoriteDrinkEl.textContent = data.favorite_drink;
+  
+  const favoriteShowEl = document.getElementById('favoriteShowText');
+  if (favoriteShowEl && data.favorite_show) favoriteShowEl.textContent = data.favorite_show;
+  
+  // Update about me description
+  const aboutDescEl = document.getElementById('aboutMeDescText');
+  if (aboutDescEl && data.about_me_html) {
+    aboutDescEl.innerHTML = data.about_me_html;
   }
-  const aboutDesc = document.querySelector('[data-page-panel="aboutme"] p[data-edit="teacher"]');
-  if (aboutDesc && data.about_me_html) {
-    aboutDesc.innerHTML = data.about_me_html;
-  }
-  const factsUl = document.querySelector('[data-page-panel="aboutme"] ul[data-edit="teacher"]');
+  
+  // Update fun facts list
+  const factsUl = document.getElementById('funFactsList');
   if (factsUl && data.fun_facts_html) {
     if (Array.isArray(data.fun_facts_html)) {
       factsUl.innerHTML = '';
@@ -1815,6 +1858,91 @@ async function saveAllBirthdays() {
   } catch (error) {
     console.error('Failed to save birthday fields:', error);
     saveBtn.textContent = '❌ Save Failed';
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 2000);
+  }
+}
+
+// Function to save individual About Me fields
+async function saveAboutMeField(fieldType) {
+  const fieldMap = {
+    'aboutMeDesc': {
+      button: 'saveAboutMeDescBtn',
+      element: 'aboutMeDescText',
+      dataField: 'about_me_html',
+      getContent: (el) => el.innerHTML || ''
+    },
+    'funFacts': {
+      button: 'saveFunFactsBtn', 
+      element: 'funFactsList',
+      dataField: 'fun_facts_html',
+      getContent: (el) => {
+        const listItems = Array.from(el.querySelectorAll('li')).map(li => li.textContent || '');
+        return listItems;
+      }
+    },
+    'favoriteColor': {
+      button: 'saveFavoriteColorBtn',
+      element: 'favoriteColorText', 
+      dataField: 'favorite_color',
+      getContent: (el) => el.textContent || ''
+    },
+    'favoriteSnack': {
+      button: 'saveFavoriteSnackBtn',
+      element: 'favoriteSnackText',
+      dataField: 'favorite_snack', 
+      getContent: (el) => el.textContent || ''
+    },
+    'favoriteDrink': {
+      button: 'saveFavoriteDrinkBtn',
+      element: 'favoriteDrinkText',
+      dataField: 'favorite_drink',
+      getContent: (el) => el.textContent || ''
+    },
+    'favoriteShow': {
+      button: 'saveFavoriteShowBtn',
+      element: 'favoriteShowText',
+      dataField: 'favorite_show',
+      getContent: (el) => el.textContent || ''
+    }
+  };
+  
+  const field = fieldMap[fieldType];
+  if (!field) return;
+  
+  const saveBtn = document.getElementById(field.button);
+  const element = document.getElementById(field.element);
+  
+  if (!saveBtn || !element) return;
+  
+  const originalText = saveBtn.textContent;
+  
+  try {
+    // Show saving state
+    saveBtn.textContent = '⏳';
+    saveBtn.disabled = true;
+    
+    // Prepare data for saving
+    const data = {};
+    data[field.dataField] = field.getContent(element);
+    
+    // Save to Firestore
+    await db.collection('classData').doc('current').set(data, { merge: true });
+    
+    // Show success state
+    saveBtn.textContent = '✅';
+    
+    // Reset button after 1 second
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 1000);
+    
+  } catch (error) {
+    console.error('Failed to save About Me field:', error);
+    saveBtn.textContent = '❌';
     setTimeout(() => {
       saveBtn.textContent = originalText;
       saveBtn.disabled = false;
