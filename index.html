@@ -278,7 +278,7 @@
             placeholder="Click to add a message about why snacks are important..."
             disabled 
             readonly
-            rows="2">Snacks help keep our energy up during learning time and teach us about sharing and community!</textarea>
+            rows="4">Snacks help keep our energy up during learning time and teach us about sharing and community!</textarea>
         </div>
         <div id="snacksGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <!-- Default snack cards - always visible, names only editable by teacher/admin -->
@@ -1519,10 +1519,10 @@
     }
     // Editable photo cards: file upload functionality
     function editPhoto(el) {
-      // Allow editing without edit mode for improved UX
-      // if (!document.body.classList.contains('editing')) {
-      //   return;
-      // }
+      // Only allow editing in edit mode
+      if (!document.body.classList.contains('editing')) {
+        return;
+      }
       
       // Create file input
       const fileInput = document.createElement('input');
@@ -1580,10 +1580,10 @@
     
     // Gallery photo upload functionality
     function editGalleryPhoto(el, galleryType) {
-      // Allow editing without edit mode for improved UX
-      // if (!document.body.classList.contains('editing')) {
-      //   return;
-      // }
+      // Only allow editing in edit mode
+      if (!document.body.classList.contains('editing')) {
+        return;
+      }
       
       // Create file input
       const fileInput = document.createElement('input');
