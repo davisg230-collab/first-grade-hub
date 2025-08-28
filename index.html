@@ -58,6 +58,20 @@
       --hdr-bg: var(--md-mustard);
       --card-bg: var(--md-cream);
     }
+    
+    /* Modern Dark Mode Variables */
+    body.dark {
+      --md-mustard: #F4D03F; /* Lighter mustard for dark mode */
+      --md-slate: #85929E; /* Lighter slate for dark mode */
+      --md-coral: #F1948A; /* Lighter coral for dark mode */
+      --md-blush: #F8C4B4; /* Lighter blush for dark mode */
+      --md-cream: #1A1D23; /* Dark background for cards */
+      --md-pebble: #C8B99C; /* Lighter pebble for dark mode */
+      --md-ink: #E8E8E8; /* Light text for dark mode */
+      --md-white: #2C3E50; /* Dark surface for dark mode */
+      --hdr-bg: #2C3E50; /* Dark header background */
+      --card-bg: #1A1D23; /* Dark card background */
+    }
     .fade-in{opacity:0;transform:translateY(8px);transition:opacity .35s,transform .35s}
     .fade-in.visible{opacity:1;transform:translateY(0)}
     .pagePanel{display:none}
@@ -75,8 +89,14 @@
     body.editing .photo-card{cursor: pointer;}
     .gallery-imgs{cursor: default;}
     body.editing .gallery-imgs{cursor: pointer;}
-    body.dark{background:#0b1a22}
-    body.dark .shadow-soft{box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    body.dark{background: #17212B; color: var(--md-ink);}
+    body.dark .shadow-soft{box-shadow:0 10px 30px rgba(0,0,0,.5)}
+    body.dark .bg-white { background: var(--md-white) !important; }
+    body.dark .bg-yellow-50 { background: rgba(244, 208, 63, 0.1) !important; }
+    body.dark .bg-blue-50 { background: rgba(133, 146, 158, 0.1) !important; }
+    body.dark .bg-green-50 { background: rgba(125, 206, 160, 0.1) !important; }
+    body.dark .border { border-color: rgba(232, 232, 232, 0.2) !important; }
+    body.dark .text-gray-400 { color: #A0A0A0 !important; }
     #pinOverlay { display: none; }
     #pinOverlay.show { display: flex; }
     .pageTab.active, .pageTab.ring-4 { box-shadow: 0 0 0 3px #fff9; }
@@ -126,6 +146,10 @@
       </div>
     </div>
   </header>
+  <!-- Tab Separator -->
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="border-t border-gray-300 dark:border-gray-600" style="border-color: color-mix(in oklab, var(--md-slate) 40%, transparent);"></div>
+  </div>
   <main class="max-w-6xl mx-auto px-6 pb-16">
     <nav id="tabs" class="mt-6 mb-4 flex flex-wrap gap-2">
       <button class="pageTab active ring-4 ring-white/40 px-4 py-2 rounded-xl font-semibold text-white"
@@ -260,7 +284,8 @@
     <section data-page-panel="scholar" class="pagePanel fade-in">
       <div class="rounded-2xl shadow-soft p-6 sm:p-10 mb-8" style="background: var(--md-white); border: 1px solid color-mix(in oklab, var(--md-mustard) 50%, var(--md-white) 50%);">
         <div class="grid lg:grid-cols-[auto,1fr] gap-8 items-center">
-          <div class="w-40 h-40 sm:w-48 sm:h-48 rounded-full border-4 img-frame photo-card overflow-hidden mx-auto lg:mx-0" style="border-color: var(--md-mustard);"></div>
+          <div class="w-40 h-40 sm:w-48 sm:h-48 rounded-full border-4 img-frame photo-card overflow-hidden mx-auto lg:mx-0" 
+               style="border-color: var(--md-mustard);" onclick="editProfilePhoto(this, 'scholar')"></div>
           <div class="text-center lg:text-left relative">
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4" style="background: color-mix(in oklab, var(--md-mustard) 25%, var(--md-white));">
               <span>🌟</span>
@@ -270,6 +295,11 @@
             <p class="text-lg leading-relaxed mb-6" data-edit="teacher" contenteditable="false">
               Emma has shown incredible kindness this week by helping her classmates and always having a positive attitude. She's been working so hard on her reading and it really shows!
             </p>
+            <button id="celebrateBtn" onclick="triggerConfetti()" 
+                    class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white" 
+                    style="background: var(--md-coral);">
+              <span>🎉</span><span>Celebrate!</span>
+            </button>
           </div>
         </div>
       </div>
@@ -444,26 +474,31 @@
             <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">📱</div>
             <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">ClassDojo</h3>
             <a href="https://classdojo.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-white text-sm" style="background: var(--md-slate);">Visit Site</a>
+            <input type="url" class="edit-only mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://classdojo.com" onchange="updateWebsiteUrl(this)">
           </div>
           <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%);">
             <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">🎯</div>
             <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">Clever – Learning Portal</h3>
             <a href="https://clever.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-white text-sm" style="background: var(--md-mustard);">Visit Site</a>
+            <input type="url" class="edit-only mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://clever.com" onchange="updateWebsiteUrl(this)">
           </div>
           <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-coral) 60%, var(--md-white) 40%);">
             <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">📘</div>
             <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">Math Practice</h3>
             <a href="https://mathplayground.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-white text-sm" style="background: var(--md-coral);">Visit Site</a>
+            <input type="url" class="edit-only mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://mathplayground.com" onchange="updateWebsiteUrl(this)">
           </div>
           <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-blush) 60%, var(--md-white) 40%);">
             <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">📚</div>
             <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">Skills Practice</h3>
             <a href="https://readingeggs.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold" style="background: var(--md-blush); color: var(--md-ink);">Visit Site</a>
+            <input type="url" class="edit-only mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://readingeggs.com" onchange="updateWebsiteUrl(this)">
           </div>
           <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-pebble) 60%, var(--md-white) 40%);">
             <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">🔤</div>
             <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">Blending Practice</h3>
             <a href="https://starfall.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-sm" style="background: var(--md-pebble); color: var(--md-ink);">Visit Site</a>
+            <input type="url" class="edit-only mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://starfall.com" onchange="updateWebsiteUrl(this)">
           </div>
         </div>
       </div>
@@ -475,21 +510,16 @@
         <div class="space-y-6">
           <div class="bg-white rounded-xl p-6" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
             <h3 class="text-lg font-semibold mb-4">🚌 Bus Riders</h3>
-            <textarea class="w-full h-32 p-3 text-sm border rounded-lg resize-none" placeholder="• Type your bullet points here...
-• One student per line
-• Use bullet points or dashes"></textarea>
+            <textarea class="w-full h-32 p-3 text-sm border rounded-lg resize-none" placeholder="Student Name
+Bus Number"></textarea>
           </div>
           <div class="bg-white rounded-xl p-6" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
             <h3 class="text-lg font-semibold mb-4">🚗 Car Riders</h3>
-            <textarea class="w-full h-32 p-3 text-sm border rounded-lg resize-none" placeholder="• Type your bullet points here...
-• One student per line
-• Use bullet points or dashes"></textarea>
+            <textarea class="w-full h-32 p-3 text-sm border rounded-lg resize-none"></textarea>
           </div>
           <div class="bg-white rounded-xl p-6" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
             <h3 class="text-lg font-semibold mb-4">🏠 Porch Pickup</h3>
-            <textarea class="w-full h-32 p-3 text-sm border rounded-lg resize-none" placeholder="• Type your bullet points here...
-• One student per line
-• Use bullet points or dashes"></textarea>
+            <textarea class="w-full h-32 p-3 text-sm border rounded-lg resize-none"></textarea>
           </div>
         </div>
       </div>
@@ -498,10 +528,26 @@
     <section data-page-panel="aboutme" class="pagePanel fade-in">
       <div class="rounded-2xl shadow-soft p-6 sm:p-10 mb-8" style="background: var(--md-cream);">
         <div class="grid md:grid-cols-[auto,1fr] gap-8 items-center">
-          <div class="w-40 h-40 sm:w-48 sm:h-48 rounded-full border-4 img-frame photo-card overflow-hidden mx-auto md:mx-0" style="border-color: var(--md-mustard);"></div>
+          <div class="w-40 h-40 sm:w-48 sm:h-48 rounded-full border-4 img-frame photo-card overflow-hidden mx-auto md:mx-0" 
+               style="border-color: var(--md-mustard);" onclick="editProfilePhoto(this, 'aboutme')"></div>
           <div>
             <h2 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">👋 About Mr. Davis</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="mb-6">
+              <h3 class="font-semibold mb-3">About Me</h3>
+              <p class="leading-relaxed" data-edit="teacher" contenteditable="false">
+                I've been teaching first grade for 8 years and absolutely love working with young learners! I believe every child can succeed with the right support and encouragement.
+              </p>
+            </div>
+            <div class="mb-6">
+              <h3 class="font-semibold mb-3">Fun Facts</h3>
+              <ul class="list-disc pl-5 space-y-1" data-edit="teacher" contenteditable="false">
+                <li>I love reading mystery novels</li>
+                <li>I have two cats named Whiskers and Mittens</li>
+                <li>I enjoy hiking on weekends</li>
+                <li>I can play the guitar</li>
+              </ul>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div class="bg-white rounded-xl p-4 text-center">
                 <div class="text-2xl mb-2">🎨</div>
                 <h4 class="font-semibold text-sm mb-1">Favorite Color</h4>
@@ -522,21 +568,6 @@
                 <h4 class="font-semibold text-sm mb-1">Favorite Show</h4>
                 <p class="text-xs" data-edit="teacher" contenteditable="false">The Office</p>
               </div>
-            </div>
-            <div class="mb-6">
-              <h3 class="font-semibold mb-3">About Me</h3>
-              <p class="leading-relaxed" data-edit="teacher" contenteditable="false">
-                I've been teaching first grade for 8 years and absolutely love working with young learners! I believe every child can succeed with the right support and encouragement.
-              </p>
-            </div>
-            <div>
-              <h3 class="font-semibold mb-3">Fun Facts</h3>
-              <ul class="list-disc pl-5 space-y-1" data-edit="teacher" contenteditable="false">
-                <li>I love reading mystery novels</li>
-                <li>I have two cats named Whiskers and Mittens</li>
-                <li>I enjoy hiking on weekends</li>
-                <li>I can play the guitar</li>
-              </ul>
             </div>
           </div>
         </div>
@@ -917,19 +948,21 @@
     
     // Home tab: Add event
     function addEvent() {
-      const emoji = prompt('Enter emoji for event:', '🎉');
-      const text = prompt('Enter event description:');
-      if (text) {
-        const div = document.createElement('div');
-        div.className = 'event-item flex items-center gap-3 p-3 rounded-xl bg-yellow-50 border';
-        div.style.borderColor = 'var(--md-mustard)';
-        div.innerHTML = `
-          <span class="event-emoji text-xl" data-edit="teacher" contenteditable="false">${emoji||'🎉'}</span>
-          <span class="event-text font-semibold flex-1" data-edit="teacher" contenteditable="false">${text}</span>
-          <button class="edit-only text-red-500 hover:text-red-700" onclick="this.parentNode.remove()">✖</button>
-        `;
-        document.getElementById('eventsList').appendChild(div);
-      }
+      // Create event directly editable on the page instead of using prompts
+      const div = document.createElement('div');
+      div.className = 'event-item flex items-center gap-3 p-3 rounded-xl bg-yellow-50 border';
+      div.style.borderColor = 'var(--md-mustard)';
+      div.innerHTML = `
+        <span class="event-emoji text-xl" data-edit="teacher" contenteditable="true">🎉</span>
+        <span class="event-text font-semibold flex-1" data-edit="teacher" contenteditable="true">Click to edit event</span>
+        <button class="edit-only text-red-500 hover:text-red-700" onclick="this.parentNode.remove()">✖</button>
+      `;
+      document.getElementById('eventsList').appendChild(div);
+      
+      // Auto-focus the text field for immediate editing
+      const textSpan = div.querySelector('.event-text');
+      textSpan.focus();
+      textSpan.select();
     }
     // Home tab: Add snack
     function addSnackItem() {
@@ -968,22 +1001,23 @@
     }
     // Extras tab: Add card
     function addExtrasCard() {
-      const title = prompt('Enter card title:');
-      const description = prompt('Enter card description:');
-      const emoji = prompt('Enter emoji (optional):') || '✨';
-      if (title && description) {
-        const newCard = document.createElement('div');
-        newCard.className = 'text-center p-8 rounded-2xl';
-        newCard.style.background = 'color-mix(in oklab, var(--md-white) 70%, var(--md-mustard) 30%)';
-        newCard.style.border = '1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%)';
-        newCard.innerHTML = `
-          <div class="text-6xl mb-4 emoji-edit" data-edit="teacher" contenteditable="false">${emoji}</div>
-          <h3 class="font-semibold mb-2" data-edit="teacher" contenteditable="false">${title}</h3>
-          <p class="text-sm" data-edit="teacher" contenteditable="false">${description}</p>
-          <button class="edit-only mt-2 text-red-500 hover:text-red-700 text-xs" onclick="this.closest('.text-center').remove();">Remove Card</button>
-        `;
-        document.getElementById('extrasGrid').appendChild(newCard);
-      }
+      // Create card directly editable on the page instead of using prompts
+      const newCard = document.createElement('div');
+      newCard.className = 'text-center p-8 rounded-2xl';
+      newCard.style.background = 'color-mix(in oklab, var(--md-white) 70%, var(--md-mustard) 30%)';
+      newCard.style.border = '1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%)';
+      newCard.innerHTML = `
+        <div class="text-6xl mb-4 emoji-edit" data-edit="teacher" contenteditable="true">✨</div>
+        <h3 class="font-semibold mb-2" data-edit="teacher" contenteditable="true">Click to edit title</h3>
+        <p class="text-sm" data-edit="teacher" contenteditable="true">Click to edit description</p>
+        <button class="edit-only mt-2 text-red-500 hover:text-red-700 text-xs" onclick="this.closest('.text-center').remove();">Remove Card</button>
+      `;
+      document.getElementById('extrasGrid').appendChild(newCard);
+      
+      // Auto-focus the title for immediate editing
+      const titleEl = newCard.querySelector('h3');
+      titleEl.focus();
+      titleEl.select();
     }
     // Specials galleries: dummy swipe
     function prevGalleryImg(btn) {
@@ -1408,6 +1442,133 @@ setInterval(async () => {
   const data = await fetchFirestoreData();
   populateDataFromSheet(data);
 }, 300000);
+
+// New JavaScript functions for enhanced functionality
+
+// Profile photo upload functionality
+function editProfilePhoto(el, section) {
+  // Only allow editing in edit mode
+  if (!document.body.classList.contains('editing')) {
+    return;
+  }
+  
+  // Create file input
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/*';
+  fileInput.style.display = 'none';
+  
+  fileInput.onchange = async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    try {
+      // Show loading state
+      el.innerHTML = '⏳';
+      el.style.pointerEvents = 'none';
+      
+      // Generate unique filename
+      const timestamp = Date.now();
+      const fileName = `profile_${section}_${timestamp}_${file.name}`;
+      
+      // Upload to Firebase Storage
+      const storageRef = storage.ref(`profiles/${fileName}`);
+      const uploadTask = await storageRef.put(file);
+      const downloadURL = await uploadTask.ref.getDownloadURL();
+      
+      // Update the display
+      el.innerHTML = `<img src="${downloadURL}" alt="Profile" style="width:100%; height:100%; object-fit:cover;">`;
+      el.style.pointerEvents = 'auto';
+      
+      // Store the photo URL for later collection
+      el.setAttribute('data-profile-url', downloadURL);
+      
+      // Show save button since we have changes
+      const saveBtn = document.getElementById('saveChangesBtn');
+      if (saveBtn) saveBtn.style.display = 'block';
+      
+    } catch (error) {
+      console.error('Failed to upload profile photo:', error);
+      alert('Failed to upload photo. Please try again.');
+      // Reset on error
+      el.innerHTML = '';
+      el.style.pointerEvents = 'auto';
+    }
+    
+    document.body.removeChild(fileInput);
+  };
+  
+  document.body.appendChild(fileInput);
+  fileInput.click();
+}
+
+// Confetti animation for celebrate button
+function triggerConfetti() {
+  // Create confetti container
+  const confettiContainer = document.createElement('div');
+  confettiContainer.style.position = 'fixed';
+  confettiContainer.style.top = '0';
+  confettiContainer.style.left = '0';
+  confettiContainer.style.width = '100%';
+  confettiContainer.style.height = '100%';
+  confettiContainer.style.pointerEvents = 'none';
+  confettiContainer.style.zIndex = '9999';
+  
+  // Create multiple confetti pieces
+  const colors = ['#E0B14A', '#E9867D', '#F2C9BE', '#7B8E9E'];
+  const emojis = ['🎉', '🌟', '✨', '🎊', '🎈'];
+  
+  for (let i = 0; i < 50; i++) {
+    const confetti = document.createElement('div');
+    confetti.style.position = 'absolute';
+    confetti.style.fontSize = '20px';
+    confetti.style.left = Math.random() * 100 + '%';
+    confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+    confetti.style.animationDelay = Math.random() * 2 + 's';
+    confetti.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    
+    // Add falling animation
+    confetti.style.animation = 'confettiFall 3s linear forwards';
+    
+    confettiContainer.appendChild(confetti);
+  }
+  
+  document.body.appendChild(confettiContainer);
+  
+  // Remove confetti after animation
+  setTimeout(() => {
+    document.body.removeChild(confettiContainer);
+  }, 5000);
+}
+
+// Website URL update functionality  
+function updateWebsiteUrl(input) {
+  const websiteCard = input.closest('.website-card');
+  const link = websiteCard.querySelector('.website-link');
+  if (link && input.value) {
+    link.href = input.value;
+    
+    // Show save button since we have changes
+    const saveBtn = document.getElementById('saveChangesBtn');
+    if (saveBtn) saveBtn.style.display = 'block';
+  }
+}
+
+// Add CSS for confetti animation
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes confettiFall {
+    0% {
+      transform: translateY(-100vh) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100vh) rotate(720deg);
+      opacity: 0;
+    }
+  }
+`;
+document.head.appendChild(style);
   </script>
 </body>
 </html>
