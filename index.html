@@ -403,20 +403,23 @@
       <div class="rounded-2xl shadow-soft p-6 sm:p-8" style="background: var(--card-bg);">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-2xl font-display font-bold" style="color: var(--md-coral);">✨ Classroom Updates</h2>
-          <div class="edit-only flex gap-2">
-            <button id="addExtrasCardBtn" class="px-3 py-2 rounded-lg text-white text-sm" style="background: var(--md-coral);" onclick="addExtrasCard()">+ Add Card</button>
+          <div class="flex gap-2">
+            <button id="saveExtrasBtn" class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveExtrasCards()">💾 Save Cards</button>
+            <button id="addExtrasCardBtn" class="px-3 py-2 rounded-lg text-white text-sm" style="background: var(--md-slate);" onclick="addExtrasCard()">+ Add Card</button>
           </div>
         </div>
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" id="extrasGrid">
           <div class="text-center p-8 rounded-2xl" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-mustard) 30%); border: 1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%);">
-            <div class="text-6xl mb-4 emoji-edit" data-edit="teacher" contenteditable="false">🎯</div>
-            <h3 class="font-semibold mb-2" data-edit="teacher" contenteditable="false">Class Goal</h3>
-            <p class="text-sm" data-edit="teacher" contenteditable="false">We're working together to read 100 books this month!</p>
+            <div class="text-6xl mb-4 emoji-edit" contenteditable="true" style="cursor: text;">🎯</div>
+            <h3 class="font-semibold mb-2" contenteditable="true" style="cursor: text;">Class Goal</h3>
+            <p class="text-sm" contenteditable="true" style="cursor: text;">We're working together to read 100 books this month!</p>
+            <button class="mt-2 text-red-500 hover:text-red-700 text-xs" onclick="this.closest('.text-center').remove();">Remove Card</button>
           </div>
           <div class="text-center p-8 rounded-2xl" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-coral) 30%); border: 1px solid color-mix(in oklab, var(--md-coral) 60%, var(--md-white) 40%);">
-            <div class="text-6xl mb-4 emoji-edit" data-edit="teacher" contenteditable="false">📣</div>
-            <h3 class="font-semibold mb-2" data-edit="teacher" contenteditable="false">Shout-outs</h3>
-            <p class="text-sm" data-edit="teacher" contenteditable="false">Amazing job on our math assessments this week!</p>
+            <div class="text-6xl mb-4 emoji-edit" contenteditable="true" style="cursor: text;">📣</div>
+            <h3 class="font-semibold mb-2" contenteditable="true" style="cursor: text;">Shout-outs</h3>
+            <p class="text-sm" contenteditable="true" style="cursor: text;">Amazing job on our math assessments this week!</p>
+            <button class="mt-2 text-red-500 hover:text-red-700 text-xs" onclick="this.closest('.text-center').remove();">Remove Card</button>
           </div>
         </div>
       </div>
@@ -494,37 +497,38 @@
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--md-cream);">
         <div class="flex items-center justify-between mb-5">
           <h2 class="text-2xl font-display font-bold" style="color: var(--md-slate);">🌐 Practice Websites</h2>
+          <button id="saveWebsitesBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="saveWebsiteUrls()">💾 Save URLs</button>
         </div>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-slate) 60%, var(--md-white) 40%);">
             <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">📱</div>
             <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">ClassDojo</h3>
             <a href="https://classdojo.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-white text-sm" style="background: var(--md-slate);">Visit Site</a>
-            <input type="url" class="edit-only mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://classdojo.com" onchange="updateWebsiteUrl(this)">
+            <input type="url" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://classdojo.com" onchange="updateWebsiteUrl(this)">
           </div>
           <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%);">
             <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">🎯</div>
             <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">Clever – Learning Portal</h3>
             <a href="https://clever.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-white text-sm" style="background: var(--md-mustard);">Visit Site</a>
-            <input type="url" class="edit-only mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://clever.com" onchange="updateWebsiteUrl(this)">
+            <input type="url" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://clever.com" onchange="updateWebsiteUrl(this)">
           </div>
           <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-coral) 60%, var(--md-white) 40%);">
             <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">📘</div>
             <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">Math Practice</h3>
             <a href="https://mathplayground.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-white text-sm" style="background: var(--md-coral);">Visit Site</a>
-            <input type="url" class="edit-only mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://mathplayground.com" onchange="updateWebsiteUrl(this)">
+            <input type="url" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://mathplayground.com" onchange="updateWebsiteUrl(this)">
           </div>
           <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-blush) 60%, var(--md-white) 40%);">
             <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">📚</div>
             <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">Skills Practice</h3>
             <a href="https://readingeggs.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold" style="background: var(--md-blush); color: var(--md-ink);">Visit Site</a>
-            <input type="url" class="edit-only mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://readingeggs.com" onchange="updateWebsiteUrl(this)">
+            <input type="url" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://readingeggs.com" onchange="updateWebsiteUrl(this)">
           </div>
           <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-pebble) 60%, var(--md-white) 40%);">
             <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">🔤</div>
             <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">Blending Practice</h3>
             <a href="https://starfall.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-sm" style="background: var(--md-pebble); color: var(--md-ink);">Visit Site</a>
-            <input type="url" class="edit-only mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://starfall.com" onchange="updateWebsiteUrl(this)">
+            <input type="url" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://starfall.com" onchange="updateWebsiteUrl(this)">
           </div>
         </div>
       </div>
@@ -1029,6 +1033,43 @@
       const favoriteShowEl = document.getElementById('favoriteShowText');
       if (favoriteShowEl) data.favorite_show = favoriteShowEl.textContent || '';
       
+      // Extras cards
+      const extrasGrid = document.getElementById('extrasGrid');
+      if (extrasGrid) {
+        const extras = [];
+        extrasGrid.querySelectorAll('.text-center').forEach(card => {
+          const emojiEl = card.querySelector('.emoji-edit, [data-edit="teacher"]');
+          const titleEl = card.querySelector('h3');
+          const bodyEl = card.querySelector('p');
+          
+          if (titleEl && bodyEl) {
+            extras.push({
+              emoji: emojiEl ? emojiEl.textContent || '✨' : '✨',
+              title: titleEl.textContent || '',
+              body_html: bodyEl.textContent || ''
+            });
+          }
+        });
+        data.extras_json = JSON.stringify(extras);
+      }
+      
+      // Website URLs
+      const websiteCards = document.querySelectorAll('.website-card');
+      const websites = [];
+      websiteCards.forEach(card => {
+        const titleEl = card.querySelector('.website-title');
+        const urlInput = card.querySelector('.website-url-input');
+        const linkEl = card.querySelector('.website-link');
+        
+        if (titleEl && urlInput) {
+          websites.push({
+            title: titleEl.textContent || '',
+            url: urlInput.value || linkEl?.href || ''
+          });
+        }
+      });
+      data.websites_json = JSON.stringify(websites);
+      
       return data;
     }
     
@@ -1188,12 +1229,25 @@
       newCard.style.background = 'color-mix(in oklab, var(--md-white) 70%, var(--md-mustard) 30%)';
       newCard.style.border = '1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%)';
       newCard.innerHTML = `
-        <div class="text-6xl mb-4 emoji-edit" data-edit="teacher" contenteditable="true">✨</div>
-        <h3 class="font-semibold mb-2" data-edit="teacher" contenteditable="true">Click to edit title</h3>
-        <p class="text-sm" data-edit="teacher" contenteditable="true">Click to edit description</p>
-        <button class="edit-only mt-2 text-red-500 hover:text-red-700 text-xs" onclick="this.closest('.text-center').remove();">Remove Card</button>
+        <div class="text-6xl mb-4 emoji-edit" contenteditable="true" style="cursor: text;">✨</div>
+        <h3 class="font-semibold mb-2" contenteditable="true" style="cursor: text;">Click to edit title</h3>
+        <p class="text-sm" contenteditable="true" style="cursor: text;">Click to edit description</p>
+        <button class="mt-2 text-red-500 hover:text-red-700 text-xs" onclick="this.closest('.text-center').remove();">Remove Card</button>
       `;
       document.getElementById('extrasGrid').appendChild(newCard);
+      
+      // Auto-focus the title for immediate editing
+      const titleEl = newCard.querySelector('h3');
+      titleEl.focus();
+      // Select all text for immediate editing
+      if (window.getSelection && document.createRange) {
+        const range = document.createRange();
+        range.selectNodeContents(titleEl);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    }
       
       // Auto-focus the title for immediate editing
       const titleEl = newCard.querySelector('h3');
@@ -1554,10 +1608,10 @@ function updateExtrasSection(extras_json) {
     div.style.background = 'color-mix(in oklab, var(--md-white) 70%, var(--md-mustard) 30%)';
     div.style.border = '1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%)';
     div.innerHTML = `
-      <div class="text-6xl mb-4 emoji-edit" data-edit="teacher" contenteditable="false">${emoji}</div>
-      <h3 class="font-semibold mb-2" data-edit="teacher" contenteditable="false">${title}</h3>
-      <p class="text-sm" data-edit="teacher" contenteditable="false">${body_html}</p>
-      <button class="edit-only mt-2 text-red-500 hover:text-red-700 text-xs" onclick="this.closest('.text-center').remove();">Remove Card</button>
+      <div class="text-6xl mb-4 emoji-edit" contenteditable="true" style="cursor: text;">${emoji}</div>
+      <h3 class="font-semibold mb-2" contenteditable="true" style="cursor: text;">${title}</h3>
+      <p class="text-sm" contenteditable="true" style="cursor: text;">${body_html}</p>
+      <button class="mt-2 text-red-500 hover:text-red-700 text-xs" onclick="this.closest('.text-center').remove();">Remove Card</button>
     `;
     extrasContainer.appendChild(div);
   });
@@ -1943,6 +1997,123 @@ async function saveAboutMeField(fieldType) {
   } catch (error) {
     console.error('Failed to save About Me field:', error);
     saveBtn.textContent = '❌';
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 2000);
+  }
+}
+
+// Function to save all extras cards
+async function saveExtrasCards() {
+  const saveBtn = document.getElementById('saveExtrasBtn');
+  
+  if (!saveBtn) return;
+  
+  const originalText = saveBtn.textContent;
+  
+  try {
+    // Show saving state
+    saveBtn.textContent = '⏳ Saving...';
+    saveBtn.disabled = true;
+    
+    // Collect extras data
+    const extrasGrid = document.getElementById('extrasGrid');
+    const extras = [];
+    
+    if (extrasGrid) {
+      extrasGrid.querySelectorAll('.text-center').forEach(card => {
+        const emojiEl = card.querySelector('.emoji-edit');
+        const titleEl = card.querySelector('h3');
+        const bodyEl = card.querySelector('p');
+        
+        if (titleEl && bodyEl) {
+          extras.push({
+            emoji: emojiEl ? emojiEl.textContent || '✨' : '✨',
+            title: titleEl.textContent || '',
+            body_html: bodyEl.textContent || ''
+          });
+        }
+      });
+    }
+    
+    // Prepare data for saving
+    const data = {
+      extras_json: JSON.stringify(extras)
+    };
+    
+    // Save to Firestore
+    await db.collection('classData').doc('current').set(data, { merge: true });
+    
+    // Show success state
+    saveBtn.textContent = '✅ Saved!';
+    
+    // Reset button after 1 second
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 1000);
+    
+  } catch (error) {
+    console.error('Failed to save extras cards:', error);
+    saveBtn.textContent = '❌ Save Failed';
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 2000);
+  }
+}
+
+// Function to save website URLs
+async function saveWebsiteUrls() {
+  const saveBtn = document.getElementById('saveWebsitesBtn');
+  
+  if (!saveBtn) return;
+  
+  const originalText = saveBtn.textContent;
+  
+  try {
+    // Show saving state
+    saveBtn.textContent = '⏳ Saving...';
+    saveBtn.disabled = true;
+    
+    // Collect website data
+    const websiteCards = document.querySelectorAll('.website-card');
+    const websites = [];
+    
+    websiteCards.forEach(card => {
+      const titleEl = card.querySelector('.website-title');
+      const urlInput = card.querySelector('.website-url-input');
+      const linkEl = card.querySelector('.website-link');
+      
+      if (titleEl && urlInput) {
+        websites.push({
+          title: titleEl.textContent || '',
+          url: urlInput.value || linkEl?.href || ''
+        });
+      }
+    });
+    
+    // Prepare data for saving
+    const data = {
+      websites_json: JSON.stringify(websites)
+    };
+    
+    // Save to Firestore
+    await db.collection('classData').doc('current').set(data, { merge: true });
+    
+    // Show success state
+    saveBtn.textContent = '✅ Saved!';
+    
+    // Reset button after 1 second
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 1000);
+    
+  } catch (error) {
+    console.error('Failed to save website URLs:', error);
+    saveBtn.textContent = '❌ Save Failed';
     setTimeout(() => {
       saveBtn.textContent = originalText;
       saveBtn.disabled = false;
