@@ -70,6 +70,11 @@
       background-color: white; color: var(--md-ink); cursor: text;
       outline: 2px dashed color-mix(in oklab,var(--md-slate) 55%,transparent); outline-offset: 2px;
     }
+    /* Photo card and gallery cursor only in edit mode */
+    .photo-card{cursor: default;}
+    body.editing .photo-card{cursor: pointer;}
+    .gallery-imgs{cursor: default;}
+    body.editing .gallery-imgs{cursor: pointer;}
     body.dark{background:#0b1a22}
     body.dark .shadow-soft{box-shadow:0 10px 30px rgba(0,0,0,.35)}
     #pinOverlay { display: none; }
@@ -149,10 +154,10 @@
           <!-- 2 small + 1 large photo grid -->
           <div class="col-span-1 flex flex-col gap-4">
             <div class="grid grid-cols-2 gap-4 mb-4">
-              <div class="photo-card rounded-xl aspect-[4/3] bg-[color:var(--md-blush)] flex items-center justify-center text-3xl font-bold cursor-pointer" onclick="editPhoto(this)">+</div>
-              <div class="photo-card rounded-xl aspect-[4/3] bg-[color:var(--md-blush)] flex items-center justify-center text-3xl font-bold cursor-pointer" onclick="editPhoto(this)">+</div>
+              <div class="photo-card rounded-xl aspect-[4/3] bg-[color:var(--md-blush)] flex items-center justify-center text-3xl font-bold" onclick="editPhoto(this)">+</div>
+              <div class="photo-card rounded-xl aspect-[4/3] bg-[color:var(--md-blush)] flex items-center justify-center text-3xl font-bold" onclick="editPhoto(this)">+</div>
             </div>
-            <div class="photo-card rounded-xl aspect-[4/3] bg-[color:var(--md-blush)] flex items-center justify-center text-3xl font-bold cursor-pointer" onclick="editPhoto(this)">+</div>
+            <div class="photo-card rounded-xl aspect-[4/3] bg-[color:var(--md-blush)] flex items-center justify-center text-3xl font-bold" onclick="editPhoto(this)">+</div>
           </div>
           <!-- Editable recap -->
           <div class="md:col-span-2">
@@ -367,7 +372,7 @@
         <div class="grid md:grid-cols-2 gap-8">
           <!-- Art -->
           <div class="rounded-2xl overflow-hidden relative" style="background: color-mix(in oklab, var(--md-white) 70%, #ef4444 30%); border: 1px solid color-mix(in oklab, #ef4444 60%, var(--md-white) 40%);">
-            <div class="gallery-imgs aspect-[4/3] bg-white m-4 flex items-center justify-center relative">
+            <div class="gallery-imgs aspect-[4/3] bg-white m-4 flex items-center justify-center relative" onclick="editGalleryPhoto(this, 'art')" data-gallery-type="art">
               <img src="" alt="Art Gallery" style="display:none;">
               <span class="text-3xl text-gray-400">+</span>
               <span class="gallery-arrows">
@@ -382,7 +387,7 @@
           </div>
           <!-- STEM -->
           <div class="rounded-2xl overflow-hidden relative" style="background: color-mix(in oklab, var(--md-white) 70%, #10b981 30%); border: 1px solid color-mix(in oklab, #10b981 60%, var(--md-white) 40%);">
-            <div class="gallery-imgs aspect-[4/3] bg-white m-4 flex items-center justify-center relative">
+            <div class="gallery-imgs aspect-[4/3] bg-white m-4 flex items-center justify-center relative" onclick="editGalleryPhoto(this, 'stem')" data-gallery-type="stem">
               <img src="" alt="STEM Gallery" style="display:none;">
               <span class="text-3xl text-gray-400">+</span>
               <span class="gallery-arrows">
@@ -397,7 +402,7 @@
           </div>
           <!-- Gym -->
           <div class="rounded-2xl overflow-hidden relative" style="background: color-mix(in oklab, var(--md-white) 70%, #3b82f6 30%); border: 1px solid color-mix(in oklab, #3b82f6 60%, var(--md-white) 40%);">
-            <div class="gallery-imgs aspect-[4/3] bg-white m-4 flex items-center justify-center relative">
+            <div class="gallery-imgs aspect-[4/3] bg-white m-4 flex items-center justify-center relative" onclick="editGalleryPhoto(this, 'gym')" data-gallery-type="gym">
               <img src="" alt="Gym Gallery" style="display:none;">
               <span class="text-3xl text-gray-400">+</span>
               <span class="gallery-arrows">
@@ -412,7 +417,7 @@
           </div>
           <!-- Music -->
           <div class="rounded-2xl overflow-hidden relative" style="background: color-mix(in oklab, var(--md-white) 70%, #8b5cf6 30%); border: 1px solid color-mix(in oklab, #8b5cf6 60%, var(--md-white) 40%);">
-            <div class="gallery-imgs aspect-[4/3] bg-white m-4 flex items-center justify-center relative">
+            <div class="gallery-imgs aspect-[4/3] bg-white m-4 flex items-center justify-center relative" onclick="editGalleryPhoto(this, 'music')" data-gallery-type="music">
               <img src="" alt="Music Gallery" style="display:none;">
               <span class="text-3xl text-gray-400">+</span>
               <span class="gallery-arrows">
@@ -848,6 +853,25 @@
       const calendarLink = document.getElementById('schoolCalendarLink');
       if (calendarLink) data.calendar_url = calendarLink.href || '';
       
+      // Photo cards URLs
+      const photoCards = document.querySelectorAll('.photo-card');
+      const photoUrls = [];
+      photoCards.forEach(card => {
+        const url = card.getAttribute('data-photo-url') || '';
+        photoUrls.push(url);
+      });
+      data.photo_urls_json = JSON.stringify(photoUrls);
+      
+      // Gallery photos URLs
+      const galleries = {};
+      ['art', 'stem', 'gym', 'music'].forEach(type => {
+        const galleryEl = document.querySelector(`[data-gallery-type="${type}"]`);
+        if (galleryEl) {
+          galleries[type] = galleryEl.getAttribute('data-gallery-url') || '';
+        }
+      });
+      data.gallery_urls_json = JSON.stringify(galleries);
+      
       return data;
     }
     
@@ -968,9 +992,137 @@
     function nextGalleryImg(btn) {
       alert("Gallery swipe feature coming soon!");
     }
-    // Editable photo cards: dummy
+    // Editable photo cards: file upload functionality
     function editPhoto(el) {
-      alert("Photo upload coming soon!");
+      // Only allow editing in edit mode
+      if (!document.body.classList.contains('editing')) {
+        return;
+      }
+      
+      // Create file input
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = 'image/*';
+      fileInput.style.display = 'none';
+      
+      fileInput.onchange = async function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        try {
+          // Show loading state
+          el.innerHTML = '⏳';
+          el.style.pointerEvents = 'none';
+          
+          // Generate unique filename
+          const timestamp = Date.now();
+          const fileName = `photo_${timestamp}_${file.name}`;
+          
+          // Upload to Firebase Storage
+          const storageRef = storage.ref(`photos/${fileName}`);
+          const uploadTask = await storageRef.put(file);
+          const downloadURL = await uploadTask.ref.getDownloadURL();
+          
+          // Update the photo card display
+          updatePhotoCardDisplay(el, downloadURL);
+          
+          // Store the photo URL in the element for later collection
+          el.setAttribute('data-photo-url', downloadURL);
+          
+          // Show save button since we have changes
+          const saveBtn = document.getElementById('saveChangesBtn');
+          if (saveBtn) saveBtn.style.display = 'block';
+          
+        } catch (error) {
+          console.error('Failed to upload photo:', error);
+          alert('Failed to upload photo. Please try again.');
+          // Reset to plus icon on error
+          el.innerHTML = '+';
+        }
+        
+        el.style.pointerEvents = 'auto';
+        document.body.removeChild(fileInput);
+      };
+      
+      document.body.appendChild(fileInput);
+      fileInput.click();
+    }
+    
+    // Helper function to update photo card display
+    function updatePhotoCardDisplay(element, imageUrl) {
+      element.innerHTML = `<img src="${imageUrl}" alt="Uploaded photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: inherit;">`;
+    }
+    
+    // Gallery photo upload functionality
+    function editGalleryPhoto(el, galleryType) {
+      // Only allow editing in edit mode
+      if (!document.body.classList.contains('editing')) {
+        return;
+      }
+      
+      // Create file input
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = 'image/*';
+      fileInput.style.display = 'none';
+      
+      fileInput.onchange = async function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        try {
+          // Show loading state
+          const originalContent = el.innerHTML;
+          el.innerHTML = '<span class="text-3xl text-gray-400">⏳</span>';
+          el.style.pointerEvents = 'none';
+          
+          // Generate unique filename
+          const timestamp = Date.now();
+          const fileName = `gallery_${galleryType}_${timestamp}_${file.name}`;
+          
+          // Upload to Firebase Storage
+          const storageRef = storage.ref(`galleries/${fileName}`);
+          const uploadTask = await storageRef.put(file);
+          const downloadURL = await uploadTask.ref.getDownloadURL();
+          
+          // Update the gallery display
+          updateGalleryDisplay(el, downloadURL);
+          
+          // Store the photo URL in the element for later collection
+          el.setAttribute('data-gallery-url', downloadURL);
+          
+          // Show save button since we have changes
+          const saveBtn = document.getElementById('saveChangesBtn');
+          if (saveBtn) saveBtn.style.display = 'block';
+          
+        } catch (error) {
+          console.error('Failed to upload gallery photo:', error);
+          alert('Failed to upload photo. Please try again.');
+          // Reset to plus icon on error
+          el.innerHTML = '<span class="text-3xl text-gray-400">+</span>';
+        }
+        
+        el.style.pointerEvents = 'auto';
+        document.body.removeChild(fileInput);
+      };
+      
+      document.body.appendChild(fileInput);
+      fileInput.click();
+    }
+    
+    // Helper function to update gallery display
+    function updateGalleryDisplay(element, imageUrl) {
+      const img = element.querySelector('img');
+      const plusSpan = element.querySelector('span');
+      
+      if (img && plusSpan) {
+        img.src = imageUrl;
+        img.style.display = 'block';
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        plusSpan.style.display = 'none';
+      }
     }
     // School calendar link edit
     function editSchoolCalendarLink(event, linkElement) {
@@ -1173,11 +1325,65 @@ function populateDataFromSheet(data) {
   updateMathSection(data.math_text, data.math_vocab_json);
   updateExtrasSection(data.extras_json);
   updateAboutMeSection(data);
+  
+  // Load photo cards
+  updatePhotoCards(data.photo_urls_json);
+  
+  // Load gallery photos
+  updateGalleryPhotos(data.gallery_urls_json);
+  
   if (data.calendar_url) {
     const cal = document.getElementById('schoolCalendarLink');
     if (cal) cal.href = data.calendar_url;
   }
 }
+
+// Function to update photo cards with saved URLs
+function updatePhotoCards(photoUrlsJson) {
+  if (!photoUrlsJson) return;
+  
+  let photoUrls = [];
+  try {
+    photoUrls = JSON.parse(photoUrlsJson);
+  } catch (e) {
+    console.error('Failed to parse photo URLs:', e);
+    return;
+  }
+  
+  const photoCards = document.querySelectorAll('.photo-card');
+  photoCards.forEach((card, index) => {
+    const url = photoUrls[index];
+    if (url) {
+      card.setAttribute('data-photo-url', url);
+      updatePhotoCardDisplay(card, url);
+    }
+  });
+}
+
+// Function to update gallery photos with saved URLs
+function updateGalleryPhotos(galleryUrlsJson) {
+  if (!galleryUrlsJson) return;
+  
+  let galleryUrls = {};
+  try {
+    galleryUrls = JSON.parse(galleryUrlsJson);
+  } catch (e) {
+    console.error('Failed to parse gallery URLs:', e);
+    return;
+  }
+  
+  ['art', 'stem', 'gym', 'music'].forEach(type => {
+    const url = galleryUrls[type];
+    if (url) {
+      const galleryEl = document.querySelector(`[data-gallery-type="${type}"]`);
+      if (galleryEl) {
+        galleryEl.setAttribute('data-gallery-url', url);
+        updateGalleryDisplay(galleryEl, url);
+      }
+    }
+  });
+}
+
 async function fetchFirestoreData() {
   try {
     const doc = await db.collection('classData').doc('current').get();
