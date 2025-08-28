@@ -433,16 +433,16 @@
         </div>
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" id="extrasGrid">
           <div class="text-center p-8 rounded-2xl" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-mustard) 30%); border: 1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%);">
-            <div class="text-6xl mb-4 emoji-edit" contenteditable="true" style="cursor: text;">🎯</div>
-            <h3 class="font-semibold mb-2" contenteditable="true" style="cursor: text;">Class Goal</h3>
-            <p class="text-sm" contenteditable="true" style="cursor: text;">We're working together to read 100 books this month!</p>
-            <button class="mt-2 text-red-500 hover:text-red-700 text-xs" onclick="this.closest('.text-center').remove();">Remove Card</button>
+            <div class="text-6xl mb-4 emoji-edit" contenteditable="false" style="cursor: default;">🎯</div>
+            <h3 class="font-semibold mb-2" contenteditable="false" style="cursor: default;">Class Goal</h3>
+            <p class="text-sm" contenteditable="false" style="cursor: default;">We're working together to read 100 books this month!</p>
+            <button class="mt-2 text-red-500 hover:text-red-700 text-xs" onclick="this.closest('.text-center').remove();" style="display: none;">Remove Card</button>
           </div>
           <div class="text-center p-8 rounded-2xl" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-coral) 30%); border: 1px solid color-mix(in oklab, var(--md-coral) 60%, var(--md-white) 40%);">
-            <div class="text-6xl mb-4 emoji-edit" contenteditable="true" style="cursor: text;">📣</div>
-            <h3 class="font-semibold mb-2" contenteditable="true" style="cursor: text;">Shout-outs</h3>
-            <p class="text-sm" contenteditable="true" style="cursor: text;">Amazing job on our math assessments this week!</p>
-            <button class="mt-2 text-red-500 hover:text-red-700 text-xs" onclick="this.closest('.text-center').remove();">Remove Card</button>
+            <div class="text-6xl mb-4 emoji-edit" contenteditable="false" style="cursor: default;">📣</div>
+            <h3 class="font-semibold mb-2" contenteditable="false" style="cursor: default;">Shout-outs</h3>
+            <p class="text-sm" contenteditable="false" style="cursor: default;">Amazing job on our math assessments this week!</p>
+            <button class="mt-2 text-red-500 hover:text-red-700 text-xs" onclick="this.closest('.text-center').remove();" style="display: none;">Remove Card</button>
           </div>
         </div>
       </div>
@@ -566,27 +566,21 @@
               <h3 class="text-lg font-semibold">🚌 Bus Riders</h3>
               <button id="saveBusRidersBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveTransportationField('busRiders')">💾 Save</button>
             </div>
-            <textarea id="busRidersTextarea" class="w-full h-32 p-3 text-sm border rounded-lg resize-none" placeholder="• Type your bullet points here...
-• One student per line
-• Use bullet points or dashes"></textarea>
+            <textarea id="busRidersTextarea" class="w-full h-32 p-3 text-sm border rounded-lg resize-none" placeholder="Scholars Name - Bus #"></textarea>
           </div>
           <div class="bg-white rounded-xl p-6" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
             <div class="flex justify-between items-center mb-4">
               <h3 class="text-lg font-semibold">🚗 Car Riders</h3>
               <button id="saveCarRidersBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveTransportationField('carRiders')">💾 Save</button>
             </div>
-            <textarea id="carRidersTextarea" class="w-full h-32 p-3 text-sm border rounded-lg resize-none" placeholder="• Type your bullet points here...
-• One student per line
-• Use bullet points or dashes"></textarea>
+            <textarea id="carRidersTextarea" class="w-full h-32 p-3 text-sm border rounded-lg resize-none"></textarea>
           </div>
           <div class="bg-white rounded-xl p-6" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
             <div class="flex justify-between items-center mb-4">
               <h3 class="text-lg font-semibold">🏠 Porch Pickup</h3>
               <button id="savePorchPickupBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveTransportationField('porchPickup')">💾 Save</button>
             </div>
-            <textarea id="porchPickupTextarea" class="w-full h-32 p-3 text-sm border rounded-lg resize-none" placeholder="• Type your bullet points here...
-• One student per line
-• Use bullet points or dashes"></textarea>
+            <textarea id="porchPickupTextarea" class="w-full h-32 p-3 text-sm border rounded-lg resize-none"></textarea>
           </div>
         </div>
       </div>
@@ -892,6 +886,15 @@
       if (saveExtrasBtn) saveExtrasBtn.style.display = 'none';
       const addExtrasCardBtn = document.getElementById('addExtrasCardBtn');
       if (addExtrasCardBtn) addExtrasCardBtn.style.display = 'none';
+      
+      // Disable Extras contenteditable elements and remove buttons
+      document.querySelectorAll('#extrasGrid [contenteditable]').forEach(el => {
+        el.contentEditable = false;
+        el.style.cursor = 'default';
+      });
+      document.querySelectorAll('#extrasGrid button[onclick*="remove"]').forEach(btn => {
+        btn.style.display = 'none';
+      });
     }
     
     function enterEditMode(){
@@ -944,6 +947,15 @@
       const addExtrasCardBtn = document.getElementById('addExtrasCardBtn');
       if (addExtrasCardBtn) addExtrasCardBtn.style.display = 'inline-block';
       
+      // Enable Extras contenteditable elements and remove buttons
+      document.querySelectorAll('#extrasGrid [contenteditable]').forEach(el => {
+        el.contentEditable = true;
+        el.style.cursor = 'text';
+      });
+      document.querySelectorAll('#extrasGrid button[onclick*="remove"]').forEach(btn => {
+        btn.style.display = 'inline-block';
+      });
+      
       document.getElementById('editModeBtn').textContent = '💾 Exit Edit Mode';
       document.getElementById('editModeBtn').onclick = exitEditMode;
     }
@@ -995,6 +1007,15 @@
       if (saveExtrasBtn) saveExtrasBtn.style.display = 'none';
       const addExtrasCardBtn = document.getElementById('addExtrasCardBtn');
       if (addExtrasCardBtn) addExtrasCardBtn.style.display = 'none';
+      
+      // Disable Extras contenteditable elements and remove buttons
+      document.querySelectorAll('#extrasGrid [contenteditable]').forEach(el => {
+        el.contentEditable = false;
+        el.style.cursor = 'default';
+      });
+      document.querySelectorAll('#extrasGrid button[onclick*="remove"]').forEach(btn => {
+        btn.style.display = 'none';
+      });
       
       document.getElementById('editModeBtn').textContent = '✏️ Edit Mode';
       document.getElementById('editModeBtn').onclick = function(){
@@ -1335,6 +1356,11 @@
         // Remove claimed styling and reset background
         card.classList.remove('snack-claimed');
         card.style.backgroundColor = 'white';
+        
+        // Save the unclaimed state to the backend
+        saveSnackDataToFirestore().catch((error) => {
+          console.error('Failed to save unclaim state:', error);
+        });
       }
       
       // Only show global save button for teachers/admins in edit mode
