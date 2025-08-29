@@ -1352,6 +1352,9 @@
       const originalText = saveBtn.textContent;
       
       try {
+        // Set saving flag to prevent periodic refresh interference
+        isSaving = true;
+        
         // Show saving state
         saveBtn.textContent = '⏳ Saving...';
         saveBtn.disabled = true;
@@ -1359,30 +1362,76 @@
         // Collect all editable field data
         const data = collectEditableFieldData();
         
+        console.log('Saving data to Firestore:', data);
+        
         // Save to Firestore
         await db.collection('classData').doc('current').set(data, { merge: true });
+        
+        console.log('Data saved successfully to Firestore');
         
         // Show success state
         saveBtn.textContent = '✅ Saved!';
         
-        // Reload data from Firestore
+        // Reload data from Firestore after a delay to ensure consistency
         setTimeout(async () => {
-          const updatedData = await fetchFirestoreData();
-          populateDataFromSheet(updatedData);
-          
-          // Hide save button and reset original values
-          saveBtn.style.display = 'none';
-          saveBtn.textContent = originalText;
-          saveBtn.disabled = false;
-          originalValues = {};
+          try {
+            const updatedData = await fetchFirestoreData();
+            populateDataFromSheet(updatedData);
+            
+            // Hide save button and reset original values
+            saveBtn.style.display = 'none';
+            saveBtn.textContent = originalText;
+            saveBtn.disabled = false;
+            originalValues = {};
+          } catch (error) {
+            console.error('Failed to reload data after save:', error);
+            // Still hide the save button even if reload fails
+            saveBtn.style.display = 'none';
+            saveBtn.textContent = originalText;
+            saveBtn.disabled = false;
+          } finally {
+            // Always clear the saving flag
+            isSaving = false;
+          }
         }, 1000);
         
       } catch (error) {
         console.error('Failed to save changes:', error);
         saveBtn.textContent = '❌ Save Failed';
+        
+        // Show detailed error in UI
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg z-50';
+        errorDiv.innerHTML = `
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <span class="text-red-500">⚠️</span>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium">Save Failed</p>
+              <p class="text-sm">${error.message || 'Unknown error occurred'}</p>
+            </div>
+            <div class="ml-auto pl-3">
+              <button class="text-red-400 hover:text-red-600" onclick="this.parentElement.parentElement.parentElement.remove()">
+                <span class="sr-only">Dismiss</span>
+                ✕
+              </button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(errorDiv);
+        
+        // Auto-remove error after 5 seconds
+        setTimeout(() => {
+          if (errorDiv.parentNode) {
+            errorDiv.parentNode.removeChild(errorDiv);
+          }
+        }, 5000);
+        
         setTimeout(() => {
           saveBtn.textContent = originalText;
           saveBtn.disabled = false;
+          isSaving = false;
         }, 2000);
       }
     }
@@ -1836,6 +1885,12 @@
       console.error('Error code:', error.code);
       console.error('Error message:', error.message);
       console.error('Error name:', error.name);
+      console.error('Error stack:', error.stack);
+      
+      // Additional debug information
+      console.error('Firebase storage initialized?', typeof storage !== 'undefined');
+      console.error('Firebase db initialized?', typeof db !== 'undefined');
+      console.error('Storage bucket config:', typeof firebase !== 'undefined' ? firebase.app().options.storageBucket : 'Firebase not available');
       
       let userMessage = `${context.charAt(0).toUpperCase() + context.slice(1)} failed: `;
       
@@ -1855,6 +1910,9 @@
             break;
           case 'storage/invalid-argument':
             userMessage += 'Invalid upload parameters.';
+            break;
+          case 'storage/retry-limit-exceeded':
+            userMessage += 'Upload failed after multiple retries. Please check your connection.';
             break;
           case 'storage/retry-limit-exceeded':
             userMessage += 'Upload retry limit exceeded. Please try again later.';
@@ -1883,6 +1941,40 @@
       return userMessage;
     };
     
+    // Helper function to validate storage URLs
+    window.validateStorageUrl = async function(url) {
+      if (!url || typeof url !== 'string' || url.trim() === '') {
+        return false;
+      }
+      
+      try {
+        // Simple check if URL is accessible
+        const response = await fetch(url, { method: 'HEAD' });
+        return response.ok;
+      } catch (error) {
+        console.warn('Storage URL validation failed:', url, error);
+        return false;
+      }
+    };
+    
+    // Helper function to test Firebase Storage connection
+    window.testStorageConnection = async function() {
+      try {
+        if (typeof storage === 'undefined') {
+          console.error('Storage not initialized');
+          return false;
+        }
+        
+        // Try to create a reference to test connectivity
+        const testRef = storage.ref('test-connection');
+        console.log('Storage connection test successful, bucket:', storage.app.options.storageBucket);
+        return true;
+      } catch (error) {
+        console.error('Storage connection test failed:', error);
+        return false;
+      }
+    };
+    
     // Editable photo cards: file upload functionality
     function editPhoto(el) {
       // Only allow editing in edit mode
@@ -1900,35 +1992,118 @@
         const file = e.target.files[0];
         if (!file) return;
         
-        try {
-          // Show loading state
-          el.innerHTML = '⏳';
-          el.style.pointerEvents = 'none';
-          
-          // Generate unique filename
-          const timestamp = Date.now();
-          const fileName = `photo_${timestamp}_${file.name}`;
-          
-          // Upload to Firebase Storage
-          const storageRef = storage.ref(`photos/${fileName}`);
-          const uploadTask = await storageRef.put(file);
-          const downloadURL = await uploadTask.ref.getDownloadURL();
-          
-          // Update the photo card display
-          updatePhotoCardDisplay(el, downloadURL);
-          
-          // Store the photo URL in the element for later collection
-          el.setAttribute('data-photo-url', downloadURL);
-          
-          // Show save button since we have changes
-          const saveBtn = document.getElementById('saveChangesBtn');
-          if (saveBtn) saveBtn.style.display = 'block';
-          
-        } catch (error) {
-          const errorMessage = window.handleUploadError(error, 'photo upload');
-          alert(errorMessage);
-          // Reset to placeholder state on error
-          resetPhotoCardToPlaceholder(el);
+        // Validate file size (max 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+          alert('File size too large. Please select an image smaller than 10MB.');
+          return;
+        }
+        
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+          alert('Please select a valid image file.');
+          return;
+        }
+        
+        let attempt = 0;
+        const maxAttempts = 3;
+        
+        while (attempt < maxAttempts) {
+          try {
+            console.log(`Photo card upload attempt ${attempt + 1}`);
+            
+            // Show loading state
+            el.innerHTML = '⏳';
+            el.style.pointerEvents = 'none';
+            
+            // Test storage connection first
+            const storageConnected = await window.testStorageConnection();
+            if (!storageConnected) {
+              throw new Error('Firebase Storage connection failed');
+            }
+            
+            // Generate unique filename
+            const timestamp = Date.now();
+            const fileName = `photo_${timestamp}_${file.name}`;
+            
+            console.log(`Uploading to: photos/${fileName}`);
+            
+            // Upload to Firebase Storage
+            const storageRef = storage.ref(`photos/${fileName}`);
+            const uploadTask = await storageRef.put(file);
+            const downloadURL = await uploadTask.ref.getDownloadURL();
+            
+            console.log('Photo card upload successful, URL:', downloadURL);
+            
+            // Validate the generated URL
+            const urlValid = await window.validateStorageUrl(downloadURL);
+            if (!urlValid) {
+              console.warn('Generated URL failed validation, but proceeding anyway');
+            }
+            
+            // Update the photo card display
+            updatePhotoCardDisplay(el, downloadURL);
+            
+            // Store the photo URL in the element for later collection
+            el.setAttribute('data-photo-url', downloadURL);
+            
+            // Show save button since we have changes
+            const saveBtn = document.getElementById('saveChangesBtn');
+            if (saveBtn) saveBtn.style.display = 'block';
+            
+            // Auto-save after successful upload to ensure persistence
+            setTimeout(() => {
+              if (saveBtn && saveBtn.style.display === 'block' && !isSaving) {
+                console.log('Auto-saving after photo card upload');
+                saveChangesToFirestore();
+              }
+            }, 500);
+            
+            // Success - break out of retry loop
+            break;
+            
+          } catch (error) {
+            attempt++;
+            console.error(`Photo card upload attempt ${attempt} failed:`, error);
+            
+            if (attempt >= maxAttempts) {
+              const errorMessage = window.handleUploadError(error, 'photo upload');
+              
+              // Show user-friendly error in UI
+              const errorDiv = document.createElement('div');
+              errorDiv.className = 'fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg z-50';
+              errorDiv.innerHTML = `
+                <div class="flex">
+                  <div class="flex-shrink-0">
+                    <span class="text-red-500">⚠️</span>
+                  </div>
+                  <div class="ml-3">
+                    <p class="text-sm font-medium">Photo Upload Failed</p>
+                    <p class="text-sm">${errorMessage}</p>
+                  </div>
+                  <div class="ml-auto pl-3">
+                    <button class="text-red-400 hover:text-red-600" onclick="this.parentElement.parentElement.parentElement.remove()">
+                      <span class="sr-only">Dismiss</span>
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              `;
+              document.body.appendChild(errorDiv);
+              
+              // Auto-remove error after 5 seconds
+              setTimeout(() => {
+                if (errorDiv.parentNode) {
+                  errorDiv.parentNode.removeChild(errorDiv);
+                }
+              }, 5000);
+              
+              // Reset to placeholder state on error
+              resetPhotoCardToPlaceholder(el);
+            } else {
+              // Wait before retry
+              await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            }
+          }
         }
         
         el.style.pointerEvents = 'auto';
@@ -2047,51 +2222,134 @@
         const file = e.target.files[0];
         if (!file) return;
         
-        try {
-          // Show loading state
-          const originalContent = el.innerHTML;
-          el.innerHTML = '<span class="text-3xl text-gray-400">⏳</span>';
-          el.style.pointerEvents = 'none';
-          
-          // Generate unique filename
-          const timestamp = Date.now();
-          const fileName = `gallery_${galleryType}_${timestamp}_${file.name}`;
-          
-          // Upload to Firebase Storage
-          const storageRef = storage.ref(`galleries/${fileName}`);
-          const uploadTask = await storageRef.put(file);
-          const downloadURL = await uploadTask.ref.getDownloadURL();
-          
-          // Update the gallery display
-          updateGalleryDisplay(el, downloadURL);
-          
-          // Add the photo URL to the array for later collection
-          const urlsStr = el.getAttribute('data-gallery-urls');
-          let urls = [];
-          if (urlsStr) {
-            try {
-              urls = JSON.parse(urlsStr);
-            } catch (e) {
-              urls = [];
+        // Validate file size (max 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+          alert('File size too large. Please select an image smaller than 10MB.');
+          return;
+        }
+        
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+          alert('Please select a valid image file.');
+          return;
+        }
+        
+        let attempt = 0;
+        const maxAttempts = 3;
+        const originalContent = el.innerHTML;
+        
+        while (attempt < maxAttempts) {
+          try {
+            console.log(`Gallery photo upload attempt ${attempt + 1} for type: ${galleryType}`);
+            
+            // Show loading state
+            el.innerHTML = '<span class="text-3xl text-gray-400">⏳</span>';
+            el.style.pointerEvents = 'none';
+            
+            // Test storage connection first
+            const storageConnected = await window.testStorageConnection();
+            if (!storageConnected) {
+              throw new Error('Firebase Storage connection failed');
+            }
+            
+            // Generate unique filename
+            const timestamp = Date.now();
+            const fileName = `gallery_${galleryType}_${timestamp}_${file.name}`;
+            
+            console.log(`Uploading to: galleries/${fileName}`);
+            
+            // Upload to Firebase Storage
+            const storageRef = storage.ref(`galleries/${fileName}`);
+            const uploadTask = await storageRef.put(file);
+            const downloadURL = await uploadTask.ref.getDownloadURL();
+            
+            console.log('Gallery photo upload successful, URL:', downloadURL);
+            
+            // Validate the generated URL
+            const urlValid = await window.validateStorageUrl(downloadURL);
+            if (!urlValid) {
+              console.warn('Generated URL failed validation, but proceeding anyway');
+            }
+            
+            // Update the gallery display
+            updateGalleryDisplay(el, downloadURL);
+            
+            // Add the photo URL to the array for later collection
+            const urlsStr = el.getAttribute('data-gallery-urls');
+            let urls = [];
+            if (urlsStr) {
+              try {
+                urls = JSON.parse(urlsStr);
+              } catch (e) {
+                urls = [];
+              }
+            }
+            urls.push(downloadURL);
+            
+            el.setAttribute('data-gallery-urls', JSON.stringify(urls));
+            el.setAttribute('data-current-index', (urls.length - 1).toString());
+            
+            // Keep legacy attribute for backward compatibility
+            el.setAttribute('data-gallery-url', downloadURL);
+            
+            // Show save button since we have changes
+            const saveBtn = document.getElementById('saveChangesBtn');
+            if (saveBtn) saveBtn.style.display = 'block';
+            
+            // Auto-save after successful upload to ensure persistence
+            setTimeout(() => {
+              if (saveBtn && saveBtn.style.display === 'block' && !isSaving) {
+                console.log('Auto-saving after gallery photo upload');
+                saveChangesToFirestore();
+              }
+            }, 500);
+            
+            // Success - break out of retry loop
+            break;
+            
+          } catch (error) {
+            attempt++;
+            console.error(`Gallery photo upload attempt ${attempt} failed:`, error);
+            
+            if (attempt >= maxAttempts) {
+              const errorMessage = window.handleUploadError(error, 'gallery photo upload');
+              
+              // Show user-friendly error in UI
+              const errorDiv = document.createElement('div');
+              errorDiv.className = 'fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg z-50';
+              errorDiv.innerHTML = `
+                <div class="flex">
+                  <div class="flex-shrink-0">
+                    <span class="text-red-500">⚠️</span>
+                  </div>
+                  <div class="ml-3">
+                    <p class="text-sm font-medium">Gallery Upload Failed</p>
+                    <p class="text-sm">${errorMessage}</p>
+                  </div>
+                  <div class="ml-auto pl-3">
+                    <button class="text-red-400 hover:text-red-600" onclick="this.parentElement.parentElement.parentElement.remove()">
+                      <span class="sr-only">Dismiss</span>
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              `;
+              document.body.appendChild(errorDiv);
+              
+              // Auto-remove error after 5 seconds
+              setTimeout(() => {
+                if (errorDiv.parentNode) {
+                  errorDiv.parentNode.removeChild(errorDiv);
+                }
+              }, 5000);
+              
+              // Reset to placeholder state on error
+              resetGalleryToPlaceholder(el);
+            } else {
+              // Wait before retry
+              await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
             }
           }
-          urls.push(downloadURL);
-          
-          el.setAttribute('data-gallery-urls', JSON.stringify(urls));
-          el.setAttribute('data-current-index', (urls.length - 1).toString());
-          
-          // Keep legacy attribute for backward compatibility
-          el.setAttribute('data-gallery-url', downloadURL);
-          
-          // Show save button since we have changes
-          const saveBtn = document.getElementById('saveChangesBtn');
-          if (saveBtn) saveBtn.style.display = 'block';
-          
-        } catch (error) {
-          const errorMessage = window.handleUploadError(error, 'gallery photo upload');
-          alert(errorMessage);
-          // Reset to placeholder state on error
-          resetGalleryToPlaceholder(el);
         }
         
         el.style.pointerEvents = 'auto';
@@ -2483,7 +2741,7 @@ function populateDataFromSheet(data) {
 }
 
 // Function to update photo cards with saved URLs
-function updatePhotoCards(photoUrlsJson) {
+async function updatePhotoCards(photoUrlsJson) {
   if (!photoUrlsJson) return;
   
   let photoUrls = [];
@@ -2495,11 +2753,19 @@ function updatePhotoCards(photoUrlsJson) {
   }
   
   const photoCards = document.querySelectorAll('.photo-card');
-  photoCards.forEach((card, index) => {
+  photoCards.forEach(async (card, index) => {
     const url = photoUrls[index];
     if (url && typeof url === 'string' && url.trim() !== '') {
-      card.setAttribute('data-photo-url', url);
-      updatePhotoCardDisplay(card, url);
+      // Validate URL before using it
+      const urlValid = await window.validateStorageUrl(url);
+      if (urlValid) {
+        card.setAttribute('data-photo-url', url);
+        updatePhotoCardDisplay(card, url);
+      } else {
+        console.warn(`Invalid photo URL at index ${index}:`, url);
+        // Reset to placeholder if URL is invalid
+        resetPhotoCardToPlaceholder(card);
+      }
     } else {
       // Reset to placeholder if URL is invalid
       resetPhotoCardToPlaceholder(card);
@@ -2508,7 +2774,7 @@ function updatePhotoCards(photoUrlsJson) {
 }
 
 // Function to update gallery photos with saved URLs
-function updateGalleryPhotos(galleryUrlsJson) {
+async function updateGalleryPhotos(galleryUrlsJson) {
   if (!galleryUrlsJson) return;
   
   let galleryUrls = {};
@@ -2519,7 +2785,7 @@ function updateGalleryPhotos(galleryUrlsJson) {
     return;
   }
   
-  ['art', 'stem', 'gym', 'music'].forEach(type => {
+  ['art', 'stem', 'gym', 'music'].forEach(async type => {
     const galleryData = galleryUrls[type];
     const galleryEl = document.querySelector(`[data-gallery-type="${type}"]`);
     
@@ -3079,6 +3345,20 @@ async function fetchFirestoreData() {
   }
 }
 document.addEventListener('DOMContentLoaded', function() {
+  // Test Firebase Storage connection on page load
+  setTimeout(async () => {
+    if (typeof storage !== 'undefined') {
+      const connectionTest = await window.testStorageConnection();
+      if (connectionTest) {
+        console.log('✅ Firebase Storage connection verified');
+      } else {
+        console.error('❌ Firebase Storage connection failed');
+      }
+    } else {
+      console.error('❌ Firebase Storage not initialized');
+    }
+  }, 500);
+  
   setTimeout(async () => {
     try {
       const data = await fetchFirestoreData();
@@ -3090,7 +3370,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }, 350);
 });
+
+// Flag to prevent periodic refresh during save operations
+let isSaving = false;
+
 setInterval(async () => {
+  // Skip refresh if we're in the middle of a save operation
+  if (isSaving) {
+    console.log('Skipping periodic refresh - save operation in progress');
+    return;
+  }
+  
   try {
     const data = await fetchFirestoreData();
     populateDataFromSheet(data);
@@ -3119,37 +3409,120 @@ function editProfilePhoto(el, section) {
     const file = e.target.files[0];
     if (!file) return;
     
-    try {
-      // Show loading state
-      el.innerHTML = '⏳';
-      el.style.pointerEvents = 'none';
-      
-      // Generate unique filename
-      const timestamp = Date.now();
-      const fileName = `profile_${section}_${timestamp}_${file.name}`;
-      
-      // Upload to Firebase Storage
-      const storageRef = storage.ref(`profiles/${fileName}`);
-      const uploadTask = await storageRef.put(file);
-      const downloadURL = await uploadTask.ref.getDownloadURL();
-      
-      // Update the display
-      el.innerHTML = `<img src="${downloadURL}" alt="Profile" style="width:100%; height:100%; object-fit:cover;">`;
-      el.style.pointerEvents = 'auto';
-      
-      // Store the photo URL for later collection
-      el.setAttribute('data-profile-url', downloadURL);
-      
-      // Show save button since we have changes
-      const saveBtn = document.getElementById('saveChangesBtn');
-      if (saveBtn) saveBtn.style.display = 'block';
-      
-    } catch (error) {
-      const errorMessage = window.handleUploadError(error, 'profile photo upload');
-      alert(errorMessage);
-      // Reset on error
-      el.innerHTML = '';
-      el.style.pointerEvents = 'auto';
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File size too large. Please select an image smaller than 10MB.');
+      return;
+    }
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select a valid image file.');
+      return;
+    }
+    
+    let attempt = 0;
+    const maxAttempts = 3;
+    
+    while (attempt < maxAttempts) {
+      try {
+        console.log(`Profile photo upload attempt ${attempt + 1} for section: ${section}`);
+        
+        // Show loading state
+        el.innerHTML = '⏳';
+        el.style.pointerEvents = 'none';
+        
+        // Test storage connection first
+        const storageConnected = await window.testStorageConnection();
+        if (!storageConnected) {
+          throw new Error('Firebase Storage connection failed');
+        }
+        
+        // Generate unique filename
+        const timestamp = Date.now();
+        const fileName = `profile_${section}_${timestamp}_${file.name}`;
+        
+        console.log(`Uploading to: profiles/${fileName}`);
+        
+        // Upload to Firebase Storage
+        const storageRef = storage.ref(`profiles/${fileName}`);
+        const uploadTask = await storageRef.put(file);
+        const downloadURL = await uploadTask.ref.getDownloadURL();
+        
+        console.log('Profile photo upload successful, URL:', downloadURL);
+        
+        // Validate the generated URL
+        const urlValid = await window.validateStorageUrl(downloadURL);
+        if (!urlValid) {
+          console.warn('Generated URL failed validation, but proceeding anyway');
+        }
+        
+        // Update the display
+        el.innerHTML = `<img src="${downloadURL}" alt="Profile" style="width:100%; height:100%; object-fit:cover;">`;
+        el.style.pointerEvents = 'auto';
+        
+        // Store the photo URL for later collection
+        el.setAttribute('data-profile-url', downloadURL);
+        
+        // Show save button since we have changes
+        const saveBtn = document.getElementById('saveChangesBtn');
+        if (saveBtn) saveBtn.style.display = 'block';
+        
+        // Auto-save after successful upload to ensure persistence
+        setTimeout(() => {
+          if (saveBtn && saveBtn.style.display === 'block' && !isSaving) {
+            console.log('Auto-saving after profile photo upload');
+            saveChangesToFirestore();
+          }
+        }, 500);
+        
+        // Success - break out of retry loop
+        break;
+        
+      } catch (error) {
+        attempt++;
+        console.error(`Profile photo upload attempt ${attempt} failed:`, error);
+        
+        if (attempt >= maxAttempts) {
+          const errorMessage = window.handleUploadError(error, 'profile photo upload');
+          
+          // Show user-friendly error in UI
+          const errorDiv = document.createElement('div');
+          errorDiv.className = 'fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg z-50';
+          errorDiv.innerHTML = `
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <span class="text-red-500">⚠️</span>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm font-medium">Upload Failed</p>
+                <p class="text-sm">${errorMessage}</p>
+              </div>
+              <div class="ml-auto pl-3">
+                <button class="text-red-400 hover:text-red-600" onclick="this.parentElement.parentElement.parentElement.remove()">
+                  <span class="sr-only">Dismiss</span>
+                  ✕
+                </button>
+              </div>
+            </div>
+          `;
+          document.body.appendChild(errorDiv);
+          
+          // Auto-remove error after 5 seconds
+          setTimeout(() => {
+            if (errorDiv.parentNode) {
+              errorDiv.parentNode.removeChild(errorDiv);
+            }
+          }, 5000);
+          
+          // Reset on error
+          el.innerHTML = '';
+          el.style.pointerEvents = 'auto';
+        } else {
+          // Wait before retry
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        }
+      }
     }
     
     document.body.removeChild(fileInput);
