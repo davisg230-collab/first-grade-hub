@@ -137,18 +137,94 @@
     .gallery-arrows button { pointer-events:auto;border:none;background:rgba(255,255,255,.75);border-radius:50%;font-size:1.5rem;padding:0.25em 0.6em;cursor:pointer; }
     .gallery-imgs { position:relative;}
     .gallery-imgs img { width:100%; height:100%; object-fit:cover; border-radius:1rem;}
+    
+    /* Classroom Border Styles */
+    .classroom-border {
+      position: relative;
+      border: 12px solid transparent;
+      border-image: repeating-linear-gradient(
+        45deg,
+        #E9867D 0px, #E9867D 8px,
+        #7B8E9E 8px, #7B8E9E 16px,
+        #E0B14A 16px, #E0B14A 24px,
+        #F2C9BE 24px, #F2C9BE 32px
+      ) 12;
+    }
+    
+    .classroom-border::before {
+      content: "";
+      position: absolute;
+      top: -12px;
+      left: -12px;
+      right: -12px;
+      bottom: -12px;
+      background: 
+        repeating-linear-gradient(
+          0deg,
+          transparent 0px, transparent 6px,
+          rgba(255,255,255,0.3) 6px, rgba(255,255,255,0.3) 8px
+        ),
+        repeating-linear-gradient(
+          90deg,
+          transparent 0px, transparent 6px,
+          rgba(255,255,255,0.3) 6px, rgba(255,255,255,0.3) 8px
+        );
+      border-radius: 8px;
+      z-index: -1;
+    }
+    
+    .classroom-border::after {
+      content: "🍎📚✏️🎨🌟📐🖍️⭐";
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--hdr-bg);
+      padding: 2px 12px;
+      font-size: 12px;
+      border-radius: 12px;
+      white-space: nowrap;
+      z-index: 1;
+    }
+    
+    @media (max-width: 640px) {
+      .classroom-border {
+        border-width: 8px;
+        border-image: repeating-linear-gradient(
+          45deg,
+          #E9867D 0px, #E9867D 6px,
+          #7B8E9E 6px, #7B8E9E 12px,
+          #E0B14A 12px, #E0B14A 18px,
+          #F2C9BE 18px, #F2C9BE 24px
+        ) 8;
+      }
+      
+      .classroom-border::before {
+        top: -8px;
+        left: -8px;
+        right: -8px;
+        bottom: -8px;
+      }
+      
+      .classroom-border::after {
+        font-size: 10px;
+        padding: 1px 8px;
+      }
+    }
   </style>
 </head>
 <body class="bg-[color:var(--md-cream)] text-[color:var(--md-ink)] font-body">
   <!-- HEADER -->
   <header class="relative w-full" style="background: var(--hdr-bg);">
-    <div class="max-w-6xl mx-auto px-6 py-10 sm:py-12">
-      <h1 class="text-3xl sm:text-4xl lg:text-5xl font-display font-extrabold text-white">
-        Hey Hey First Grade!
-      </h1>
-      <p id="weekText" class="mt-2 text-white/95 font-semibold"
-         data-edit="teacher" contenteditable="false">Week of September 1–5</p>
-      <div class="mt-6 flex flex-wrap items-center gap-3">
+    <div class="max-w-6xl mx-auto p-6 sm:p-8">
+      <div class="classroom-border" style="background: var(--hdr-bg); border-radius: 8px;">
+        <div class="px-6 py-8 sm:px-8 sm:py-10">
+          <h1 class="text-3xl sm:text-4xl lg:text-5xl font-display font-extrabold text-white">
+            Hey Hey First Grade!
+          </h1>
+          <p id="weekText" class="mt-2 text-white/95 font-semibold"
+             data-edit="teacher" contenteditable="false">Week of September 1–5</p>
+          <div class="mt-6 flex flex-wrap items-center gap-3">
         <button id="toggleHighContrast"
                 class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-[color:var(--md-ink)] font-semibold hover:opacity-90">
           <span>🌓</span><span>Light/Dark</span>
@@ -175,6 +251,8 @@
                 data-page="birthdays" style="background: var(--md-coral);">
           <span>🎂</span><span>Birthdays</span>
         </button>
+          </div>
+        </div>
       </div>
     </div>
   </header>
