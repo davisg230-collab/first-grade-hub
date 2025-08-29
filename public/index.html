@@ -100,7 +100,7 @@
 </head>
 <body class="bg-[color:var(--md-cream)] text-[color:var(--md-ink)] font-body">
   <!-- Live Image Upload Section -->
-  <div id="imageUploadSection" class="max-w-6xl mx-auto px-6 py-4">
+  <div id="imageUploadSection" class="edit-only max-w-6xl mx-auto px-6 py-4">
     <div class="rounded-xl shadow-soft p-4" style="background: var(--card-bg); border: 2px dashed #E0B14A;">
       <div class="flex flex-col sm:flex-row items-center gap-4">
         <div class="flex items-center gap-3">
@@ -800,6 +800,25 @@
         document.getElementById('pinInput').focus();
       };
       
+      // Hide upload UI and reset its state
+      const uploadSection = document.getElementById('imageUploadSection');
+      if (uploadSection) {
+        // Reset upload form state
+        const liveImageInput = document.getElementById('liveImageInput');
+        const uploadImageBtn = document.getElementById('uploadImageBtn');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const uploadedImageContainer = document.getElementById('uploadedImageContainer');
+        
+        if (liveImageInput) liveImageInput.value = '';
+        if (uploadImageBtn) {
+          uploadImageBtn.disabled = true;
+          uploadImageBtn.classList.add('opacity-50', 'cursor-not-allowed');
+          uploadImageBtn.innerHTML = 'Upload';
+        }
+        if (uploadStatus) uploadStatus.classList.add('hidden');
+        if (uploadedImageContainer) uploadedImageContainer.classList.add('hidden');
+      }
+      
       // Check for changes and show/hide save button
       const saveBtn = document.getElementById('saveChangesBtn');
       if (hasChanges()) {
@@ -1103,10 +1122,11 @@
           uploadImageBtn.innerHTML = '⏳ Uploading...';
           showStatus('Uploading image to Firebase Storage...', 'loading');
 
-          // Use original filename as requested (store at /uploads/filename)
-          const fileName = file.name;
+          // Generate unique filename using Date.now()_originalfilename format
+          const timestamp = Date.now();
+          const fileName = `${timestamp}_${file.name}`;
           
-          // Upload to Firebase Storage at /uploads/filename path
+          // Upload to Firebase Storage at /uploads/ path
           const storageRef = storage.ref(`uploads/${fileName}`);
           const uploadTask = await storageRef.put(file);
           const downloadURL = await uploadTask.ref.getDownloadURL();
