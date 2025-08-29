@@ -69,6 +69,20 @@
       --hdr-bg: var(--md-mustard);
       --card-bg: var(--md-cream);
     }
+    
+    /* Modern Dark Mode Variables */
+    body.dark {
+      --md-mustard: #F4D03F; /* Lighter mustard for dark mode */
+      --md-slate: #85929E; /* Lighter slate for dark mode */
+      --md-coral: #F1948A; /* Lighter coral for dark mode */
+      --md-blush: #F8C4B4; /* Lighter blush for dark mode */
+      --md-cream: #1A1D23; /* Dark background for cards */
+      --md-pebble: #C8B99C; /* Lighter pebble for dark mode */
+      --md-ink: #E8E8E8; /* Light text for dark mode */
+      --md-white: #2C3E50; /* Dark surface for dark mode */
+      --hdr-bg: #2C3E50; /* Dark header background */
+      --card-bg: #1A1D23; /* Dark card background */
+    }
     .fade-in{opacity:0;transform:translateY(8px);transition:opacity .35s,transform .35s}
     .fade-in.visible{opacity:1;transform:translateY(0)}
     .pagePanel{display:none}
@@ -81,16 +95,40 @@
       background-color: white; color: var(--md-ink); cursor: text;
       outline: 2px dashed color-mix(in oklab,var(--md-slate) 55%,transparent); outline-offset: 2px;
     }
+    /* Hide Practice Website URL inputs when not in edit mode */
+    .website-url-input { display: none; }
+    body.editing .website-url-input { display: block; }
+    /* Snack message textarea styling */
+    #snackMessage:disabled { background-color: transparent; color: var(--md-ink); cursor: default; border: none; }
+    body.editing #snackMessage:not(:disabled) {
+      background-color: rgba(255,255,255,0.7); cursor: text;
+      outline: 2px dashed color-mix(in oklab,var(--md-slate) 55%,transparent); outline-offset: 2px;
+    }
+    /* Styling for disabled about me, class roster, birthday, and website fields */
+    #aboutMeDescText[contenteditable="false"] { background-color: transparent; border: none; cursor: default; }
+    body.editing #aboutMeDescText[contenteditable="true"] { 
+      outline: 2px dashed color-mix(in oklab,var(--md-slate) 55%,transparent); outline-offset: 2px;
+    }
+    #classRosterTextarea:disabled, .website-url-input:disabled, textarea[id*="BirthdaysTextarea"]:disabled { 
+      background-color: #f3f4f6; color: #9ca3af; cursor: not-allowed; border-color: #e5e7eb;
+    }
+    body.editing #classRosterTextarea:not(:disabled), body.editing .website-url-input:not(:disabled), body.editing textarea[id*="BirthdaysTextarea"]:not(:disabled) {
+      background-color: white; color: var(--md-ink); cursor: text;
+      outline: 2px dashed color-mix(in oklab,var(--md-slate) 55%,transparent); outline-offset: 2px;
+    }
     /* Photo card and gallery cursor only in edit mode */
     .photo-card{cursor: default;}
     body.editing .photo-card{cursor: pointer;}
     .gallery-imgs{cursor: default;}
     body.editing .gallery-imgs{cursor: pointer;}
-    /* Hide teacher debug panels when not in edit mode */
-    .teacher-only-debug { display: none; }
-    body.editing .teacher-only-debug { display: block; }
-    body.dark{background:#0b1a22}
-    body.dark .shadow-soft{box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    body.dark{background: #17212B; color: var(--md-ink);}
+    body.dark .shadow-soft{box-shadow:0 10px 30px rgba(0,0,0,.5)}
+    body.dark .bg-white { background: var(--md-white) !important; }
+    body.dark .bg-yellow-50 { background: rgba(244, 208, 63, 0.1) !important; }
+    body.dark .bg-blue-50 { background: rgba(133, 146, 158, 0.1) !important; }
+    body.dark .bg-green-50 { background: rgba(125, 206, 160, 0.1) !important; }
+    body.dark .border { border-color: rgba(232, 232, 232, 0.2) !important; }
+    body.dark .text-gray-400 { color: #A0A0A0 !important; }
     #pinOverlay { display: none; }
     #pinOverlay.show { display: flex; }
     .pageTab.active, .pageTab.ring-4 { box-shadow: 0 0 0 3px #fff9; }
@@ -102,61 +140,6 @@
   </style>
 </head>
 <body class="bg-[color:var(--md-cream)] text-[color:var(--md-ink)] font-body">
-  <!-- Live Image Upload Section -->
-  <div id="imageUploadSection" class="edit-only max-w-6xl mx-auto px-6 py-4">
-    <div class="rounded-xl shadow-soft p-4" style="background: var(--card-bg); border: 2px dashed #E0B14A;">
-      <div class="flex flex-col sm:flex-row items-center gap-4">
-        <div class="flex items-center gap-3">
-          <span class="text-2xl">📸</span>
-          <div>
-            <h3 class="font-semibold text-lg">Live Image Upload</h3>
-            <p class="text-sm text-gray-600">Upload images directly to Firebase Storage</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-3">
-          <input type="file" id="liveImageInput" accept="image/*" class="hidden">
-          <button id="selectImageBtn" class="px-4 py-2 rounded-lg font-semibold text-white hover:opacity-90" style="background: var(--md-coral);">
-            Select Image
-          </button>
-          <button id="uploadImageBtn" class="px-4 py-2 rounded-lg font-semibold text-white hover:opacity-90 opacity-50 cursor-not-allowed" style="background: var(--md-mustard);" disabled>
-            Upload
-          </button>
-        </div>
-      </div>
-      <div id="uploadStatus" class="mt-3 text-sm hidden"></div>
-      
-      <!-- Debug panel for teachers (only visible in edit mode) -->
-      <div id="uploadDebugPanel" class="mt-4 p-3 bg-gray-50 rounded-lg border hidden teacher-only-debug">
-        <div class="flex justify-between items-center mb-2">
-          <h4 class="font-semibold text-sm text-gray-700">Debug Info (Teacher Only)</h4>
-          <button id="toggleDebugInfo" class="text-xs bg-gray-200 px-2 py-1 rounded hover:bg-gray-300">Show Details</button>
-        </div>
-        <div id="debugDetails" class="hidden">
-          <div class="text-xs space-y-1 text-gray-600">
-            <div><strong>Firebase Project:</strong> <span id="debugProjectId">-</span></div>
-            <div><strong>Storage Bucket:</strong> <span id="debugStorageBucket">-</span></div>
-            <div><strong>Auth Domain:</strong> <span id="debugAuthDomain">-</span></div>
-            <div><strong>Firebase SDK:</strong> <span id="debugFirebaseSDK">-</span></div>
-            <div><strong>Storage Status:</strong> <span id="debugStorageStatus">-</span></div>
-            <div><strong>Last Upload:</strong> <span id="debugLastUpload">None</span></div>
-          </div>
-        </div>
-      </div>
-      
-      <div id="uploadedImageContainer" class="mt-4 hidden">
-        <h4 class="font-semibold mb-2">Uploaded Image:</h4>
-        <img id="uploadedImage" class="max-w-xs rounded-lg shadow-md" alt="Uploaded image">
-        <div id="downloadUrlContainer" class="mt-2">
-          <p class="text-sm font-medium">Download URL:</p>
-          <div class="flex items-center gap-2 mt-1">
-            <input id="downloadUrlInput" type="text" readonly class="flex-1 px-2 py-1 text-xs bg-gray-100 border rounded" placeholder="Download URL will appear here">
-            <button id="copyUrlBtn" class="px-2 py-1 text-xs rounded bg-gray-200 hover:bg-gray-300">Copy</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  
   <!-- HEADER -->
   <header class="relative w-full" style="background: var(--hdr-bg);">
     <div class="max-w-6xl mx-auto px-6 py-10 sm:py-12">
@@ -195,6 +178,10 @@
       </div>
     </div>
   </header>
+  <!-- Tab Separator -->
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="border-t border-gray-300 dark:border-gray-600" style="border-color: color-mix(in oklab, var(--md-slate) 40%, transparent);"></div>
+  </div>
   <main class="max-w-6xl mx-auto px-6 pb-16">
     <nav id="tabs" class="mt-6 mb-4 flex flex-wrap gap-2">
       <button class="pageTab active ring-4 ring-white/40 px-4 py-2 rounded-xl font-semibold text-white"
@@ -218,7 +205,7 @@
     <section data-page-panel="home" class="pagePanel fade-in active">
       <!-- What We Did -->
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
-        <h2 class="text-2xl font-display font-bold mb-5">What We Did This Week</h2>
+        <h2 class="text-2xl font-display font-bold mb-5 text-center">What We Did This Week</h2>
         <div class="grid md:grid-cols-3 gap-6">
           <!-- 2 small + 1 large photo grid -->
           <div class="col-span-1 flex flex-col gap-4">
@@ -285,41 +272,65 @@
           </div>
           <button id="snackAdd" class="px-3 py-2 rounded-lg text-white" style="background: var(--md-coral);" onclick="addSnackItem()">+ Add other snack</button>
         </div>
+        <!-- Snack importance message -->
+        <div class="mb-4 p-3 rounded-lg" style="background: color-mix(in oklab, var(--md-mustard) 20%, var(--md-white) 80%); border: 1px solid color-mix(in oklab, var(--md-mustard) 40%, var(--md-white) 60%);">
+          <div class="flex justify-between items-start mb-2 edit-only" style="display: none;">
+            <h4 class="font-semibold text-sm">Snack Message</h4>
+            <button id="saveSnackMessageBtn" class="px-3 py-1 rounded-lg text-white text-xs font-semibold" style="background: var(--md-coral);" onclick="saveSnackMessage()">💾 Save</button>
+          </div>
+          <textarea 
+            id="snackMessage" 
+            class="w-full text-sm border-0 resize-none" 
+            style="background: transparent; outline: none;" 
+            placeholder="Click to add a message about why snacks are important..."
+            disabled 
+            readonly
+            rows="4">Snacks help keep our energy up during learning time and teach us about sharing and community!</textarea>
+        </div>
         <div id="snacksGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div class="p-4 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
+          <!-- Default snack cards - always visible, names only editable by teacher/admin -->
+          <div class="p-4 rounded-xl bg-white default-snack-card" data-default-snack="true" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
             <div class="flex items-center gap-3 mb-3">
-              <input type="checkbox" class="w-4 h-4 snack-check">
-              <span class="text-xl">🍎</span>
-              <span class="font-medium">Apple slices</span>
+              <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="1">
+              <span class="text-xl">🥯</span>
+              <span class="font-medium snack-title" data-edit="teacher" contenteditable="false">Breakfast Bars</span>
             </div>
             <div class="flex items-center gap-2">
-              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);">
-              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)">Save</button>
-              <button class="text-gray-400 hover:text-red-500" onclick="this.closest('.p-4').remove()">✖</button>
+              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="2">
+              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="3">Save</button>
             </div>
           </div>
-          <div class="p-4 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
+          <div class="p-4 rounded-xl bg-white default-snack-card" data-default-snack="true" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
             <div class="flex items-center gap-3 mb-3">
-              <input type="checkbox" class="w-4 h-4 snack-check">
-              <span class="text-xl">🥨</span>
-              <span class="font-medium">Pretzels</span>
+              <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="4">
+              <span class="text-xl">🍬</span>
+              <span class="font-medium snack-title" data-edit="teacher" contenteditable="false">Gummies</span>
             </div>
             <div class="flex items-center gap-2">
-              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);">
-              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)">Save</button>
-              <button class="text-gray-400 hover:text-red-500" onclick="this.closest('.p-4').remove()">✖</button>
+              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="5">
+              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="6">Save</button>
             </div>
           </div>
-          <div class="p-4 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
+          <div class="p-4 rounded-xl bg-white default-snack-card" data-default-snack="true" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
             <div class="flex items-center gap-3 mb-3">
-              <input type="checkbox" class="w-4 h-4 snack-check">
-              <span class="text-xl">🧀</span>
-              <span class="font-medium">Cheese sticks</span>
+              <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="7">
+              <span class="text-xl">🍚</span>
+              <span class="font-medium snack-title" data-edit="teacher" contenteditable="false">Rice Krispy Treats</span>
             </div>
             <div class="flex items-center gap-2">
-              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);">
-              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)">Save</button>
-              <button class="text-gray-400 hover:text-red-500" onclick="this.closest('.p-4').remove()">✖</button>
+              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="8">
+              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="9">Save</button>
+            </div>
+          </div>
+          <div class="p-4 rounded-xl bg-white default-snack-card" data-default-snack="true" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
+            <div class="flex items-center gap-3 mb-3">
+              <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="10">
+              <span class="text-xl">🧃</span>
+              <span class="font-medium snack-title" data-edit="teacher" contenteditable="false">Juice</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="11">
+              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="12">Save</button>
             </div>
           </div>
         </div>
@@ -329,7 +340,8 @@
     <section data-page-panel="scholar" class="pagePanel fade-in">
       <div class="rounded-2xl shadow-soft p-6 sm:p-10 mb-8" style="background: var(--md-white); border: 1px solid color-mix(in oklab, var(--md-mustard) 50%, var(--md-white) 50%);">
         <div class="grid lg:grid-cols-[auto,1fr] gap-8 items-center">
-          <div class="w-40 h-40 sm:w-48 sm:h-48 rounded-full border-4 img-frame photo-card overflow-hidden mx-auto lg:mx-0" style="border-color: var(--md-mustard);"></div>
+          <div class="w-40 h-40 sm:w-48 sm:h-48 rounded-full border-4 img-frame photo-card overflow-hidden mx-auto lg:mx-0" 
+               style="border-color: var(--md-mustard);" onclick="editProfilePhoto(this, 'scholar')"></div>
           <div class="text-center lg:text-left relative">
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4" style="background: color-mix(in oklab, var(--md-mustard) 25%, var(--md-white));">
               <span>🌟</span>
@@ -339,6 +351,11 @@
             <p class="text-lg leading-relaxed mb-6" data-edit="teacher" contenteditable="false">
               Emma has shown incredible kindness this week by helping her classmates and always having a positive attitude. She's been working so hard on her reading and it really shows!
             </p>
+            <button id="celebrateBtn" onclick="triggerConfetti()" 
+                    class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white" 
+                    style="background: var(--md-coral);">
+              <span>🎉</span><span>Celebrate!</span>
+            </button>
           </div>
         </div>
       </div>
@@ -355,7 +372,7 @@
           </div>
           <div class="rounded-xl p-4" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-coral) 30%); border: 1px solid color-mix(in oklab, var(--md-coral) 60%, var(--md-white) 40%);">
             <h3 class="font-semibold mb-3">Sounds / Sight Words / Vocab</h3>
-            <ul class="text-sm list-disc pl-5" data-edit="teacher" contenteditable="true">
+            <ul class="text-sm list-disc pl-5" data-edit="teacher" contenteditable="false">
               <li>Short vowel sounds</li>
               <li>Words: the, and, is, to</li>
               <li>Family vocabulary</li>
@@ -377,7 +394,7 @@
           </div>
           <div class="rounded-xl p-4" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-coral) 30%); border: 1px solid color-mix(in oklab, var(--md-coral) 60%, var(--md-white) 40%);">
             <h3 class="font-semibold mb-3">Ask your scholar...</h3>
-            <ul class="text-sm list-disc pl-5" data-edit="teacher" contenteditable="true">
+            <ul class="text-sm list-disc pl-5" data-edit="teacher" contenteditable="false">
               <li>What happened in today's story?</li>
               <li>Who was your favorite character?</li>
               <li>What do you think happens next?</li>
@@ -391,7 +408,6 @@
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
         <div class="flex items-center justify-between mb-5">
           <h2 class="text-2xl font-display font-bold" style="color: var(--md-slate);">🧮 Math Adventures</h2>
-          <p class="text-sm text-[color:var(--md-ink)]/80">This week in math</p>
         </div>
         <div class="grid md:grid-cols-3 gap-6">
           <div class="md:col-span-2">
@@ -401,7 +417,7 @@
           </div>
           <div class="rounded-xl p-4" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-blush) 30%); border: 1px solid color-mix(in oklab, var(--md-blush) 60%, var(--md-white) 40%);">
             <h3 class="font-semibold mb-3">Vocabulary & Strategies</h3>
-            <ul class="text-sm list-disc pl-5" data-edit="teacher" contenteditable="true">
+            <ul class="text-sm list-disc pl-5" data-edit="teacher" contenteditable="false">
               <li>Addition, sum, plus</li>
               <li>Count on strategy</li>
               <li>Number line</li>
@@ -416,20 +432,23 @@
       <div class="rounded-2xl shadow-soft p-6 sm:p-8" style="background: var(--card-bg);">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-2xl font-display font-bold" style="color: var(--md-coral);">✨ Classroom Updates</h2>
-          <div class="edit-only flex gap-2">
-            <button id="addExtrasCardBtn" class="px-3 py-2 rounded-lg text-white text-sm" style="background: var(--md-coral);" onclick="addExtrasCard()">+ Add Card</button>
+          <div class="flex gap-2">
+            <button id="saveExtrasBtn" class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveExtrasCards()">💾 Save Cards</button>
+            <button id="addExtrasCardBtn" class="px-3 py-2 rounded-lg text-white text-sm" style="background: var(--md-slate);" onclick="addExtrasCard()">+ Add Card</button>
           </div>
         </div>
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" id="extrasGrid">
           <div class="text-center p-8 rounded-2xl" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-mustard) 30%); border: 1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%);">
-            <div class="text-6xl mb-4 emoji-edit" data-edit="teacher" contenteditable="false">🎯</div>
-            <h3 class="font-semibold mb-2" data-edit="teacher" contenteditable="false">Class Goal</h3>
-            <p class="text-sm" data-edit="teacher" contenteditable="false">We're working together to read 100 books this month!</p>
+            <div class="text-6xl mb-4 emoji-edit" contenteditable="false" style="cursor: default;">🎯</div>
+            <h3 class="font-semibold mb-2" contenteditable="false" style="cursor: default;">Class Goal</h3>
+            <p class="text-sm" contenteditable="false" style="cursor: default;">We're working together to read 100 books this month!</p>
+            <button class="mt-2 text-red-500 hover:text-red-700 text-xs" onclick="this.closest('.text-center').remove();" style="display: none;">Remove Card</button>
           </div>
           <div class="text-center p-8 rounded-2xl" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-coral) 30%); border: 1px solid color-mix(in oklab, var(--md-coral) 60%, var(--md-white) 40%);">
-            <div class="text-6xl mb-4 emoji-edit" data-edit="teacher" contenteditable="false">📣</div>
-            <h3 class="font-semibold mb-2" data-edit="teacher" contenteditable="false">Shout-outs</h3>
-            <p class="text-sm" data-edit="teacher" contenteditable="false">Amazing job on our math assessments this week!</p>
+            <div class="text-6xl mb-4 emoji-edit" contenteditable="false" style="cursor: default;">📣</div>
+            <h3 class="font-semibold mb-2" contenteditable="false" style="cursor: default;">Shout-outs</h3>
+            <p class="text-sm" contenteditable="false" style="cursor: default;">Amazing job on our math assessments this week!</p>
+            <button class="mt-2 text-red-500 hover:text-red-700 text-xs" onclick="this.closest('.text-center').remove();" style="display: none;">Remove Card</button>
           </div>
         </div>
       </div>
@@ -448,6 +467,7 @@
                 <button onclick="prevGalleryImg(this)">‹</button>
                 <button onclick="nextGalleryImg(this)">›</button>
               </span>
+              <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="deleteGalleryPhoto(this, 'art')" title="Delete Photo">✖</button>
             </div>
             <div class="rounded-lg p-4 m-4 bg-white" style="color: var(--md-ink);">
               <h3 class="font-semibold">🎨 Art</h3>
@@ -463,6 +483,7 @@
                 <button onclick="prevGalleryImg(this)">‹</button>
                 <button onclick="nextGalleryImg(this)">›</button>
               </span>
+              <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="deleteGalleryPhoto(this, 'stem')" title="Delete Photo">✖</button>
             </div>
             <div class="rounded-lg p-4 m-4 bg-white" style="color: var(--md-ink);">
               <h3 class="font-semibold">🔬 STEM</h3>
@@ -478,6 +499,7 @@
                 <button onclick="prevGalleryImg(this)">‹</button>
                 <button onclick="nextGalleryImg(this)">›</button>
               </span>
+              <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="deleteGalleryPhoto(this, 'gym')" title="Delete Photo">✖</button>
             </div>
             <div class="rounded-lg p-4 m-4 bg-white" style="color: var(--md-ink);">
               <h3 class="font-semibold">🏃‍♂️ Gym</h3>
@@ -493,6 +515,7 @@
                 <button onclick="prevGalleryImg(this)">‹</button>
                 <button onclick="nextGalleryImg(this)">›</button>
               </span>
+              <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="deleteGalleryPhoto(this, 'music')" title="Delete Photo">✖</button>
             </div>
             <div class="rounded-lg p-4 m-4 bg-white" style="color: var(--md-ink);">
               <h3 class="font-semibold">🎵 Music</h3>
@@ -507,32 +530,38 @@
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--md-cream);">
         <div class="flex items-center justify-between mb-5">
           <h2 class="text-2xl font-display font-bold" style="color: var(--md-slate);">🌐 Practice Websites</h2>
+          <button id="saveWebsitesBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="saveWebsiteUrls()">💾 Save URLs</button>
         </div>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-slate) 60%, var(--md-white) 40%);">
             <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">📱</div>
             <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">ClassDojo</h3>
             <a href="https://classdojo.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-white text-sm" style="background: var(--md-slate);">Visit Site</a>
+            <input type="url" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://classdojo.com" onchange="updateWebsiteUrl(this)">
           </div>
           <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%);">
             <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">🎯</div>
             <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">Clever – Learning Portal</h3>
             <a href="https://clever.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-white text-sm" style="background: var(--md-mustard);">Visit Site</a>
+            <input type="url" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://clever.com" onchange="updateWebsiteUrl(this)">
           </div>
           <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-coral) 60%, var(--md-white) 40%);">
             <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">📘</div>
             <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">Math Practice</h3>
             <a href="https://mathplayground.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-white text-sm" style="background: var(--md-coral);">Visit Site</a>
+            <input type="url" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://mathplayground.com" onchange="updateWebsiteUrl(this)">
           </div>
           <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-blush) 60%, var(--md-white) 40%);">
             <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">📚</div>
             <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">Skills Practice</h3>
             <a href="https://readingeggs.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold" style="background: var(--md-blush); color: var(--md-ink);">Visit Site</a>
+            <input type="url" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://readingeggs.com" onchange="updateWebsiteUrl(this)">
           </div>
           <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-pebble) 60%, var(--md-white) 40%);">
             <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">🔤</div>
             <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">Blending Practice</h3>
             <a href="https://starfall.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-sm" style="background: var(--md-pebble); color: var(--md-ink);">Visit Site</a>
+            <input type="url" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://starfall.com" onchange="updateWebsiteUrl(this)">
           </div>
         </div>
       </div>
@@ -543,22 +572,25 @@
         <h2 class="text-2xl font-display font-bold mb-6" style="color: #f59e0b;">🚌 Transportation</h2>
         <div class="space-y-6">
           <div class="bg-white rounded-xl p-6" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
-            <h3 class="text-lg font-semibold mb-4">🚌 Bus Riders</h3>
-            <textarea class="w-full h-32 p-3 text-sm border rounded-lg resize-none" placeholder="• Type your bullet points here...
-• One student per line
-• Use bullet points or dashes"></textarea>
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold">🚌 Bus Riders</h3>
+              <button id="saveBusRidersBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveTransportationField('busRiders')">💾 Save</button>
+            </div>
+            <textarea id="busRidersTextarea" class="w-full h-32 p-3 text-sm border rounded-lg resize-none" placeholder="Student name and bus number"></textarea>
           </div>
           <div class="bg-white rounded-xl p-6" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
-            <h3 class="text-lg font-semibold mb-4">🚗 Car Riders</h3>
-            <textarea class="w-full h-32 p-3 text-sm border rounded-lg resize-none" placeholder="• Type your bullet points here...
-• One student per line
-• Use bullet points or dashes"></textarea>
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold">🚗 Car Riders</h3>
+              <button id="saveCarRidersBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveTransportationField('carRiders')">💾 Save</button>
+            </div>
+            <textarea id="carRidersTextarea" class="w-full h-32 p-3 text-sm border rounded-lg resize-none"></textarea>
           </div>
           <div class="bg-white rounded-xl p-6" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
-            <h3 class="text-lg font-semibold mb-4">🏠 Porch Pickup</h3>
-            <textarea class="w-full h-32 p-3 text-sm border rounded-lg resize-none" placeholder="• Type your bullet points here...
-• One student per line
-• Use bullet points or dashes"></textarea>
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold">🏠 Porch Pickup</h3>
+              <button id="savePorchPickupBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveTransportationField('porchPickup')">💾 Save</button>
+            </div>
+            <textarea id="porchPickupTextarea" class="w-full h-32 p-3 text-sm border rounded-lg resize-none"></textarea>
           </div>
         </div>
       </div>
@@ -567,45 +599,60 @@
     <section data-page-panel="aboutme" class="pagePanel fade-in">
       <div class="rounded-2xl shadow-soft p-6 sm:p-10 mb-8" style="background: var(--md-cream);">
         <div class="grid md:grid-cols-[auto,1fr] gap-8 items-center">
-          <div class="w-40 h-40 sm:w-48 sm:h-48 rounded-full border-4 img-frame photo-card overflow-hidden mx-auto md:mx-0" style="border-color: var(--md-mustard);"></div>
+          <div class="w-40 h-40 sm:w-48 sm:h-48 rounded-full border-4 img-frame photo-card overflow-hidden mx-auto md:mx-0" 
+               style="border-color: var(--md-mustard);" onclick="editProfilePhoto(this, 'aboutme')"></div>
           <div>
             <h2 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">👋 About Mr. Davis</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              <div class="bg-white rounded-xl p-4 text-center">
-                <div class="text-2xl mb-2">🎨</div>
-                <h4 class="font-semibold text-sm mb-1">Favorite Color</h4>
-                <p class="text-xs" data-edit="teacher" contenteditable="false">Blue</p>
-              </div>
-              <div class="bg-white rounded-xl p-4 text-center">
-                <div class="text-2xl mb-2">🍪</div>
-                <h4 class="font-semibold text-sm mb-1">Favorite Snack</h4>
-                <p class="text-xs" data-edit="teacher" contenteditable="false">Cookies</p>
-              </div>
-              <div class="bg-white rounded-xl p-4 text-center">
-                <div class="text-2xl mb-2">🥤</div>
-                <h4 class="font-semibold text-sm mb-1">Favorite Drink</h4>
-                <p class="text-xs" data-edit="teacher" contenteditable="false">Coffee</p>
-              </div>
-              <div class="bg-white rounded-xl p-4 text-center">
-                <div class="text-2xl mb-2">📺</div>
-                <h4 class="font-semibold text-sm mb-1">Favorite Show</h4>
-                <p class="text-xs" data-edit="teacher" contenteditable="false">The Office</p>
-              </div>
-            </div>
             <div class="mb-6">
-              <h3 class="font-semibold mb-3">About Me</h3>
-              <p class="leading-relaxed" data-edit="teacher" contenteditable="false">
+              <div class="flex justify-between items-center mb-3">
+                <h3 class="font-semibold">About Me</h3>
+                <button id="saveAboutMeDescBtn" class="px-3 py-1 rounded-lg text-white text-xs font-semibold" style="background: var(--md-coral);" onclick="saveAboutMeField('aboutMeDesc')">💾 Save</button>
+              </div>
+              <p id="aboutMeDescText" class="leading-relaxed" contenteditable="false" style="min-height: 60px; padding: 8px; border: 1px solid #e5e7eb; border-radius: 6px;">
                 I've been teaching first grade for 8 years and absolutely love working with young learners! I believe every child can succeed with the right support and encouragement.
               </p>
             </div>
-            <div>
-              <h3 class="font-semibold mb-3">Fun Facts</h3>
-              <ul class="list-disc pl-5 space-y-1" data-edit="teacher" contenteditable="false">
+            <div class="mb-6">
+              <div class="flex justify-between items-center mb-3">
+                <h3 class="font-semibold">Fun Facts</h3>
+                <button id="saveFunFactsBtn" class="px-3 py-1 rounded-lg text-white text-xs font-semibold" style="background: var(--md-coral);" onclick="saveAboutMeField('funFacts')">💾 Save</button>
+              </div>
+              <ul id="funFactsList" class="list-disc pl-5 space-y-1" contenteditable="false" style="min-height: 80px; padding: 8px; border: 1px solid #e5e7eb; border-radius: 6px;">
                 <li>I love reading mystery novels</li>
                 <li>I have two cats named Whiskers and Mittens</li>
                 <li>I enjoy hiking on weekends</li>
                 <li>I can play the guitar</li>
               </ul>
+            </div>
+          </div>
+        </div>
+        <!-- Favorites Section moved to bottom -->
+        <div class="mt-8">
+          <h3 class="font-semibold mb-4 text-center">Personal Favorites</h3>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white rounded-xl p-4 text-center">
+              <div class="text-2xl mb-2">🎨</div>
+              <h4 class="font-semibold text-sm mb-1">Favorite Color</h4>
+              <p id="favoriteColorText" class="text-xs" contenteditable="false" style="min-height: 20px; padding: 4px; border: 1px solid #e5e7eb; border-radius: 4px;">Blue</p>
+              <button id="saveFavoriteColorBtn" class="mt-2 px-2 py-1 rounded text-white text-xs" style="background: var(--md-coral);" onclick="saveAboutMeField('favoriteColor')">💾</button>
+            </div>
+            <div class="bg-white rounded-xl p-4 text-center">
+              <div class="text-2xl mb-2">🍪</div>
+              <h4 class="font-semibold text-sm mb-1">Favorite Snack</h4>
+              <p id="favoriteSnackText" class="text-xs" contenteditable="false" style="min-height: 20px; padding: 4px; border: 1px solid #e5e7eb; border-radius: 4px;">Cookies</p>
+              <button id="saveFavoriteSnackBtn" class="mt-2 px-2 py-1 rounded text-white text-xs" style="background: var(--md-coral);" onclick="saveAboutMeField('favoriteSnack')">💾</button>
+            </div>
+            <div class="bg-white rounded-xl p-4 text-center">
+              <div class="text-2xl mb-2">🥤</div>
+              <h4 class="font-semibold text-sm mb-1">Favorite Drink</h4>
+              <p id="favoriteDrinkText" class="text-xs" contenteditable="false" style="min-height: 20px; padding: 4px; border: 1px solid #e5e7eb; border-radius: 4px;">Coffee</p>
+              <button id="saveFavoriteDrinkBtn" class="mt-2 px-2 py-1 rounded text-white text-xs" style="background: var(--md-coral);" onclick="saveAboutMeField('favoriteDrink')">💾</button>
+            </div>
+            <div class="bg-white rounded-xl p-4 text-center">
+              <div class="text-2xl mb-2">📺</div>
+              <h4 class="font-semibold text-sm mb-1">Favorite Show</h4>
+              <p id="favoriteShowText" class="text-xs" contenteditable="false" style="min-height: 20px; padding: 4px; border: 1px solid #e5e7eb; border-radius: 4px;">The Office</p>
+              <button id="saveFavoriteShowBtn" class="mt-2 px-2 py-1 rounded text-white text-xs" style="background: var(--md-coral);" onclick="saveAboutMeField('favoriteShow')">💾</button>
             </div>
           </div>
         </div>
@@ -615,8 +662,11 @@
     <section data-page-panel="birthdays" class="pagePanel fade-in">
       <h2 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">🎂 Class Roster & Birthdays</h2>
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8 bg-white" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
-        <h3 class="text-xl font-semibold mb-5">👥 Class Roster</h3>
-        <textarea class="w-full h-40 p-4 text-sm border rounded-lg resize-none teacher-only-edit" disabled placeholder="• Type your student names here...
+        <div class="flex justify-between items-center mb-5">
+          <h3 class="text-xl font-semibold">👥 Class Roster</h3>
+          <button id="saveClassRosterBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveBirthdayField('classRoster')">💾 Save</button>
+        </div>
+        <textarea id="classRosterTextarea" class="w-full h-40 p-4 text-sm border rounded-lg resize-none" placeholder="• Type your student names here...
 • One student per line
 • Use bullet points or dashes">• Emma S.
 • Jake M.
@@ -626,57 +676,60 @@
 • Noah T.</textarea>
       </div>
       <div class="rounded-2xl shadow-soft p-6 sm:p-8" style="background: var(--md-cream);">
-        <h3 class="text-xl font-semibold mb-5">🎂 Birthday Calendar</h3>
+        <div class="flex justify-between items-center mb-5">
+          <h3 class="text-xl font-semibold">🎂 Birthday Calendar</h3>
+          <button id="saveAllBirthdaysBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveAllBirthdays()">💾 Save All Birthdays</button>
+        </div>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div class="birthday-month bg-white rounded-xl p-4" style="border: 1px solid color-mix(in oklab, var(--md-blush) 60%, var(--md-white) 40%);">
             <h4 class="font-semibold mb-3">❄️ January</h4>
-            <textarea class="w-full h-20 p-2 text-sm border rounded resize-none teacher-only-edit" disabled placeholder="Enter birthdays..."></textarea>
+            <textarea id="januaryBirthdaysTextarea" class="w-full h-20 p-2 text-sm border rounded resize-none" placeholder="Enter birthdays..."></textarea>
           </div>
           <div class="birthday-month bg-white rounded-xl p-4" style="border: 1px solid color-mix(in oklab, var(--md-coral) 60%, var(--md-white) 40%);">
             <h4 class="font-semibold mb-3">💕 February</h4>
-            <textarea class="w-full h-20 p-2 text-sm border rounded resize-none teacher-only-edit" disabled placeholder="Enter birthdays..."></textarea>
+            <textarea id="februaryBirthdaysTextarea" class="w-full h-20 p-2 text-sm border rounded resize-none" placeholder="Enter birthdays..."></textarea>
           </div>
           <div class="birthday-month bg-white rounded-xl p-4" style="border: 1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%);">
             <h4 class="font-semibold mb-3">🌸 March</h4>
-            <textarea class="w-full h-20 p-2 text-sm border rounded resize-none teacher-only-edit" disabled placeholder="Enter birthdays..."></textarea>
+            <textarea id="marchBirthdaysTextarea" class="w-full h-20 p-2 text-sm border rounded resize-none" placeholder="Enter birthdays..."></textarea>
           </div>
           <div class="birthday-month bg-white rounded-xl p-4" style="border: 1px solid color-mix(in oklab, var(--md-slate) 60%, var(--md-white) 40%);">
             <h4 class="font-semibold mb-3">🌷 April</h4>
-            <textarea class="w-full h-20 p-2 text-sm border rounded resize-none teacher-only-edit" disabled placeholder="Enter birthdays..."></textarea>
+            <textarea id="aprilBirthdaysTextarea" class="w-full h-20 p-2 text-sm border rounded resize-none" placeholder="Enter birthdays..."></textarea>
           </div>
           <div class="birthday-month bg-white rounded-xl p-4" style="border: 1px solid color-mix(in oklab, var(--md-pebble) 60%, var(--md-white) 40%);">
             <h4 class="font-semibold mb-3">🌺 May</h4>
-            <textarea class="w-full h-20 p-2 text-sm border rounded resize-none teacher-only-edit" disabled placeholder="Enter birthdays..."></textarea>
+            <textarea id="mayBirthdaysTextarea" class="w-full h-20 p-2 text-sm border rounded resize-none" placeholder="Enter birthdays..."></textarea>
           </div>
           <div class="birthday-month bg-white rounded-xl p-4" style="border: 1px solid color-mix(in oklab, var(--md-coral) 60%, var(--md-white) 40%);">
             <h4 class="font-semibold mb-3">☀️ June</h4>
-            <textarea class="w-full h-20 p-2 text-sm border rounded resize-none teacher-only-edit" disabled placeholder="Enter birthdays..."></textarea>
+            <textarea id="juneBirthdaysTextarea" class="w-full h-20 p-2 text-sm border rounded resize-none" placeholder="Enter birthdays..."></textarea>
           </div>
           <div class="birthday-month bg-white rounded-xl p-4" style="border: 1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%);">
             <h4 class="font-semibold mb-3">🏖️ July</h4>
-            <textarea class="w-full h-20 p-2 text-sm border rounded resize-none teacher-only-edit" disabled placeholder="Enter birthdays..."></textarea>
+            <textarea id="julyBirthdaysTextarea" class="w-full h-20 p-2 text-sm border rounded resize-none" placeholder="Enter birthdays..."></textarea>
           </div>
           <div class="birthday-month bg-white rounded-xl p-4" style="border: 1px solid color-mix(in oklab, var(--md-blush) 60%, var(--md-white) 40%);">
             <h4 class="font-semibold mb-3">🌻 August</h4>
-            <textarea class="w-full h-20 p-2 text-sm border rounded resize-none teacher-only-edit" disabled placeholder="Enter birthdays..."></textarea>
+            <textarea id="augustBirthdaysTextarea" class="w-full h-20 p-2 text-sm border rounded resize-none" placeholder="Enter birthdays..."></textarea>
           </div>
           <div class="birthday-month bg-white rounded-xl p-4" style="border: 1px solid color-mix(in oklab, var(--md-slate) 60%, var(--md-white) 40%);">
             <h4 class="font-semibold mb-3">🍎 September</h4>
-            <textarea class="w-full h-20 p-2 text-sm border rounded resize-none teacher-only-edit" disabled placeholder="Enter birthdays..."></textarea>
+            <textarea id="septemberBirthdaysTextarea" class="w-full h-20 p-2 text-sm border rounded resize-none" placeholder="Enter birthdays..."></textarea>
           </div>
           <div class="birthday-month bg-white rounded-xl p-4" style="border: 1px solid color-mix(in oklab, var(--md-pebble) 60%, var(--md-white) 40%);">
             <h4 class="font-semibold mb-3">🍂 October</h4>
-            <textarea class="w-full h-20 p-2 text-sm border rounded resize-none teacher-only-edit" disabled placeholder="Enter birthdays...">15th – Emma S.
+            <textarea id="octoberBirthdaysTextarea" class="w-full h-20 p-2 text-sm border rounded resize-none" placeholder="Enter birthdays...">15th – Emma S.
 28th – Jake M.</textarea>
           </div>
           <div class="birthday-month bg-white rounded-xl p-4" style="border: 1px solid color-mix(in oklab, var(--md-coral) 60%, var(--md-white) 40%);">
             <h4 class="font-semibold mb-3">🦃 November</h4>
-            <textarea class="w-full h-20 p-2 text-sm border rounded resize-none teacher-only-edit" disabled placeholder="Enter birthdays...">12th – Sarah L.
+            <textarea id="novemberBirthdaysTextarea" class="w-full h-20 p-2 text-sm border rounded resize-none" placeholder="Enter birthdays...">12th – Sarah L.
 25th – Alex R.</textarea>
           </div>
           <div class="birthday-month bg-white rounded-xl p-4" style="border: 1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%);">
             <h4 class="font-semibold mb-3">🎄 December</h4>
-            <textarea class="w-full h-20 p-2 text-sm border rounded resize-none teacher-only-edit" disabled placeholder="Enter birthdays...">8th – Mia K.
+            <textarea id="decemberBirthdaysTextarea" class="w-full h-20 p-2 text-sm border rounded resize-none" placeholder="Enter birthdays...">8th – Mia K.
 22nd – Noah T.</textarea>
           </div>
         </div>
@@ -687,7 +740,7 @@
     <div class="max-w-6xl mx-auto px-6 py-8">
       <div class="flex items-center justify-between">
         <div>
-          <p class="text-sm text-gray-600">© 2024 Mr. Davis's First Grade Class</p>
+          <p class="text-sm text-gray-600">© 2025 Mr. Davis's First Grade Class</p>
         </div>
         <div class="flex gap-3">
           <button id="saveChangesBtn" class="px-4 py-2 rounded-xl font-semibold text-white shadow-soft" style="background: var(--md-coral); display: none;">
@@ -740,6 +793,10 @@
       });
       // Edit Mode PIN overlay logic
       const TEACHER_PIN = '2213';
+      
+      // Initialize read-only state on page load
+      initializeReadOnlyState();
+      
       document.getElementById('editModeBtn').onclick = function() {
         document.getElementById('pinOverlay').classList.add('show');
         document.getElementById('pinInput').focus();
@@ -804,11 +861,139 @@
       return hasChanges;
     }
     
+    
+    function initializeReadOnlyState() {
+      // Disable About Me section
+      const aboutMeDescText = document.getElementById('aboutMeDescText');
+      if (aboutMeDescText) aboutMeDescText.contentEditable = false;
+      const funFactsList = document.getElementById('funFactsList');
+      if (funFactsList) funFactsList.contentEditable = false;
+      const favoriteColorText = document.getElementById('favoriteColorText');
+      if (favoriteColorText) favoriteColorText.contentEditable = false;
+      const favoriteSnackText = document.getElementById('favoriteSnackText');
+      if (favoriteSnackText) favoriteSnackText.contentEditable = false;
+      const favoriteDrinkText = document.getElementById('favoriteDrinkText');
+      if (favoriteDrinkText) favoriteDrinkText.contentEditable = false;
+      const favoriteShowText = document.getElementById('favoriteShowText');
+      if (favoriteShowText) favoriteShowText.contentEditable = false;
+      const aboutMeSaveButtons = ['saveAboutMeDescBtn', 'saveFunFactsBtn', 'saveFavoriteColorBtn', 'saveFavoriteSnackBtn', 'saveFavoriteDrinkBtn', 'saveFavoriteShowBtn'];
+      aboutMeSaveButtons.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.style.display = 'none';
+      });
+      
+      // Disable Class Roster section
+      const classRosterTextarea = document.getElementById('classRosterTextarea');
+      if (classRosterTextarea) { classRosterTextarea.disabled = true; classRosterTextarea.readOnly = true; }
+      const saveClassRosterBtn = document.getElementById('saveClassRosterBtn');
+      if (saveClassRosterBtn) saveClassRosterBtn.style.display = 'none';
+      
+      // Disable Birthday sections
+      const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+      months.forEach(month => {
+        const monthTextarea = document.getElementById(`${month}BirthdaysTextarea`);
+        if (monthTextarea) { monthTextarea.disabled = true; monthTextarea.readOnly = true; }
+      });
+      const saveAllBirthdaysBtn = document.getElementById('saveAllBirthdaysBtn');
+      if (saveAllBirthdaysBtn) saveAllBirthdaysBtn.style.display = 'none';
+      
+      // Disable Practice Websites section  
+      document.querySelectorAll('.website-url-input').forEach(input => {
+        input.disabled = true;
+        input.readOnly = true;
+      });
+      const saveWebsitesBtn = document.getElementById('saveWebsitesBtn');
+      if (saveWebsitesBtn) saveWebsitesBtn.style.display = 'none';
+      
+      // Disable Extras section
+      const saveExtrasBtn = document.getElementById('saveExtrasBtn');
+      if (saveExtrasBtn) saveExtrasBtn.style.display = 'none';
+      const addExtrasCardBtn = document.getElementById('addExtrasCardBtn');
+      if (addExtrasCardBtn) addExtrasCardBtn.style.display = 'none';
+      
+      // Disable Extras contenteditable elements and remove buttons
+      document.querySelectorAll('#extrasGrid [contenteditable]').forEach(el => {
+        el.contentEditable = false;
+        el.style.cursor = 'default';
+      });
+      document.querySelectorAll('#extrasGrid button[onclick*="remove"]').forEach(btn => {
+        btn.style.display = 'none';
+      });
+    }
+    
     function enterEditMode(){
       storeOriginalValues();
       document.body.classList.add('editing');
       document.querySelectorAll('[data-edit="teacher"]').forEach(el=>el.contentEditable=true);
       document.querySelectorAll('.teacher-only-edit').forEach(el=>{el.disabled=false;el.readOnly=false;});
+      // Enable snack message textarea and show edit controls
+      const snackMessage = document.getElementById('snackMessage');
+      if (snackMessage) {
+        snackMessage.disabled = false;
+        snackMessage.readOnly = false;
+      }
+      // Show edit-only elements
+      document.querySelectorAll('.edit-only').forEach(el => {
+        el.style.display = 'block';
+      });
+      
+      // Enable About Me section
+      const aboutMeDescText = document.getElementById('aboutMeDescText');
+      if (aboutMeDescText) aboutMeDescText.contentEditable = true;
+      const funFactsList = document.getElementById('funFactsList');
+      if (funFactsList) funFactsList.contentEditable = true;
+      const favoriteColorText = document.getElementById('favoriteColorText');
+      if (favoriteColorText) favoriteColorText.contentEditable = true;
+      const favoriteSnackText = document.getElementById('favoriteSnackText');
+      if (favoriteSnackText) favoriteSnackText.contentEditable = true;
+      const favoriteDrinkText = document.getElementById('favoriteDrinkText');
+      if (favoriteDrinkText) favoriteDrinkText.contentEditable = true;
+      const favoriteShowText = document.getElementById('favoriteShowText');
+      if (favoriteShowText) favoriteShowText.contentEditable = true;
+      const aboutMeSaveButtons = ['saveAboutMeDescBtn', 'saveFunFactsBtn', 'saveFavoriteColorBtn', 'saveFavoriteSnackBtn', 'saveFavoriteDrinkBtn', 'saveFavoriteShowBtn'];
+      aboutMeSaveButtons.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.style.display = 'inline-block';
+      });
+      
+      // Enable Class Roster section
+      const classRosterTextarea = document.getElementById('classRosterTextarea');
+      if (classRosterTextarea) { classRosterTextarea.disabled = false; classRosterTextarea.readOnly = false; }
+      const saveClassRosterBtn = document.getElementById('saveClassRosterBtn');
+      if (saveClassRosterBtn) saveClassRosterBtn.style.display = 'inline-block';
+      
+      // Enable Birthday sections
+      const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+      months.forEach(month => {
+        const monthTextarea = document.getElementById(`${month}BirthdaysTextarea`);
+        if (monthTextarea) { monthTextarea.disabled = false; monthTextarea.readOnly = false; }
+      });
+      const saveAllBirthdaysBtn = document.getElementById('saveAllBirthdaysBtn');
+      if (saveAllBirthdaysBtn) saveAllBirthdaysBtn.style.display = 'inline-block';
+      
+      // Enable Practice Websites section  
+      document.querySelectorAll('.website-url-input').forEach(input => {
+        input.disabled = false;
+        input.readOnly = false;
+      });
+      const saveWebsitesBtn = document.getElementById('saveWebsitesBtn');
+      if (saveWebsitesBtn) saveWebsitesBtn.style.display = 'inline-block';
+      
+      // Enable Extras section
+      const saveExtrasBtn = document.getElementById('saveExtrasBtn');
+      if (saveExtrasBtn) saveExtrasBtn.style.display = 'inline-block';
+      const addExtrasCardBtn = document.getElementById('addExtrasCardBtn');
+      if (addExtrasCardBtn) addExtrasCardBtn.style.display = 'inline-block';
+      
+      // Enable Extras contenteditable elements and remove buttons
+      document.querySelectorAll('#extrasGrid [contenteditable]').forEach(el => {
+        el.contentEditable = true;
+        el.style.cursor = 'text';
+      });
+      document.querySelectorAll('#extrasGrid button[onclick*="remove"]').forEach(btn => {
+        btn.style.display = 'inline-block';
+      });
+      
       document.getElementById('editModeBtn').textContent = '💾 Exit Edit Mode';
       document.getElementById('editModeBtn').onclick = exitEditMode;
     }
@@ -816,30 +1001,79 @@
       document.body.classList.remove('editing');
       document.querySelectorAll('[data-edit="teacher"]').forEach(el=>el.contentEditable=false);
       document.querySelectorAll('.teacher-only-edit').forEach(el=>{el.disabled=true;el.readOnly=true;});
+      // Disable snack message textarea and hide edit controls
+      const snackMessage = document.getElementById('snackMessage');
+      if (snackMessage) {
+        snackMessage.disabled = true;
+        snackMessage.readOnly = true;
+      }
+      // Hide edit-only elements
+      document.querySelectorAll('.edit-only').forEach(el => {
+        el.style.display = 'none';
+      });
+      
+      // Disable About Me section
+      const aboutMeDescText = document.getElementById('aboutMeDescText');
+      if (aboutMeDescText) aboutMeDescText.contentEditable = false;
+      const funFactsList = document.getElementById('funFactsList');
+      if (funFactsList) funFactsList.contentEditable = false;
+      const favoriteColorText = document.getElementById('favoriteColorText');
+      if (favoriteColorText) favoriteColorText.contentEditable = false;
+      const favoriteSnackText = document.getElementById('favoriteSnackText');
+      if (favoriteSnackText) favoriteSnackText.contentEditable = false;
+      const favoriteDrinkText = document.getElementById('favoriteDrinkText');
+      if (favoriteDrinkText) favoriteDrinkText.contentEditable = false;
+      const favoriteShowText = document.getElementById('favoriteShowText');
+      if (favoriteShowText) favoriteShowText.contentEditable = false;
+      const aboutMeSaveButtons = ['saveAboutMeDescBtn', 'saveFunFactsBtn', 'saveFavoriteColorBtn', 'saveFavoriteSnackBtn', 'saveFavoriteDrinkBtn', 'saveFavoriteShowBtn'];
+      aboutMeSaveButtons.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.style.display = 'none';
+      });
+      
+      // Disable Class Roster section
+      const classRosterTextarea = document.getElementById('classRosterTextarea');
+      if (classRosterTextarea) { classRosterTextarea.disabled = true; classRosterTextarea.readOnly = true; }
+      const saveClassRosterBtn = document.getElementById('saveClassRosterBtn');
+      if (saveClassRosterBtn) saveClassRosterBtn.style.display = 'none';
+      
+      // Disable Birthday sections
+      const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+      months.forEach(month => {
+        const monthTextarea = document.getElementById(`${month}BirthdaysTextarea`);
+        if (monthTextarea) { monthTextarea.disabled = true; monthTextarea.readOnly = true; }
+      });
+      const saveAllBirthdaysBtn = document.getElementById('saveAllBirthdaysBtn');
+      if (saveAllBirthdaysBtn) saveAllBirthdaysBtn.style.display = 'none';
+      
+      // Disable Practice Websites section  
+      document.querySelectorAll('.website-url-input').forEach(input => {
+        input.disabled = true;
+        input.readOnly = true;
+      });
+      const saveWebsitesBtn = document.getElementById('saveWebsitesBtn');
+      if (saveWebsitesBtn) saveWebsitesBtn.style.display = 'none';
+      
+      // Disable Extras section
+      const saveExtrasBtn = document.getElementById('saveExtrasBtn');
+      if (saveExtrasBtn) saveExtrasBtn.style.display = 'none';
+      const addExtrasCardBtn = document.getElementById('addExtrasCardBtn');
+      if (addExtrasCardBtn) addExtrasCardBtn.style.display = 'none';
+      
+      // Disable Extras contenteditable elements and remove buttons
+      document.querySelectorAll('#extrasGrid [contenteditable]').forEach(el => {
+        el.contentEditable = false;
+        el.style.cursor = 'default';
+      });
+      document.querySelectorAll('#extrasGrid button[onclick*="remove"]').forEach(btn => {
+        btn.style.display = 'none';
+      });
+      
       document.getElementById('editModeBtn').textContent = '✏️ Edit Mode';
       document.getElementById('editModeBtn').onclick = function(){
         document.getElementById('pinOverlay').classList.add('show');
         document.getElementById('pinInput').focus();
       };
-      
-      // Hide upload UI and reset its state
-      const uploadSection = document.getElementById('imageUploadSection');
-      if (uploadSection) {
-        // Reset upload form state
-        const liveImageInput = document.getElementById('liveImageInput');
-        const uploadImageBtn = document.getElementById('uploadImageBtn');
-        const uploadStatus = document.getElementById('uploadStatus');
-        const uploadedImageContainer = document.getElementById('uploadedImageContainer');
-        
-        if (liveImageInput) liveImageInput.value = '';
-        if (uploadImageBtn) {
-          uploadImageBtn.disabled = true;
-          uploadImageBtn.classList.add('opacity-50', 'cursor-not-allowed');
-          uploadImageBtn.innerHTML = 'Upload';
-        }
-        if (uploadStatus) uploadStatus.classList.add('hidden');
-        if (uploadedImageContainer) uploadedImageContainer.classList.add('hidden');
-      }
       
       // Check for changes and show/hide save button
       const saveBtn = document.getElementById('saveChangesBtn');
@@ -886,19 +1120,32 @@
         }
       }
       
-      // Snacks grid - collect snack items  
-      const snacksGrid = document.querySelector('.grid.grid-cols-1.gap-3');
+      // Snacks grid - collect snack items with checkbox states
+      const snacksGrid = document.getElementById('snacksGrid');
       if (snacksGrid) {
         const snacks = [];
-        snacksGrid.querySelectorAll('.grid.grid-cols-\\[auto_1fr\\].gap-2').forEach(item => {
-          const emoji = item.querySelector('span:first-child')?.textContent || '';
-          const name = item.querySelector('span:nth-child(2)')?.textContent || '';
-          if (name) {
-            snacks.push({ emoji: emoji, name: name });
+        snacksGrid.querySelectorAll('.p-4').forEach(card => {
+          const emoji = card.querySelector('.text-xl')?.textContent || '';
+          const item = card.querySelector('.snack-title')?.textContent || '';
+          const claimedBy = card.querySelector('.snack-name')?.value || '';
+          const checked = card.querySelector('.snack-checkbox')?.checked || false;
+          const isDefault = card.getAttribute('data-default-snack') === 'true';
+          if (item) {
+            snacks.push({ 
+              emoji: emoji, 
+              item: item, 
+              claimed_by: claimedBy, 
+              checked: checked,
+              is_default: isDefault
+            });
           }
         });
         data.snacks_json = JSON.stringify(snacks);
       }
+      
+      // Snack message
+      const snackMessageEl = document.getElementById('snackMessage');
+      if (snackMessageEl) data.snack_message = snackMessageEl.value || '';
       
       // Scholar info
       const scholarNameEl = document.querySelector('[data-page-panel="scholar"] h3[data-edit="teacher"]');
@@ -960,6 +1207,95 @@
       });
       data.gallery_urls_json = JSON.stringify(galleries);
       
+      // Transportation fields
+      const busRidersEl = document.getElementById('busRidersTextarea');
+      if (busRidersEl) data.bus_riders = busRidersEl.value || '';
+      
+      const carRidersEl = document.getElementById('carRidersTextarea');
+      if (carRidersEl) data.car_riders = carRidersEl.value || '';
+      
+      const porchPickupEl = document.getElementById('porchPickupTextarea');
+      if (porchPickupEl) data.porch_pickup = porchPickupEl.value || '';
+      
+      // Birthday fields
+      const classRosterEl = document.getElementById('classRosterTextarea');
+      if (classRosterEl) data.class_roster = classRosterEl.value || '';
+      
+      // Monthly birthday fields
+      const months = ['january', 'february', 'march', 'april', 'may', 'june', 
+                      'july', 'august', 'september', 'october', 'november', 'december'];
+      months.forEach(month => {
+        const monthEl = document.getElementById(`${month}BirthdaysTextarea`);
+        if (monthEl) data[`${month}_birthdays`] = monthEl.value || '';
+      });
+      
+      // About Me fields
+      const aboutMeDescEl = document.getElementById('aboutMeDescText');
+      if (aboutMeDescEl) data.about_me_html = aboutMeDescEl.innerHTML || '';
+      
+      const funFactsEl = document.getElementById('funFactsList');
+      if (funFactsEl) {
+        // Extract list items from the contenteditable ul
+        const listItems = Array.from(funFactsEl.querySelectorAll('li')).map(li => li.textContent || '');
+        data.fun_facts_html = listItems;
+      }
+      
+      const favoriteColorEl = document.getElementById('favoriteColorText');
+      if (favoriteColorEl) data.favorite_color = favoriteColorEl.textContent || '';
+      
+      const favoriteSnackEl = document.getElementById('favoriteSnackText');
+      if (favoriteSnackEl) data.favorite_snack = favoriteSnackEl.textContent || '';
+      
+      const favoriteDrinkEl = document.getElementById('favoriteDrinkText');
+      if (favoriteDrinkEl) data.favorite_drink = favoriteDrinkEl.textContent || '';
+      
+      const favoriteShowEl = document.getElementById('favoriteShowText');
+      if (favoriteShowEl) data.favorite_show = favoriteShowEl.textContent || '';
+      
+      // Extras cards
+      const extrasGrid = document.getElementById('extrasGrid');
+      if (extrasGrid) {
+        const extras = [];
+        extrasGrid.querySelectorAll('.text-center').forEach(card => {
+          const emojiEl = card.querySelector('.emoji-edit, [data-edit="teacher"]');
+          const titleEl = card.querySelector('h3');
+          const bodyEl = card.querySelector('p');
+          
+          if (titleEl && bodyEl) {
+            extras.push({
+              emoji: emojiEl ? emojiEl.textContent || '✨' : '✨',
+              title: titleEl.textContent || '',
+              body_html: bodyEl.textContent || ''
+            });
+          }
+        });
+        data.extras_json = JSON.stringify(extras);
+      }
+      
+      // Website URLs
+      const websiteCards = document.querySelectorAll('.website-card');
+      const websites = [];
+      websiteCards.forEach(card => {
+        const titleEl = card.querySelector('.website-title');
+        const urlInput = card.querySelector('.website-url-input');
+        const linkEl = card.querySelector('.website-link');
+        
+        if (titleEl && urlInput) {
+          websites.push({
+            title: titleEl.textContent || '',
+            url: urlInput.value || linkEl?.href || ''
+          });
+        }
+      });
+      data.websites_json = JSON.stringify(websites);
+      
+      // Profile photos URLs
+      const scholarProfileEl = document.querySelector('[onclick*="scholar"]');
+      if (scholarProfileEl) data.scholar_profile_url = scholarProfileEl.getAttribute('data-profile-url') || '';
+      
+      const aboutMeProfileEl = document.querySelector('[onclick*="aboutme"]');
+      if (aboutMeProfileEl) data.about_me_profile_url = aboutMeProfileEl.getAttribute('data-profile-url') || '';
+      
       return data;
     }
     
@@ -1005,335 +1341,327 @@
     
     // Home tab: Add event
     function addEvent() {
-      const emoji = prompt('Enter emoji for event:', '🎉');
-      const text = prompt('Enter event description:');
-      if (text) {
-        const div = document.createElement('div');
-        div.className = 'event-item flex items-center gap-3 p-3 rounded-xl bg-yellow-50 border';
-        div.style.borderColor = 'var(--md-mustard)';
-        div.innerHTML = `
-          <span class="event-emoji text-xl" data-edit="teacher" contenteditable="false">${emoji||'🎉'}</span>
-          <span class="event-text font-semibold flex-1" data-edit="teacher" contenteditable="false">${text}</span>
-          <button class="edit-only text-red-500 hover:text-red-700" onclick="this.parentNode.remove()">✖</button>
-        `;
-        document.getElementById('eventsList').appendChild(div);
-      }
+      // Create event directly editable on the page instead of using prompts
+      const div = document.createElement('div');
+      div.className = 'event-item flex items-center gap-3 p-3 rounded-xl bg-yellow-50 border';
+      div.style.borderColor = 'var(--md-mustard)';
+      div.innerHTML = `
+        <span class="event-emoji text-xl" data-edit="teacher" contenteditable="true">🎉</span>
+        <span class="event-text font-semibold flex-1" data-edit="teacher" contenteditable="true">Click to edit event</span>
+        <button class="edit-only text-red-500 hover:text-red-700" onclick="this.parentNode.remove()">✖</button>
+      `;
+      document.getElementById('eventsList').appendChild(div);
+      
+      // Auto-focus the text field for immediate editing
+      const textSpan = div.querySelector('.event-text');
+      textSpan.focus();
+      textSpan.select();
     }
     // Home tab: Add snack
     function addSnackItem() {
-      const snackName = prompt('Enter snack name:');
-      const emoji = prompt('Enter emoji (optional):') || '🍎';
-      if (snackName) {
-        const newSnack = document.createElement('div');
-        newSnack.className = 'p-4 rounded-xl bg-white';
-        newSnack.style.border = '1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%)';
-        newSnack.innerHTML = `
-          <div class="flex items-center gap-3 mb-3">
-            <input type="checkbox" class="w-4 h-4 snack-check">
-            <span class="text-xl">${emoji}</span>
-            <span class="font-medium">${snackName}</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);">
-            <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)">Save</button>
-            <button class="text-gray-400 hover:text-red-500" onclick="this.closest('.p-4').remove()">✖</button>
-          </div>
-        `;
-        document.getElementById('snacksGrid').appendChild(newSnack);
+      // Create new snack card that parents can edit (user-added, not default)
+      const newSnack = document.createElement('div');
+      newSnack.className = 'p-4 rounded-xl bg-white user-added-snack-card';
+      newSnack.setAttribute('data-default-snack', 'false');
+      newSnack.style.border = '1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%)';
+      
+      // Get the highest current tabindex to continue sequence
+      const existingCheckboxes = document.querySelectorAll('.snack-checkbox');
+      let nextTabIndex = (existingCheckboxes.length * 3) + 1;
+      
+      newSnack.innerHTML = `
+        <div class="flex items-center gap-3 mb-3">
+          <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="${nextTabIndex}">
+          <span class="text-xl" contenteditable="true" style="cursor: text;">🍎</span>
+          <span class="font-medium snack-title" contenteditable="true" style="cursor: text;">New snack</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="${nextTabIndex + 1}">
+          <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="${nextTabIndex + 2}">Save</button>
+          <button class="text-gray-400 hover:text-red-500" onclick="this.closest('.p-4').remove()">✖</button>
+        </div>
+      `;
+      document.getElementById('snacksGrid').appendChild(newSnack);
+      
+      // Focus on the snack name for editing
+      const snackNameSpan = newSnack.querySelector('.snack-title');
+      snackNameSpan.focus();
+      // Select all text for contenteditable elements
+      if (window.getSelection && document.createRange) {
+        const range = document.createRange();
+        range.selectNodeContents(snackNameSpan);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    }
+    
+    // Toggle snack input based on checkbox state
+    function toggleSnackInput(checkbox) {
+      const card = checkbox.closest('.p-4');
+      const nameInput = card.querySelector('.snack-name');
+      const saveButton = card.querySelector('button[onclick*="claimSnack"]');
+      
+      if (checkbox.checked) {
+        nameInput.disabled = false;
+        saveButton.disabled = false;
+        nameInput.focus();
+        // Add visual feedback that it's now active
+        card.style.backgroundColor = 'rgba(224, 177, 74, 0.1)';
+      } else {
+        nameInput.disabled = true;
+        saveButton.disabled = true;
+        nameInput.value = '';
+        // Remove claimed styling and reset background
+        card.classList.remove('snack-claimed');
+        card.style.backgroundColor = 'white';
+        
+        // Save the unclaimed state to the backend
+        saveSnackDataToFirestore().catch((error) => {
+          console.error('Failed to save unclaim state:', error);
+        });
+      }
+      
+      // Only show global save button for teachers/admins in edit mode
+      if (document.body.classList.contains('editing')) {
+        const saveBtn = document.getElementById('saveChangesBtn');
+        if (saveBtn) saveBtn.style.display = 'block';
       }
     }
     // Snack claim
     function claimSnack(btn) {
       const card = btn.closest('.p-4');
+      const checkbox = card.querySelector('.snack-checkbox');
       const name = card.querySelector('.snack-name').value.trim();
-      if (name) {
+      
+      // Only allow claiming if checkbox is checked and name is provided
+      if (checkbox && checkbox.checked && name) {
         card.classList.add('snack-claimed');
-        btn.textContent = 'Saved!';
-        setTimeout(()=>{btn.textContent='Save';},1800);
-      } else {
-        card.classList.remove('snack-claimed');
+        btn.textContent = 'Saving...';
+        btn.disabled = true;
+        
+        // Save to Firestore immediately
+        saveSnackDataToFirestore().then(() => {
+          btn.textContent = 'Saved!';
+          setTimeout(() => {
+            btn.textContent = 'Save';
+            btn.disabled = false;
+          }, 1800);
+        }).catch((error) => {
+          console.error('Failed to save snack data:', error);
+          btn.textContent = 'Save Failed';
+          setTimeout(() => {
+            btn.textContent = 'Save';
+            btn.disabled = false;
+          }, 2000);
+        });
+        
+        // Only show global save button for teachers/admins in edit mode
+        // Parents get individual card saves only
+        if (document.body.classList.contains('editing')) {
+          const saveBtn = document.getElementById('saveChangesBtn');
+          if (saveBtn) saveBtn.style.display = 'block';
+        }
+      } else if (!checkbox || !checkbox.checked) {
+        alert('Please check the box first to claim this snack.');
+      } else if (!name) {
+        alert('Please enter your name to claim this snack.');
       }
-    }
-    // Extras tab: Add card
-    function addExtrasCard() {
-      const title = prompt('Enter card title:');
-      const description = prompt('Enter card description:');
-      const emoji = prompt('Enter emoji (optional):') || '✨';
-      if (title && description) {
-        const newCard = document.createElement('div');
-        newCard.className = 'text-center p-8 rounded-2xl';
-        newCard.style.background = 'color-mix(in oklab, var(--md-white) 70%, var(--md-mustard) 30%)';
-        newCard.style.border = '1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%)';
-        newCard.innerHTML = `
-          <div class="text-6xl mb-4 emoji-edit" data-edit="teacher" contenteditable="false">${emoji}</div>
-          <h3 class="font-semibold mb-2" data-edit="teacher" contenteditable="false">${title}</h3>
-          <p class="text-sm" data-edit="teacher" contenteditable="false">${description}</p>
-          <button class="edit-only mt-2 text-red-500 hover:text-red-700 text-xs" onclick="this.closest('.text-center').remove();">Remove Card</button>
-        `;
-        document.getElementById('extrasGrid').appendChild(newCard);
-      }
-    }
-    // Specials galleries: dummy swipe
-    function prevGalleryImg(btn) {
-      alert("Gallery swipe feature coming soon!");
-    }
-    function nextGalleryImg(btn) {
-      alert("Gallery swipe feature coming soon!");
     }
     
-    // Live Image Upload Functionality
-    document.addEventListener('DOMContentLoaded', function() {
-      const liveImageInput = document.getElementById('liveImageInput');
-      const selectImageBtn = document.getElementById('selectImageBtn');
-      const uploadImageBtn = document.getElementById('uploadImageBtn');
-      const uploadStatus = document.getElementById('uploadStatus');
-      const uploadedImageContainer = document.getElementById('uploadedImageContainer');
-      const uploadedImage = document.getElementById('uploadedImage');
-      const downloadUrlInput = document.getElementById('downloadUrlInput');
-      const copyUrlBtn = document.getElementById('copyUrlBtn');
-      const toggleDebugBtn = document.getElementById('toggleDebugInfo');
-      const debugDetails = document.getElementById('debugDetails');
-
-      // Populate debug panel with Firebase config info
-      function updateDebugPanel() {
-        document.getElementById('debugProjectId').textContent = firebaseConfig.projectId || 'Not configured';
-        document.getElementById('debugStorageBucket').textContent = firebaseConfig.storageBucket || 'Not configured';
-        document.getElementById('debugAuthDomain').textContent = firebaseConfig.authDomain || 'Not configured';
-        document.getElementById('debugFirebaseSDK').textContent = typeof firebase !== 'undefined' ? 'Loaded' : 'Not loaded';
-        document.getElementById('debugStorageStatus').textContent = (typeof storage !== 'undefined' && storage) ? 'Initialized' : 'Not initialized';
-      }
-
-      // Toggle debug details
-      toggleDebugBtn.addEventListener('click', function() {
-        if (debugDetails.classList.contains('hidden')) {
-          debugDetails.classList.remove('hidden');
-          toggleDebugBtn.textContent = 'Hide Details';
-          updateDebugPanel();
+    // Function to save snack message
+    async function saveSnackMessage() {
+      const snackMessageEl = document.getElementById('snackMessage');
+      const saveBtn = document.getElementById('saveSnackMessageBtn');
+      
+      if (!snackMessageEl || !saveBtn) return;
+      
+      const originalText = saveBtn.textContent;
+      
+      try {
+        // Show saving state
+        saveBtn.textContent = '⏳ Saving...';
+        saveBtn.disabled = true;
+        
+        const message = snackMessageEl.value || '';
+        
+        // Try to save to Firestore first
+        if (typeof db !== 'undefined') {
+          await db.collection('classData').doc('current').set(
+            { snack_message: message }, 
+            { merge: true }
+          );
         } else {
-          debugDetails.classList.add('hidden');
-          toggleDebugBtn.textContent = 'Show Details';
+          // Fallback to localStorage for testing
+          localStorage.setItem('classData_snack_message', message);
         }
-      });
-
-      // Update debug info on page load
-      updateDebugPanel();
-
-      // Select image button click handler
-      selectImageBtn.addEventListener('click', function() {
-        liveImageInput.click();
-      });
-
-      // File input change handler
-      liveImageInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-          // Validate file type
-          if (!file.type.startsWith('image/')) {
-            showStatus('Please select a valid image file', 'error');
-            liveImageInput.value = '';
-            return;
-          }
-          
-          // Validate file size (limit to 10MB)
-          const maxSize = 10 * 1024 * 1024; // 10MB in bytes
-          if (file.size > maxSize) {
-            showStatus('File size too large. Please select an image under 10MB', 'error');
-            liveImageInput.value = '';
-            return;
-          }
-          
-          uploadImageBtn.disabled = false;
-          uploadImageBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-          showStatus(`Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`, 'info');
-        } else {
-          uploadImageBtn.disabled = true;
-          uploadImageBtn.classList.add('opacity-50', 'cursor-not-allowed');
-          hideStatus();
-        }
-      });
-
-      // Upload button click handler
-      uploadImageBtn.addEventListener('click', async function() {
-        const file = liveImageInput.files[0];
-        if (!file) return;
-
-        // Log upload attempt with full details
-        console.log('=== UPLOAD ATTEMPT ===');
-        console.log('File details:', {
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          lastModified: new Date(file.lastModified).toISOString()
-        });
-        console.log('Firebase config:', {
-          projectId: firebaseConfig.projectId,
-          storageBucket: firebaseConfig.storageBucket,
-          authDomain: firebaseConfig.authDomain
-        });
-        console.log('Firebase SDK status:', {
-          firebaseApp: typeof firebase !== 'undefined' ? 'loaded' : 'not loaded',
-          storage: typeof storage !== 'undefined' && storage ? 'initialized' : 'not initialized',
-          storageRef: typeof storage !== 'undefined' && storage ? typeof storage.ref : 'unavailable'
-        });
-
-        // Enhanced Firebase Storage availability check
-        if (typeof firebase === 'undefined') {
-          const errorMsg = 'Firebase SDK not loaded. Please check your internet connection and refresh the page.';
-          console.error('UPLOAD ERROR:', errorMsg);
-          showStatus(errorMsg, 'error');
-          alert(errorMsg);
-          return;
-        }
-
-        if (typeof storage === 'undefined' || !storage) {
-          const errorMsg = 'Firebase Storage not initialized. Please check your connection and Firebase configuration.';
-          console.error('UPLOAD ERROR:', errorMsg);
-          showStatus(errorMsg, 'error');
-          alert(errorMsg);
-          return;
-        }
-
-        try {
-          // Show loading state
-          uploadImageBtn.disabled = true;
-          uploadImageBtn.innerHTML = '⏳ Uploading...';
-          showStatus('Uploading image to Firebase Storage...', 'loading');
-
-          // Generate unique filename using Date.now()_originalfilename format
-          const timestamp = Date.now();
-          const fileName = `${timestamp}_${file.name}`;
-          
-          console.log('Generated filename:', fileName);
-          console.log('Upload path:', `uploads/${fileName}`);
-          
-          // Upload to Firebase Storage at /uploads/ path
-          const storageRef = storage.ref(`uploads/${fileName}`);
-          console.log('Storage reference created successfully');
-          
-          const uploadTask = await storageRef.put(file);
-          console.log('File uploaded successfully, getting download URL...');
-          
-          const downloadURL = await uploadTask.ref.getDownloadURL();
-          console.log('Upload completed successfully. Download URL:', downloadURL);
-          
-          // Update debug panel with last upload info
-          document.getElementById('debugLastUpload').textContent = new Date().toLocaleString() + ' - ' + fileName;
-          
-          // Show success and display results
-          showStatus('Upload successful!', 'success');
-          displayUploadedImage(downloadURL);
-          
-          // Alert with download URL as requested
-          alert(`Upload successful!\nDownload URL: ${downloadURL}`);
-
-          // Reset form
-          liveImageInput.value = '';
-          uploadImageBtn.disabled = true;
-          uploadImageBtn.classList.add('opacity-50', 'cursor-not-allowed');
-          uploadImageBtn.innerHTML = 'Upload';
-
-        } catch (error) {
-          // Enhanced error logging and user feedback
-          console.error('=== UPLOAD FAILED ===');
-          console.error('Error details:', error);
-          console.error('Error code:', error.code);
-          console.error('Error message:', error.message);
-          console.error('Error name:', error.name);
-          
-          // Provide specific error messages based on error type
-          let userMessage = 'Upload failed: ';
-          let detailedMessage = error.message || 'Unknown error occurred';
-          
-          if (error.code) {
-            switch (error.code) {
-              case 'storage/unauthorized':
-                userMessage += 'Permission denied. Please check Firebase storage rules.';
-                break;
-              case 'storage/canceled':
-                userMessage += 'Upload was canceled.';
-                break;
-              case 'storage/unknown':
-                userMessage += 'Unknown error occurred. Please try again.';
-                break;
-              case 'storage/invalid-format':
-                userMessage += 'Invalid file format.';
-                break;
-              case 'storage/invalid-argument':
-                userMessage += 'Invalid upload parameters.';
-                break;
-              case 'storage/retry-limit-exceeded':
-                userMessage += 'Upload retry limit exceeded. Please try again later.';
-                break;
-              case 'storage/quota-exceeded':
-                userMessage += 'Storage quota exceeded.';
-                break;
-              default:
-                userMessage += `Firebase error (${error.code}): ${detailedMessage}`;
-            }
-          } else if (error.message) {
-            if (error.message.includes('CORS')) {
-              userMessage += 'CORS policy error. Please contact administrator.';
-            } else if (error.message.includes('network')) {
-              userMessage += 'Network connection error. Please check your internet connection.';
-            } else if (error.message.includes('bucket')) {
-              userMessage += 'Storage bucket configuration error. Please contact administrator.';
-            } else {
-              userMessage += detailedMessage;
-            }
-          } else {
-            userMessage += 'Unknown error occurred. Please try again.';
-          }
-          
-          console.error('User message:', userMessage);
-          showStatus(userMessage, 'error');
-          alert(userMessage);
-        }
-
-        // Reset button state
-        uploadImageBtn.disabled = false;
-        uploadImageBtn.innerHTML = 'Upload';
-      });
-
-      // Copy URL button handler
-      copyUrlBtn.addEventListener('click', function() {
-        downloadUrlInput.select();
-        document.execCommand('copy');
-        copyUrlBtn.textContent = 'Copied!';
+        
+        // Show success state
+        saveBtn.textContent = '✅ Saved!';
+        
+        // Reset button after delay
         setTimeout(() => {
-          copyUrlBtn.textContent = 'Copy';
+          saveBtn.textContent = originalText;
+          saveBtn.disabled = false;
+        }, 1500);
+        
+      } catch (error) {
+        console.error('Failed to save snack message:', error);
+        saveBtn.textContent = '❌ Error';
+        setTimeout(() => {
+          saveBtn.textContent = originalText;
+          saveBtn.disabled = false;
         }, 2000);
-      });
-
-      // Helper functions
-      function showStatus(message, type) {
-        uploadStatus.textContent = message;
-        uploadStatus.className = `mt-3 text-sm ${getStatusClass(type)}`;
-        uploadStatus.classList.remove('hidden');
       }
-
-      function hideStatus() {
-        uploadStatus.classList.add('hidden');
-      }
-
-      function getStatusClass(type) {
-        switch(type) {
-          case 'success': return 'text-green-600';
-          case 'error': return 'text-red-600';
-          case 'loading': return 'text-blue-600';
-          case 'info': return 'text-gray-600';
-          default: return 'text-gray-600';
+    }
+    
+    // Function to save snack data to Firestore
+    async function saveSnackDataToFirestore() {
+      try {
+        // Collect current snack data
+        const snacksGrid = document.getElementById('snacksGrid');
+        if (!snacksGrid) return;
+        
+        const snacks = [];
+        snacksGrid.querySelectorAll('.p-4').forEach(card => {
+          const emoji = card.querySelector('.text-xl')?.textContent || '';
+          const item = card.querySelector('.snack-title')?.textContent || '';
+          const claimedBy = card.querySelector('.snack-name')?.value || '';
+          const checked = card.querySelector('.snack-checkbox')?.checked || false;
+          const isDefault = card.getAttribute('data-default-snack') === 'true';
+          if (item) {
+            snacks.push({ 
+              emoji: emoji, 
+              item: item, 
+              claimed_by: claimedBy, 
+              checked: checked,
+              is_default: isDefault
+            });
+          }
+        });
+        
+        const snacksData = JSON.stringify(snacks);
+        
+        // Try to save to Firestore first
+        if (typeof db !== 'undefined') {
+          await db.collection('classData').doc('current').set(
+            { snacks_json: snacksData }, 
+            { merge: true }
+          );
+          console.log('Snack data saved to Firestore successfully');
+        } else {
+          // Fallback to localStorage for testing when Firebase is not available
+          localStorage.setItem('classData_snacks_json', snacksData);
+          console.log('Snack data saved to localStorage (Firebase not available)');
+        }
+        
+      } catch (error) {
+        console.error('Failed to save snack data:', error);
+        // Fallback to localStorage on Firestore error
+        try {
+          const snacksGrid = document.getElementById('snacksGrid');
+          if (snacksGrid) {
+            const snacks = [];
+            snacksGrid.querySelectorAll('.p-4').forEach(card => {
+              const emoji = card.querySelector('.text-xl')?.textContent || '';
+              const item = card.querySelector('.snack-title')?.textContent || '';
+              const claimedBy = card.querySelector('.snack-name')?.value || '';
+              const checked = card.querySelector('.snack-checkbox')?.checked || false;
+              const isDefault = card.getAttribute('data-default-snack') === 'true';
+              if (item) {
+                snacks.push({ 
+                  emoji: emoji, 
+                  item: item, 
+                  claimed_by: claimedBy, 
+                  checked: checked,
+                  is_default: isDefault
+                });
+              }
+            });
+            localStorage.setItem('classData_snacks_json', JSON.stringify(snacks));
+            console.log('Snack data saved to localStorage as fallback');
+          }
+        } catch (localError) {
+          console.error('Failed to save to localStorage as well:', localError);
+          throw error;
         }
       }
-
-      function displayUploadedImage(downloadURL) {
-        uploadedImage.src = downloadURL;
-        downloadUrlInput.value = downloadURL;
-        uploadedImageContainer.classList.remove('hidden');
+    }
+    
+    // Extras tab: Add card
+    function addExtrasCard() {
+      // Create card directly editable on the page instead of using prompts
+      const newCard = document.createElement('div');
+      newCard.className = 'text-center p-8 rounded-2xl';
+      newCard.style.background = 'color-mix(in oklab, var(--md-white) 70%, var(--md-mustard) 30%)';
+      newCard.style.border = '1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%)';
+      newCard.innerHTML = `
+        <div class="text-6xl mb-4 emoji-edit" contenteditable="true" style="cursor: text;">✨</div>
+        <h3 class="font-semibold mb-2" contenteditable="true" style="cursor: text;">Click to edit title</h3>
+        <p class="text-sm" contenteditable="true" style="cursor: text;">Click to edit description</p>
+        <button class="mt-2 text-red-500 hover:text-red-700 text-xs" onclick="this.closest('.text-center').remove();">Remove Card</button>
+      `;
+      document.getElementById('extrasGrid').appendChild(newCard);
+      
+      // Auto-focus the title for immediate editing
+      const titleEl = newCard.querySelector('h3');
+      titleEl.focus();
+      // Select all text for immediate editing
+      if (window.getSelection && document.createRange) {
+        const range = document.createRange();
+        range.selectNodeContents(titleEl);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
       }
-    });
-
-    // Enhanced error handling helper function (global scope)
-    window.handleUploadError = function(error, context = 'upload') {
+    }
+    // Specials galleries: enhanced functionality
+    function prevGalleryImg(btn) {
+      const galleryContainer = btn.closest('.gallery-imgs');
+      const galleryType = galleryContainer.getAttribute('data-gallery-type');
+      
+      // For now, show a notice since multi-image storage needs backend implementation
+      alert("Previous image feature requires additional setup for storing multiple photos per gallery.");
+    }
+    
+    function nextGalleryImg(btn) {
+      const galleryContainer = btn.closest('.gallery-imgs');
+      const galleryType = galleryContainer.getAttribute('data-gallery-type');
+      
+      // For now, show a notice since multi-image storage needs backend implementation
+      alert("Next image feature requires additional setup for storing multiple photos per gallery.");
+    }
+    
+    // Delete gallery photo function
+    function deleteGalleryPhoto(btn, galleryType) {
+      if (!document.body.classList.contains('editing')) {
+        return; // Only allow deletion in edit mode
+      }
+      
+      if (confirm('Are you sure you want to delete this photo?')) {
+        const galleryContainer = btn.closest('.gallery-imgs');
+        const img = galleryContainer.querySelector('img');
+        const plusIcon = galleryContainer.querySelector('.text-3xl');
+        
+        // Reset the gallery to empty state
+        if (img) {
+          img.style.display = 'none';
+          img.src = '';
+        }
+        if (plusIcon) {
+          plusIcon.style.display = 'block';
+        }
+        
+        // Hide the delete button
+        btn.style.display = 'none';
+        
+        // TODO: Remove from backend storage
+        console.log(`Deleted photo from ${galleryType} gallery`);
+      }
+    }
+    
+    // Enhanced error handling helper function for uploads (global scope)
+    window.handleUploadError = window.handleUploadError || function(error, context = 'upload') {
       console.error(`=== ${context.toUpperCase()} FAILED ===`);
       console.error('Error details:', error);
       console.error('Error code:', error.code);
@@ -1385,7 +1713,7 @@
       console.error('User message:', userMessage);
       return userMessage;
     };
-
+    
     // Editable photo cards: file upload functionality
     function editPhoto(el) {
       // Only allow editing in edit mode
@@ -1585,29 +1913,91 @@ function updateLookingAhead(lookingAhead) {
 function updateSnacksGrid(snacks_json) {
   const snacksContainer = document.getElementById('snacksGrid');
   if (!snacksContainer) return;
+  
+  // Don't clear the container, as we want to preserve the default cards
+  // Instead, only remove user-added cards and update existing ones
+  const userAddedCards = snacksContainer.querySelectorAll('.user-added-snack-card');
+  userAddedCards.forEach(card => card.remove());
+  
   const arr = parseArray(snacks_json);
-  snacksContainer.innerHTML = '';
-  arr.forEach(snack => {
-    const emoji = snack.emoji || '🍎';
-    const item = snack.item || '';
-    const claimed = snack.claimed_by || '';
-    const div = document.createElement('div');
-    div.className = 'p-4 rounded-xl bg-white';
-    div.style.border = '1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%)';
-    div.innerHTML = `
-      <div class="flex items-center gap-3 mb-3">
-        <input type="checkbox" class="w-4 h-4 snack-check" ${claimed ? 'checked' : ''}>
-        <span class="text-xl">${emoji}</span>
-        <span class="font-medium">${item}</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" value="${claimed}">
-        <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)">Save</button>
-        <button class="text-gray-400 hover:text-red-500" onclick="this.closest('.p-4').remove()">✖</button>
-      </div>
-    `;
-    snacksContainer.appendChild(div);
+  
+  // First, update default cards with their claimed status
+  const defaultCards = snacksContainer.querySelectorAll('.default-snack-card');
+  arr.forEach((snack, index) => {
+    if (snack.is_default && defaultCards[index]) {
+      const card = defaultCards[index];
+      const checkbox = card.querySelector('.snack-checkbox');
+      const nameInput = card.querySelector('.snack-name');
+      const saveButton = card.querySelector('button[onclick*="claimSnack"]');
+      const title = card.querySelector('.snack-title');
+      
+      // Update title (only for teachers in edit mode)
+      if (title && snack.item) {
+        title.textContent = snack.item;
+      }
+      
+      // Update claimed status
+      if (checkbox) {
+        checkbox.checked = snack.checked || false;
+      }
+      if (nameInput) {
+        nameInput.value = snack.claimed_by || '';
+        nameInput.disabled = !snack.checked;
+      }
+      if (saveButton) {
+        saveButton.disabled = !snack.checked;
+      }
+      
+      // Update visual styling
+      if (snack.claimed_by && snack.checked) {
+        card.classList.add('snack-claimed');
+        card.style.backgroundColor = 'rgba(224, 177, 74, 0.1)';
+      } else {
+        card.classList.remove('snack-claimed');
+        card.style.backgroundColor = 'white';
+      }
+    }
   });
+  
+  // Then, add user-added cards
+  arr.forEach((snack, index) => {
+    if (!snack.is_default) {
+      const emoji = snack.emoji || '🍎';
+      const item = snack.item || '';
+      const claimed = snack.claimed_by || '';
+      const checked = snack.checked || false;
+      const div = document.createElement('div');
+      div.className = 'p-4 rounded-xl bg-white user-added-snack-card';
+      div.setAttribute('data-default-snack', 'false');
+      div.style.border = '1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%)';
+      const tabIndexBase = (index * 3) + 13; // Start after default cards
+      div.innerHTML = `
+        <div class="flex items-center gap-3 mb-3">
+          <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="${tabIndexBase}" ${checked ? 'checked' : ''}>
+          <span class="text-xl" contenteditable="true" style="cursor: text;">${emoji}</span>
+          <span class="font-medium snack-title" contenteditable="true" style="cursor: text;">${item}</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" value="${claimed}" ${checked ? '' : 'disabled'} tabindex="${tabIndexBase + 1}">
+          <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" ${checked ? '' : 'disabled'} tabindex="${tabIndexBase + 2}">Save</button>
+          <button class="text-gray-400 hover:text-red-500" onclick="this.closest('.p-4').remove()">✖</button>
+        </div>
+      `;
+      snacksContainer.appendChild(div);
+      
+      // Add claimed styling if needed
+      if (claimed && checked) {
+        div.classList.add('snack-claimed');
+        div.style.backgroundColor = 'rgba(224, 177, 74, 0.1)';
+      }
+    }
+  });
+}
+function updateSnackMessage(snack_message) {
+  const messageEl = document.getElementById('snackMessage');
+  if (messageEl && snack_message) {
+    messageEl.value = snack_message;
+  }
 }
 function updateScholarInfo(scholar_name, scholar_blurb) {
   const nameEl = document.querySelector('[data-page-panel="scholar"] h3[data-edit="teacher"]');
@@ -1671,28 +2061,38 @@ function updateExtrasSection(extras_json) {
     div.style.background = 'color-mix(in oklab, var(--md-white) 70%, var(--md-mustard) 30%)';
     div.style.border = '1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%)';
     div.innerHTML = `
-      <div class="text-6xl mb-4 emoji-edit" data-edit="teacher" contenteditable="false">${emoji}</div>
-      <h3 class="font-semibold mb-2" data-edit="teacher" contenteditable="false">${title}</h3>
-      <p class="text-sm" data-edit="teacher" contenteditable="false">${body_html}</p>
-      <button class="edit-only mt-2 text-red-500 hover:text-red-700 text-xs" onclick="this.closest('.text-center').remove();">Remove Card</button>
+      <div class="text-6xl mb-4 emoji-edit" contenteditable="true" style="cursor: text;">${emoji}</div>
+      <h3 class="font-semibold mb-2" contenteditable="true" style="cursor: text;">${title}</h3>
+      <p class="text-sm" contenteditable="true" style="cursor: text;">${body_html}</p>
+      <button class="mt-2 text-red-500 hover:text-red-700 text-xs" onclick="this.closest('.text-center').remove();">Remove Card</button>
     `;
     extrasContainer.appendChild(div);
   });
 }
 function updateAboutMeSection(data) {
   if (!data) return;
-  const cards = document.querySelectorAll('[data-page-panel="aboutme"] .text-xs[data-edit="teacher"]');
-  if (cards.length >= 4) {
-    if (data.favorite_color) cards[0].textContent = data.favorite_color;
-    if (data.favorite_snack) cards[1].textContent = data.favorite_snack;
-    if (data.favorite_drink) cards[2].textContent = data.favorite_drink;
-    if (data.favorite_show)  cards[3].textContent = data.favorite_show;
+  
+  // Update favorite fields by ID
+  const favoriteColorEl = document.getElementById('favoriteColorText');
+  if (favoriteColorEl && data.favorite_color) favoriteColorEl.textContent = data.favorite_color;
+  
+  const favoriteSnackEl = document.getElementById('favoriteSnackText');
+  if (favoriteSnackEl && data.favorite_snack) favoriteSnackEl.textContent = data.favorite_snack;
+  
+  const favoriteDrinkEl = document.getElementById('favoriteDrinkText');
+  if (favoriteDrinkEl && data.favorite_drink) favoriteDrinkEl.textContent = data.favorite_drink;
+  
+  const favoriteShowEl = document.getElementById('favoriteShowText');
+  if (favoriteShowEl && data.favorite_show) favoriteShowEl.textContent = data.favorite_show;
+  
+  // Update about me description
+  const aboutDescEl = document.getElementById('aboutMeDescText');
+  if (aboutDescEl && data.about_me_html) {
+    aboutDescEl.innerHTML = data.about_me_html;
   }
-  const aboutDesc = document.querySelector('[data-page-panel="aboutme"] p[data-edit="teacher"]');
-  if (aboutDesc && data.about_me_html) {
-    aboutDesc.innerHTML = data.about_me_html;
-  }
-  const factsUl = document.querySelector('[data-page-panel="aboutme"] ul[data-edit="teacher"]');
+  
+  // Update fun facts list
+  const factsUl = document.getElementById('funFactsList');
   if (factsUl && data.fun_facts_html) {
     if (Array.isArray(data.fun_facts_html)) {
       factsUl.innerHTML = '';
@@ -1704,6 +2104,19 @@ function updateAboutMeSection(data) {
     } else {
       factsUl.innerHTML = data.fun_facts_html;
     }
+  }
+  
+  // Update profile photos
+  const scholarProfileEl = document.querySelector('[onclick*="scholar"]');
+  if (scholarProfileEl && data.scholar_profile_url) {
+    scholarProfileEl.innerHTML = `<img src="${data.scholar_profile_url}" alt="Scholar Profile" style="width:100%; height:100%; object-fit:cover;">`;
+    scholarProfileEl.setAttribute('data-profile-url', data.scholar_profile_url);
+  }
+  
+  const aboutMeProfileEl = document.querySelector('[onclick*="aboutme"]');
+  if (aboutMeProfileEl && data.about_me_profile_url) {
+    aboutMeProfileEl.innerHTML = `<img src="${data.about_me_profile_url}" alt="About Me Profile" style="width:100%; height:100%; object-fit:cover;">`;
+    aboutMeProfileEl.setAttribute('data-profile-url', data.about_me_profile_url);
   }
 }
 function populateDataFromSheet(data) {
@@ -1718,6 +2131,7 @@ function populateDataFromSheet(data) {
   updateEventsList(data.dates_json);
   updateLookingAhead(data.looking_ahead);
   updateSnacksGrid(data.snacks_json);
+  updateSnackMessage(data.snack_message);
   updateScholarInfo(data.scholar_name, data.scholar_blurb);
   updateSkillsSection(data.skills_text, data.sounds_json);
   updateListeningSection(data.listening_text, data.ask_json);
@@ -1730,6 +2144,12 @@ function populateDataFromSheet(data) {
   
   // Load gallery photos
   updateGalleryPhotos(data.gallery_urls_json);
+  
+  // Load transportation data
+  updateTransportationFields(data);
+  
+  // Load birthday data
+  updateBirthdayFields(data);
   
   if (data.calendar_url) {
     const cal = document.getElementById('schoolCalendarLink');
@@ -1781,6 +2201,395 @@ function updateGalleryPhotos(galleryUrlsJson) {
       }
     }
   });
+}
+
+// Function to update transportation fields with saved data
+function updateTransportationFields(data) {
+  if (!data) return;
+  
+  const busRidersEl = document.getElementById('busRidersTextarea');
+  if (busRidersEl && data.bus_riders) {
+    busRidersEl.value = data.bus_riders;
+  }
+  
+  const carRidersEl = document.getElementById('carRidersTextarea');
+  if (carRidersEl && data.car_riders) {
+    carRidersEl.value = data.car_riders;
+  }
+  
+  const porchPickupEl = document.getElementById('porchPickupTextarea');
+  if (porchPickupEl && data.porch_pickup) {
+    porchPickupEl.value = data.porch_pickup;
+  }
+}
+
+// Function to save individual transportation fields
+async function saveTransportationField(fieldType) {
+  const buttonMap = {
+    'busRiders': 'saveBusRidersBtn',
+    'carRiders': 'saveCarRidersBtn', 
+    'porchPickup': 'savePorchPickupBtn'
+  };
+  
+  const textareaMap = {
+    'busRiders': 'busRidersTextarea',
+    'carRiders': 'carRidersTextarea',
+    'porchPickup': 'porchPickupTextarea'
+  };
+  
+  const dataMap = {
+    'busRiders': 'bus_riders',
+    'carRiders': 'car_riders',
+    'porchPickup': 'porch_pickup'
+  };
+  
+  const saveBtn = document.getElementById(buttonMap[fieldType]);
+  const textarea = document.getElementById(textareaMap[fieldType]);
+  
+  if (!saveBtn || !textarea) return;
+  
+  const originalText = saveBtn.textContent;
+  
+  try {
+    // Show saving state
+    saveBtn.textContent = '⏳ Saving...';
+    saveBtn.disabled = true;
+    
+    // Prepare data for saving
+    const data = {};
+    data[dataMap[fieldType]] = textarea.value || '';
+    
+    // Save to Firestore
+    await db.collection('classData').doc('current').set(data, { merge: true });
+    
+    // Show success state
+    saveBtn.textContent = '✅ Saved!';
+    
+    // Reset button after 1 second
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 1000);
+    
+  } catch (error) {
+    console.error('Failed to save transportation field:', error);
+    saveBtn.textContent = '❌ Save Failed';
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 2000);
+  }
+}
+
+// Function to update birthday fields with saved data
+function updateBirthdayFields(data) {
+  if (!data) return;
+  
+  // Update class roster
+  const classRosterEl = document.getElementById('classRosterTextarea');
+  if (classRosterEl && data.class_roster) {
+    classRosterEl.value = data.class_roster;
+  }
+  
+  // Update monthly birthdays
+  const months = ['january', 'february', 'march', 'april', 'may', 'june', 
+                  'july', 'august', 'september', 'october', 'november', 'december'];
+  months.forEach(month => {
+    const monthEl = document.getElementById(`${month}BirthdaysTextarea`);
+    if (monthEl && data[`${month}_birthdays`]) {
+      monthEl.value = data[`${month}_birthdays`];
+    }
+  });
+}
+
+// Function to save individual birthday fields
+async function saveBirthdayField(fieldType) {
+  const saveBtn = document.getElementById('saveClassRosterBtn');
+  const textarea = document.getElementById('classRosterTextarea');
+  
+  if (!saveBtn || !textarea) return;
+  
+  const originalText = saveBtn.textContent;
+  
+  try {
+    // Show saving state
+    saveBtn.textContent = '⏳ Saving...';
+    saveBtn.disabled = true;
+    
+    // Prepare data for saving
+    const data = {};
+    data.class_roster = textarea.value || '';
+    
+    // Save to Firestore
+    await db.collection('classData').doc('current').set(data, { merge: true });
+    
+    // Show success state
+    saveBtn.textContent = '✅ Saved!';
+    
+    // Reset button after 1 second
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 1000);
+    
+  } catch (error) {
+    console.error('Failed to save birthday field:', error);
+    saveBtn.textContent = '❌ Save Failed';
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 2000);
+  }
+}
+
+// Function to save all birthday fields at once
+async function saveAllBirthdays() {
+  const saveBtn = document.getElementById('saveAllBirthdaysBtn');
+  
+  if (!saveBtn) return;
+  
+  const originalText = saveBtn.textContent;
+  
+  try {
+    // Show saving state
+    saveBtn.textContent = '⏳ Saving...';
+    saveBtn.disabled = true;
+    
+    // Prepare data for saving
+    const data = {};
+    
+    // Collect all monthly birthday data
+    const months = ['january', 'february', 'march', 'april', 'may', 'june', 
+                    'july', 'august', 'september', 'october', 'november', 'december'];
+    months.forEach(month => {
+      const monthEl = document.getElementById(`${month}BirthdaysTextarea`);
+      if (monthEl) {
+        data[`${month}_birthdays`] = monthEl.value || '';
+      }
+    });
+    
+    // Save to Firestore
+    await db.collection('classData').doc('current').set(data, { merge: true });
+    
+    // Show success state
+    saveBtn.textContent = '✅ Saved!';
+    
+    // Reset button after 1 second
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 1000);
+    
+  } catch (error) {
+    console.error('Failed to save birthday fields:', error);
+    saveBtn.textContent = '❌ Save Failed';
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 2000);
+  }
+}
+
+// Function to save individual About Me fields
+async function saveAboutMeField(fieldType) {
+  const fieldMap = {
+    'aboutMeDesc': {
+      button: 'saveAboutMeDescBtn',
+      element: 'aboutMeDescText',
+      dataField: 'about_me_html',
+      getContent: (el) => el.innerHTML || ''
+    },
+    'funFacts': {
+      button: 'saveFunFactsBtn', 
+      element: 'funFactsList',
+      dataField: 'fun_facts_html',
+      getContent: (el) => {
+        const listItems = Array.from(el.querySelectorAll('li')).map(li => li.textContent || '');
+        return listItems;
+      }
+    },
+    'favoriteColor': {
+      button: 'saveFavoriteColorBtn',
+      element: 'favoriteColorText', 
+      dataField: 'favorite_color',
+      getContent: (el) => el.textContent || ''
+    },
+    'favoriteSnack': {
+      button: 'saveFavoriteSnackBtn',
+      element: 'favoriteSnackText',
+      dataField: 'favorite_snack', 
+      getContent: (el) => el.textContent || ''
+    },
+    'favoriteDrink': {
+      button: 'saveFavoriteDrinkBtn',
+      element: 'favoriteDrinkText',
+      dataField: 'favorite_drink',
+      getContent: (el) => el.textContent || ''
+    },
+    'favoriteShow': {
+      button: 'saveFavoriteShowBtn',
+      element: 'favoriteShowText',
+      dataField: 'favorite_show',
+      getContent: (el) => el.textContent || ''
+    }
+  };
+  
+  const field = fieldMap[fieldType];
+  if (!field) return;
+  
+  const saveBtn = document.getElementById(field.button);
+  const element = document.getElementById(field.element);
+  
+  if (!saveBtn || !element) return;
+  
+  const originalText = saveBtn.textContent;
+  
+  try {
+    // Show saving state
+    saveBtn.textContent = '⏳';
+    saveBtn.disabled = true;
+    
+    // Prepare data for saving
+    const data = {};
+    data[field.dataField] = field.getContent(element);
+    
+    // Save to Firestore
+    await db.collection('classData').doc('current').set(data, { merge: true });
+    
+    // Show success state
+    saveBtn.textContent = '✅';
+    
+    // Reset button after 1 second
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 1000);
+    
+  } catch (error) {
+    console.error('Failed to save About Me field:', error);
+    saveBtn.textContent = '❌';
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 2000);
+  }
+}
+
+// Function to save all extras cards
+async function saveExtrasCards() {
+  const saveBtn = document.getElementById('saveExtrasBtn');
+  
+  if (!saveBtn) return;
+  
+  const originalText = saveBtn.textContent;
+  
+  try {
+    // Show saving state
+    saveBtn.textContent = '⏳ Saving...';
+    saveBtn.disabled = true;
+    
+    // Collect extras data
+    const extrasGrid = document.getElementById('extrasGrid');
+    const extras = [];
+    
+    if (extrasGrid) {
+      extrasGrid.querySelectorAll('.text-center').forEach(card => {
+        const emojiEl = card.querySelector('.emoji-edit');
+        const titleEl = card.querySelector('h3');
+        const bodyEl = card.querySelector('p');
+        
+        if (titleEl && bodyEl) {
+          extras.push({
+            emoji: emojiEl ? emojiEl.textContent || '✨' : '✨',
+            title: titleEl.textContent || '',
+            body_html: bodyEl.textContent || ''
+          });
+        }
+      });
+    }
+    
+    // Prepare data for saving
+    const data = {
+      extras_json: JSON.stringify(extras)
+    };
+    
+    // Save to Firestore
+    await db.collection('classData').doc('current').set(data, { merge: true });
+    
+    // Show success state
+    saveBtn.textContent = '✅ Saved!';
+    
+    // Reset button after 1 second
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 1000);
+    
+  } catch (error) {
+    console.error('Failed to save extras cards:', error);
+    saveBtn.textContent = '❌ Save Failed';
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 2000);
+  }
+}
+
+// Function to save website URLs
+async function saveWebsiteUrls() {
+  const saveBtn = document.getElementById('saveWebsitesBtn');
+  
+  if (!saveBtn) return;
+  
+  const originalText = saveBtn.textContent;
+  
+  try {
+    // Show saving state
+    saveBtn.textContent = '⏳ Saving...';
+    saveBtn.disabled = true;
+    
+    // Collect website data
+    const websiteCards = document.querySelectorAll('.website-card');
+    const websites = [];
+    
+    websiteCards.forEach(card => {
+      const titleEl = card.querySelector('.website-title');
+      const urlInput = card.querySelector('.website-url-input');
+      const linkEl = card.querySelector('.website-link');
+      
+      if (titleEl && urlInput) {
+        websites.push({
+          title: titleEl.textContent || '',
+          url: urlInput.value || linkEl?.href || ''
+        });
+      }
+    });
+    
+    // Prepare data for saving
+    const data = {
+      websites_json: JSON.stringify(websites)
+    };
+    
+    // Save to Firestore
+    await db.collection('classData').doc('current').set(data, { merge: true });
+    
+    // Show success state
+    saveBtn.textContent = '✅ Saved!';
+    
+    // Reset button after 1 second
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 1000);
+    
+  } catch (error) {
+    console.error('Failed to save website URLs:', error);
+    saveBtn.textContent = '❌ Save Failed';
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 2000);
+  }
 }
 
 // Error display functions
@@ -1837,10 +2646,10 @@ function getDefaultFallbackData() {
       "Winter concert practice begins"
     ],
     snacks_json: JSON.stringify([
-      { item: "🥯 Breakfast Bars", claimed: "", checked: false },
-      { item: "🍬 Gummies", claimed: "", checked: false },
-      { item: "🍚 Rice Krispy Treats", claimed: "", checked: false },
-      { item: "🧃 Juice", claimed: "", checked: false }
+      { emoji: "🥯", item: "Breakfast Bars", claimed_by: "", checked: false, is_default: true },
+      { emoji: "🍬", item: "Gummies", claimed_by: "", checked: false, is_default: true },
+      { emoji: "🍚", item: "Rice Krispy Treats", claimed_by: "", checked: false, is_default: true },
+      { emoji: "🧃", item: "Juice", claimed_by: "", checked: false, is_default: true }
     ]),
     snack_message: "Snacks help keep our energy up during learning time and teach us about sharing and community!",
     scholar_name: "Scholar of the Week",
@@ -1864,9 +2673,19 @@ async function fetchFirestoreData() {
   try {
     // Check if Firebase is available
     if (typeof db === 'undefined') {
-      console.error('Firebase not available - using fallback content');
-      showDataLoadError('Firebase connection not available');
-      return null;
+      console.error('Firebase not available - checking localStorage fallback');
+      // Check if we have saved snack data in localStorage
+      const savedSnacksData = localStorage.getItem('classData_snacks_json');
+      if (savedSnacksData) {
+        const fallbackData = getDefaultFallbackData();
+        fallbackData.snacks_json = savedSnacksData;
+        console.log('Using localStorage fallback data for snacks');
+        showDataLoadError('Firebase connection not available - using saved local data');
+        return fallbackData;
+      } else {
+        showDataLoadError('Firebase connection not available');
+        return null;
+      }
     }
     
     const doc = await db.collection('classData').doc('current').get();
@@ -1905,6 +2724,162 @@ setInterval(async () => {
     // Don't show error for periodic refreshes, just log it
   }
 }, 300000);
+
+// New JavaScript functions for enhanced functionality
+
+// Profile photo upload functionality
+function editProfilePhoto(el, section) {
+  // Only allow editing in edit mode with PIN
+  if (!document.body.classList.contains('editing')) {
+    return;
+  }
+  
+  // Create file input
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/*';
+  fileInput.style.display = 'none';
+  
+  fileInput.onchange = async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    try {
+      // Show loading state
+      el.innerHTML = '⏳';
+      el.style.pointerEvents = 'none';
+      
+      // Generate unique filename
+      const timestamp = Date.now();
+      const fileName = `profile_${section}_${timestamp}_${file.name}`;
+      
+      // Upload to Firebase Storage
+      const storageRef = storage.ref(`profiles/${fileName}`);
+      const uploadTask = await storageRef.put(file);
+      const downloadURL = await uploadTask.ref.getDownloadURL();
+      
+      // Update the display
+      el.innerHTML = `<img src="${downloadURL}" alt="Profile" style="width:100%; height:100%; object-fit:cover;">`;
+      el.style.pointerEvents = 'auto';
+      
+      // Store the photo URL for later collection
+      el.setAttribute('data-profile-url', downloadURL);
+      
+      // Show save button since we have changes
+      const saveBtn = document.getElementById('saveChangesBtn');
+      if (saveBtn) saveBtn.style.display = 'block';
+      
+    } catch (error) {
+      const errorMessage = window.handleUploadError(error, 'profile photo upload');
+      alert(errorMessage);
+      // Reset on error
+      el.innerHTML = '';
+      el.style.pointerEvents = 'auto';
+    }
+    
+    document.body.removeChild(fileInput);
+  };
+  
+  document.body.appendChild(fileInput);
+  fileInput.click();
+}
+
+// Confetti animation for celebrate button
+function triggerConfetti() {
+  // Create confetti container
+  const confettiContainer = document.createElement('div');
+  confettiContainer.style.position = 'fixed';
+  confettiContainer.style.top = '0';
+  confettiContainer.style.left = '0';
+  confettiContainer.style.width = '100%';
+  confettiContainer.style.height = '100%';
+  confettiContainer.style.pointerEvents = 'none';
+  confettiContainer.style.zIndex = '9999';
+  
+  // Create multiple confetti pieces with more variety and flow
+  const colors = ['#E0B14A', '#E9867D', '#F2C9BE', '#7B8E9E', '#F7EFE2'];
+  const emojis = ['🎉', '🌟', '✨', '🎊', '🎈', '🏆', '⭐', '💫', '🎯'];
+  
+  // Create more confetti pieces for a fuller effect
+  for (let i = 0; i < 80; i++) {
+    const confetti = document.createElement('div');
+    confetti.style.position = 'absolute';
+    confetti.style.fontSize = Math.random() * 10 + 15 + 'px'; // Vary sizes
+    confetti.style.left = Math.random() * 100 + '%';
+    confetti.style.top = '-50px'; // Start above the screen
+    
+    // Add random horizontal drift for more flowy movement
+    const drift = (Math.random() - 0.5) * 200; // -100px to +100px drift
+    const fallDuration = Math.random() * 2 + 3; // 3-5 seconds fall time
+    const rotationSpeed = Math.random() * 720 + 360; // 360-1080 degrees
+    
+    confetti.style.animationDuration = fallDuration + 's';
+    confetti.style.animationDelay = Math.random() * 1.5 + 's'; // Stagger the start
+    confetti.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    
+    // Enhanced falling animation with drift and rotation
+    confetti.style.animation = `confettiFlowFall ${fallDuration}s ease-in forwards`;
+    confetti.style.setProperty('--drift', drift + 'px');
+    confetti.style.setProperty('--rotation', rotationSpeed + 'deg');
+    
+    confettiContainer.appendChild(confetti);
+  }
+  
+  document.body.appendChild(confettiContainer);
+  
+  // Remove confetti after animation
+  setTimeout(() => {
+    if (document.body.contains(confettiContainer)) {
+      document.body.removeChild(confettiContainer);
+    }
+  }, 7000);
+}
+
+// Website URL update functionality  
+function updateWebsiteUrl(input) {
+  const websiteCard = input.closest('.website-card');
+  const link = websiteCard.querySelector('.website-link');
+  if (link && input.value) {
+    link.href = input.value;
+    
+    // Show save button since we have changes
+    const saveBtn = document.getElementById('saveChangesBtn');
+    if (saveBtn) saveBtn.style.display = 'block';
+  }
+}
+
+// Add CSS for confetti animation
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes confettiFlowFall {
+    0% {
+      transform: translateY(-100vh) translateX(0) rotate(0deg);
+      opacity: 1;
+    }
+    25% {
+      opacity: 1;
+    }
+    75% {
+      opacity: 0.8;
+    }
+    100% {
+      transform: translateY(100vh) translateX(var(--drift)) rotate(var(--rotation));
+      opacity: 0;
+    }
+  }
+  
+  @keyframes confettiFall {
+    0% {
+      transform: translateY(-100vh) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100vh) rotate(720deg);
+      opacity: 0;
+    }
+  }
+`;
+document.head.appendChild(style);
   </script>
 </body>
 </html>
