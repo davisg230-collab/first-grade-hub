@@ -1337,12 +1337,16 @@
       });
       data.websites_json = JSON.stringify(websites);
       
-      // Profile photos URLs
-      const scholarProfileEl = document.querySelector('[onclick*="scholar"]');
-      if (scholarProfileEl) data.scholar_profile_url = scholarProfileEl.getAttribute('data-profile-url') || '';
+      // Profile photos URLs - using more specific selectors
+      const scholarProfileEl = document.querySelector('[onclick*="editProfilePhoto"][onclick*="scholar"]');
+      if (scholarProfileEl) {
+        data.scholar_profile_url = scholarProfileEl.getAttribute('data-profile-url') || '';
+      }
       
-      const aboutMeProfileEl = document.querySelector('[onclick*="aboutme"]');
-      if (aboutMeProfileEl) data.about_me_profile_url = aboutMeProfileEl.getAttribute('data-profile-url') || '';
+      const aboutMeProfileEl = document.querySelector('[onclick*="editProfilePhoto"][onclick*="aboutme"]');
+      if (aboutMeProfileEl) {
+        data.about_me_profile_url = aboutMeProfileEl.getAttribute('data-profile-url') || '';
+      }
       
       return data;
     }
@@ -2535,6 +2539,72 @@
       const deleteBtn = element.querySelector('.edit-only');
       if (deleteBtn) deleteBtn.style.display = 'none';
     }
+    
+    // Helper function to reset profile to placeholder state (similar to gallery reset)
+    function resetProfileToPlaceholder(element) {
+      const img = element.querySelector('img');
+      
+      if (img) {
+        img.remove();
+      }
+      
+      // Reset to placeholder state with proper styling
+      element.innerHTML = '<span class="text-3xl text-gray-400">+</span>';
+      
+      // Clear profile data attributes
+      element.removeAttribute('data-profile-url');
+      
+      console.log('Reset profile to placeholder state');
+    }
+    
+    // Function to update profile photos with proper error handling and reset
+    async function updateProfilePhoto(section, imageUrl) {
+      const profileEl = document.querySelector(`[onclick*="${section}"]`);
+      
+      if (!profileEl) {
+        console.warn(`Profile element not found for section: ${section}`);
+        return;
+      }
+      
+      if (imageUrl && imageUrl.trim() !== '') {
+        // Validate URL before setting
+        try {
+          const isValid = await window.validateStorageUrl(imageUrl);
+          if (isValid) {
+            // Create image with error handling
+            const img = document.createElement('img');
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'cover';
+            img.alt = `${section} Profile`;
+            
+            img.onload = function() {
+              profileEl.innerHTML = '';
+              profileEl.appendChild(img);
+              profileEl.setAttribute('data-profile-url', imageUrl);
+              console.log(`Profile image loaded successfully for ${section}`);
+            };
+            
+            img.onerror = function() {
+              console.warn(`Failed to load profile image for ${section}, resetting to placeholder`);
+              resetProfileToPlaceholder(profileEl);
+            };
+            
+            img.src = imageUrl;
+          } else {
+            console.warn(`Invalid profile URL for ${section}, resetting to placeholder`);
+            resetProfileToPlaceholder(profileEl);
+          }
+        } catch (error) {
+          console.error(`Error validating profile URL for ${section}:`, error);
+          resetProfileToPlaceholder(profileEl);
+        }
+      } else {
+        // No URL provided, reset to placeholder
+        resetProfileToPlaceholder(profileEl);
+      }
+    }
+    
     // School calendar link edit
     function editSchoolCalendarLink(event, linkElement) {
       if (document.body.classList.contains('editing')) {
@@ -2795,18 +2865,9 @@ function updateAboutMeSection(data) {
     }
   }
   
-  // Update profile photos
-  const scholarProfileEl = document.querySelector('[onclick*="scholar"]');
-  if (scholarProfileEl && data.scholar_profile_url) {
-    scholarProfileEl.innerHTML = `<img src="${data.scholar_profile_url}" alt="Scholar Profile" style="width:100%; height:100%; object-fit:cover;">`;
-    scholarProfileEl.setAttribute('data-profile-url', data.scholar_profile_url);
-  }
-  
-  const aboutMeProfileEl = document.querySelector('[onclick*="aboutme"]');
-  if (aboutMeProfileEl && data.about_me_profile_url) {
-    aboutMeProfileEl.innerHTML = `<img src="${data.about_me_profile_url}" alt="About Me Profile" style="width:100%; height:100%; object-fit:cover;">`;
-    aboutMeProfileEl.setAttribute('data-profile-url', data.about_me_profile_url);
-  }
+  // Update profile photos with proper reset handling
+  updateProfilePhoto('scholar', data.scholar_profile_url);
+  updateProfilePhoto('aboutme', data.about_me_profile_url);
 }
 function populateDataFromSheet(data) {
   // Always populate with either real data or fallback content
