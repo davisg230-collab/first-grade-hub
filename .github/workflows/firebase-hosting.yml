@@ -2,8 +2,8 @@ name: Deploy to Firebase Hosting on merge
 
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch: {}
+    branches: [ main ]     # deploy on merges/pushes to main
+  workflow_dispatch: {}     # allows the "Run workflow" button
 
 jobs:
   deploy:
@@ -21,18 +21,25 @@ jobs:
       - name: Check Firebase auth & project access
         run: |
           firebase --version
+          cd "$GITHUB_WORKSPACE"
+          ls -la
+          echo "---- projects:list ----"
           firebase projects:list --project first-grade-news-hub-mrdavis
+          echo "---- show firebase.json ----"
+          cat firebase.json
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
 
       - name: Deploy to Firebase Hosting
-        run: >
-          firebase deploy
-          --only "hosting:first-grade-news-hub-mrdavis"
-          --project first-grade-news-hub-mrdavis
-          --non-interactive
-          --debug
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          firebase deploy \
+            --only hosting \
+            --project first-grade-news-hub-mrdavis \
+            --non-interactive \
+            --debug
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
 
 
