@@ -179,8 +179,8 @@
     </div>
   </header>
   <!-- Tab Separator -->
-  <div class="max-w-6xl mx-auto px-6">
-    <div class="border-t-2" style="border-color: color-mix(in oklab, var(--md-slate) 60%, var(--md-white) 40%);"></div>
+  <div class="w-full">
+    <div class="border-t-4" style="border-color: color-mix(in oklab, var(--md-slate) 70%, var(--md-white) 30%); box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></div>
   </div>
   <main class="max-w-6xl mx-auto px-6 pb-16">
     <nav id="tabs" class="mt-6 mb-4 flex flex-wrap gap-2">
@@ -994,6 +994,13 @@
         btn.style.display = 'inline-block';
       });
       
+      // Update gallery images clickable state (disable when in edit mode)
+      document.querySelectorAll('.gallery-imgs img').forEach(img => {
+        const galleryContainer = img.closest('.gallery-imgs');
+        const galleryType = galleryContainer ? galleryContainer.getAttribute('data-gallery-type') : '';
+        makeGalleryImageClickable(img, galleryType);
+      });
+      
       document.getElementById('editModeBtn').textContent = '💾 Exit Edit Mode';
       document.getElementById('editModeBtn').onclick = exitEditMode;
     }
@@ -1067,6 +1074,13 @@
       });
       document.querySelectorAll('#extrasGrid button[onclick*="remove"]').forEach(btn => {
         btn.style.display = 'none';
+      });
+      
+      // Update gallery images clickable state (enable when not in edit mode)
+      document.querySelectorAll('.gallery-imgs img').forEach(img => {
+        const galleryContainer = img.closest('.gallery-imgs');
+        const galleryType = galleryContainer ? galleryContainer.getAttribute('data-gallery-type') : '';
+        makeGalleryImageClickable(img, galleryType);
       });
       
       document.getElementById('editModeBtn').textContent = '✏️ Edit Mode';
@@ -1740,6 +1754,58 @@
       }
     }
     
+    // Image enlargement modal functions
+    function openImageModal(imageUrl) {
+      const modal = document.getElementById('imageModal');
+      const modalImage = document.getElementById('modalImage');
+      
+      if (modal && modalImage && imageUrl) {
+        modalImage.src = imageUrl;
+        modal.style.display = 'flex';
+        
+        // Prevent body scroll when modal is open
+        document.body.style.overflow = 'hidden';
+      }
+    }
+    
+    function closeImageModal() {
+      const modal = document.getElementById('imageModal');
+      const modalImage = document.getElementById('modalImage');
+      
+      if (modal && modalImage) {
+        modal.style.display = 'none';
+        modalImage.src = '';
+        
+        // Restore body scroll
+        document.body.style.overflow = '';
+      }
+    }
+    
+    // Function to make gallery images clickable for enlargement
+    function makeGalleryImageClickable(img, galleryType) {
+      // Only make clickable if not in edit mode and not Scholar/About Me pictures
+      if (!document.body.classList.contains('editing') && 
+          galleryType !== 'scholar' && 
+          galleryType !== 'aboutme' && 
+          img.src && img.src !== '') {
+        img.style.cursor = 'pointer';
+        img.onclick = function(e) {
+          e.stopPropagation();
+          openImageModal(img.src);
+        };
+      } else {
+        img.style.cursor = 'default';
+        img.onclick = null;
+      }
+    }
+    
+    // Add ESC key support for closing modal
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeImageModal();
+      }
+    });
+    
     // Enhanced error handling helper function for uploads (global scope)
     window.handleUploadError = window.handleUploadError || function(error, context = 'upload') {
       console.error(`=== ${context.toUpperCase()} FAILED ===`);
@@ -1939,6 +2005,10 @@
         img.style.height = '100%';
         img.style.objectFit = 'cover';
         plusSpan.style.display = 'none';
+        
+        // Make image clickable for enlargement
+        const galleryType = element.getAttribute('data-gallery-type');
+        makeGalleryImageClickable(img, galleryType);
       }
     }
     // School calendar link edit
@@ -3019,5 +3089,13 @@ style.textContent = `
 `;
 document.head.appendChild(style);
   </script>
+  
+  <!-- Image Enlargement Modal -->
+  <div id="imageModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center;" onclick="closeImageModal()">
+    <div style="position: relative; max-width: 90%; max-height: 90%; display: flex; justify-content: center; align-items: center;">
+      <img id="modalImage" src="" alt="Enlarged view" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+      <button onclick="closeImageModal()" style="position: absolute; top: -40px; right: -40px; background: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;" title="Close">✕</button>
+    </div>
+  </div>
 </body>
 </html>
