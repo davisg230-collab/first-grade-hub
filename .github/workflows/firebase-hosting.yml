@@ -24,7 +24,7 @@ jobs:
           cd "$GITHUB_WORKSPACE"
           ls -la
           echo "---- projects:list ----"
-          firebase projects:list --project first-grade-news-hub-mrdavis
+          firebase projects:list --project first-grade-news-hub
           echo "---- show firebase.json ----"
           cat firebase.json
         env:
@@ -35,7 +35,7 @@ jobs:
           cd "$GITHUB_WORKSPACE"
           firebase deploy \
             --only hosting \
-            --project first-grade-news-hub-mrdavis \
+            --project first-grade-news-hub \
             --non-interactive \
             --debug
         env:
