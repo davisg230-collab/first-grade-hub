@@ -2,8 +2,8 @@ name: Deploy to Firebase Hosting on merge
 
 on:
   push:
-    branches: [ main ]   # runs whenever you push/merge to main
-  workflow_dispatch: {}   # lets you manually run it from the Actions tab
+    branches: [ main ]
+  workflow_dispatch: {}
 
 jobs:
   deploy:
@@ -15,10 +15,24 @@ jobs:
         with:
           node-version: '20'
 
-      - run: npm install -g firebase-tools
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools@latest
 
-      - name: Deploy to Firebase Hosting
-        run: firebase deploy --only hosting --project first-grade-news-hub-mrdavis
+      - name: Check Firebase auth & project access
+        run: |
+          firebase --version
+          firebase projects:list --project first-grade-news-hub-mrdavis
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+      - name: Deploy to Firebase Hosting
+        run: >
+          firebase deploy
+          --only "hosting:first-grade-news-hub-mrdavis"
+          --project first-grade-news-hub-mrdavis
+          --non-interactive
+          --debug
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
 
