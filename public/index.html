@@ -2102,8 +2102,11 @@
           try {
             console.log(`Photo card upload attempt ${attempt + 1}`);
             
-            // Show loading state
-            el.innerHTML = '⏳';
+            // Set uploading flag to prevent periodic refresh interference
+            isUploading = true;
+            
+            // Show uploading state
+            el.innerHTML = '<div style="font-size: 12px; text-align: center;">⏳<br>Uploading...</div>';
             el.style.pointerEvents = 'none';
             
             // Test storage connection first
@@ -2141,6 +2144,9 @@
             const saveBtn = document.getElementById('saveChangesBtn');
             if (saveBtn) saveBtn.style.display = 'block';
             
+            // Clear uploading flag
+            isUploading = false;
+            
             // Auto-save after successful upload to ensure persistence
             setTimeout(() => {
               if (saveBtn && saveBtn.style.display === 'block' && !isSaving) {
@@ -2157,6 +2163,9 @@
             console.error(`Photo card upload attempt ${attempt} failed:`, error);
             
             if (attempt >= maxAttempts) {
+              // Clear uploading flag on final failure
+              isUploading = false;
+              
               const errorMessage = window.handleUploadError(error, 'photo upload');
               
               // Show user-friendly error in UI
@@ -2333,8 +2342,11 @@
           try {
             console.log(`Gallery photo upload attempt ${attempt + 1} for type: ${galleryType}`);
             
-            // Show loading state
-            el.innerHTML = '<span class="text-3xl text-gray-400">⏳</span>';
+            // Set uploading flag to prevent periodic refresh interference
+            isUploading = true;
+            
+            // Show uploading state
+            el.innerHTML = '<span class="text-sm text-gray-600">⏳<br>Uploading...</span>';
             el.style.pointerEvents = 'none';
             
             // Test storage connection first
@@ -2387,6 +2399,9 @@
             const saveBtn = document.getElementById('saveChangesBtn');
             if (saveBtn) saveBtn.style.display = 'block';
             
+            // Clear uploading flag
+            isUploading = false;
+            
             // Auto-save after successful upload to ensure persistence
             setTimeout(() => {
               if (saveBtn && saveBtn.style.display === 'block' && !isSaving) {
@@ -2403,6 +2418,9 @@
             console.error(`Gallery photo upload attempt ${attempt} failed:`, error);
             
             if (attempt >= maxAttempts) {
+              // Clear uploading flag on final failure
+              isUploading = false;
+              
               const errorMessage = window.handleUploadError(error, 'gallery photo upload');
               
               // Show user-friendly error in UI
@@ -3578,13 +3596,14 @@ document.addEventListener('DOMContentLoaded', function() {
   }, 350);
 });
 
-// Flag to prevent periodic refresh during save operations
+// Flags to prevent periodic refresh during save/upload operations
 let isSaving = false;
+let isUploading = false;
 
 setInterval(async () => {
-  // Skip refresh if we're in the middle of a save operation
-  if (isSaving) {
-    console.log('Skipping periodic refresh - save operation in progress');
+  // Skip refresh if we're in the middle of a save or upload operation
+  if (isSaving || isUploading) {
+    console.log('Skipping periodic refresh - save/upload operation in progress');
     return;
   }
   
@@ -3635,8 +3654,11 @@ function editProfilePhoto(el, section) {
       try {
         console.log(`Profile photo upload attempt ${attempt + 1} for section: ${section}`);
         
-        // Show loading state
-        el.innerHTML = '⏳';
+        // Set uploading flag to prevent periodic refresh interference
+        isUploading = true;
+        
+        // Show uploading state
+        el.innerHTML = '<div style="font-size: 12px; text-align: center;">⏳<br>Uploading...</div>';
         el.style.pointerEvents = 'none';
         
         // Test storage connection first
@@ -3675,6 +3697,9 @@ function editProfilePhoto(el, section) {
         const saveBtn = document.getElementById('saveChangesBtn');
         if (saveBtn) saveBtn.style.display = 'block';
         
+        // Clear uploading flag
+        isUploading = false;
+        
         // Auto-save after successful upload to ensure persistence
         setTimeout(() => {
           if (saveBtn && saveBtn.style.display === 'block' && !isSaving) {
@@ -3691,6 +3716,9 @@ function editProfilePhoto(el, section) {
         console.error(`Profile photo upload attempt ${attempt} failed:`, error);
         
         if (attempt >= maxAttempts) {
+          // Clear uploading flag on final failure
+          isUploading = false;
+          
           const errorMessage = window.handleUploadError(error, 'profile photo upload');
           
           // Show user-friendly error in UI
