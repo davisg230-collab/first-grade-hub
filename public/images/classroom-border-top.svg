@@ -1,0 +1,11 @@
+<svg width="120" height="30" viewBox="0 0 120 30" xmlns="http://www.w3.org/2000/svg">
+  <!-- Scalloped border pattern that cuts into the yellow area -->
+  <path d="M0,30 Q20,0 40,30 Q60,0 80,30 Q100,0 120,30 L120,0 L0,0 Z" 
+        fill="#F2C9BE" 
+        stroke="#E0B14A" 
+        stroke-width="2"/>
+  <!-- Additional decorative elements -->
+  <circle cx="20" cy="15" r="3" fill="#E9867D" opacity="0.6"/>
+  <circle cx="60" cy="15" r="3" fill="#E9867D" opacity="0.6"/>
+  <circle cx="100" cy="15" r="3" fill="#E9867D" opacity="0.6"/>
+</svg>

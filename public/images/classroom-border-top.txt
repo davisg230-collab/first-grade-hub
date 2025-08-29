@@ -1,0 +1,1 @@
+Placeholder for classroom-border-top.png - This will be replaced with the actual scalloped border image
