@@ -1202,7 +1202,18 @@
       ['art', 'stem', 'gym', 'music'].forEach(type => {
         const galleryEl = document.querySelector(`[data-gallery-type="${type}"]`);
         if (galleryEl) {
-          galleries[type] = galleryEl.getAttribute('data-gallery-url') || '';
+          const urlsStr = galleryEl.getAttribute('data-gallery-urls');
+          if (urlsStr) {
+            try {
+              galleries[type] = JSON.parse(urlsStr);
+            } catch (e) {
+              // Fallback to old format
+              galleries[type] = galleryEl.getAttribute('data-gallery-url') || '';
+            }
+          } else {
+            // Fallback to old format
+            galleries[type] = galleryEl.getAttribute('data-gallery-url') || '';
+          }
         }
       });
       data.gallery_urls_json = JSON.stringify(galleries);
@@ -1599,7 +1610,7 @@
         <div class="text-6xl mb-4 emoji-edit" contenteditable="true" style="cursor: text;">✨</div>
         <h3 class="font-semibold mb-2" contenteditable="true" style="cursor: text;">Click to edit title</h3>
         <p class="text-sm" contenteditable="true" style="cursor: text;">Click to edit description</p>
-        <button class="mt-2 text-red-500 hover:text-red-700 text-xs" onclick="this.closest('.text-center').remove();">Remove Card</button>
+        <button class="mt-2 text-red-500 hover:text-red-700 text-xs" onclick="this.closest('.text-center').remove();" style="display: inline-block;">Remove Card</button>
       `;
       document.getElementById('extrasGrid').appendChild(newCard);
       
@@ -1620,16 +1631,42 @@
       const galleryContainer = btn.closest('.gallery-imgs');
       const galleryType = galleryContainer.getAttribute('data-gallery-type');
       
-      // For now, show a notice since multi-image storage needs backend implementation
-      alert("Previous image feature requires additional setup for storing multiple photos per gallery.");
+      const urlsStr = galleryContainer.getAttribute('data-gallery-urls');
+      if (!urlsStr) return;
+      
+      try {
+        const urls = JSON.parse(urlsStr);
+        if (urls.length <= 1) return; // No navigation needed for single image
+        
+        let currentIndex = parseInt(galleryContainer.getAttribute('data-current-index') || '0');
+        currentIndex = (currentIndex - 1 + urls.length) % urls.length;
+        
+        galleryContainer.setAttribute('data-current-index', currentIndex.toString());
+        updateGalleryDisplay(galleryContainer, urls[currentIndex]);
+      } catch (e) {
+        console.error('Failed to navigate gallery:', e);
+      }
     }
     
     function nextGalleryImg(btn) {
       const galleryContainer = btn.closest('.gallery-imgs');
       const galleryType = galleryContainer.getAttribute('data-gallery-type');
       
-      // For now, show a notice since multi-image storage needs backend implementation
-      alert("Next image feature requires additional setup for storing multiple photos per gallery.");
+      const urlsStr = galleryContainer.getAttribute('data-gallery-urls');
+      if (!urlsStr) return;
+      
+      try {
+        const urls = JSON.parse(urlsStr);
+        if (urls.length <= 1) return; // No navigation needed for single image
+        
+        let currentIndex = parseInt(galleryContainer.getAttribute('data-current-index') || '0');
+        currentIndex = (currentIndex + 1) % urls.length;
+        
+        galleryContainer.setAttribute('data-current-index', currentIndex.toString());
+        updateGalleryDisplay(galleryContainer, urls[currentIndex]);
+      } catch (e) {
+        console.error('Failed to navigate gallery:', e);
+      }
     }
     
     // Delete gallery photo function
@@ -1643,19 +1680,62 @@
         const img = galleryContainer.querySelector('img');
         const plusIcon = galleryContainer.querySelector('.text-3xl');
         
-        // Reset the gallery to empty state
-        if (img) {
-          img.style.display = 'none';
-          img.src = '';
-        }
-        if (plusIcon) {
-          plusIcon.style.display = 'block';
+        const urlsStr = galleryContainer.getAttribute('data-gallery-urls');
+        if (urlsStr) {
+          try {
+            const urls = JSON.parse(urlsStr);
+            const currentIndex = parseInt(galleryContainer.getAttribute('data-current-index') || '0');
+            
+            if (urls.length > 1) {
+              // Remove current image from array
+              urls.splice(currentIndex, 1);
+              galleryContainer.setAttribute('data-gallery-urls', JSON.stringify(urls));
+              
+              // Adjust current index if needed
+              let newIndex = currentIndex;
+              if (newIndex >= urls.length) {
+                newIndex = urls.length - 1;
+              }
+              galleryContainer.setAttribute('data-current-index', newIndex.toString());
+              
+              // Show the new current image
+              updateGalleryDisplay(galleryContainer, urls[newIndex]);
+              galleryContainer.setAttribute('data-gallery-url', urls[newIndex]);
+            } else {
+              // Last image - reset to empty state
+              galleryContainer.removeAttribute('data-gallery-urls');
+              galleryContainer.removeAttribute('data-current-index');
+              galleryContainer.removeAttribute('data-gallery-url');
+              
+              if (img) {
+                img.style.display = 'none';
+                img.src = '';
+              }
+              if (plusIcon) {
+                plusIcon.style.display = 'block';
+              }
+              btn.style.display = 'none';
+            }
+          } catch (e) {
+            console.error('Failed to delete from gallery:', e);
+          }
+        } else {
+          // Fallback to old behavior for single images
+          if (img) {
+            img.style.display = 'none';
+            img.src = '';
+          }
+          if (plusIcon) {
+            plusIcon.style.display = 'block';
+          }
+          btn.style.display = 'none';
+          galleryContainer.removeAttribute('data-gallery-url');
         }
         
-        // Hide the delete button
-        btn.style.display = 'none';
+        // Show save button since we have changes
+        const saveBtn = document.getElementById('saveChangesBtn');
+        if (saveBtn) saveBtn.style.display = 'block';
         
-        // TODO: Remove from backend storage
         console.log(`Deleted photo from ${galleryType} gallery`);
       }
     }
@@ -1810,7 +1890,22 @@
           // Update the gallery display
           updateGalleryDisplay(el, downloadURL);
           
-          // Store the photo URL in the element for later collection
+          // Add the photo URL to the array for later collection
+          const urlsStr = el.getAttribute('data-gallery-urls');
+          let urls = [];
+          if (urlsStr) {
+            try {
+              urls = JSON.parse(urlsStr);
+            } catch (e) {
+              urls = [];
+            }
+          }
+          urls.push(downloadURL);
+          
+          el.setAttribute('data-gallery-urls', JSON.stringify(urls));
+          el.setAttribute('data-current-index', (urls.length - 1).toString());
+          
+          // Keep legacy attribute for backward compatibility
           el.setAttribute('data-gallery-url', downloadURL);
           
           // Show save button since we have changes
@@ -2064,7 +2159,7 @@ function updateExtrasSection(extras_json) {
       <div class="text-6xl mb-4 emoji-edit" contenteditable="true" style="cursor: text;">${emoji}</div>
       <h3 class="font-semibold mb-2" contenteditable="true" style="cursor: text;">${title}</h3>
       <p class="text-sm" contenteditable="true" style="cursor: text;">${body_html}</p>
-      <button class="mt-2 text-red-500 hover:text-red-700 text-xs" onclick="this.closest('.text-center').remove();">Remove Card</button>
+      <button class="mt-2 text-red-500 hover:text-red-700 text-xs" onclick="this.closest('.text-center').remove();" style="display: none;">Remove Card</button>
     `;
     extrasContainer.appendChild(div);
   });
@@ -2151,6 +2246,9 @@ function populateDataFromSheet(data) {
   // Load birthday data
   updateBirthdayFields(data);
   
+  // Load website URLs
+  updateWebsiteCards(data.websites_json);
+  
   if (data.calendar_url) {
     const cal = document.getElementById('schoolCalendarLink');
     if (cal) cal.href = data.calendar_url;
@@ -2192,12 +2290,25 @@ function updateGalleryPhotos(galleryUrlsJson) {
   }
   
   ['art', 'stem', 'gym', 'music'].forEach(type => {
-    const url = galleryUrls[type];
-    if (url) {
+    const galleryData = galleryUrls[type];
+    if (galleryData) {
       const galleryEl = document.querySelector(`[data-gallery-type="${type}"]`);
       if (galleryEl) {
-        galleryEl.setAttribute('data-gallery-url', url);
-        updateGalleryDisplay(galleryEl, url);
+        // Support both old format (single URL) and new format (array of URLs)
+        let urls = [];
+        if (typeof galleryData === 'string') {
+          // Old format - single URL
+          urls = [galleryData];
+        } else if (Array.isArray(galleryData)) {
+          // New format - array of URLs
+          urls = galleryData;
+        }
+        
+        if (urls.length > 0) {
+          galleryEl.setAttribute('data-gallery-urls', JSON.stringify(urls));
+          galleryEl.setAttribute('data-current-index', '0');
+          updateGalleryDisplay(galleryEl, urls[0]);
+        }
       }
     }
   });
@@ -2298,6 +2409,33 @@ function updateBirthdayFields(data) {
     const monthEl = document.getElementById(`${month}BirthdaysTextarea`);
     if (monthEl && data[`${month}_birthdays`]) {
       monthEl.value = data[`${month}_birthdays`];
+    }
+  });
+}
+
+// Function to update website cards with saved URLs
+function updateWebsiteCards(websitesJson) {
+  if (!websitesJson) return;
+  
+  let websites = [];
+  try {
+    websites = JSON.parse(websitesJson);
+  } catch (e) {
+    console.error('Failed to parse websites JSON:', e);
+    return;
+  }
+  
+  const websiteCards = document.querySelectorAll('.website-card');
+  websiteCards.forEach((card, index) => {
+    const website = websites[index];
+    if (website && website.url) {
+      const urlInput = card.querySelector('.website-url-input');
+      const linkEl = card.querySelector('.website-link');
+      const titleEl = card.querySelector('.website-title');
+      
+      if (urlInput) urlInput.value = website.url;
+      if (linkEl) linkEl.href = website.url;
+      if (titleEl && website.title) titleEl.textContent = website.title;
     }
   });
 }
