@@ -1975,6 +1975,97 @@
       }
     };
     
+    // Helper function to validate all image URLs in Firestore data
+    window.validateAllImageUrls = async function(data) {
+      const results = {
+        valid: [],
+        invalid: [],
+        total: 0
+      };
+      
+      if (!data) return results;
+      
+      // Check photo URLs
+      if (data.photo_urls_json) {
+        try {
+          const photoUrls = JSON.parse(data.photo_urls_json);
+          for (let i = 0; i < photoUrls.length; i++) {
+            const url = photoUrls[i];
+            if (url && typeof url === 'string' && url.trim() !== '') {
+              results.total++;
+              const isValid = await window.validateStorageUrl(url);
+              if (isValid) {
+                results.valid.push({ type: 'photo', index: i, url });
+              } else {
+                results.invalid.push({ type: 'photo', index: i, url });
+              }
+            }
+          }
+        } catch (e) {
+          console.error('Failed to parse photo URLs:', e);
+        }
+      }
+      
+      // Check gallery URLs
+      if (data.gallery_urls_json) {
+        try {
+          const galleryUrls = JSON.parse(data.gallery_urls_json);
+          for (const galleryType of ['art', 'stem', 'gym', 'music']) {
+            const galleryData = galleryUrls[galleryType];
+            if (galleryData) {
+              let urls = [];
+              if (typeof galleryData === 'string' && galleryData.trim() !== '') {
+                urls = [galleryData];
+              } else if (Array.isArray(galleryData)) {
+                urls = galleryData.filter(url => url && typeof url === 'string' && url.trim() !== '');
+              }
+              
+              for (let i = 0; i < urls.length; i++) {
+                const url = urls[i];
+                results.total++;
+                const isValid = await window.validateStorageUrl(url);
+                if (isValid) {
+                  results.valid.push({ type: 'gallery', galleryType, index: i, url });
+                } else {
+                  results.invalid.push({ type: 'gallery', galleryType, index: i, url });
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.error('Failed to parse gallery URLs:', e);
+        }
+      }
+      
+      // Check profile URLs
+      if (data.scholar_profile_url) {
+        results.total++;
+        const isValid = await window.validateStorageUrl(data.scholar_profile_url);
+        if (isValid) {
+          results.valid.push({ type: 'profile', section: 'scholar', url: data.scholar_profile_url });
+        } else {
+          results.invalid.push({ type: 'profile', section: 'scholar', url: data.scholar_profile_url });
+        }
+      }
+      
+      if (data.about_me_profile_url) {
+        results.total++;
+        const isValid = await window.validateStorageUrl(data.about_me_profile_url);
+        if (isValid) {
+          results.valid.push({ type: 'profile', section: 'aboutme', url: data.about_me_profile_url });
+        } else {
+          results.invalid.push({ type: 'profile', section: 'aboutme', url: data.about_me_profile_url });
+        }
+      }
+      
+      console.log(`Image URL validation complete: ${results.valid.length}/${results.total} valid`);
+      if (results.invalid.length > 0) {
+        console.warn('Invalid URLs found:', results.invalid);
+      }
+      
+      return results;
+    };
+    
     // Editable photo cards: file upload functionality
     function editPhoto(el) {
       // Only allow editing in edit mode
@@ -3345,6 +3436,82 @@ async function fetchFirestoreData() {
   }
 }
 document.addEventListener('DOMContentLoaded', function() {
+  // Debug mode - add to URL: ?debug=true
+  const urlParams = new URLSearchParams(window.location.search);
+  const isDebugMode = urlParams.get('debug') === 'true';
+  
+  if (isDebugMode) {
+    // Create debug console in page
+    const debugConsole = document.createElement('div');
+    debugConsole.id = 'debugConsole';
+    debugConsole.style.cssText = `
+      position: fixed; 
+      bottom: 10px; 
+      right: 10px; 
+      width: 400px; 
+      max-height: 300px; 
+      background: black; 
+      color: lime; 
+      font-family: monospace; 
+      font-size: 12px; 
+      padding: 10px; 
+      border: 1px solid #333; 
+      overflow-y: auto; 
+      z-index: 10000;
+      display: none;
+    `;
+    debugConsole.innerHTML = '<div style="color: yellow; font-weight: bold;">🔧 DEBUG CONSOLE</div>';
+    document.body.appendChild(debugConsole);
+    
+    // Override console.log for debug mode
+    const originalLog = console.log;
+    const originalError = console.error;
+    const originalWarn = console.warn;
+    
+    function addToDebugConsole(level, ...args) {
+      const msg = args.join(' ');
+      const color = level === 'error' ? 'red' : level === 'warn' ? 'orange' : 'lime';
+      debugConsole.innerHTML += `<div style="color: ${color};">[${level.toUpperCase()}] ${msg}</div>`;
+      debugConsole.scrollTop = debugConsole.scrollHeight;
+    }
+    
+    console.log = function(...args) {
+      originalLog.apply(console, args);
+      addToDebugConsole('log', ...args);
+    };
+    
+    console.error = function(...args) {
+      originalError.apply(console, args);
+      addToDebugConsole('error', ...args);
+    };
+    
+    console.warn = function(...args) {
+      originalWarn.apply(console, args);
+      addToDebugConsole('warn', ...args);
+    };
+    
+    // Add toggle button
+    const toggleBtn = document.createElement('button');
+    toggleBtn.textContent = '🔧 Debug';
+    toggleBtn.style.cssText = `
+      position: fixed; 
+      bottom: 10px; 
+      left: 10px; 
+      z-index: 10001; 
+      background: #333; 
+      color: white; 
+      border: none; 
+      padding: 5px 10px; 
+      cursor: pointer;
+    `;
+    toggleBtn.onclick = () => {
+      debugConsole.style.display = debugConsole.style.display === 'none' ? 'block' : 'none';
+    };
+    document.body.appendChild(toggleBtn);
+    
+    console.log('Debug mode enabled');
+  }
+  
   // Test Firebase Storage connection on page load
   setTimeout(async () => {
     if (typeof storage !== 'undefined') {
@@ -3362,6 +3529,46 @@ document.addEventListener('DOMContentLoaded', function() {
   setTimeout(async () => {
     try {
       const data = await fetchFirestoreData();
+      
+      // Validate all image URLs if in debug mode or if data exists
+      if (data && (isDebugMode || data.photo_urls_json || data.gallery_urls_json)) {
+        console.log('Validating stored image URLs...');
+        const urlValidation = await window.validateAllImageUrls(data);
+        
+        if (urlValidation.invalid.length > 0) {
+          console.warn(`Found ${urlValidation.invalid.length} invalid image URLs that need to be fixed`);
+          
+          // Show warning in UI if there are broken images
+          const warningDiv = document.createElement('div');
+          warningDiv.className = 'fixed top-4 left-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded shadow-lg z-50';
+          warningDiv.innerHTML = `
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <span class="text-yellow-500">⚠️</span>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm font-medium">Image Issues Detected</p>
+                <p class="text-sm">${urlValidation.invalid.length} stored image(s) could not be loaded. They may have been deleted from storage.</p>
+              </div>
+              <div class="ml-auto pl-3">
+                <button class="text-yellow-400 hover:text-yellow-600" onclick="this.parentElement.parentElement.parentElement.remove()">
+                  <span class="sr-only">Dismiss</span>
+                  ✕
+                </button>
+              </div>
+            </div>
+          `;
+          document.body.appendChild(warningDiv);
+          
+          // Auto-remove warning after 10 seconds
+          setTimeout(() => {
+            if (warningDiv.parentNode) {
+              warningDiv.parentNode.removeChild(warningDiv);
+            }
+          }, 10000);
+        }
+      }
+      
       populateDataFromSheet(data);
     } catch (error) {
       console.error('Error during initial data load:', error);
