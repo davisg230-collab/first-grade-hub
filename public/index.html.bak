@@ -210,16 +210,10 @@
           <!-- 2 small + 1 large photo grid -->
           <div class="col-span-1 flex flex-col gap-4">
             <div class="grid grid-cols-2 gap-4 mb-4">
-              <div class="photo-card rounded-xl aspect-[4/3] bg-[color:var(--md-blush)] flex items-center justify-center text-3xl font-bold relative" onclick="handleHomePhotoClick(this)">+
-                <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteHomePhoto(this)" title="Delete Photo">✖</button>
-              </div>
-              <div class="photo-card rounded-xl aspect-[4/3] bg-[color:var(--md-blush)] flex items-center justify-center text-3xl font-bold relative" onclick="handleHomePhotoClick(this)">+
-                <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteHomePhoto(this)" title="Delete Photo">✖</button>
-              </div>
+              <div class="photo-card rounded-xl aspect-[4/3] bg-[color:var(--md-blush)] flex items-center justify-center text-3xl font-bold" onclick="editPhoto(this)">+</div>
+              <div class="photo-card rounded-xl aspect-[4/3] bg-[color:var(--md-blush)] flex items-center justify-center text-3xl font-bold" onclick="editPhoto(this)">+</div>
             </div>
-            <div class="photo-card rounded-xl aspect-[4/3] bg-[color:var(--md-blush)] flex items-center justify-center text-3xl font-bold relative" onclick="handleHomePhotoClick(this)">+
-              <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteHomePhoto(this)" title="Delete Photo">✖</button>
-            </div>
+            <div class="photo-card rounded-xl aspect-[4/3] bg-[color:var(--md-blush)] flex items-center justify-center text-3xl font-bold" onclick="editPhoto(this)">+</div>
           </div>
           <!-- Editable recap -->
           <div class="md:col-span-2">
@@ -1007,12 +1001,6 @@
         makeGalleryImageClickable(img, galleryType);
       });
       
-      // Update home page images clickable state (disable when in edit mode)
-      document.querySelectorAll('.photo-card img').forEach(img => {
-        img.style.cursor = 'default';
-        img.onclick = null;
-      });
-      
       document.getElementById('editModeBtn').textContent = '💾 Exit Edit Mode';
       document.getElementById('editModeBtn').onclick = exitEditMode;
     }
@@ -1093,17 +1081,6 @@
         const galleryContainer = img.closest('.gallery-imgs');
         const galleryType = galleryContainer ? galleryContainer.getAttribute('data-gallery-type') : '';
         makeGalleryImageClickable(img, galleryType);
-      });
-      
-      // Update home page images clickable state (enable when not in edit mode)
-      document.querySelectorAll('.photo-card img').forEach(img => {
-        if (img.src && img.src !== '') {
-          img.style.cursor = 'pointer';
-          img.onclick = function(e) {
-            e.stopPropagation();
-            openImageModal(img.src);
-          };
-        }
       });
       
       document.getElementById('editModeBtn').textContent = '✏️ Edit Mode';
@@ -1941,44 +1918,7 @@
     
     // Helper function to update photo card display
     function updatePhotoCardDisplay(element, imageUrl) {
-      element.innerHTML = `<img src="${imageUrl}" alt="Uploaded photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: inherit;">
-        <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteHomePhoto(this)" title="Delete Photo">✖</button>`;
-    }
-    
-    // Handle clicks on home page photo cards - either edit or view in modal
-    function handleHomePhotoClick(element) {
-      // Check if we're in edit mode
-      if (document.body.classList.contains('editing')) {
-        // In edit mode, allow editing
-        editPhoto(element);
-      } else {
-        // Not in edit mode, check if there's an image to display in modal
-        const img = element.querySelector('img');
-        if (img && img.src && img.src !== '') {
-          openImageModal(img.src);
-        }
-      }
-    }
-    
-    // Delete home page photo function
-    function deleteHomePhoto(btn) {
-      if (!document.body.classList.contains('editing')) {
-        return; // Only allow deletion in edit mode
-      }
-      
-      if (confirm('Are you sure you want to delete this photo?')) {
-        const photoCard = btn.closest('.photo-card');
-        
-        // Reset to empty state
-        photoCard.innerHTML = '+<button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteHomePhoto(this)" title="Delete Photo">✖</button>';
-        photoCard.removeAttribute('data-photo-url');
-        
-        // Show save button since we have changes
-        const saveBtn = document.getElementById('saveChangesBtn');
-        if (saveBtn) saveBtn.style.display = 'block';
-        
-        console.log('Deleted photo from home page');
-      }
+      element.innerHTML = `<img src="${imageUrl}" alt="Uploaded photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: inherit;">`;
     }
     
     // Gallery photo upload functionality
