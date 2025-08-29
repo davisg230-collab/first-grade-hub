@@ -180,7 +180,7 @@
   </header>
   <!-- Tab Separator -->
   <div class="max-w-6xl mx-auto px-6">
-    <div class="border-t border-gray-300 dark:border-gray-600" style="border-color: color-mix(in oklab, var(--md-slate) 40%, transparent);"></div>
+    <div class="border-t-2" style="border-color: color-mix(in oklab, var(--md-slate) 60%, var(--md-white) 40%);"></div>
   </div>
   <main class="max-w-6xl mx-auto px-6 pb-16">
     <nav id="tabs" class="mt-6 mb-4 flex flex-wrap gap-2">
@@ -464,10 +464,10 @@
               <img src="" alt="Art Gallery" style="display:none;">
               <span class="text-3xl text-gray-400">+</span>
               <span class="gallery-arrows">
-                <button onclick="prevGalleryImg(this)">‹</button>
-                <button onclick="nextGalleryImg(this)">›</button>
+                <button onclick="event.stopPropagation(); prevGalleryImg(this)">‹</button>
+                <button onclick="event.stopPropagation(); nextGalleryImg(this)">›</button>
               </span>
-              <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="deleteGalleryPhoto(this, 'art')" title="Delete Photo">✖</button>
+              <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteGalleryPhoto(this, 'art')" title="Delete Photo">✖</button>
             </div>
             <div class="rounded-lg p-4 m-4 bg-white" style="color: var(--md-ink);">
               <h3 class="font-semibold">🎨 Art</h3>
@@ -480,10 +480,10 @@
               <img src="" alt="STEM Gallery" style="display:none;">
               <span class="text-3xl text-gray-400">+</span>
               <span class="gallery-arrows">
-                <button onclick="prevGalleryImg(this)">‹</button>
-                <button onclick="nextGalleryImg(this)">›</button>
+                <button onclick="event.stopPropagation(); prevGalleryImg(this)">‹</button>
+                <button onclick="event.stopPropagation(); nextGalleryImg(this)">›</button>
               </span>
-              <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="deleteGalleryPhoto(this, 'stem')" title="Delete Photo">✖</button>
+              <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteGalleryPhoto(this, 'stem')" title="Delete Photo">✖</button>
             </div>
             <div class="rounded-lg p-4 m-4 bg-white" style="color: var(--md-ink);">
               <h3 class="font-semibold">🔬 STEM</h3>
@@ -496,10 +496,10 @@
               <img src="" alt="Gym Gallery" style="display:none;">
               <span class="text-3xl text-gray-400">+</span>
               <span class="gallery-arrows">
-                <button onclick="prevGalleryImg(this)">‹</button>
-                <button onclick="nextGalleryImg(this)">›</button>
+                <button onclick="event.stopPropagation(); prevGalleryImg(this)">‹</button>
+                <button onclick="event.stopPropagation(); nextGalleryImg(this)">›</button>
               </span>
-              <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="deleteGalleryPhoto(this, 'gym')" title="Delete Photo">✖</button>
+              <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteGalleryPhoto(this, 'gym')" title="Delete Photo">✖</button>
             </div>
             <div class="rounded-lg p-4 m-4 bg-white" style="color: var(--md-ink);">
               <h3 class="font-semibold">🏃‍♂️ Gym</h3>
@@ -512,10 +512,10 @@
               <img src="" alt="Music Gallery" style="display:none;">
               <span class="text-3xl text-gray-400">+</span>
               <span class="gallery-arrows">
-                <button onclick="prevGalleryImg(this)">‹</button>
-                <button onclick="nextGalleryImg(this)">›</button>
+                <button onclick="event.stopPropagation(); prevGalleryImg(this)">‹</button>
+                <button onclick="event.stopPropagation(); nextGalleryImg(this)">›</button>
               </span>
-              <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="deleteGalleryPhoto(this, 'music')" title="Delete Photo">✖</button>
+              <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteGalleryPhoto(this, 'music')" title="Delete Photo">✖</button>
             </div>
             <div class="rounded-lg p-4 m-4 bg-white" style="color: var(--md-ink);">
               <h3 class="font-semibold">🎵 Music</h3>
