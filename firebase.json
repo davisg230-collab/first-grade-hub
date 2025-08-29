@@ -1,11 +1,8 @@
 {
   "hosting": {
-    "site": "first-grade-news-hub", 
+    "site": "first-grade-news-hub-mrdavis",
     "public": "public",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ]
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
   }
 }
+
