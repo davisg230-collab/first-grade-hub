@@ -86,6 +86,9 @@
     body.editing .photo-card{cursor: pointer;}
     .gallery-imgs{cursor: default;}
     body.editing .gallery-imgs{cursor: pointer;}
+    /* Hide teacher debug panels when not in edit mode */
+    .teacher-only-debug { display: none; }
+    body.editing .teacher-only-debug { display: block; }
     body.dark{background:#0b1a22}
     body.dark .shadow-soft{box-shadow:0 10px 30px rgba(0,0,0,.35)}
     #pinOverlay { display: none; }
@@ -121,6 +124,25 @@
         </div>
       </div>
       <div id="uploadStatus" class="mt-3 text-sm hidden"></div>
+      
+      <!-- Debug panel for teachers (only visible in edit mode) -->
+      <div id="uploadDebugPanel" class="mt-4 p-3 bg-gray-50 rounded-lg border hidden teacher-only-debug">
+        <div class="flex justify-between items-center mb-2">
+          <h4 class="font-semibold text-sm text-gray-700">Debug Info (Teacher Only)</h4>
+          <button id="toggleDebugInfo" class="text-xs bg-gray-200 px-2 py-1 rounded hover:bg-gray-300">Show Details</button>
+        </div>
+        <div id="debugDetails" class="hidden">
+          <div class="text-xs space-y-1 text-gray-600">
+            <div><strong>Firebase Project:</strong> <span id="debugProjectId">-</span></div>
+            <div><strong>Storage Bucket:</strong> <span id="debugStorageBucket">-</span></div>
+            <div><strong>Auth Domain:</strong> <span id="debugAuthDomain">-</span></div>
+            <div><strong>Firebase SDK:</strong> <span id="debugFirebaseSDK">-</span></div>
+            <div><strong>Storage Status:</strong> <span id="debugStorageStatus">-</span></div>
+            <div><strong>Last Upload:</strong> <span id="debugLastUpload">None</span></div>
+          </div>
+        </div>
+      </div>
+      
       <div id="uploadedImageContainer" class="mt-4 hidden">
         <h4 class="font-semibold mb-2">Uploaded Image:</h4>
         <img id="uploadedImage" class="max-w-xs rounded-lg shadow-md" alt="Uploaded image">
@@ -1069,6 +1091,32 @@
       const uploadedImage = document.getElementById('uploadedImage');
       const downloadUrlInput = document.getElementById('downloadUrlInput');
       const copyUrlBtn = document.getElementById('copyUrlBtn');
+      const toggleDebugBtn = document.getElementById('toggleDebugInfo');
+      const debugDetails = document.getElementById('debugDetails');
+
+      // Populate debug panel with Firebase config info
+      function updateDebugPanel() {
+        document.getElementById('debugProjectId').textContent = firebaseConfig.projectId || 'Not configured';
+        document.getElementById('debugStorageBucket').textContent = firebaseConfig.storageBucket || 'Not configured';
+        document.getElementById('debugAuthDomain').textContent = firebaseConfig.authDomain || 'Not configured';
+        document.getElementById('debugFirebaseSDK').textContent = typeof firebase !== 'undefined' ? 'Loaded' : 'Not loaded';
+        document.getElementById('debugStorageStatus').textContent = (typeof storage !== 'undefined' && storage) ? 'Initialized' : 'Not initialized';
+      }
+
+      // Toggle debug details
+      toggleDebugBtn.addEventListener('click', function() {
+        if (debugDetails.classList.contains('hidden')) {
+          debugDetails.classList.remove('hidden');
+          toggleDebugBtn.textContent = 'Hide Details';
+          updateDebugPanel();
+        } else {
+          debugDetails.classList.add('hidden');
+          toggleDebugBtn.textContent = 'Show Details';
+        }
+      });
+
+      // Update debug info on page load
+      updateDebugPanel();
 
       // Select image button click handler
       selectImageBtn.addEventListener('click', function() {
@@ -1109,10 +1157,39 @@
         const file = liveImageInput.files[0];
         if (!file) return;
 
-        // Check if Firebase Storage is available
+        // Log upload attempt with full details
+        console.log('=== UPLOAD ATTEMPT ===');
+        console.log('File details:', {
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          lastModified: new Date(file.lastModified).toISOString()
+        });
+        console.log('Firebase config:', {
+          projectId: firebaseConfig.projectId,
+          storageBucket: firebaseConfig.storageBucket,
+          authDomain: firebaseConfig.authDomain
+        });
+        console.log('Firebase SDK status:', {
+          firebaseApp: typeof firebase !== 'undefined' ? 'loaded' : 'not loaded',
+          storage: typeof storage !== 'undefined' && storage ? 'initialized' : 'not initialized',
+          storageRef: typeof storage !== 'undefined' && storage ? typeof storage.ref : 'unavailable'
+        });
+
+        // Enhanced Firebase Storage availability check
+        if (typeof firebase === 'undefined') {
+          const errorMsg = 'Firebase SDK not loaded. Please check your internet connection and refresh the page.';
+          console.error('UPLOAD ERROR:', errorMsg);
+          showStatus(errorMsg, 'error');
+          alert(errorMsg);
+          return;
+        }
+
         if (typeof storage === 'undefined' || !storage) {
-          showStatus('Firebase Storage not available - please check your connection', 'error');
-          alert('Firebase Storage is not available. Please check your internet connection and try again.');
+          const errorMsg = 'Firebase Storage not initialized. Please check your connection and Firebase configuration.';
+          console.error('UPLOAD ERROR:', errorMsg);
+          showStatus(errorMsg, 'error');
+          alert(errorMsg);
           return;
         }
 
@@ -1126,10 +1203,21 @@
           const timestamp = Date.now();
           const fileName = `${timestamp}_${file.name}`;
           
+          console.log('Generated filename:', fileName);
+          console.log('Upload path:', `uploads/${fileName}`);
+          
           // Upload to Firebase Storage at /uploads/ path
           const storageRef = storage.ref(`uploads/${fileName}`);
+          console.log('Storage reference created successfully');
+          
           const uploadTask = await storageRef.put(file);
+          console.log('File uploaded successfully, getting download URL...');
+          
           const downloadURL = await uploadTask.ref.getDownloadURL();
+          console.log('Upload completed successfully. Download URL:', downloadURL);
+          
+          // Update debug panel with last upload info
+          document.getElementById('debugLastUpload').textContent = new Date().toLocaleString() + ' - ' + fileName;
           
           // Show success and display results
           showStatus('Upload successful!', 'success');
@@ -1145,9 +1233,60 @@
           uploadImageBtn.innerHTML = 'Upload';
 
         } catch (error) {
-          console.error('Failed to upload image:', error);
-          showStatus('Upload failed. Please try again.', 'error');
-          alert('Failed to upload image. Please try again.');
+          // Enhanced error logging and user feedback
+          console.error('=== UPLOAD FAILED ===');
+          console.error('Error details:', error);
+          console.error('Error code:', error.code);
+          console.error('Error message:', error.message);
+          console.error('Error name:', error.name);
+          
+          // Provide specific error messages based on error type
+          let userMessage = 'Upload failed: ';
+          let detailedMessage = error.message || 'Unknown error occurred';
+          
+          if (error.code) {
+            switch (error.code) {
+              case 'storage/unauthorized':
+                userMessage += 'Permission denied. Please check Firebase storage rules.';
+                break;
+              case 'storage/canceled':
+                userMessage += 'Upload was canceled.';
+                break;
+              case 'storage/unknown':
+                userMessage += 'Unknown error occurred. Please try again.';
+                break;
+              case 'storage/invalid-format':
+                userMessage += 'Invalid file format.';
+                break;
+              case 'storage/invalid-argument':
+                userMessage += 'Invalid upload parameters.';
+                break;
+              case 'storage/retry-limit-exceeded':
+                userMessage += 'Upload retry limit exceeded. Please try again later.';
+                break;
+              case 'storage/quota-exceeded':
+                userMessage += 'Storage quota exceeded.';
+                break;
+              default:
+                userMessage += `Firebase error (${error.code}): ${detailedMessage}`;
+            }
+          } else if (error.message) {
+            if (error.message.includes('CORS')) {
+              userMessage += 'CORS policy error. Please contact administrator.';
+            } else if (error.message.includes('network')) {
+              userMessage += 'Network connection error. Please check your internet connection.';
+            } else if (error.message.includes('bucket')) {
+              userMessage += 'Storage bucket configuration error. Please contact administrator.';
+            } else {
+              userMessage += detailedMessage;
+            }
+          } else {
+            userMessage += 'Unknown error occurred. Please try again.';
+          }
+          
+          console.error('User message:', userMessage);
+          showStatus(userMessage, 'error');
+          alert(userMessage);
         }
 
         // Reset button state
@@ -1193,6 +1332,60 @@
       }
     });
 
+    // Enhanced error handling helper function (global scope)
+    window.handleUploadError = function(error, context = 'upload') {
+      console.error(`=== ${context.toUpperCase()} FAILED ===`);
+      console.error('Error details:', error);
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
+      console.error('Error name:', error.name);
+      
+      let userMessage = `${context.charAt(0).toUpperCase() + context.slice(1)} failed: `;
+      
+      if (error.code) {
+        switch (error.code) {
+          case 'storage/unauthorized':
+            userMessage += 'Permission denied. Please check Firebase storage rules.';
+            break;
+          case 'storage/canceled':
+            userMessage += 'Upload was canceled.';
+            break;
+          case 'storage/unknown':
+            userMessage += 'Unknown error occurred. Please try again.';
+            break;
+          case 'storage/invalid-format':
+            userMessage += 'Invalid file format.';
+            break;
+          case 'storage/invalid-argument':
+            userMessage += 'Invalid upload parameters.';
+            break;
+          case 'storage/retry-limit-exceeded':
+            userMessage += 'Upload retry limit exceeded. Please try again later.';
+            break;
+          case 'storage/quota-exceeded':
+            userMessage += 'Storage quota exceeded.';
+            break;
+          default:
+            userMessage += `Firebase error (${error.code}): ${error.message || 'Unknown error'}`;
+        }
+      } else if (error.message) {
+        if (error.message.includes('CORS')) {
+          userMessage += 'CORS policy error. Please contact administrator.';
+        } else if (error.message.includes('network')) {
+          userMessage += 'Network connection error. Please check your internet connection.';
+        } else if (error.message.includes('bucket')) {
+          userMessage += 'Storage bucket configuration error. Please contact administrator.';
+        } else {
+          userMessage += error.message;
+        }
+      } else {
+        userMessage += 'Unknown error occurred. Please try again.';
+      }
+      
+      console.error('User message:', userMessage);
+      return userMessage;
+    };
+
     // Editable photo cards: file upload functionality
     function editPhoto(el) {
       // Only allow editing in edit mode
@@ -1235,8 +1428,8 @@
           if (saveBtn) saveBtn.style.display = 'block';
           
         } catch (error) {
-          console.error('Failed to upload photo:', error);
-          alert('Failed to upload photo. Please try again.');
+          const errorMessage = window.handleUploadError(error, 'photo upload');
+          alert(errorMessage);
           // Reset to plus icon on error
           el.innerHTML = '+';
         }
@@ -1297,8 +1490,8 @@
           if (saveBtn) saveBtn.style.display = 'block';
           
         } catch (error) {
-          console.error('Failed to upload gallery photo:', error);
-          alert('Failed to upload photo. Please try again.');
+          const errorMessage = window.handleUploadError(error, 'gallery photo upload');
+          alert(errorMessage);
           // Reset to plus icon on error
           el.innerHTML = '<span class="text-3xl text-gray-400">+</span>';
         }

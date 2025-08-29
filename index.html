@@ -1556,6 +1556,61 @@
     function nextGalleryImg(btn) {
       alert("Gallery swipe feature coming soon!");
     }
+    
+    // Enhanced error handling helper function for uploads (global scope)
+    window.handleUploadError = window.handleUploadError || function(error, context = 'upload') {
+      console.error(`=== ${context.toUpperCase()} FAILED ===`);
+      console.error('Error details:', error);
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
+      console.error('Error name:', error.name);
+      
+      let userMessage = `${context.charAt(0).toUpperCase() + context.slice(1)} failed: `;
+      
+      if (error.code) {
+        switch (error.code) {
+          case 'storage/unauthorized':
+            userMessage += 'Permission denied. Please check Firebase storage rules.';
+            break;
+          case 'storage/canceled':
+            userMessage += 'Upload was canceled.';
+            break;
+          case 'storage/unknown':
+            userMessage += 'Unknown error occurred. Please try again.';
+            break;
+          case 'storage/invalid-format':
+            userMessage += 'Invalid file format.';
+            break;
+          case 'storage/invalid-argument':
+            userMessage += 'Invalid upload parameters.';
+            break;
+          case 'storage/retry-limit-exceeded':
+            userMessage += 'Upload retry limit exceeded. Please try again later.';
+            break;
+          case 'storage/quota-exceeded':
+            userMessage += 'Storage quota exceeded.';
+            break;
+          default:
+            userMessage += `Firebase error (${error.code}): ${error.message || 'Unknown error'}`;
+        }
+      } else if (error.message) {
+        if (error.message.includes('CORS')) {
+          userMessage += 'CORS policy error. Please contact administrator.';
+        } else if (error.message.includes('network')) {
+          userMessage += 'Network connection error. Please check your internet connection.';
+        } else if (error.message.includes('bucket')) {
+          userMessage += 'Storage bucket configuration error. Please contact administrator.';
+        } else {
+          userMessage += error.message;
+        }
+      } else {
+        userMessage += 'Unknown error occurred. Please try again.';
+      }
+      
+      console.error('User message:', userMessage);
+      return userMessage;
+    };
+    
     // Editable photo cards: file upload functionality
     function editPhoto(el) {
       // Only allow editing in edit mode
@@ -1598,8 +1653,8 @@
           if (saveBtn) saveBtn.style.display = 'block';
           
         } catch (error) {
-          console.error('Failed to upload photo:', error);
-          alert('Failed to upload photo. Please try again.');
+          const errorMessage = window.handleUploadError(error, 'photo upload');
+          alert(errorMessage);
           // Reset to plus icon on error
           el.innerHTML = '+';
         }
@@ -1660,8 +1715,8 @@
           if (saveBtn) saveBtn.style.display = 'block';
           
         } catch (error) {
-          console.error('Failed to upload gallery photo:', error);
-          alert('Failed to upload photo. Please try again.');
+          const errorMessage = window.handleUploadError(error, 'gallery photo upload');
+          alert(errorMessage);
           // Reset to plus icon on error
           el.innerHTML = '<span class="text-3xl text-gray-400">+</span>';
         }
@@ -2612,8 +2667,8 @@ function editProfilePhoto(el, section) {
       if (saveBtn) saveBtn.style.display = 'block';
       
     } catch (error) {
-      console.error('Failed to upload profile photo:', error);
-      alert('Failed to upload photo. Please try again.');
+      const errorMessage = window.handleUploadError(error, 'profile photo upload');
+      alert(errorMessage);
       // Reset on error
       el.innerHTML = '';
       el.style.pointerEvents = 'auto';
