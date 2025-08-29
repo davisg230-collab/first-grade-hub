@@ -1927,8 +1927,8 @@
         } catch (error) {
           const errorMessage = window.handleUploadError(error, 'photo upload');
           alert(errorMessage);
-          // Reset to plus icon on error
-          el.innerHTML = '+';
+          // Reset to placeholder state on error
+          resetPhotoCardToPlaceholder(el);
         }
         
         el.style.pointerEvents = 'auto';
@@ -1941,8 +1941,57 @@
     
     // Helper function to update photo card display
     function updatePhotoCardDisplay(element, imageUrl) {
-      element.innerHTML = `<img src="${imageUrl}" alt="Uploaded photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: inherit;">
-        <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteHomePhoto(this)" title="Delete Photo">✖</button>`;
+      // Validate imageUrl
+      if (!imageUrl || typeof imageUrl !== 'string' || imageUrl.trim() === '') {
+        console.warn('Invalid image URL provided to updatePhotoCardDisplay:', imageUrl);
+        resetPhotoCardToPlaceholder(element);
+        return;
+      }
+
+      // Create image element with error handling
+      const img = document.createElement('img');
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.objectFit = 'cover';
+      img.style.borderRadius = 'inherit';
+      img.alt = ''; // Remove alt text to prevent showing text on broken images
+      
+      // Handle successful image load
+      img.onload = function() {
+        element.innerHTML = '';
+        element.appendChild(img);
+        
+        // Add delete button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only';
+        deleteBtn.style.display = 'none';
+        deleteBtn.onclick = function(event) {
+          event.stopPropagation();
+          deleteHomePhoto(this);
+        };
+        deleteBtn.title = 'Delete Photo';
+        deleteBtn.textContent = '✖';
+        element.appendChild(deleteBtn);
+      };
+      
+      // Handle image load error
+      img.onerror = function() {
+        console.error('Failed to load image:', imageUrl);
+        resetPhotoCardToPlaceholder(element);
+      };
+      
+      img.src = imageUrl;
+    }
+
+    // Helper function to reset photo card to placeholder state
+    function resetPhotoCardToPlaceholder(element) {
+      element.innerHTML = '+';
+      element.style.display = 'flex';
+      element.style.alignItems = 'center';
+      element.style.justifyContent = 'center';
+      element.style.fontSize = '3rem';
+      element.style.fontWeight = 'bold';
+      element.removeAttribute('data-photo-url');
     }
     
     // Handle clicks on home page photo cards - either edit or view in modal
@@ -2041,8 +2090,8 @@
         } catch (error) {
           const errorMessage = window.handleUploadError(error, 'gallery photo upload');
           alert(errorMessage);
-          // Reset to plus icon on error
-          el.innerHTML = '<span class="text-3xl text-gray-400">+</span>';
+          // Reset to placeholder state on error
+          resetGalleryToPlaceholder(el);
         }
         
         el.style.pointerEvents = 'auto';
@@ -2056,20 +2105,68 @@
     // Helper function to update gallery display
     function updateGalleryDisplay(element, imageUrl) {
       const img = element.querySelector('img');
-      const plusSpan = element.querySelector('span');
+      const plusSpan = element.querySelector('span:not(.gallery-arrows)');
+      
+      // Validate imageUrl
+      if (!imageUrl || typeof imageUrl !== 'string' || imageUrl.trim() === '') {
+        console.warn('Invalid image URL provided to updateGalleryDisplay:', imageUrl);
+        resetGalleryToPlaceholder(element);
+        return;
+      }
       
       if (img && plusSpan) {
-        img.src = imageUrl;
-        img.style.display = 'block';
-        img.style.width = '100%';
-        img.style.height = '100%';
-        img.style.objectFit = 'cover';
-        plusSpan.style.display = 'none';
+        // Handle successful image load
+        img.onload = function() {
+          img.style.display = 'block';
+          img.style.width = '100%';
+          img.style.height = '100%';
+          img.style.objectFit = 'cover';
+          plusSpan.style.display = 'none';
+          
+          // Make image clickable for enlargement
+          const galleryType = element.getAttribute('data-gallery-type');
+          makeGalleryImageClickable(img, galleryType);
+        };
         
-        // Make image clickable for enlargement
-        const galleryType = element.getAttribute('data-gallery-type');
-        makeGalleryImageClickable(img, galleryType);
+        // Handle image load error
+        img.onerror = function() {
+          console.error('Failed to load gallery image:', imageUrl);
+          resetGalleryToPlaceholder(element);
+        };
+        
+        img.alt = ''; // Remove alt text to prevent showing text on broken images
+        img.src = imageUrl;
+      } else {
+        console.error('Gallery display elements not found');
+        resetGalleryToPlaceholder(element);
       }
+    }
+
+    // Helper function to reset gallery to placeholder state
+    function resetGalleryToPlaceholder(element) {
+      const img = element.querySelector('img');
+      const plusSpan = element.querySelector('span:not(.gallery-arrows)');
+      
+      if (img) {
+        img.style.display = 'none';
+        img.src = '';
+        img.onload = null;
+        img.onerror = null;
+      }
+      if (plusSpan) {
+        plusSpan.style.display = 'block';
+        plusSpan.textContent = '+';
+        plusSpan.className = 'text-3xl text-gray-400';
+      }
+      
+      // Clear gallery data attributes
+      element.removeAttribute('data-gallery-url');
+      element.removeAttribute('data-gallery-urls');
+      element.removeAttribute('data-current-index');
+      
+      // Hide navigation arrows and delete button
+      const deleteBtn = element.querySelector('.edit-only');
+      if (deleteBtn) deleteBtn.style.display = 'none';
     }
     // School calendar link edit
     function editSchoolCalendarLink(event, linkElement) {
@@ -2400,9 +2497,12 @@ function updatePhotoCards(photoUrlsJson) {
   const photoCards = document.querySelectorAll('.photo-card');
   photoCards.forEach((card, index) => {
     const url = photoUrls[index];
-    if (url) {
+    if (url && typeof url === 'string' && url.trim() !== '') {
       card.setAttribute('data-photo-url', url);
       updatePhotoCardDisplay(card, url);
+    } else {
+      // Reset to placeholder if URL is invalid
+      resetPhotoCardToPlaceholder(card);
     }
   });
 }
@@ -2421,25 +2521,32 @@ function updateGalleryPhotos(galleryUrlsJson) {
   
   ['art', 'stem', 'gym', 'music'].forEach(type => {
     const galleryData = galleryUrls[type];
+    const galleryEl = document.querySelector(`[data-gallery-type="${type}"]`);
+    
+    if (!galleryEl) return;
+    
     if (galleryData) {
-      const galleryEl = document.querySelector(`[data-gallery-type="${type}"]`);
-      if (galleryEl) {
-        // Support both old format (single URL) and new format (array of URLs)
-        let urls = [];
-        if (typeof galleryData === 'string') {
-          // Old format - single URL
-          urls = [galleryData];
-        } else if (Array.isArray(galleryData)) {
-          // New format - array of URLs
-          urls = galleryData;
-        }
-        
-        if (urls.length > 0) {
-          galleryEl.setAttribute('data-gallery-urls', JSON.stringify(urls));
-          galleryEl.setAttribute('data-current-index', '0');
-          updateGalleryDisplay(galleryEl, urls[0]);
-        }
+      // Support both old format (single URL) and new format (array of URLs)
+      let urls = [];
+      if (typeof galleryData === 'string' && galleryData.trim() !== '') {
+        // Old format - single URL
+        urls = [galleryData];
+      } else if (Array.isArray(galleryData)) {
+        // New format - array of URLs, filter out invalid ones
+        urls = galleryData.filter(url => url && typeof url === 'string' && url.trim() !== '');
       }
+      
+      if (urls.length > 0) {
+        galleryEl.setAttribute('data-gallery-urls', JSON.stringify(urls));
+        galleryEl.setAttribute('data-current-index', '0');
+        updateGalleryDisplay(galleryEl, urls[0]);
+      } else {
+        // No valid URLs, reset to placeholder
+        resetGalleryToPlaceholder(galleryEl);
+      }
+    } else {
+      // No gallery data, reset to placeholder
+      resetGalleryToPlaceholder(galleryEl);
     }
   });
 }
