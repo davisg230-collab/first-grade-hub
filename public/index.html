@@ -666,8 +666,8 @@
     </section>
     <!-- BIRTHDAYS TAB -->
     <section data-page-panel="birthdays" class="pagePanel fade-in">
-      <h2 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">🎂 Class Roster & Birthdays</h2>
-      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8 bg-white" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
+      <h2 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">🎂 Birthdays</h2>
+      <div id="classRosterSection" class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8 bg-white" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
         <div class="flex justify-between items-center mb-5">
           <h3 class="text-xl font-semibold">👥 Class Roster</h3>
           <button id="saveClassRosterBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveBirthdayField('classRoster')">💾 Save</button>
@@ -773,6 +773,9 @@
     </div>
   </div>
   <script>
+    // Global variables
+    let isOwner = false; // Track if current user is the repository owner
+    
     // Tab navigation
     function showPage(pageId) {
       document.querySelectorAll('.pagePanel').forEach(panel => {
@@ -799,6 +802,7 @@
       });
       // Edit Mode PIN overlay logic
       const TEACHER_PIN = '2213';
+      const OWNER_PIN = '8875'; // Separate PIN for repository owner (davisg230-collab)
       
       // Initialize read-only state on page load
       initializeReadOnlyState();
@@ -814,9 +818,14 @@
       document.getElementById('pinSubmit').onclick = function() {
         var pin = document.getElementById('pinInput').value;
         if(pin === TEACHER_PIN){
+          isOwner = false;
           enterEditMode();
           document.getElementById('pinOverlay').classList.remove('show');
-        }else{
+        } else if(pin === OWNER_PIN){
+          isOwner = true;
+          enterEditMode();
+          document.getElementById('pinOverlay').classList.remove('show');
+        } else {
           document.getElementById('pinInput').style.borderColor='#ef4444';
           setTimeout(()=>{document.getElementById('pinInput').style.borderColor='';},900);
         }
@@ -888,10 +897,13 @@
         if (btn) btn.style.display = 'none';
       });
       
-      // Disable Class Roster section
+      // Disable Class Roster section and hide it by default
+      const classRosterSection = document.getElementById('classRosterSection');
       const classRosterTextarea = document.getElementById('classRosterTextarea');
-      if (classRosterTextarea) { classRosterTextarea.disabled = true; classRosterTextarea.readOnly = true; }
       const saveClassRosterBtn = document.getElementById('saveClassRosterBtn');
+      
+      if (classRosterSection) classRosterSection.style.display = 'none';
+      if (classRosterTextarea) { classRosterTextarea.disabled = true; classRosterTextarea.readOnly = true; }
       if (saveClassRosterBtn) saveClassRosterBtn.style.display = 'none';
       
       // Disable Birthday sections
@@ -962,11 +974,20 @@
         if (btn) btn.style.display = 'inline-block';
       });
       
-      // Enable Class Roster section
+      // Enable Class Roster section (owner only)
+      const classRosterSection = document.getElementById('classRosterSection');
       const classRosterTextarea = document.getElementById('classRosterTextarea');
-      if (classRosterTextarea) { classRosterTextarea.disabled = false; classRosterTextarea.readOnly = false; }
       const saveClassRosterBtn = document.getElementById('saveClassRosterBtn');
-      if (saveClassRosterBtn) saveClassRosterBtn.style.display = 'inline-block';
+      
+      if (isOwner) {
+        // Show and enable roster section for owner
+        if (classRosterSection) classRosterSection.style.display = 'block';
+        if (classRosterTextarea) { classRosterTextarea.disabled = false; classRosterTextarea.readOnly = false; }
+        if (saveClassRosterBtn) saveClassRosterBtn.style.display = 'inline-block';
+      } else {
+        // Hide roster section for non-owners
+        if (classRosterSection) classRosterSection.style.display = 'none';
+      }
       
       // Enable Birthday sections
       const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
@@ -1017,6 +1038,7 @@
       document.getElementById('editModeBtn').onclick = exitEditMode;
     }
     function exitEditMode(){
+      isOwner = false; // Reset owner status when exiting edit mode
       document.body.classList.remove('editing');
       document.querySelectorAll('[data-edit="teacher"]').forEach(el=>el.contentEditable=false);
       document.querySelectorAll('.teacher-only-edit').forEach(el=>{el.disabled=true;el.readOnly=true;});
@@ -1050,10 +1072,13 @@
         if (btn) btn.style.display = 'none';
       });
       
-      // Disable Class Roster section
+      // Disable Class Roster section and hide it
+      const classRosterSection = document.getElementById('classRosterSection');
       const classRosterTextarea = document.getElementById('classRosterTextarea');
-      if (classRosterTextarea) { classRosterTextarea.disabled = true; classRosterTextarea.readOnly = true; }
       const saveClassRosterBtn = document.getElementById('saveClassRosterBtn');
+      
+      if (classRosterSection) classRosterSection.style.display = 'none';
+      if (classRosterTextarea) { classRosterTextarea.disabled = true; classRosterTextarea.readOnly = true; }
       if (saveClassRosterBtn) saveClassRosterBtn.style.display = 'none';
       
       // Disable Birthday sections
