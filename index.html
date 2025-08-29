@@ -274,6 +274,10 @@
         </div>
         <!-- Snack importance message -->
         <div class="mb-4 p-3 rounded-lg" style="background: color-mix(in oklab, var(--md-mustard) 20%, var(--md-white) 80%); border: 1px solid color-mix(in oklab, var(--md-mustard) 40%, var(--md-white) 60%);">
+          <div class="flex justify-between items-start mb-2 edit-only" style="display: none;">
+            <h4 class="font-semibold text-sm">Snack Message</h4>
+            <button id="saveSnackMessageBtn" class="px-3 py-1 rounded-lg text-white text-xs font-semibold" style="background: var(--md-coral);" onclick="saveSnackMessage()">💾 Save</button>
+          </div>
           <textarea 
             id="snackMessage" 
             class="w-full text-sm border-0 resize-none" 
@@ -463,6 +467,7 @@
                 <button onclick="prevGalleryImg(this)">‹</button>
                 <button onclick="nextGalleryImg(this)">›</button>
               </span>
+              <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="deleteGalleryPhoto(this, 'art')" title="Delete Photo">✖</button>
             </div>
             <div class="rounded-lg p-4 m-4 bg-white" style="color: var(--md-ink);">
               <h3 class="font-semibold">🎨 Art</h3>
@@ -478,6 +483,7 @@
                 <button onclick="prevGalleryImg(this)">‹</button>
                 <button onclick="nextGalleryImg(this)">›</button>
               </span>
+              <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="deleteGalleryPhoto(this, 'stem')" title="Delete Photo">✖</button>
             </div>
             <div class="rounded-lg p-4 m-4 bg-white" style="color: var(--md-ink);">
               <h3 class="font-semibold">🔬 STEM</h3>
@@ -493,6 +499,7 @@
                 <button onclick="prevGalleryImg(this)">‹</button>
                 <button onclick="nextGalleryImg(this)">›</button>
               </span>
+              <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="deleteGalleryPhoto(this, 'gym')" title="Delete Photo">✖</button>
             </div>
             <div class="rounded-lg p-4 m-4 bg-white" style="color: var(--md-ink);">
               <h3 class="font-semibold">🏃‍♂️ Gym</h3>
@@ -508,6 +515,7 @@
                 <button onclick="prevGalleryImg(this)">‹</button>
                 <button onclick="nextGalleryImg(this)">›</button>
               </span>
+              <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="deleteGalleryPhoto(this, 'music')" title="Delete Photo">✖</button>
             </div>
             <div class="rounded-lg p-4 m-4 bg-white" style="color: var(--md-ink);">
               <h3 class="font-semibold">🎵 Music</h3>
@@ -568,7 +576,7 @@
               <h3 class="text-lg font-semibold">🚌 Bus Riders</h3>
               <button id="saveBusRidersBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveTransportationField('busRiders')">💾 Save</button>
             </div>
-            <textarea id="busRidersTextarea" class="w-full h-32 p-3 text-sm border rounded-lg resize-none" placeholder="Scholars Name - Bus #"></textarea>
+            <textarea id="busRidersTextarea" class="w-full h-32 p-3 text-sm border rounded-lg resize-none" placeholder="Student name and bus number"></textarea>
           </div>
           <div class="bg-white rounded-xl p-6" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
             <div class="flex justify-between items-center mb-4">
@@ -616,31 +624,35 @@
                 <li>I can play the guitar</li>
               </ul>
             </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div class="bg-white rounded-xl p-4 text-center">
-                <div class="text-2xl mb-2">🎨</div>
-                <h4 class="font-semibold text-sm mb-1">Favorite Color</h4>
-                <p id="favoriteColorText" class="text-xs" contenteditable="false" style="min-height: 20px; padding: 4px; border: 1px solid #e5e7eb; border-radius: 4px;">Blue</p>
-                <button id="saveFavoriteColorBtn" class="mt-2 px-2 py-1 rounded text-white text-xs" style="background: var(--md-coral);" onclick="saveAboutMeField('favoriteColor')">💾</button>
-              </div>
-              <div class="bg-white rounded-xl p-4 text-center">
-                <div class="text-2xl mb-2">🍪</div>
-                <h4 class="font-semibold text-sm mb-1">Favorite Snack</h4>
-                <p id="favoriteSnackText" class="text-xs" contenteditable="false" style="min-height: 20px; padding: 4px; border: 1px solid #e5e7eb; border-radius: 4px;">Cookies</p>
-                <button id="saveFavoriteSnackBtn" class="mt-2 px-2 py-1 rounded text-white text-xs" style="background: var(--md-coral);" onclick="saveAboutMeField('favoriteSnack')">💾</button>
-              </div>
-              <div class="bg-white rounded-xl p-4 text-center">
-                <div class="text-2xl mb-2">🥤</div>
-                <h4 class="font-semibold text-sm mb-1">Favorite Drink</h4>
-                <p id="favoriteDrinkText" class="text-xs" contenteditable="false" style="min-height: 20px; padding: 4px; border: 1px solid #e5e7eb; border-radius: 4px;">Coffee</p>
-                <button id="saveFavoriteDrinkBtn" class="mt-2 px-2 py-1 rounded text-white text-xs" style="background: var(--md-coral);" onclick="saveAboutMeField('favoriteDrink')">💾</button>
-              </div>
-              <div class="bg-white rounded-xl p-4 text-center">
-                <div class="text-2xl mb-2">📺</div>
-                <h4 class="font-semibold text-sm mb-1">Favorite Show</h4>
-                <p id="favoriteShowText" class="text-xs" contenteditable="false" style="min-height: 20px; padding: 4px; border: 1px solid #e5e7eb; border-radius: 4px;">The Office</p>
-                <button id="saveFavoriteShowBtn" class="mt-2 px-2 py-1 rounded text-white text-xs" style="background: var(--md-coral);" onclick="saveAboutMeField('favoriteShow')">💾</button>
-              </div>
+          </div>
+        </div>
+        <!-- Favorites Section moved to bottom -->
+        <div class="mt-8">
+          <h3 class="font-semibold mb-4 text-center">Personal Favorites</h3>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white rounded-xl p-4 text-center">
+              <div class="text-2xl mb-2">🎨</div>
+              <h4 class="font-semibold text-sm mb-1">Favorite Color</h4>
+              <p id="favoriteColorText" class="text-xs" contenteditable="false" style="min-height: 20px; padding: 4px; border: 1px solid #e5e7eb; border-radius: 4px;">Blue</p>
+              <button id="saveFavoriteColorBtn" class="mt-2 px-2 py-1 rounded text-white text-xs" style="background: var(--md-coral);" onclick="saveAboutMeField('favoriteColor')">💾</button>
+            </div>
+            <div class="bg-white rounded-xl p-4 text-center">
+              <div class="text-2xl mb-2">🍪</div>
+              <h4 class="font-semibold text-sm mb-1">Favorite Snack</h4>
+              <p id="favoriteSnackText" class="text-xs" contenteditable="false" style="min-height: 20px; padding: 4px; border: 1px solid #e5e7eb; border-radius: 4px;">Cookies</p>
+              <button id="saveFavoriteSnackBtn" class="mt-2 px-2 py-1 rounded text-white text-xs" style="background: var(--md-coral);" onclick="saveAboutMeField('favoriteSnack')">💾</button>
+            </div>
+            <div class="bg-white rounded-xl p-4 text-center">
+              <div class="text-2xl mb-2">🥤</div>
+              <h4 class="font-semibold text-sm mb-1">Favorite Drink</h4>
+              <p id="favoriteDrinkText" class="text-xs" contenteditable="false" style="min-height: 20px; padding: 4px; border: 1px solid #e5e7eb; border-radius: 4px;">Coffee</p>
+              <button id="saveFavoriteDrinkBtn" class="mt-2 px-2 py-1 rounded text-white text-xs" style="background: var(--md-coral);" onclick="saveAboutMeField('favoriteDrink')">💾</button>
+            </div>
+            <div class="bg-white rounded-xl p-4 text-center">
+              <div class="text-2xl mb-2">📺</div>
+              <h4 class="font-semibold text-sm mb-1">Favorite Show</h4>
+              <p id="favoriteShowText" class="text-xs" contenteditable="false" style="min-height: 20px; padding: 4px; border: 1px solid #e5e7eb; border-radius: 4px;">The Office</p>
+              <button id="saveFavoriteShowBtn" class="mt-2 px-2 py-1 rounded text-white text-xs" style="background: var(--md-coral);" onclick="saveAboutMeField('favoriteShow')">💾</button>
             </div>
           </div>
         </div>
@@ -914,12 +926,16 @@
       document.body.classList.add('editing');
       document.querySelectorAll('[data-edit="teacher"]').forEach(el=>el.contentEditable=true);
       document.querySelectorAll('.teacher-only-edit').forEach(el=>{el.disabled=false;el.readOnly=false;});
-      // Enable snack message textarea
+      // Enable snack message textarea and show edit controls
       const snackMessage = document.getElementById('snackMessage');
       if (snackMessage) {
         snackMessage.disabled = false;
         snackMessage.readOnly = false;
       }
+      // Show edit-only elements
+      document.querySelectorAll('.edit-only').forEach(el => {
+        el.style.display = 'block';
+      });
       
       // Enable About Me section
       const aboutMeDescText = document.getElementById('aboutMeDescText');
@@ -985,12 +1001,16 @@
       document.body.classList.remove('editing');
       document.querySelectorAll('[data-edit="teacher"]').forEach(el=>el.contentEditable=false);
       document.querySelectorAll('.teacher-only-edit').forEach(el=>{el.disabled=true;el.readOnly=true;});
-      // Disable snack message textarea
+      // Disable snack message textarea and hide edit controls
       const snackMessage = document.getElementById('snackMessage');
       if (snackMessage) {
         snackMessage.disabled = true;
         snackMessage.readOnly = true;
       }
+      // Hide edit-only elements
+      document.querySelectorAll('.edit-only').forEach(el => {
+        el.style.display = 'none';
+      });
       
       // Disable About Me section
       const aboutMeDescText = document.getElementById('aboutMeDescText');
@@ -1449,6 +1469,52 @@
       }
     }
     
+    // Function to save snack message
+    async function saveSnackMessage() {
+      const snackMessageEl = document.getElementById('snackMessage');
+      const saveBtn = document.getElementById('saveSnackMessageBtn');
+      
+      if (!snackMessageEl || !saveBtn) return;
+      
+      const originalText = saveBtn.textContent;
+      
+      try {
+        // Show saving state
+        saveBtn.textContent = '⏳ Saving...';
+        saveBtn.disabled = true;
+        
+        const message = snackMessageEl.value || '';
+        
+        // Try to save to Firestore first
+        if (typeof db !== 'undefined') {
+          await db.collection('classData').doc('current').set(
+            { snack_message: message }, 
+            { merge: true }
+          );
+        } else {
+          // Fallback to localStorage for testing
+          localStorage.setItem('classData_snack_message', message);
+        }
+        
+        // Show success state
+        saveBtn.textContent = '✅ Saved!';
+        
+        // Reset button after delay
+        setTimeout(() => {
+          saveBtn.textContent = originalText;
+          saveBtn.disabled = false;
+        }, 1500);
+        
+      } catch (error) {
+        console.error('Failed to save snack message:', error);
+        saveBtn.textContent = '❌ Error';
+        setTimeout(() => {
+          saveBtn.textContent = originalText;
+          saveBtn.disabled = false;
+        }, 2000);
+      }
+    }
+    
     // Function to save snack data to Firestore
     async function saveSnackDataToFirestore() {
       try {
@@ -1549,12 +1615,49 @@
         sel.addRange(range);
       }
     }
-    // Specials galleries: dummy swipe
+    // Specials galleries: enhanced functionality
     function prevGalleryImg(btn) {
-      alert("Gallery swipe feature coming soon!");
+      const galleryContainer = btn.closest('.gallery-imgs');
+      const galleryType = galleryContainer.getAttribute('data-gallery-type');
+      
+      // For now, show a notice since multi-image storage needs backend implementation
+      alert("Previous image feature requires additional setup for storing multiple photos per gallery.");
     }
+    
     function nextGalleryImg(btn) {
-      alert("Gallery swipe feature coming soon!");
+      const galleryContainer = btn.closest('.gallery-imgs');
+      const galleryType = galleryContainer.getAttribute('data-gallery-type');
+      
+      // For now, show a notice since multi-image storage needs backend implementation
+      alert("Next image feature requires additional setup for storing multiple photos per gallery.");
+    }
+    
+    // Delete gallery photo function
+    function deleteGalleryPhoto(btn, galleryType) {
+      if (!document.body.classList.contains('editing')) {
+        return; // Only allow deletion in edit mode
+      }
+      
+      if (confirm('Are you sure you want to delete this photo?')) {
+        const galleryContainer = btn.closest('.gallery-imgs');
+        const img = galleryContainer.querySelector('img');
+        const plusIcon = galleryContainer.querySelector('.text-3xl');
+        
+        // Reset the gallery to empty state
+        if (img) {
+          img.style.display = 'none';
+          img.src = '';
+        }
+        if (plusIcon) {
+          plusIcon.style.display = 'block';
+        }
+        
+        // Hide the delete button
+        btn.style.display = 'none';
+        
+        // TODO: Remove from backend storage
+        console.log(`Deleted photo from ${galleryType} gallery`);
+      }
     }
     
     // Enhanced error handling helper function for uploads (global scope)
