@@ -3255,6 +3255,17 @@ async function saveTransportationField(fieldType) {
   const originalText = saveBtn.textContent;
   
   try {
+    // Check if Firebase is available
+    if (typeof db === 'undefined') {
+      console.error('Firebase not available - cannot save transportation data');
+      saveBtn.textContent = '❌ No Connection';
+      setTimeout(() => {
+        saveBtn.textContent = originalText;
+        saveBtn.disabled = false;
+      }, 3000);
+      return;
+    }
+    
     // Show saving state
     saveBtn.textContent = '⏳ Saving...';
     saveBtn.disabled = true;
