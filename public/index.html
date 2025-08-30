@@ -490,9 +490,9 @@
             </button>
           </div>
           
-          <!-- Admin Button (appears when PIN is entered) -->
+          <!-- Admin Button (appears in Edit Mode) -->
           <div class="mb-4">
-            <button id="createdShoutsBtn" class="px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-slate); display: none;">
+            <button id="createdShoutsBtn" class="edit-only px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-slate);">
               📋 Created Shoutouts
             </button>
           </div>
@@ -820,7 +820,6 @@
     let allShoutouts = []; // All submitted shoutouts
     let approvedShoutouts = []; // Only approved shoutouts for shuffle
     let currentShoutoutIndex = 0; // For shuffling through approved shoutouts
-    let isShoutoutAdmin = false; // Track if admin PIN entered for shoutouts
     
     // Tab navigation
     function showPage(pageId) {
@@ -3351,9 +3350,9 @@ function shuffleShoutoutTV() {
 
 // Admin Shoutouts Management
 function openAdminShoutsModal() {
-  if (!isShoutoutAdmin) {
-    // Show PIN prompt
-    showShoutoutAdminPIN();
+  // Check if Edit Mode is active (body has 'editing' class)
+  if (!document.body.classList.contains('editing')) {
+    alert('Please enter Edit Mode first to access shoutout management.');
     return;
   }
   
@@ -3370,21 +3369,6 @@ function closeAdminShoutsModal() {
   if (modal) {
     modal.style.display = 'none';
     document.body.style.overflow = '';
-  }
-}
-
-function showShoutoutAdminPIN() {
-  const pin = prompt('Enter admin PIN to manage shoutouts:');
-  if (pin === '2213') {
-    isShoutoutAdmin = true;
-    // Show admin button
-    const adminBtn = document.getElementById('createdShoutsBtn');
-    if (adminBtn) {
-      adminBtn.style.display = 'inline-block';
-    }
-    openAdminShoutsModal();
-  } else if (pin !== null) {
-    alert('Invalid PIN');
   }
 }
 
