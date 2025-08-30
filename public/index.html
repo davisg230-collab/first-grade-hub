@@ -173,6 +173,33 @@
         white-space: nowrap;
         min-width: max-content;
       }
+      
+      /* Transportation cards mobile layout */
+      .transportation-cards {
+        grid-template-columns: repeat(3, minmax(250px, 1fr)) !important;
+      }
+      
+      .transportation-card {
+        min-width: 250px;
+      }
+      
+      /* Birthday months mobile layout */
+      .birthday-months-mobile {
+        grid-template-columns: repeat(12, minmax(200px, 1fr)) !important;
+      }
+      
+      .birthday-month {
+        min-width: 200px;
+      }
+      
+      /* Specials cards mobile layout */
+      .specials-cards-mobile {
+        grid-template-columns: repeat(4, minmax(250px, 1fr)) !important;
+      }
+      
+      .specials-card {
+        min-width: 250px;
+      }
     }
     
     /* Desktop keeps flex-wrap behavior */
@@ -547,9 +574,15 @@
     <section data-page-panel="specials" class="pagePanel fade-in">
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
         <h2 class="text-2xl font-display font-bold mb-6" style="color: #f59e0b;">🎨 Specials Classes</h2>
-        <div class="grid md:grid-cols-2 gap-8">
+        
+        <!-- Mobile Arrow Indicator -->
+        <div class="md:hidden text-center text-sm text-gray-500 mb-4">
+          ← Swipe to view all specials →
+        </div>
+        
+        <div class="specials-cards-mobile mobile-tab-scroll scrollbar-hide grid md:grid-cols-2 gap-8">
           <!-- Art -->
-          <div class="rounded-2xl overflow-hidden relative" style="background: color-mix(in oklab, var(--md-white) 70%, #ef4444 30%); border: 1px solid color-mix(in oklab, #ef4444 60%, var(--md-white) 40%);">
+          <div class="specials-card rounded-2xl overflow-hidden relative" style="background: color-mix(in oklab, var(--md-white) 70%, #ef4444 30%); border: 1px solid color-mix(in oklab, #ef4444 60%, var(--md-white) 40%);">
             <div class="gallery-imgs aspect-[4/3] bg-white m-4 flex items-center justify-center relative" onclick="editGalleryPhoto(this, 'art')" data-gallery-type="art">
               <img src="" alt="Art Gallery" style="display:none;">
               <span class="text-3xl text-gray-400">+</span>
@@ -565,7 +598,7 @@
             </div>
           </div>
           <!-- STEM -->
-          <div class="rounded-2xl overflow-hidden relative" style="background: color-mix(in oklab, var(--md-white) 70%, #10b981 30%); border: 1px solid color-mix(in oklab, #10b981 60%, var(--md-white) 40%);">
+          <div class="specials-card rounded-2xl overflow-hidden relative" style="background: color-mix(in oklab, var(--md-white) 70%, #10b981 30%); border: 1px solid color-mix(in oklab, #10b981 60%, var(--md-white) 40%);">
             <div class="gallery-imgs aspect-[4/3] bg-white m-4 flex items-center justify-center relative" onclick="editGalleryPhoto(this, 'stem')" data-gallery-type="stem">
               <img src="" alt="STEM Gallery" style="display:none;">
               <span class="text-3xl text-gray-400">+</span>
@@ -581,7 +614,7 @@
             </div>
           </div>
           <!-- Gym -->
-          <div class="rounded-2xl overflow-hidden relative" style="background: color-mix(in oklab, var(--md-white) 70%, #3b82f6 30%); border: 1px solid color-mix(in oklab, #3b82f6 60%, var(--md-white) 40%);">
+          <div class="specials-card rounded-2xl overflow-hidden relative" style="background: color-mix(in oklab, var(--md-white) 70%, #3b82f6 30%); border: 1px solid color-mix(in oklab, #3b82f6 60%, var(--md-white) 40%);">
             <div class="gallery-imgs aspect-[4/3] bg-white m-4 flex items-center justify-center relative" onclick="editGalleryPhoto(this, 'gym')" data-gallery-type="gym">
               <img src="" alt="Gym Gallery" style="display:none;">
               <span class="text-3xl text-gray-400">+</span>
@@ -597,7 +630,7 @@
             </div>
           </div>
           <!-- Music -->
-          <div class="rounded-2xl overflow-hidden relative" style="background: color-mix(in oklab, var(--md-white) 70%, #8b5cf6 30%); border: 1px solid color-mix(in oklab, #8b5cf6 60%, var(--md-white) 40%);">
+          <div class="specials-card rounded-2xl overflow-hidden relative" style="background: color-mix(in oklab, var(--md-white) 70%, #8b5cf6 30%); border: 1px solid color-mix(in oklab, #8b5cf6 60%, var(--md-white) 40%);">
             <div class="gallery-imgs aspect-[4/3] bg-white m-4 flex items-center justify-center relative" onclick="editGalleryPhoto(this, 'music')" data-gallery-type="music">
               <img src="" alt="Music Gallery" style="display:none;">
               <span class="text-3xl text-gray-400">+</span>
@@ -660,28 +693,61 @@
     <section data-page-panel="transportation" class="pagePanel fade-in">
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--md-cream);">
         <h2 class="text-2xl font-display font-bold mb-6" style="color: #f59e0b;">🚌 Transportation</h2>
-        <div class="space-y-6">
-          <div class="bg-white rounded-xl p-6" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
-            <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-semibold">🚌 Bus Riders</h3>
-              <button id="saveBusRidersBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveTransportationField('busRiders')">💾 Save</button>
-            </div>
-            <textarea id="busRidersTextarea" class="w-full h-32 p-3 text-sm border rounded-lg resize-none" placeholder="Student name and bus number"></textarea>
+        
+        <!-- Admin Instructions Box -->
+        <div class="bg-white rounded-xl p-4 mb-6" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="text-sm font-semibold text-gray-600">📝 Page Instructions</h3>
+            <button id="saveTransportationInstructionsBtn" class="px-3 py-1 rounded-lg text-white text-xs font-semibold" style="background: var(--md-coral);" onclick="saveTransportationField('instructions')">💾 Save</button>
           </div>
-          <div class="bg-white rounded-xl p-6" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
-            <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-semibold">🚗 Car Riders</h3>
-              <button id="saveCarRidersBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveTransportationField('carRiders')">💾 Save</button>
+          <textarea id="transportationInstructionsTextarea" class="w-full h-16 p-3 text-sm border rounded-lg resize-none" placeholder="Add instructions for parents about transportation procedures...">Please review your child's transportation method and contact the office if changes are needed.</textarea>
+        </div>
+
+        <!-- Mobile Arrow Indicator -->
+        <div class="md:hidden text-center text-sm text-gray-500 mb-4">
+          ← Swipe to view all transportation options →
+        </div>
+
+        <!-- Transportation Cards Container -->
+        <div class="transportation-cards-container">
+          <div class="transportation-cards mobile-tab-scroll scrollbar-hide grid md:grid-cols-3 gap-4">
+            <!-- Bus Card -->
+            <div class="transportation-card bg-white rounded-xl p-6 cursor-pointer hover:shadow-lg transition-shadow" 
+                 style="border: 2px solid #fbbf24;" onclick="openTransportationModal('bus')">
+              <div class="text-center">
+                <div class="text-4xl mb-3">🚌</div>
+                <h3 class="text-lg font-semibold mb-2" style="color: #fbbf24;">Bus Riders</h3>
+                <p class="text-sm text-gray-600">Click to manage bus transportation</p>
+              </div>
             </div>
-            <textarea id="carRidersTextarea" class="w-full h-32 p-3 text-sm border rounded-lg resize-none"></textarea>
-          </div>
-          <div class="bg-white rounded-xl p-6" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
-            <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-semibold">🏠 Porch Pickup</h3>
-              <button id="savePorchPickupBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveTransportationField('porchPickup')">💾 Save</button>
+
+            <!-- Car Card -->
+            <div class="transportation-card bg-white rounded-xl p-6 cursor-pointer hover:shadow-lg transition-shadow" 
+                 style="border: 2px solid #10b981;" onclick="openTransportationModal('car')">
+              <div class="text-center">
+                <div class="text-4xl mb-3">🚗</div>
+                <h3 class="text-lg font-semibold mb-2" style="color: #10b981;">Car Riders</h3>
+                <p class="text-sm text-gray-600">Click to manage car pickup</p>
+              </div>
             </div>
-            <textarea id="porchPickupTextarea" class="w-full h-32 p-3 text-sm border rounded-lg resize-none"></textarea>
+
+            <!-- Porch Card -->
+            <div class="transportation-card bg-white rounded-xl p-6 cursor-pointer hover:shadow-lg transition-shadow" 
+                 style="border: 2px solid #8b5cf6;" onclick="openTransportationModal('porch')">
+              <div class="text-center">
+                <div class="text-4xl mb-3">🏠</div>
+                <h3 class="text-lg font-semibold mb-2" style="color: #8b5cf6;">Porch Pickup</h3>
+                <p class="text-sm text-gray-600">Click to manage porch pickup</p>
+              </div>
+            </div>
           </div>
+        </div>
+
+        <!-- Hidden textareas for backward compatibility -->
+        <div style="display: none;">
+          <textarea id="busRidersTextarea"></textarea>
+          <textarea id="carRidersTextarea"></textarea>
+          <textarea id="porchPickupTextarea"></textarea>
         </div>
       </div>
     </section>
@@ -770,7 +836,13 @@
           <h3 class="text-xl font-semibold">🎂 Birthday Calendar</h3>
           <button id="saveAllBirthdaysBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveAllBirthdays()">💾 Save All Birthdays</button>
         </div>
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        
+        <!-- Mobile Arrow Indicator -->
+        <div class="md:hidden text-center text-sm text-gray-500 mb-4">
+          ← Swipe to view all months →
+        </div>
+        
+        <div class="birthday-months-mobile mobile-tab-scroll scrollbar-hide grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div class="birthday-month bg-white rounded-xl p-4" style="border: 1px solid color-mix(in oklab, var(--md-blush) 60%, var(--md-white) 40%);">
             <h4 class="font-semibold mb-3">❄️ January</h4>
             <textarea id="januaryBirthdaysTextarea" class="w-full h-20 p-2 text-sm border rounded resize-none" placeholder="Enter birthdays..."></textarea>
@@ -3119,6 +3191,11 @@ function updateTransportationFields(data) {
   if (porchPickupEl && data.porch_pickup) {
     porchPickupEl.value = data.porch_pickup;
   }
+  
+  const instructionsEl = document.getElementById('transportationInstructionsTextarea');
+  if (instructionsEl && data.transportation_instructions) {
+    instructionsEl.value = data.transportation_instructions;
+  }
 }
 
 // Function to save individual transportation fields
@@ -3126,19 +3203,22 @@ async function saveTransportationField(fieldType) {
   const buttonMap = {
     'busRiders': 'saveBusRidersBtn',
     'carRiders': 'saveCarRidersBtn', 
-    'porchPickup': 'savePorchPickupBtn'
+    'porchPickup': 'savePorchPickupBtn',
+    'instructions': 'saveTransportationInstructionsBtn'
   };
   
   const textareaMap = {
     'busRiders': 'busRidersTextarea',
     'carRiders': 'carRidersTextarea',
-    'porchPickup': 'porchPickupTextarea'
+    'porchPickup': 'porchPickupTextarea',
+    'instructions': 'transportationInstructionsTextarea'
   };
   
   const dataMap = {
     'busRiders': 'bus_riders',
     'carRiders': 'car_riders',
-    'porchPickup': 'porch_pickup'
+    'porchPickup': 'porch_pickup',
+    'instructions': 'transportation_instructions'
   };
   
   const saveBtn = document.getElementById(buttonMap[fieldType]);
@@ -3198,6 +3278,101 @@ function updateBirthdayFields(data) {
       monthEl.value = data[`${month}_birthdays`];
     }
   });
+}
+
+// Transportation Modal Functions
+let currentTransportationType = null;
+
+function openTransportationModal(type) {
+  const modal = document.getElementById('transportationModal');
+  const icon = document.getElementById('transportationModalIcon');
+  const title = document.getElementById('transportationModalTitle');
+  const textarea = document.getElementById('transportationModalTextarea');
+  
+  // Store current type
+  currentTransportationType = type;
+  
+  // Configure modal based on transportation type
+  const config = {
+    bus: {
+      icon: '🚌',
+      title: 'Bus Riders',
+      color: '#fbbf24',
+      placeholder: 'Student name and bus number\nExample:\n• Emma S. - Bus #15\n• Jake M. - Bus #23',
+      dataField: 'busRiders'
+    },
+    car: {
+      icon: '🚗',
+      title: 'Car Riders',
+      color: '#10b981',
+      placeholder: 'Student name and pickup details\nExample:\n• Sarah L. - Mom pickup\n• Alex R. - Dad pickup',
+      dataField: 'carRiders'
+    },
+    porch: {
+      icon: '🏠',
+      title: 'Porch Pickup',
+      color: '#8b5cf6',
+      placeholder: 'Student name and porch pickup notes\nExample:\n• Mia K. - Front porch\n• Noah T. - Side entrance',
+      dataField: 'porchPickup'
+    }
+  };
+  
+  const typeConfig = config[type];
+  if (typeConfig) {
+    icon.textContent = typeConfig.icon;
+    title.textContent = typeConfig.title;
+    title.style.color = typeConfig.color;
+    textarea.placeholder = typeConfig.placeholder;
+    modal.style.setProperty('--modal-border-color', typeConfig.color);
+    modal.style.setProperty('--modal-title-color', typeConfig.color);
+    
+    // Load existing data
+    const existingTextarea = document.getElementById(`${typeConfig.dataField}Textarea`);
+    if (existingTextarea) {
+      textarea.value = existingTextarea.value;
+    }
+  }
+  
+  if (modal) {
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    textarea.focus();
+  }
+}
+
+function closeTransportationModal() {
+  const modal = document.getElementById('transportationModal');
+  if (modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+    currentTransportationType = null;
+  }
+}
+
+function saveTransportationFromModal() {
+  if (!currentTransportationType) return;
+  
+  const textarea = document.getElementById('transportationModalTextarea');
+  const config = {
+    bus: { field: 'busRiders', textareaId: 'busRidersTextarea' },
+    car: { field: 'carRiders', textareaId: 'carRidersTextarea' },
+    porch: { field: 'porchPickup', textareaId: 'porchPickupTextarea' }
+  };
+  
+  const typeConfig = config[currentTransportationType];
+  if (typeConfig && textarea) {
+    // Update the hidden textarea (if it exists)
+    const hiddenTextarea = document.getElementById(typeConfig.textareaId);
+    if (hiddenTextarea) {
+      hiddenTextarea.value = textarea.value;
+    }
+    
+    // Save using existing function
+    saveTransportationField(typeConfig.field);
+    
+    // Close modal
+    closeTransportationModal();
+  }
 }
 
 // Contact Me Modal Functions
@@ -4552,6 +4727,28 @@ style.textContent = `
 document.head.appendChild(style);
   </script>
   
+  <!-- Transportation Modal -->
+  <div id="transportationModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9998; justify-content: center; align-items: center;" onclick="closeTransportationModal()">
+    <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-8 max-w-lg mx-4" onclick="event.stopPropagation();" style="border: 3px solid var(--modal-border-color);">
+      <div class="text-center mb-6">
+        <div id="transportationModalIcon" class="text-6xl mb-4">🚌</div>
+        <h3 id="transportationModalTitle" class="text-2xl font-display font-bold mb-2" style="color: var(--modal-title-color);">Bus Riders</h3>
+        <p class="text-sm text-gray-600">Manage transportation details</p>
+      </div>
+      
+      <div class="space-y-4">
+        <textarea id="transportationModalTextarea" class="w-full h-40 p-4 text-sm border rounded-lg resize-none" placeholder="Student name and transportation details"></textarea>
+      </div>
+      
+      <div class="flex gap-3 justify-center mt-6">
+        <button onclick="closeTransportationModal()" class="px-6 py-3 rounded-xl border font-semibold">Cancel</button>
+        <button id="transportationModalSaveBtn" onclick="saveTransportationFromModal()" class="px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
+          💾 Save
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Contact Me Modal -->
   <div id="contactModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9998; justify-content: center; align-items: center;" onclick="closeContactModal()">
     <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-8 max-w-md mx-4" onclick="event.stopPropagation();" style="border: 2px solid var(--md-coral);">
