@@ -3250,25 +3250,30 @@ async function saveTransportationField(fieldType) {
   const saveBtn = document.getElementById(buttonMap[fieldType]);
   const textarea = document.getElementById(textareaMap[fieldType]);
   
-  if (!saveBtn || !textarea) return;
+  // Textarea is required, but save button is optional (for modal saves)
+  if (!textarea) return;
   
-  const originalText = saveBtn.textContent;
+  const originalText = saveBtn ? saveBtn.textContent : '';
   
   try {
     // Check if Firebase is available
     if (typeof db === 'undefined') {
       console.error('Firebase not available - cannot save transportation data');
-      saveBtn.textContent = '❌ No Connection';
-      setTimeout(() => {
-        saveBtn.textContent = originalText;
-        saveBtn.disabled = false;
-      }, 3000);
+      if (saveBtn) {
+        saveBtn.textContent = '❌ No Connection';
+        setTimeout(() => {
+          saveBtn.textContent = originalText;
+          saveBtn.disabled = false;
+        }, 3000);
+      }
       return;
     }
     
-    // Show saving state
-    saveBtn.textContent = '⏳ Saving...';
-    saveBtn.disabled = true;
+    // Show saving state (only if button exists)
+    if (saveBtn) {
+      saveBtn.textContent = '⏳ Saving...';
+      saveBtn.disabled = true;
+    }
     
     // Prepare data for saving
     const data = {};
@@ -3277,22 +3282,26 @@ async function saveTransportationField(fieldType) {
     // Save to Firestore
     await db.collection('classData').doc('current').set(data, { merge: true });
     
-    // Show success state
-    saveBtn.textContent = '✅ Saved!';
-    
-    // Reset button after 1 second
-    setTimeout(() => {
-      saveBtn.textContent = originalText;
-      saveBtn.disabled = false;
-    }, 1000);
+    // Show success state (only if button exists)
+    if (saveBtn) {
+      saveBtn.textContent = '✅ Saved!';
+      
+      // Reset button after 1 second
+      setTimeout(() => {
+        saveBtn.textContent = originalText;
+        saveBtn.disabled = false;
+      }, 1000);
+    }
     
   } catch (error) {
     console.error('Failed to save transportation field:', error);
-    saveBtn.textContent = '❌ Save Failed';
-    setTimeout(() => {
-      saveBtn.textContent = originalText;
-      saveBtn.disabled = false;
-    }, 2000);
+    if (saveBtn) {
+      saveBtn.textContent = '❌ Save Failed';
+      setTimeout(() => {
+        saveBtn.textContent = originalText;
+        saveBtn.disabled = false;
+      }, 2000);
+    }
   }
 }
 
