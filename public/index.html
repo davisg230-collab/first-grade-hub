@@ -138,6 +138,50 @@
     .gallery-imgs { position:relative;}
     .gallery-imgs img { width:100%; height:100%; object-fit:cover; border-radius:1rem;}
     .filter-btn { background: #e5e7eb; color: #6b7280; }
+    
+    /* Mobile tab scrolling styles */
+    .scrollbar-hide {
+      -ms-overflow-style: none;  /* IE and Edge */
+      scrollbar-width: none;  /* Firefox */
+      scroll-behavior: smooth;
+    }
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;  /* Chrome, Safari and Opera */
+    }
+    
+    /* Mobile tab carousel styles */
+    @media (max-width: 768px) {
+      .mobile-tab-scroll {
+        display: flex;
+        flex-wrap: nowrap !important;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+        scroll-padding: 1rem;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x proximity;
+      }
+      
+      .mobile-tab-scroll > * {
+        flex-shrink: 0;
+        scroll-snap-align: start;
+      }
+      
+      /* Ensure tabs don't wrap on mobile */
+      .mobile-tab-scroll .pageTab,
+      .mobile-tab-scroll button,
+      .mobile-tab-scroll a {
+        white-space: nowrap;
+        min-width: max-content;
+      }
+    }
+    
+    /* Desktop keeps flex-wrap behavior */
+    @media (min-width: 769px) {
+      .mobile-tab-scroll {
+        flex-wrap: wrap !important;
+        overflow-x: visible !important;
+      }
+    }
     .filter-btn.active { background: var(--md-coral); color: white; }
   </style>
 </head>
@@ -154,7 +198,7 @@
       </h1>
       <p id="weekText" class="mt-2 text-white/95 font-semibold"
          data-edit="teacher" contenteditable="false">Week of September 1–5</p>
-      <div class="mt-6 flex flex-wrap items-center gap-3">
+      <div class="mt-6 flex flex-wrap items-center gap-3 mobile-tab-scroll scrollbar-hide">
         <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
                 data-page="aboutme" style="background: var(--md-coral);">
           <span>👨‍🏫</span><span>About Mr. Davis</span>
@@ -189,7 +233,7 @@
     <div class="border-t-4" style="border-color: color-mix(in oklab, var(--md-slate) 70%, var(--md-white) 30%); box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></div>
   </div>
   <main class="max-w-6xl mx-auto px-6 pb-16">
-    <nav id="tabs" class="mt-6 mb-4 flex flex-wrap gap-2">
+    <nav id="tabs" class="mt-6 mb-4 flex flex-wrap gap-2 mobile-tab-scroll scrollbar-hide">
       <button class="pageTab active ring-4 ring-white/40 px-4 py-2 rounded-xl font-semibold text-white"
               data-page="home" style="background: var(--md-coral);">Home</button>
       <button class="pageTab px-4 py-2 rounded-xl font-semibold text-white"
