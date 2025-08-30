@@ -142,6 +142,10 @@
 <body class="bg-[color:var(--md-cream)] text-[color:var(--md-ink)] font-body">
   <!-- HEADER -->
   <header class="relative w-full" style="background: var(--hdr-bg);">
+    <!-- Shoutout Button - positioned in top right -->
+    <button id="shoutoutBtn" class="absolute top-4 right-4 md:top-6 md:right-6 bg-[color:var(--md-coral)] text-white px-4 py-2 rounded-full font-semibold shadow-lg hover:opacity-90 transition-opacity z-10" style="border-radius: 20px;">
+      💬 Shoutout Your Scholar!
+    </button>
     <div class="max-w-6xl mx-auto px-6 py-10 sm:py-12">
       <h1 class="text-3xl sm:text-4xl lg:text-5xl font-display font-extrabold text-white">
         Hey Hey First Grade!
@@ -149,31 +153,31 @@
       <p id="weekText" class="mt-2 text-white/95 font-semibold"
          data-edit="teacher" contenteditable="false">Week of September 1–5</p>
       <div class="mt-6 flex flex-wrap items-center gap-3">
-        <button id="toggleHighContrast"
-                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-[color:var(--md-ink)] font-semibold hover:opacity-90">
-          <span>🌓</span><span>Light/Dark</span>
+        <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
+                data-page="aboutme" style="background: var(--md-coral);">
+          <span>👨‍🏫</span><span>About Mr. Davis</span>
         </button>
-        <a href="mailto:dgonzalezjr@crossroadsschoolskc.org"
+        <button id="contactMeBtn"
            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
            style="background: var(--md-coral);">
           <span>📧</span><span>Contact Me</span>
-        </a>
+        </button>
         <a id="classDojoBtn" href="https://classdojo.com" target="_blank"
            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
            style="background:#6b7280;">
-          <span>🎯</span><span>ClassDojo</span>
+          <span>🎯</span><span>Class Dojo</span>
         </a>
         <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
                 data-page="transportation" style="background: var(--md-slate);">
           <span>🚌</span><span>Transportation</span>
         </button>
         <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
-                data-page="aboutme" style="background: var(--md-coral);">
-          <span>👨‍🏫</span><span>About Me</span>
-        </button>
-        <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
                 data-page="birthdays" style="background: var(--md-coral);">
           <span>🎂</span><span>Birthdays</span>
+        </button>
+        <button id="toggleHighContrast"
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-[color:var(--md-ink)] font-semibold hover:opacity-90">
+          <span>🌓</span><span>Light/Dark</span>
         </button>
       </div>
     </div>
@@ -187,7 +191,11 @@
       <button class="pageTab active ring-4 ring-white/40 px-4 py-2 rounded-xl font-semibold text-white"
               data-page="home" style="background: var(--md-coral);">Home</button>
       <button class="pageTab px-4 py-2 rounded-xl font-semibold text-white"
-              data-page="scholar" style="background: var(--md-mustard);">Scholar</button>
+              data-page="scholar" style="background: var(--md-mustard);">Scholar of the Week!!</button>
+      <button class="pageTab px-4 py-2 rounded-xl font-semibold text-white"
+              data-page="extras" style="background:#6b7280;">Extras</button>
+      <button class="pageTab px-4 py-2 rounded-xl font-semibold text-white"
+              data-page="practice" style="background: var(--md-pebble); color: var(--md-ink);">Practice Websites</button>
       <button class="pageTab px-4 py-2 rounded-xl font-semibold text-white"
               data-page="skills" style="background: var(--md-slate);">Skills</button>
       <button class="pageTab px-4 py-2 rounded-xl font-semibold text-white"
@@ -195,11 +203,7 @@
       <button class="pageTab px-4 py-2 rounded-xl font-semibold text-[color:var(--md-ink)]"
               data-page="math" style="background: var(--md-blush);">Math</button>
       <button class="pageTab px-4 py-2 rounded-xl font-semibold text-white"
-              data-page="extras" style="background:#6b7280;">Extras</button>
-      <button class="pageTab px-4 py-2 rounded-xl font-semibold text-white"
               data-page="specials" style="background:#f59e0b;">Specials</button>
-      <button class="pageTab px-4 py-2 rounded-xl font-semibold text-white"
-              data-page="practice" style="background: var(--md-pebble); color: var(--md-ink);">Practice Websites</button>
     </nav>
     <!-- HOME TAB -->
     <section data-page-panel="home" class="pagePanel fade-in active">
@@ -3111,6 +3115,109 @@ function updateBirthdayFields(data) {
   });
 }
 
+// Contact Me Modal Functions
+function openContactModal() {
+  const modal = document.getElementById('contactModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeContactModal() {
+  const modal = document.getElementById('contactModal');
+  if (modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+}
+
+// Shoutout Modal Functions
+function openShoutoutModal() {
+  const modal = document.getElementById('shoutoutModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeShoutoutModal() {
+  const modal = document.getElementById('shoutoutModal');
+  if (modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+}
+
+// Shoutout PIN Modal Functions
+function openShoutoutPinModal() {
+  const modal = document.getElementById('shoutoutPinModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    document.getElementById('shoutoutPinInput').focus();
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeShoutoutPinModal() {
+  const modal = document.getElementById('shoutoutPinModal');
+  if (modal) {
+    modal.style.display = 'none';
+    document.getElementById('shoutoutPinInput').value = '';
+    document.body.style.overflow = '';
+  }
+}
+
+// Shoutout messages array
+const shoutoutMessages = [
+  "We're cheering for you and all your hard work.",
+  "You're a superstar scholar!",
+  "Your curiosity and questions make our classroom amazing!",
+  "Keep being the wonderful student you are!",
+  "Your hard work is paying off - we're so proud!",
+  "You bring so much joy to our learning adventures!",
+  "Your kindness and friendship make our class special!",
+  "You're growing so much as a learner - fantastic job!"
+];
+
+let currentShoutoutPinTarget = null;
+
+// Shoutout functionality
+function shuffleShoutout() {
+  const display = document.getElementById('shoutoutDisplay');
+  if (display) {
+    const randomMessage = shoutoutMessages[Math.floor(Math.random() * shoutoutMessages.length)];
+    display.textContent = randomMessage;
+  }
+}
+
+function editShoutout() {
+  const display = document.getElementById('shoutoutDisplay');
+  if (display) {
+    const textarea = document.createElement('textarea');
+    textarea.value = display.textContent;
+    textarea.className = 'w-full h-32 p-3 rounded-lg border text-center resize-none';
+    textarea.style.fontFamily = '"Comic Sans MS", cursive, sans-serif';
+    textarea.style.fontSize = '1.2rem';
+    textarea.placeholder = "We're cheering for you and all your hard work.";
+    
+    display.innerHTML = '';
+    display.appendChild(textarea);
+    
+    const saveBtn = document.createElement('button');
+    saveBtn.textContent = 'Save';
+    saveBtn.className = 'mt-3 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90';
+    saveBtn.style.background = 'var(--md-coral)';
+    saveBtn.onclick = function() {
+      const newText = textarea.value.trim() || "We're cheering for you and all your hard work.";
+      display.innerHTML = newText;
+    };
+    
+    display.appendChild(saveBtn);
+    textarea.focus();
+  }
+}
+
 // Function to update website cards with saved URLs
 function updateWebsiteCards(websitesJson) {
   if (!websitesJson) return;
@@ -3680,6 +3787,73 @@ document.addEventListener('DOMContentLoaded', function() {
       populateDataFromSheet(null); // This will trigger fallback data
     }
   }, 350);
+  
+  // Set up modal event listeners
+  const contactBtn = document.getElementById('contactMeBtn');
+  if (contactBtn) {
+    contactBtn.addEventListener('click', openContactModal);
+  }
+  
+  const shoutoutBtn = document.getElementById('shoutoutBtn');
+  if (shoutoutBtn) {
+    shoutoutBtn.addEventListener('click', openShoutoutModal);
+  }
+  
+  // Shoutout modal button listeners
+  const shuffleBtn = document.getElementById('shuffleShoutoutBtn');
+  if (shuffleBtn) {
+    shuffleBtn.addEventListener('click', function() {
+      currentShoutoutPinTarget = 'shuffle';
+      openShoutoutPinModal();
+    });
+  }
+  
+  const editBtn = document.getElementById('editShoutoutBtn');
+  if (editBtn) {
+    editBtn.addEventListener('click', function() {
+      currentShoutoutPinTarget = 'edit';
+      openShoutoutPinModal();
+    });
+  }
+  
+  // Shoutout PIN modal listeners
+  const pinCancel = document.getElementById('shoutoutPinCancel');
+  if (pinCancel) {
+    pinCancel.addEventListener('click', closeShoutoutPinModal);
+  }
+  
+  const pinSubmit = document.getElementById('shoutoutPinSubmit');
+  if (pinSubmit) {
+    pinSubmit.addEventListener('click', function() {
+      const pin = document.getElementById('shoutoutPinInput').value;
+      if (pin === '2213') {
+        closeShoutoutPinModal();
+        if (currentShoutoutPinTarget === 'shuffle') {
+          shuffleShoutout();
+        } else if (currentShoutoutPinTarget === 'edit') {
+          editShoutout();
+        }
+        currentShoutoutPinTarget = null;
+      } else {
+        // Invalid PIN - show error
+        const input = document.getElementById('shoutoutPinInput');
+        input.style.borderColor = '#ef4444';
+        setTimeout(() => {
+          input.style.borderColor = '';
+        }, 900);
+      }
+    });
+  }
+  
+  // Add Enter key support for PIN input
+  const pinInput = document.getElementById('shoutoutPinInput');
+  if (pinInput) {
+    pinInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        pinSubmit.click();
+      }
+    });
+  }
 });
 
 // Flags to prevent periodic refresh during save/upload operations
@@ -3951,6 +4125,74 @@ style.textContent = `
 document.head.appendChild(style);
   </script>
   
+  <!-- Contact Me Modal -->
+  <div id="contactModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9998; justify-content: center; align-items: center;" onclick="closeContactModal()">
+    <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-8 max-w-md mx-4" onclick="event.stopPropagation();" style="border: 2px solid var(--md-coral);">
+      <div class="text-center">
+        <div class="text-4xl mb-4">👨‍🏫</div>
+        <h3 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">Contact Mr. Davis</h3>
+        <div class="space-y-4">
+          <div class="bg-white rounded-xl p-4" style="border: 1px solid var(--md-coral);">
+            <div class="text-sm font-semibold text-gray-600 mb-2">📧 Email</div>
+            <a href="mailto:dgonzalezjr@crossroadsschoolskc.org" class="text-[color:var(--md-coral)] font-semibold hover:underline">
+              dgonzalezjr@crossroadsschoolskc.org
+            </a>
+          </div>
+          <div class="bg-white rounded-xl p-4" style="border: 1px solid var(--md-coral);">
+            <div class="text-sm font-semibold text-gray-600 mb-2">📞 Phone</div>
+            <a href="tel:816-482-1708" class="text-[color:var(--md-coral)] font-semibold hover:underline">
+              816-482-1708
+            </a>
+          </div>
+        </div>
+        <button onclick="closeContactModal()" class="mt-6 px-6 py-2 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shoutout Modal -->
+  <div id="shoutoutModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9997; justify-content: center; align-items: center;" onclick="closeShoutoutModal()">
+    <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-8 max-w-2xl mx-4" onclick="event.stopPropagation();" style="border: 3px solid var(--md-coral);">
+      <div class="text-center">
+        <div class="text-6xl mb-4">📺</div>
+        <h3 class="text-3xl font-display font-bold mb-6" style="color: var(--md-coral); font-family: 'Comic Sans MS', cursive, sans-serif;">Shoutout TV!</h3>
+        <div class="bg-black rounded-xl p-6 mb-6" style="min-height: 200px; display: flex; align-items: center; justify-content: center;">
+          <div id="shoutoutDisplay" class="text-white text-center" style="font-family: 'Comic Sans MS', cursive, sans-serif; font-size: 1.5rem; line-height: 1.4;">
+            We're cheering for you and all your hard work.
+          </div>
+        </div>
+        <div class="flex gap-3 justify-center">
+          <button id="shuffleShoutoutBtn" class="px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-mustard);">
+            🎲 Shuffle
+          </button>
+          <button id="editShoutoutBtn" class="px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-slate);">
+            ✏️ Edit
+          </button>
+          <button onclick="closeShoutoutModal()" class="px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shoutout PIN Modal -->
+  <div id="shoutoutPinModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center;">
+    <div class="bg-white rounded-2xl p-8 max-w-md mx-4">
+      <h3 class="text-xl font-bold text-center mb-4">Enter PIN</h3>
+      <p class="text-center text-gray-600 mb-6">Enter PIN to access this feature</p>
+      <div class="space-y-4">
+        <input id="shoutoutPinInput" type="password" placeholder="Enter PIN" class="w-full px-4 py-3 rounded-xl border text-center text-lg">
+        <div class="flex gap-3">
+          <button id="shoutoutPinCancel" class="flex-1 px-4 py-3 rounded-xl border font-semibold">Cancel</button>
+          <button id="shoutoutPinSubmit" class="flex-1 px-4 py-3 rounded-xl font-semibold text-white" style="background: var(--md-slate);">Enter</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Image Enlargement Modal -->
   <div id="imageModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center;" onclick="closeImageModal()">
     <div style="position: relative; max-width: 90%; max-height: 90%; display: flex; justify-content: center; align-items: center;">
