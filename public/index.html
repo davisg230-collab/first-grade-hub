@@ -137,13 +137,15 @@
     .gallery-arrows button { pointer-events:auto;border:none;background:rgba(255,255,255,.75);border-radius:50%;font-size:1.5rem;padding:0.25em 0.6em;cursor:pointer; }
     .gallery-imgs { position:relative;}
     .gallery-imgs img { width:100%; height:100%; object-fit:cover; border-radius:1rem;}
+    .filter-btn { background: #e5e7eb; color: #6b7280; }
+    .filter-btn.active { background: var(--md-coral); color: white; }
   </style>
 </head>
 <body class="bg-[color:var(--md-cream)] text-[color:var(--md-ink)] font-body">
   <!-- HEADER -->
   <header class="relative w-full" style="background: var(--hdr-bg);">
     <!-- Shoutout Button - positioned in top right -->
-    <button id="shoutoutBtn" class="absolute top-4 right-4 md:top-6 md:right-6 bg-[color:var(--md-coral)] text-white px-4 py-2 rounded-full font-semibold shadow-lg hover:opacity-90 transition-opacity z-10" style="border-radius: 20px;">
+    <button id="shoutoutBtn" class="absolute top-4 right-4 md:top-6 md:right-6 bg-[color:var(--md-coral)] text-white px-4 py-2 rounded-full font-semibold shadow-lg hover:opacity-90 transition-opacity z-10" style="border-radius: 20px;" data-page="shoutouts">
       💬 Shoutout Your Scholar!
     </button>
     <div class="max-w-6xl mx-auto px-6 py-10 sm:py-12">
@@ -459,6 +461,40 @@
             <h3 class="font-semibold mb-2" contenteditable="false" style="cursor: default;">Shout-outs</h3>
             <p class="text-sm" contenteditable="false" style="cursor: default;">Amazing job on our math assessments this week!</p>
             <button class="mt-2 text-red-500 hover:text-red-700 text-xs" onclick="this.closest('.text-center').remove();" style="display: none;">Remove Card</button>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- SHOUTOUT YOUR SCHOLAR TAB -->
+    <section data-page-panel="shoutouts" class="pagePanel fade-in">
+      <div class="text-center mb-8">
+        <!-- Retro TV Display (centered, not in card) -->
+        <div class="mx-auto max-w-4xl">
+          <div class="text-8xl mb-4">📺</div>
+          <h2 class="text-4xl font-display font-bold mb-8" style="color: var(--md-coral); font-family: 'Comic Sans MS', cursive, sans-serif;">Shoutout TV!</h2>
+          
+          <!-- TV Screen -->
+          <div class="bg-black rounded-xl p-8 mb-8" style="min-height: 300px; display: flex; align-items: center; justify-content: center; border: 8px solid #333;">
+            <div id="shoutoutTVDisplay" class="text-white text-center" style="font-family: 'Comic Sans MS', cursive, sans-serif; font-size: 2rem; line-height: 1.4; max-width: 80%;">
+              Welcome to Shoutout TV! Click "Create Shoutout" to send love to a scholar!
+            </div>
+          </div>
+          
+          <!-- Control Buttons -->
+          <div class="flex gap-4 justify-center mb-8">
+            <button id="shuffleTVBtn" class="px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90 text-lg" style="background: var(--md-mustard);">
+              🎲 Shuffle
+            </button>
+            <button id="createShoutoutBtn" class="px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90 text-lg" style="background: var(--md-coral);">
+              ✨ Create Shoutout
+            </button>
+          </div>
+          
+          <!-- Admin Button (appears when PIN is entered) -->
+          <div class="mb-4">
+            <button id="createdShoutsBtn" class="px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-slate); display: none;">
+              📋 Created Shoutouts
+            </button>
           </div>
         </div>
       </div>
@@ -779,6 +815,12 @@
   <script>
     // Global variables
     let isOwner = false; // Track if current user is the repository owner
+    
+    // Shoutout system variables
+    let allShoutouts = []; // All submitted shoutouts
+    let approvedShoutouts = []; // Only approved shoutouts for shuffle
+    let currentShoutoutIndex = 0; // For shuffling through approved shoutouts
+    let isShoutoutAdmin = false; // Track if admin PIN entered for shoutouts
     
     // Tab navigation
     function showPage(pageId) {
@@ -3218,6 +3260,251 @@ function editShoutout() {
   }
 }
 
+// NEW SHOUTOUT PAGE FUNCTIONS
+
+// Create Shoutout Modal Functions
+function openCreateShoutoutModal() {
+  const modal = document.getElementById('createShoutoutModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    // Clear form
+    document.getElementById('scholarNameInput').value = '';
+    document.getElementById('fromInput').value = '';
+    document.getElementById('messageInput').value = '';
+  }
+}
+
+function closeCreateShoutoutModal() {
+  const modal = document.getElementById('createShoutoutModal');
+  if (modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+}
+
+// Submit new shoutout
+async function submitShoutout() {
+  const scholarName = document.getElementById('scholarNameInput').value.trim();
+  const from = document.getElementById('fromInput').value.trim();
+  const message = document.getElementById('messageInput').value.trim();
+  
+  if (!scholarName || !from || !message) {
+    alert('Please fill in all fields!');
+    return;
+  }
+  
+  const shoutout = {
+    id: Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+    scholarName,
+    from,
+    message,
+    approved: false,
+    timestamp: new Date().toISOString()
+  };
+  
+  // Add to local array
+  allShoutouts.push(shoutout);
+  
+  // Save to Firebase
+  await saveShoutoutsToFirebase();
+  
+  closeCreateShoutoutModal();
+  
+  // Show success message
+  const display = document.getElementById('shoutoutTVDisplay');
+  if (display) {
+    display.innerHTML = `
+      <div style="color: var(--md-coral);">
+        ✨ Shoutout submitted! ✨<br>
+        <span style="font-size: 1.2rem;">Thank you for spreading kindness!</span><br>
+        <span style="font-size: 1rem; opacity: 0.8;">Your message will appear after approval.</span>
+      </div>
+    `;
+  }
+}
+
+// Shuffle through approved shoutouts on TV
+function shuffleShoutoutTV() {
+  if (approvedShoutouts.length === 0) {
+    const display = document.getElementById('shoutoutTVDisplay');
+    if (display) {
+      display.innerHTML = '<span style="opacity: 0.7;">No approved shoutouts yet. Create one to get started!</span>';
+    }
+    return;
+  }
+  
+  currentShoutoutIndex = (currentShoutoutIndex + 1) % approvedShoutouts.length;
+  const shoutout = approvedShoutouts[currentShoutoutIndex];
+  
+  const display = document.getElementById('shoutoutTVDisplay');
+  if (display && shoutout) {
+    display.innerHTML = `
+      <div>
+        <div style="color: var(--md-mustard); font-size: 1.2rem; margin-bottom: 0.5rem;">${shoutout.scholarName}</div>
+        <div style="margin-bottom: 1rem;">${shoutout.message}</div>
+        <div style="color: var(--md-coral); font-size: 1rem;">— ${shoutout.from}</div>
+      </div>
+    `;
+  }
+}
+
+// Admin Shoutouts Management
+function openAdminShoutsModal() {
+  if (!isShoutoutAdmin) {
+    // Show PIN prompt
+    showShoutoutAdminPIN();
+    return;
+  }
+  
+  const modal = document.getElementById('adminShoutsModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    refreshAdminShoutouts();
+  }
+}
+
+function closeAdminShoutsModal() {
+  const modal = document.getElementById('adminShoutsModal');
+  if (modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+}
+
+function showShoutoutAdminPIN() {
+  const pin = prompt('Enter admin PIN to manage shoutouts:');
+  if (pin === '2213') {
+    isShoutoutAdmin = true;
+    // Show admin button
+    const adminBtn = document.getElementById('createdShoutsBtn');
+    if (adminBtn) {
+      adminBtn.style.display = 'inline-block';
+    }
+    openAdminShoutsModal();
+  } else if (pin !== null) {
+    alert('Invalid PIN');
+  }
+}
+
+function filterShoutouts(filter) {
+  // Update filter buttons
+  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('filter' + filter.charAt(0).toUpperCase() + filter.slice(1)).classList.add('active');
+  
+  refreshAdminShoutouts(filter);
+}
+
+function refreshAdminShoutouts(filter = 'all') {
+  const container = document.getElementById('adminShoutsContainer');
+  if (!container) return;
+  
+  let shoutsToShow = allShoutouts;
+  if (filter === 'pending') {
+    shoutsToShow = allShoutouts.filter(s => !s.approved);
+  } else if (filter === 'approved') {
+    shoutsToShow = allShoutouts.filter(s => s.approved);
+  }
+  
+  if (shoutsToShow.length === 0) {
+    container.innerHTML = '<div class="text-center text-gray-500 py-8">No shoutouts found.</div>';
+    return;
+  }
+  
+  container.innerHTML = shoutsToShow.map(shoutout => `
+    <div class="bg-white rounded-lg p-4 border ${shoutout.approved ? 'border-green-200 bg-green-50' : 'border-yellow-200 bg-yellow-50'}">
+      <div class="flex justify-between items-start mb-2">
+        <div>
+          <strong style="color: var(--md-slate);">${shoutout.scholarName}</strong>
+          <span class="text-sm text-gray-500"> from ${shoutout.from}</span>
+        </div>
+        <div class="flex gap-1">
+          ${!shoutout.approved ? `<button onclick="approveShoutout('${shoutout.id}')" class="px-2 py-1 bg-green-500 text-white rounded text-xs">Approve</button>` : ''}
+          <button onclick="editShoutoutAdmin('${shoutout.id}')" class="px-2 py-1 bg-blue-500 text-white rounded text-xs">Edit</button>
+          <button onclick="deleteShoutout('${shoutout.id}')" class="px-2 py-1 bg-red-500 text-white rounded text-xs">Delete</button>
+        </div>
+      </div>
+      <div class="text-sm mb-2">${shoutout.message}</div>
+      <div class="text-xs text-gray-400">${new Date(shoutout.timestamp).toLocaleDateString()}</div>
+    </div>
+  `).join('');
+}
+
+async function approveShoutout(id) {
+  const shoutout = allShoutouts.find(s => s.id === id);
+  if (shoutout) {
+    shoutout.approved = true;
+    await saveShoutoutsToFirebase();
+    updateApprovedShoutouts();
+    refreshAdminShoutouts();
+  }
+}
+
+async function deleteShoutout(id) {
+  if (confirm('Delete this shoutout?')) {
+    allShoutouts = allShoutouts.filter(s => s.id !== id);
+    await saveShoutoutsToFirebase();
+    updateApprovedShoutouts();
+    refreshAdminShoutouts();
+  }
+}
+
+function editShoutoutAdmin(id) {
+  const shoutout = allShoutouts.find(s => s.id === id);
+  if (!shoutout) return;
+  
+  const newMessage = prompt('Edit message:', shoutout.message);
+  if (newMessage !== null && newMessage.trim()) {
+    shoutout.message = newMessage.trim();
+    saveShoutoutsToFirebase();
+    refreshAdminShoutouts();
+  }
+}
+
+// Data persistence functions
+async function saveShoutoutsToFirebase() {
+  if (!db) return;
+  
+  try {
+    await db.collection('shoutouts').doc('data').set({
+      shoutouts: allShoutouts,
+      lastUpdated: new Date().toISOString()
+    });
+    console.log('Shoutouts saved to Firebase');
+  } catch (error) {
+    console.error('Failed to save shoutouts:', error);
+  }
+}
+
+async function loadShoutoutsFromFirebase() {
+  if (!db) return;
+  
+  try {
+    const doc = await db.collection('shoutouts').doc('data').get();
+    if (doc.exists) {
+      const data = doc.data();
+      allShoutouts = data.shoutouts || [];
+      updateApprovedShoutouts();
+      console.log('Shoutouts loaded from Firebase:', allShoutouts.length);
+    }
+  } catch (error) {
+    console.error('Failed to load shoutouts:', error);
+  }
+}
+
+function updateApprovedShoutouts() {
+  approvedShoutouts = allShoutouts.filter(s => s.approved);
+  
+  // Update TV display if we're on the shoutouts page and have approved shoutouts
+  if (approvedShoutouts.length > 0) {
+    const display = document.getElementById('shoutoutTVDisplay');
+    if (display && display.textContent.includes('Welcome to Shoutout TV')) {
+      shuffleShoutoutTV();
+    }
+  }
+}
+
 // Function to update website cards with saved URLs
 function updateWebsiteCards(websitesJson) {
   if (!websitesJson) return;
@@ -3796,10 +4083,67 @@ document.addEventListener('DOMContentLoaded', function() {
   
   const shoutoutBtn = document.getElementById('shoutoutBtn');
   if (shoutoutBtn) {
-    shoutoutBtn.addEventListener('click', openShoutoutModal);
+    shoutoutBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      showPage('shoutouts');
+    });
   }
   
-  // Shoutout modal button listeners
+  // NEW SHOUTOUT PAGE LISTENERS
+  
+  // Shuffle button on TV page
+  const shuffleTVBtn = document.getElementById('shuffleTVBtn');
+  if (shuffleTVBtn) {
+    shuffleTVBtn.addEventListener('click', shuffleShoutoutTV);
+  }
+  
+  // Create shoutout button
+  const createShoutBtn = document.getElementById('createShoutoutBtn');
+  if (createShoutBtn) {
+    createShoutBtn.addEventListener('click', openCreateShoutoutModal);
+  }
+  
+  // Admin shoutouts button
+  const createdShoutsBtn = document.getElementById('createdShoutsBtn');
+  if (createdShoutsBtn) {
+    createdShoutsBtn.addEventListener('click', openAdminShoutsModal);
+  }
+  
+  // Load shoutouts data on page load
+  loadShoutoutsFromFirebase();
+  
+  // Add some test data for demonstration (will be replaced by real data from Firebase)
+  if (allShoutouts.length === 0) {
+    allShoutouts = [
+      {
+        id: 'test1',
+        scholarName: 'Emma',
+        from: 'Grandma',
+        message: 'You are such a wonderful reader! Keep up the amazing work!',
+        approved: false,
+        timestamp: new Date().toISOString()
+      },
+      {
+        id: 'test2',
+        scholarName: 'Marcus',
+        from: 'Dad',
+        message: 'Your math skills are improving so much! We are so proud!',
+        approved: true,
+        timestamp: new Date().toISOString()
+      },
+      {
+        id: 'test3',
+        scholarName: 'Sophia',
+        from: 'Auntie Maria',
+        message: 'Your kindness to your classmates makes our hearts happy!',
+        approved: true,
+        timestamp: new Date().toISOString()
+      }
+    ];
+    updateApprovedShoutouts();
+  }
+  
+  // OLD SHOUTOUT MODAL LISTENERS (kept for compatibility)
   const shuffleBtn = document.getElementById('shuffleShoutoutBtn');
   if (shuffleBtn) {
     shuffleBtn.addEventListener('click', function() {
@@ -4189,6 +4533,67 @@ document.head.appendChild(style);
           <button id="shoutoutPinCancel" class="flex-1 px-4 py-3 rounded-xl border font-semibold">Cancel</button>
           <button id="shoutoutPinSubmit" class="flex-1 px-4 py-3 rounded-xl font-semibold text-white" style="background: var(--md-slate);">Enter</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Shoutout Modal -->
+  <div id="createShoutoutModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9998; justify-content: center; align-items: center;" onclick="closeCreateShoutoutModal()">
+    <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-8 max-w-lg mx-4" onclick="event.stopPropagation();" style="border: 3px solid var(--md-coral);">
+      <div class="text-center">
+        <div class="text-6xl mb-4">✨</div>
+        <h3 class="text-3xl font-display font-bold mb-6" style="color: var(--md-coral); font-family: 'Comic Sans MS', cursive, sans-serif;">Create a Shoutout!</h3>
+        
+        <form id="shoutoutForm" class="space-y-4 text-left">
+          <div>
+            <label class="block text-sm font-semibold mb-2" style="color: var(--md-slate);">Scholar's Name</label>
+            <input id="scholarNameInput" type="text" placeholder="e.g. Giovanni" class="w-full px-4 py-3 rounded-xl border text-center" style="font-family: 'Comic Sans MS', cursive, sans-serif;">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-semibold mb-2" style="color: var(--md-slate);">From</label>
+            <input id="fromInput" type="text" placeholder="e.g. Mommy, Grandpa, Auntie Rose" class="w-full px-4 py-3 rounded-xl border text-center" style="font-family: 'Comic Sans MS', cursive, sans-serif;">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-semibold mb-2" style="color: var(--md-slate);">Message</label>
+            <textarea id="messageInput" rows="4" class="w-full px-4 py-3 rounded-xl border resize-none" style="font-family: 'Comic Sans MS', cursive, sans-serif;" placeholder="• We're so proud of your kindness!
+• Keep up the great work!
+• You are amazing!
+• Your hard work makes us smile!"></textarea>
+          </div>
+        </form>
+        
+        <div class="flex gap-3 justify-center mt-6">
+          <button onclick="closeCreateShoutoutModal()" class="px-6 py-3 rounded-xl border font-semibold">Cancel</button>
+          <button onclick="submitShoutout()" class="px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
+            Send Shoutout! 💌
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Shoutouts Management Modal -->
+  <div id="adminShoutsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9998; justify-content: center; align-items: center;" onclick="closeAdminShoutsModal()">
+    <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden" onclick="event.stopPropagation();" style="border: 3px solid var(--md-slate);">
+      <div class="text-center mb-6">
+        <h3 class="text-2xl font-display font-bold" style="color: var(--md-slate);">📋 Manage Shoutouts</h3>
+        <div class="flex gap-2 justify-center mt-4">
+          <button id="filterAll" class="px-3 py-1 rounded-lg text-sm font-semibold filter-btn active" onclick="filterShoutouts('all')">All</button>
+          <button id="filterPending" class="px-3 py-1 rounded-lg text-sm font-semibold filter-btn" onclick="filterShoutouts('pending')">Pending</button>
+          <button id="filterApproved" class="px-3 py-1 rounded-lg text-sm font-semibold filter-btn" onclick="filterShoutouts('approved')">Approved</button>
+        </div>
+      </div>
+      
+      <div id="adminShoutsContainer" class="space-y-3 max-h-96 overflow-y-auto">
+        <!-- Shoutouts will be populated here -->
+      </div>
+      
+      <div class="text-center mt-6">
+        <button onclick="closeAdminShoutsModal()" class="px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-slate);">
+          Close
+        </button>
       </div>
     </div>
   </div>
