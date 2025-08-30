@@ -4114,6 +4114,37 @@ document.addEventListener('DOMContentLoaded', function() {
   // Load shoutouts data on page load
   loadShoutoutsFromFirebase();
   
+  // Add some test data for demonstration (will be replaced by real data from Firebase)
+  if (allShoutouts.length === 0) {
+    allShoutouts = [
+      {
+        id: 'test1',
+        scholarName: 'Emma',
+        from: 'Grandma',
+        message: 'You are such a wonderful reader! Keep up the amazing work!',
+        approved: false,
+        timestamp: new Date().toISOString()
+      },
+      {
+        id: 'test2',
+        scholarName: 'Marcus',
+        from: 'Dad',
+        message: 'Your math skills are improving so much! We are so proud!',
+        approved: true,
+        timestamp: new Date().toISOString()
+      },
+      {
+        id: 'test3',
+        scholarName: 'Sophia',
+        from: 'Auntie Maria',
+        message: 'Your kindness to your classmates makes our hearts happy!',
+        approved: true,
+        timestamp: new Date().toISOString()
+      }
+    ];
+    updateApprovedShoutouts();
+  }
+  
   // OLD SHOUTOUT MODAL LISTENERS (kept for compatibility)
   const shuffleBtn = document.getElementById('shuffleShoutoutBtn');
   if (shuffleBtn) {
