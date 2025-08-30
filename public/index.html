@@ -25,7 +25,7 @@
       }
     };
   </script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@600;700;800&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
   
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -471,11 +471,11 @@
         <!-- Retro TV Display (centered, not in card) -->
         <div class="mx-auto max-w-4xl">
           <div class="text-8xl mb-4">📺</div>
-          <h2 class="text-4xl font-display font-bold mb-8" style="color: var(--md-coral); font-family: 'Comic Sans MS', cursive, sans-serif;">Shoutout TV!</h2>
+          <h2 class="text-4xl font-display font-bold mb-8" style="color: var(--md-coral); font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif;">Shoutout TV!</h2>
           
           <!-- TV Screen -->
           <div class="bg-black rounded-xl p-8 mb-8" style="min-height: 300px; display: flex; align-items: center; justify-content: center; border: 8px solid #333;">
-            <div id="shoutoutTVDisplay" class="text-white text-center" style="font-family: 'Comic Sans MS', cursive, sans-serif; font-size: 2rem; line-height: 1.4; max-width: 80%;">
+            <div id="shoutoutTVDisplay" class="text-white text-center" style="font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif; font-size: 2rem; line-height: 1.4; max-width: 80%;">
               Welcome to Shoutout TV! Click "Create Shoutout" to send love to a scholar!
             </div>
           </div>
@@ -3238,7 +3238,7 @@ function editShoutout() {
     const textarea = document.createElement('textarea');
     textarea.value = display.textContent;
     textarea.className = 'w-full h-32 p-3 rounded-lg border text-center resize-none';
-    textarea.style.fontFamily = '"Comic Sans MS", cursive, sans-serif';
+    textarea.style.fontFamily = '"Comic Sans MS", "Comic Neue", cursive, sans-serif';
     textarea.style.fontSize = '1.2rem';
     textarea.placeholder = "We're cheering for you and all your hard work.";
     
@@ -3306,20 +3306,30 @@ async function submitShoutout() {
   allShoutouts.push(shoutout);
   
   // Save to Firebase
-  await saveShoutoutsToFirebase();
+  const saveSuccess = await saveShoutoutsToFirebase();
   
   closeCreateShoutoutModal();
   
-  // Show success message
+  // Show success or failure message
   const display = document.getElementById('shoutoutTVDisplay');
   if (display) {
-    display.innerHTML = `
-      <div style="color: var(--md-coral);">
-        ✨ Shoutout submitted! ✨<br>
-        <span style="font-size: 1.2rem;">Thank you for spreading kindness!</span><br>
-        <span style="font-size: 1rem; opacity: 0.8;">Your message will appear after approval.</span>
-      </div>
-    `;
+    if (saveSuccess) {
+      display.innerHTML = `
+        <div style="color: var(--md-coral);">
+          ✨ Shoutout submitted! ✨<br>
+          <span style="font-size: 1.2rem;">Thank you for spreading kindness!</span><br>
+          <span style="font-size: 1rem; opacity: 0.8;">Your message will appear after approval.</span>
+        </div>
+      `;
+    } else {
+      display.innerHTML = `
+        <div style="color: var(--md-coral);">
+          ⚠️ Shoutout created locally ⚠️<br>
+          <span style="font-size: 1.2rem;">But there was a save error.</span><br>
+          <span style="font-size: 1rem; opacity: 0.8;">Please contact support if this persists.</span>
+        </div>
+      `;
+    }
   }
 }
 
@@ -3360,7 +3370,11 @@ function openAdminShoutsModal() {
   if (modal) {
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
-    refreshAdminShoutouts();
+    
+    // Always reload fresh data from Firebase when opening admin modal
+    loadShoutoutsFromFirebase().then(() => {
+      refreshAdminShoutouts();
+    });
   }
 }
 
@@ -3409,7 +3423,7 @@ function refreshAdminShoutouts(filter = 'all') {
           <button onclick="deleteShoutout('${shoutout.id}')" class="px-2 py-1 bg-red-500 text-white rounded text-xs">Delete</button>
         </div>
       </div>
-      <div class="text-sm mb-2">${shoutout.message}</div>
+      <div class="text-sm mb-2" style="font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif;">${shoutout.message}</div>
       <div class="text-xs text-gray-400">${new Date(shoutout.timestamp).toLocaleDateString()}</div>
     </div>
   `).join('');
@@ -3419,7 +3433,11 @@ async function approveShoutout(id) {
   const shoutout = allShoutouts.find(s => s.id === id);
   if (shoutout) {
     shoutout.approved = true;
-    await saveShoutoutsToFirebase();
+    const saveSuccess = await saveShoutoutsToFirebase();
+    if (!saveSuccess) {
+      // Revert the change if save failed
+      shoutout.approved = false;
+    }
     updateApprovedShoutouts();
     refreshAdminShoutouts();
   }
@@ -3427,8 +3445,13 @@ async function approveShoutout(id) {
 
 async function deleteShoutout(id) {
   if (confirm('Delete this shoutout?')) {
+    const originalShoutouts = [...allShoutouts]; // Keep backup
     allShoutouts = allShoutouts.filter(s => s.id !== id);
-    await saveShoutoutsToFirebase();
+    const saveSuccess = await saveShoutoutsToFirebase();
+    if (!saveSuccess) {
+      // Restore original data if save failed
+      allShoutouts = originalShoutouts;
+    }
     updateApprovedShoutouts();
     refreshAdminShoutouts();
   }
@@ -3438,17 +3461,26 @@ function editShoutoutAdmin(id) {
   const shoutout = allShoutouts.find(s => s.id === id);
   if (!shoutout) return;
   
+  const originalMessage = shoutout.message;
   const newMessage = prompt('Edit message:', shoutout.message);
   if (newMessage !== null && newMessage.trim()) {
     shoutout.message = newMessage.trim();
-    saveShoutoutsToFirebase();
-    refreshAdminShoutouts();
+    saveShoutoutsToFirebase().then(saveSuccess => {
+      if (!saveSuccess) {
+        // Revert the change if save failed
+        shoutout.message = originalMessage;
+      }
+      refreshAdminShoutouts();
+    });
   }
 }
 
 // Data persistence functions
 async function saveShoutoutsToFirebase() {
-  if (!db) return;
+  if (!db) {
+    showShoutoutError('Not connected to Firebase. Your shoutout was not saved.');
+    return false;
+  }
   
   try {
     await db.collection('shoutouts').doc('data').set({
@@ -3456,13 +3488,19 @@ async function saveShoutoutsToFirebase() {
       lastUpdated: new Date().toISOString()
     });
     console.log('Shoutouts saved to Firebase');
+    return true;
   } catch (error) {
     console.error('Failed to save shoutouts:', error);
+    showShoutoutError('Failed to save shoutout. Please try again or contact support.');
+    return false;
   }
 }
 
 async function loadShoutoutsFromFirebase() {
-  if (!db) return;
+  if (!db) {
+    showShoutoutError('Not connected to Firebase. Cannot load latest shoutouts.');
+    return false;
+  }
   
   try {
     const doc = await db.collection('shoutouts').doc('data').get();
@@ -3471,9 +3509,18 @@ async function loadShoutoutsFromFirebase() {
       allShoutouts = data.shoutouts || [];
       updateApprovedShoutouts();
       console.log('Shoutouts loaded from Firebase:', allShoutouts.length);
+      return true;
+    } else {
+      // No data exists yet - this is normal for a new app
+      allShoutouts = [];
+      updateApprovedShoutouts();
+      console.log('No shoutouts data found in Firebase - starting fresh');
+      return true;
     }
   } catch (error) {
     console.error('Failed to load shoutouts:', error);
+    showShoutoutError('Failed to load latest shoutouts. You may be seeing outdated data.');
+    return false;
   }
 }
 
@@ -3487,6 +3534,45 @@ function updateApprovedShoutouts() {
       shuffleShoutoutTV();
     }
   }
+}
+
+// Function to show user-friendly error messages for shoutout operations
+function showShoutoutError(message) {
+  // Remove any existing error messages
+  const existingError = document.getElementById('shoutoutError');
+  if (existingError) {
+    existingError.remove();
+  }
+  
+  // Create error notification
+  const errorDiv = document.createElement('div');
+  errorDiv.id = 'shoutoutError';
+  errorDiv.className = 'fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-lg z-50 max-w-sm';
+  errorDiv.innerHTML = `
+    <div class="flex">
+      <div class="flex-shrink-0">
+        <span class="text-red-500">⚠️</span>
+      </div>
+      <div class="ml-3">
+        <p class="text-sm font-medium">Shoutout Error</p>
+        <p class="text-sm">${message}</p>
+      </div>
+      <div class="ml-auto pl-3">
+        <button class="text-red-400 hover:text-red-600" onclick="this.parentElement.parentElement.parentElement.remove()">
+          <span class="sr-only">Dismiss</span>
+          ✕
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(errorDiv);
+  
+  // Auto-remove error after 8 seconds
+  setTimeout(() => {
+    if (errorDiv.parentNode) {
+      errorDiv.remove();
+    }
+  }, 8000);
 }
 
 // Function to update website cards with saved URLs
@@ -4096,37 +4182,6 @@ document.addEventListener('DOMContentLoaded', function() {
   // Load shoutouts data on page load
   loadShoutoutsFromFirebase();
   
-  // Add some test data for demonstration (will be replaced by real data from Firebase)
-  if (allShoutouts.length === 0) {
-    allShoutouts = [
-      {
-        id: 'test1',
-        scholarName: 'Emma',
-        from: 'Grandma',
-        message: 'You are such a wonderful reader! Keep up the amazing work!',
-        approved: false,
-        timestamp: new Date().toISOString()
-      },
-      {
-        id: 'test2',
-        scholarName: 'Marcus',
-        from: 'Dad',
-        message: 'Your math skills are improving so much! We are so proud!',
-        approved: true,
-        timestamp: new Date().toISOString()
-      },
-      {
-        id: 'test3',
-        scholarName: 'Sophia',
-        from: 'Auntie Maria',
-        message: 'Your kindness to your classmates makes our hearts happy!',
-        approved: true,
-        timestamp: new Date().toISOString()
-      }
-    ];
-    updateApprovedShoutouts();
-  }
-  
   // OLD SHOUTOUT MODAL LISTENERS (kept for compatibility)
   const shuffleBtn = document.getElementById('shuffleShoutoutBtn');
   if (shuffleBtn) {
@@ -4485,9 +4540,9 @@ document.head.appendChild(style);
     <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-8 max-w-2xl mx-4" onclick="event.stopPropagation();" style="border: 3px solid var(--md-coral);">
       <div class="text-center">
         <div class="text-6xl mb-4">📺</div>
-        <h3 class="text-3xl font-display font-bold mb-6" style="color: var(--md-coral); font-family: 'Comic Sans MS', cursive, sans-serif;">Shoutout TV!</h3>
+        <h3 class="text-3xl font-display font-bold mb-6" style="color: var(--md-coral); font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif;">Shoutout TV!</h3>
         <div class="bg-black rounded-xl p-6 mb-6" style="min-height: 200px; display: flex; align-items: center; justify-content: center;">
-          <div id="shoutoutDisplay" class="text-white text-center" style="font-family: 'Comic Sans MS', cursive, sans-serif; font-size: 1.5rem; line-height: 1.4;">
+          <div id="shoutoutDisplay" class="text-white text-center" style="font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif; font-size: 1.5rem; line-height: 1.4;">
             We're cheering for you and all your hard work.
           </div>
         </div>
@@ -4526,22 +4581,22 @@ document.head.appendChild(style);
     <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-8 max-w-lg mx-4" onclick="event.stopPropagation();" style="border: 3px solid var(--md-coral);">
       <div class="text-center">
         <div class="text-6xl mb-4">✨</div>
-        <h3 class="text-3xl font-display font-bold mb-6" style="color: var(--md-coral); font-family: 'Comic Sans MS', cursive, sans-serif;">Create a Shoutout!</h3>
+        <h3 class="text-3xl font-display font-bold mb-6" style="color: var(--md-coral); font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif;">Create a Shoutout!</h3>
         
         <form id="shoutoutForm" class="space-y-4 text-left">
           <div>
             <label class="block text-sm font-semibold mb-2" style="color: var(--md-slate);">Scholar's Name</label>
-            <input id="scholarNameInput" type="text" placeholder="e.g. Giovanni" class="w-full px-4 py-3 rounded-xl border text-center" style="font-family: 'Comic Sans MS', cursive, sans-serif;">
+            <input id="scholarNameInput" type="text" placeholder="e.g. Giovanni" class="w-full px-4 py-3 rounded-xl border text-center" style="font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif;">
           </div>
           
           <div>
             <label class="block text-sm font-semibold mb-2" style="color: var(--md-slate);">From</label>
-            <input id="fromInput" type="text" placeholder="e.g. Mommy, Grandpa, Auntie Rose" class="w-full px-4 py-3 rounded-xl border text-center" style="font-family: 'Comic Sans MS', cursive, sans-serif;">
+            <input id="fromInput" type="text" placeholder="e.g. Mommy, Grandpa, Auntie Rose" class="w-full px-4 py-3 rounded-xl border text-center" style="font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif;">
           </div>
           
           <div>
             <label class="block text-sm font-semibold mb-2" style="color: var(--md-slate);">Message</label>
-            <textarea id="messageInput" rows="4" class="w-full px-4 py-3 rounded-xl border resize-none" style="font-family: 'Comic Sans MS', cursive, sans-serif;" placeholder="• We're so proud of your kindness!
+            <textarea id="messageInput" rows="4" class="w-full px-4 py-3 rounded-xl border resize-none" style="font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif;" placeholder="• We're so proud of your kindness!
 • Keep up the great work!
 • You are amazing!
 • Your hard work makes us smile!"></textarea>
