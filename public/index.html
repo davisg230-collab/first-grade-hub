@@ -696,8 +696,7 @@
         
         <!-- Admin Instructions Box -->
         <div class="bg-white rounded-xl p-4 mb-6" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
-          <div class="flex justify-between items-center mb-3">
-            <h3 class="text-sm font-semibold text-gray-600">📝 Page Instructions</h3>
+          <div class="flex justify-end items-center mb-3">
             <button id="saveTransportationInstructionsBtn" class="px-3 py-1 rounded-lg text-white text-xs font-semibold" style="background: var(--md-coral);" onclick="saveTransportationField('instructions')">💾 Save</button>
           </div>
           <textarea id="transportationInstructionsTextarea" class="w-full h-16 p-3 text-sm border rounded-lg resize-none" placeholder="Add instructions for parents about transportation procedures...">Please review your child's transportation method and contact the office if changes are needed.</textarea>
@@ -1098,6 +1097,15 @@
       document.querySelectorAll('#extrasGrid button[onclick*="remove"]').forEach(btn => {
         btn.style.display = 'none';
       });
+      
+      // Disable Transportation instructions section
+      const transportationInstructionsTextarea = document.getElementById('transportationInstructionsTextarea');
+      const saveTransportationInstructionsBtn = document.getElementById('saveTransportationInstructionsBtn');
+      if (transportationInstructionsTextarea) { 
+        transportationInstructionsTextarea.disabled = true; 
+        transportationInstructionsTextarea.readOnly = true; 
+      }
+      if (saveTransportationInstructionsBtn) saveTransportationInstructionsBtn.style.display = 'none';
     }
     
     function enterEditMode(){
@@ -1181,6 +1189,15 @@
       document.querySelectorAll('#extrasGrid button[onclick*="remove"]').forEach(btn => {
         btn.style.display = 'inline-block';
       });
+      
+      // Enable Transportation instructions section
+      const transportationInstructionsTextarea = document.getElementById('transportationInstructionsTextarea');
+      const saveTransportationInstructionsBtn = document.getElementById('saveTransportationInstructionsBtn');
+      if (transportationInstructionsTextarea) { 
+        transportationInstructionsTextarea.disabled = false; 
+        transportationInstructionsTextarea.readOnly = false; 
+      }
+      if (saveTransportationInstructionsBtn) saveTransportationInstructionsBtn.style.display = 'inline-block';
       
       // Update gallery images clickable state (disable when in edit mode)
       document.querySelectorAll('.gallery-imgs img').forEach(img => {
@@ -1273,6 +1290,15 @@
       document.querySelectorAll('#extrasGrid button[onclick*="remove"]').forEach(btn => {
         btn.style.display = 'none';
       });
+      
+      // Disable Transportation instructions section
+      const transportationInstructionsTextarea = document.getElementById('transportationInstructionsTextarea');
+      const saveTransportationInstructionsBtn = document.getElementById('saveTransportationInstructionsBtn');
+      if (transportationInstructionsTextarea) { 
+        transportationInstructionsTextarea.disabled = true; 
+        transportationInstructionsTextarea.readOnly = true; 
+      }
+      if (saveTransportationInstructionsBtn) saveTransportationInstructionsBtn.style.display = 'none';
       
       // Update gallery images clickable state (enable when not in edit mode)
       document.querySelectorAll('.gallery-imgs img').forEach(img => {
@@ -3229,6 +3255,17 @@ async function saveTransportationField(fieldType) {
   const originalText = saveBtn.textContent;
   
   try {
+    // Check if Firebase is available
+    if (typeof db === 'undefined') {
+      console.error('Firebase not available - cannot save transportation data');
+      saveBtn.textContent = '❌ No Connection';
+      setTimeout(() => {
+        saveBtn.textContent = originalText;
+        saveBtn.disabled = false;
+      }, 3000);
+      return;
+    }
+    
     // Show saving state
     saveBtn.textContent = '⏳ Saving...';
     saveBtn.disabled = true;
