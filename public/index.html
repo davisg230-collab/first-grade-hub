@@ -545,15 +545,20 @@
     <!-- SHOUTOUT YOUR SCHOLAR TAB -->
     <section data-page-panel="shoutouts" class="pagePanel fade-in">
       <div class="text-center mb-8">
-        <!-- Retro TV Display (centered, not in card) -->
-        <div class="mx-auto max-w-4xl">
-          <div class="text-8xl mb-4">📺</div>
+        <!-- Large TV Display (functional TV without decorative emoji) -->
+        <div class="mx-auto max-w-5xl">
           <h2 class="text-4xl font-display font-bold mb-8" style="color: var(--md-coral); font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif;">Shoutout TV!</h2>
           
-          <!-- TV Screen -->
-          <div class="bg-black rounded-xl p-8 mb-8" style="min-height: 300px; display: flex; align-items: center; justify-content: center; border: 8px solid #333;">
-            <div id="shoutoutTVDisplay" class="text-white text-center" style="font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif; font-size: 2rem; line-height: 1.4; max-width: 80%;">
-              Welcome to Shoutout TV! Click "Create Shoutout" to send love to a scholar!
+          <!-- Enhanced TV Screen with TV-like appearance -->
+          <div class="tv-container mx-auto" style="max-width: 800px; background: linear-gradient(145deg, #2a2a2a, #1a1a1a); border-radius: 40px; padding: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);">
+            <div class="bg-black rounded-2xl p-8 mb-4" style="min-height: 350px; display: flex; align-items: center; justify-content: center; border: 12px solid #333; box-shadow: inset 0 0 30px rgba(0,0,0,0.8);">
+              <div id="shoutoutTVDisplay" class="text-white text-center" style="font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif; font-size: 2rem; line-height: 1.4; max-width: 90%;">
+                Welcome to our amazing first grade classroom! Keep being awesome, scholars!
+              </div>
+            </div>
+            <!-- TV Brand/Controls Area -->
+            <div class="text-center" style="color: #666; font-size: 0.8rem; margin-top: 8px;">
+              <div style="background: #333; border-radius: 8px; padding: 4px 12px; display: inline-block;">Classroom TV</div>
             </div>
           </div>
           
@@ -951,6 +956,7 @@
     let allShoutouts = []; // All submitted shoutouts
     let approvedShoutouts = []; // Only approved shoutouts for shuffle
     let currentShoutoutIndex = 0; // For shuffling through approved shoutouts
+    let mainTVMessage = 'Welcome to our amazing first grade classroom! Keep being awesome, scholars!'; // Main TV message
     
     // Tab navigation
     function showPage(pageId) {
@@ -3700,7 +3706,8 @@ function shuffleShoutoutTV() {
   if (approvedShoutouts.length === 0) {
     const display = document.getElementById('shoutoutTVDisplay');
     if (display) {
-      display.innerHTML = '<span style="opacity: 0.7;">No approved shoutouts yet. Create one to get started!</span>';
+      // Show main message when no approved shoutouts
+      display.innerHTML = `<div style="color: var(--md-white);">${mainTVMessage}</div>`;
     }
     return;
   }
@@ -3737,6 +3744,9 @@ function openAdminShoutsModal() {
     loadShoutoutsFromFirebase().then(() => {
       refreshAdminShoutouts();
     });
+    
+    // Load and populate the main message
+    loadMainMessage();
   }
 }
 
@@ -3889,13 +3899,9 @@ async function loadShoutoutsFromFirebase() {
 function updateApprovedShoutouts() {
   approvedShoutouts = allShoutouts.filter(s => s.approved);
   
-  // Update TV display if we're on the shoutouts page and have approved shoutouts
-  if (approvedShoutouts.length > 0) {
-    const display = document.getElementById('shoutoutTVDisplay');
-    if (display && display.textContent.includes('Welcome to Shoutout TV')) {
-      shuffleShoutoutTV();
-    }
-  }
+  // Don't automatically shuffle when shoutouts are updated
+  // Let the user manually shuffle to see shoutouts
+  // The TV will show the main message by default
 }
 
 // Function to show user-friendly error messages for shoutout operations
@@ -3935,6 +3941,98 @@ function showShoutoutError(message) {
       errorDiv.remove();
     }
   }, 8000);
+}
+
+// Main TV Message Functions
+async function saveMainMessage() {
+  const textarea = document.getElementById('mainMessageTextarea');
+  const saveBtn = document.getElementById('saveMainMessageBtn');
+  
+  if (!textarea || !saveBtn) return;
+  
+  const newMessage = textarea.value.trim();
+  if (!newMessage) {
+    alert('Please enter a message for the TV display.');
+    return;
+  }
+  
+  const originalText = saveBtn.textContent;
+  saveBtn.textContent = '⏳ Saving...';
+  saveBtn.disabled = true;
+  
+  try {
+    // Update the local variable
+    mainTVMessage = newMessage;
+    
+    // Save to Firestore
+    if (db) {
+      await db.collection('classData').doc('current').set({
+        mainTVMessage: newMessage
+      }, { merge: true });
+      console.log('Main TV message saved to Firestore');
+    } else {
+      // Fallback to localStorage for testing
+      localStorage.setItem('mainTVMessage', newMessage);
+    }
+    
+    // Update the TV display if it's currently showing the main message
+    updateTVDisplay();
+    
+    // Show success state
+    saveBtn.textContent = '✅ Saved!';
+    
+    // Reset button after delay
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 1500);
+    
+  } catch (error) {
+    console.error('Failed to save main TV message:', error);
+    saveBtn.textContent = '❌ Error';
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 2000);
+  }
+}
+
+async function loadMainMessage() {
+  try {
+    if (db) {
+      const doc = await db.collection('classData').doc('current').get();
+      if (doc.exists) {
+        const data = doc.data();
+        if (data.mainTVMessage) {
+          mainTVMessage = data.mainTVMessage;
+        }
+      }
+    } else {
+      // Fallback to localStorage for testing
+      const saved = localStorage.getItem('mainTVMessage');
+      if (saved) {
+        mainTVMessage = saved;
+      }
+    }
+    
+    // Update textarea in admin modal if it exists
+    const textarea = document.getElementById('mainMessageTextarea');
+    if (textarea) {
+      textarea.value = mainTVMessage;
+    }
+    
+    console.log('Main TV message loaded:', mainTVMessage);
+  } catch (error) {
+    console.error('Failed to load main TV message:', error);
+  }
+}
+
+function updateTVDisplay() {
+  const display = document.getElementById('shoutoutTVDisplay');
+  if (!display) return;
+  
+  // Show main message by default
+  display.innerHTML = `<div style="color: var(--md-white);">${mainTVMessage}</div>`;
 }
 
 // Function to update website cards with saved URLs
@@ -4544,6 +4642,11 @@ document.addEventListener('DOMContentLoaded', function() {
   // Load shoutouts data on page load
   loadShoutoutsFromFirebase();
   
+  // Load main TV message on page load
+  loadMainMessage().then(() => {
+    updateTVDisplay();
+  });
+  
   // OLD SHOUTOUT MODAL LISTENERS (kept for compatibility)
   const shuffleBtn = document.getElementById('shuffleShoutoutBtn');
   if (shuffleBtn) {
@@ -5006,6 +5109,20 @@ document.head.appendChild(style);
           <button id="filterAll" class="px-3 py-1 rounded-lg text-sm font-semibold filter-btn active" onclick="filterShoutouts('all')">All</button>
           <button id="filterPending" class="px-3 py-1 rounded-lg text-sm font-semibold filter-btn" onclick="filterShoutouts('pending')">Pending</button>
           <button id="filterApproved" class="px-3 py-1 rounded-lg text-sm font-semibold filter-btn" onclick="filterShoutouts('approved')">Approved</button>
+        </div>
+      </div>
+      
+      <!-- Main TV Message Section -->
+      <div class="mb-6 p-4 rounded-xl" style="background: color-mix(in oklab, var(--md-cream) 70%, var(--md-mustard) 30%); border: 2px solid var(--md-mustard);">
+        <div class="text-center mb-3">
+          <h4 class="text-lg font-semibold" style="color: var(--md-slate);">📺 TV Main Message</h4>
+          <p class="text-sm" style="color: var(--md-slate); opacity: 0.8;">This message appears on the TV by default and when no shoutouts are available</p>
+        </div>
+        <div class="flex gap-3 items-start">
+          <textarea id="mainMessageTextarea" class="flex-1 p-3 rounded-lg border resize-none" rows="3" style="font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif;" placeholder="Enter the main message for the TV display...">Welcome to our amazing first grade classroom! Keep being awesome, scholars!</textarea>
+          <button id="saveMainMessageBtn" class="px-4 py-3 rounded-lg text-white font-semibold hover:opacity-90" style="background: var(--md-coral);" onclick="saveMainMessage()">
+            💾 Save Message
+          </button>
         </div>
       </div>
       
