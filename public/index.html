@@ -104,12 +104,7 @@
       background-color: rgba(255,255,255,0.7); cursor: text;
       outline: 2px dashed color-mix(in oklab,var(--md-slate) 55%,transparent); outline-offset: 2px;
     }
-    /* Shoutout instructions textarea styling */
-    #shoutoutInstructionsTextarea:disabled { background-color: transparent; color: var(--md-ink); cursor: default; border: none; }
-    body.editing #shoutoutInstructionsTextarea:not(:disabled) {
-      background-color: rgba(255,255,255,0.7); cursor: text;
-      outline: 2px dashed color-mix(in oklab,var(--md-slate) 55%,transparent); outline-offset: 2px;
-    }
+
     /* Styling for disabled about me, class roster, birthday, and website fields */
     #aboutMeDescText[contenteditable="false"] { background-color: transparent; border: none; cursor: default; }
     body.editing #aboutMeDescText[contenteditable="true"] { 
@@ -579,15 +574,7 @@
             </button>
           </div>
           
-          <!-- Instructions Box (editable in Edit Mode) -->
-          <div class="max-w-4xl mx-auto">
-            <div class="bg-white rounded-xl p-4 mb-6" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
-              <div class="flex justify-end items-center mb-3 edit-only" style="display: none;">
-                <button id="saveShoutoutInstructionsBtn" class="px-3 py-1 rounded-lg text-white text-xs font-semibold" style="background: var(--md-coral);" onclick="saveShoutoutInstructions()">💾 Save</button>
-              </div>
-              <textarea id="shoutoutInstructionsTextarea" class="w-full h-16 p-3 text-sm border rounded-lg resize-none" placeholder="Add instructions for students/parents about using Shoutout TV..." disabled readonly>Create shoutouts to celebrate your classmates' achievements and watch them display on our classroom TV!</textarea>
-            </div>
-          </div>
+
         </div>
       </div>
     </section>
@@ -1220,15 +1207,7 @@
         transportationInstructionsTextarea.readOnly = false; 
       }
       if (saveTransportationInstructionsBtn) saveTransportationInstructionsBtn.style.display = 'inline-block';
-      
-      // Enable Shoutout instructions section
-      const shoutoutInstructionsTextarea = document.getElementById('shoutoutInstructionsTextarea');
-      const saveShoutoutInstructionsBtn = document.getElementById('saveShoutoutInstructionsBtn');
-      if (shoutoutInstructionsTextarea) { 
-        shoutoutInstructionsTextarea.disabled = false; 
-        shoutoutInstructionsTextarea.readOnly = false; 
-      }
-      if (saveShoutoutInstructionsBtn) saveShoutoutInstructionsBtn.style.display = 'inline-block';
+
       
       // Update gallery images clickable state (disable when in edit mode)
       document.querySelectorAll('.gallery-imgs img').forEach(img => {
@@ -1330,15 +1309,7 @@
         transportationInstructionsTextarea.readOnly = true; 
       }
       if (saveTransportationInstructionsBtn) saveTransportationInstructionsBtn.style.display = 'none';
-      
-      // Disable Shoutout instructions section
-      const shoutoutInstructionsTextarea = document.getElementById('shoutoutInstructionsTextarea');
-      const saveShoutoutInstructionsBtn = document.getElementById('saveShoutoutInstructionsBtn');
-      if (shoutoutInstructionsTextarea) { 
-        shoutoutInstructionsTextarea.disabled = true; 
-        shoutoutInstructionsTextarea.readOnly = true; 
-      }
-      if (saveShoutoutInstructionsBtn) saveShoutoutInstructionsBtn.style.display = 'none';
+
       
       // Update gallery images clickable state (enable when not in edit mode)
       document.querySelectorAll('.gallery-imgs img').forEach(img => {
@@ -3149,12 +3120,7 @@ function populateDataFromSheet(data) {
   
   // Load transportation data
   updateTransportationFields(data);
-  
-  // Load shoutout instructions
-  const shoutoutInstructionsEl = document.getElementById('shoutoutInstructionsTextarea');
-  if (shoutoutInstructionsEl && data.shoutout_instructions) {
-    shoutoutInstructionsEl.value = data.shoutout_instructions;
-  }
+
   
   // Load birthday data
   updateBirthdayFields(data);
@@ -3352,61 +3318,6 @@ async function saveTransportationField(fieldType) {
 }
 
 // Function to save shoutout instructions
-async function saveShoutoutInstructions() {
-  const saveBtn = document.getElementById('saveShoutoutInstructionsBtn');
-  const textarea = document.getElementById('shoutoutInstructionsTextarea');
-  
-  if (!textarea) return;
-  
-  const originalText = saveBtn ? saveBtn.textContent : '';
-  
-  try {
-    // Check if Firebase is available
-    if (typeof db === 'undefined') {
-      console.error('Firebase not available - cannot save shoutout instructions');
-      if (saveBtn) {
-        saveBtn.textContent = '❌ No Connection';
-        setTimeout(() => {
-          saveBtn.textContent = originalText;
-          saveBtn.disabled = false;
-        }, 2000);
-      }
-      return;
-    }
-    
-    if (saveBtn) {
-      saveBtn.disabled = true;
-      saveBtn.textContent = '⏳';
-    }
-    
-    // Save to Firebase
-    await db.collection('classData').doc('general').set({
-      shoutout_instructions: textarea.value
-    }, { merge: true });
-    
-    console.log('Shoutout instructions saved successfully');
-    
-    if (saveBtn) {
-      saveBtn.textContent = '✅ Saved!';
-      
-      // Reset button after 1 second
-      setTimeout(() => {
-        saveBtn.textContent = originalText;
-        saveBtn.disabled = false;
-      }, 1000);
-    }
-    
-  } catch (error) {
-    console.error('Failed to save shoutout instructions:', error);
-    if (saveBtn) {
-      saveBtn.textContent = '❌ Save Failed';
-      setTimeout(() => {
-        saveBtn.textContent = originalText;
-        saveBtn.disabled = false;
-      }, 2000);
-    }
-  }
-}
 
 // Function to update birthday fields with saved data
 function updateBirthdayFields(data) {
