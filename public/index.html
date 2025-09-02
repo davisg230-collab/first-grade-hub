@@ -2720,6 +2720,9 @@
           // Make image clickable for enlargement
           const galleryType = element.getAttribute('data-gallery-type');
           makeGalleryImageClickable(img, galleryType);
+          
+          // Update arrow visibility and gallery counter
+          updateGalleryArrowsAndCounter(element);
         };
         
         // Handle image load error
@@ -2733,6 +2736,49 @@
       } else {
         console.error('Gallery display elements not found');
         resetGalleryToPlaceholder(element);
+      }
+    }
+
+    // Helper function to update gallery arrows visibility and image counter
+    function updateGalleryArrowsAndCounter(element) {
+      const arrowsContainer = element.querySelector('.gallery-arrows');
+      const urlsStr = element.getAttribute('data-gallery-urls');
+      
+      if (!arrowsContainer) return;
+      
+      let urls = [];
+      if (urlsStr) {
+        try {
+          urls = JSON.parse(urlsStr);
+        } catch (e) {
+          urls = [];
+        }
+      }
+      
+      // Show/hide arrows based on number of images
+      if (urls.length > 1) {
+        arrowsContainer.style.display = 'flex';
+        
+        // Add or update image counter
+        let counter = element.querySelector('.gallery-counter');
+        if (!counter) {
+          counter = document.createElement('div');
+          counter.className = 'gallery-counter';
+          counter.style.cssText = 'position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.7);color:white;padding:4px 8px;border-radius:12px;font-size:0.75rem;pointer-events:none;';
+          element.appendChild(counter);
+        }
+        
+        const currentIndex = parseInt(element.getAttribute('data-current-index') || '0');
+        counter.textContent = `${currentIndex + 1} of ${urls.length}`;
+        counter.style.display = 'block';
+      } else {
+        arrowsContainer.style.display = 'none';
+        
+        // Hide counter if it exists
+        const counter = element.querySelector('.gallery-counter');
+        if (counter) {
+          counter.style.display = 'none';
+        }
       }
     }
 
@@ -2758,9 +2804,15 @@
       element.removeAttribute('data-gallery-urls');
       element.removeAttribute('data-current-index');
       
-      // Hide navigation arrows and delete button
+      // Hide navigation arrows, delete button, and counter
       const deleteBtn = element.querySelector('.edit-only');
       if (deleteBtn) deleteBtn.style.display = 'none';
+      
+      const arrowsContainer = element.querySelector('.gallery-arrows');
+      if (arrowsContainer) arrowsContainer.style.display = 'none';
+      
+      const counter = element.querySelector('.gallery-counter');
+      if (counter) counter.style.display = 'none';
     }
     
     // Helper function to reset profile to placeholder state (similar to gallery reset)
