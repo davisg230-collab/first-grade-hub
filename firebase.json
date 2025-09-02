@@ -3,6 +3,9 @@
     "site": "first-grade-news-hub-mrdavis",
     "public": "public",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
+  },
+  "firestore": {
+    "rules": "firestore.rules"
   }
 }
 
