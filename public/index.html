@@ -62,9 +62,30 @@
     
     // Ensure the user is signed in before performing Firestore writes
     async function ensureSignedIn() {
-      const user = firebase.auth().currentUser;
-      if (!user) {
-        await firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider());
+      try {
+        if (!auth) {
+          throw new Error('Firebase authentication not available');
+        }
+        const user = auth.currentUser;
+        if (!user) {
+          console.log('Starting Google sign-in...');
+          await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+          console.log('Google sign-in successful');
+        } else {
+          console.log('Already signed in with Google');
+        }
+      } catch (error) {
+        console.error('Google sign-in failed:', error);
+        // Re-throw with user-friendly message
+        if (error.code === 'auth/popup-closed-by-user') {
+          throw new Error('Sign-in cancelled. Please try again.');
+        } else if (error.code === 'auth/popup-blocked') {
+          throw new Error('Pop-up blocked by browser. Please allow pop-ups and try again.');
+        } else if (error.code === 'auth/network-request-failed') {
+          throw new Error('Network error. Please check your connection and try again.');
+        } else {
+          throw new Error('Sign-in failed: ' + (error.message || 'Unknown error'));
+        }
       }
     }
   </script>
@@ -813,11 +834,20 @@
         document.getElementById('pinOverlay').classList.remove('show');
         document.getElementById('pinInput').value = '';
       };
-      document.getElementById('pinSubmit').onclick = function() {
+      document.getElementById('pinSubmit').onclick = async function() {
         var pin = document.getElementById('pinInput').value;
         if(pin === TEACHER_PIN){
-          enterEditMode();
-          document.getElementById('pinOverlay').classList.remove('show');
+          try {
+            await enterEditMode();
+            // Only close the overlay if authentication succeeded
+            document.getElementById('pinOverlay').classList.remove('show');
+            document.getElementById('pinInput').value = '';
+          } catch (error) {
+            // Keep the overlay open and highlight the input field
+            // The error alert is already shown by enterEditMode()
+            document.getElementById('pinInput').style.borderColor='#ef4444';
+            setTimeout(()=>{document.getElementById('pinInput').style.borderColor='';},2000);
+          }
         }else{
           document.getElementById('pinInput').style.borderColor='#ef4444';
           setTimeout(()=>{document.getElementById('pinInput').style.borderColor='';},900);
@@ -930,88 +960,97 @@
     }
     
     async function enterEditMode(){
-      await ensureSignedIn();
-      storeOriginalValues();
-      document.body.classList.add('editing');
-      document.querySelectorAll('[data-edit="teacher"]').forEach(el=>el.contentEditable=true);
-      document.querySelectorAll('.teacher-only-edit').forEach(el=>{el.disabled=false;el.readOnly=false;});
-      // Enable snack message textarea and show edit controls
-      const snackMessage = document.getElementById('snackMessage');
-      if (snackMessage) {
-        snackMessage.disabled = false;
-        snackMessage.readOnly = false;
+      try {
+        // Require Google Auth before enabling edit mode
+        await ensureSignedIn();
+        
+        storeOriginalValues();
+        document.body.classList.add('editing');
+        document.querySelectorAll('[data-edit="teacher"]').forEach(el=>el.contentEditable=true);
+        document.querySelectorAll('.teacher-only-edit').forEach(el=>{el.disabled=false;el.readOnly=false;});
+        // Enable snack message textarea and show edit controls
+        const snackMessage = document.getElementById('snackMessage');
+        if (snackMessage) {
+          snackMessage.disabled = false;
+          snackMessage.readOnly = false;
+        }
+        // Show edit-only elements
+        document.querySelectorAll('.edit-only').forEach(el => {
+          el.style.display = 'block';
+        });
+        
+        // Enable About Me section
+        const aboutMeDescText = document.getElementById('aboutMeDescText');
+        if (aboutMeDescText) aboutMeDescText.contentEditable = true;
+        const funFactsList = document.getElementById('funFactsList');
+        if (funFactsList) funFactsList.contentEditable = true;
+        const favoriteColorText = document.getElementById('favoriteColorText');
+        if (favoriteColorText) favoriteColorText.contentEditable = true;
+        const favoriteSnackText = document.getElementById('favoriteSnackText');
+        if (favoriteSnackText) favoriteSnackText.contentEditable = true;
+        const favoriteDrinkText = document.getElementById('favoriteDrinkText');
+        if (favoriteDrinkText) favoriteDrinkText.contentEditable = true;
+        const favoriteShowText = document.getElementById('favoriteShowText');
+        if (favoriteShowText) favoriteShowText.contentEditable = true;
+        const aboutMeSaveButtons = ['saveAboutMeDescBtn', 'saveFunFactsBtn', 'saveFavoriteColorBtn', 'saveFavoriteSnackBtn', 'saveFavoriteDrinkBtn', 'saveFavoriteShowBtn'];
+        aboutMeSaveButtons.forEach(id => {
+          const btn = document.getElementById(id);
+          if (btn) btn.style.display = 'inline-block';
+        });
+        
+        // Enable Class Roster section
+        const classRosterTextarea = document.getElementById('classRosterTextarea');
+        if (classRosterTextarea) { classRosterTextarea.disabled = false; classRosterTextarea.readOnly = false; }
+        const saveClassRosterBtn = document.getElementById('saveClassRosterBtn');
+        if (saveClassRosterBtn) saveClassRosterBtn.style.display = 'inline-block';
+        
+        // Enable Birthday sections
+        const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+        months.forEach(month => {
+          const monthTextarea = document.getElementById(`${month}BirthdaysTextarea`);
+          if (monthTextarea) { monthTextarea.disabled = false; monthTextarea.readOnly = false; }
+        });
+        const saveAllBirthdaysBtn = document.getElementById('saveAllBirthdaysBtn');
+        if (saveAllBirthdaysBtn) saveAllBirthdaysBtn.style.display = 'inline-block';
+        
+        // Enable Practice Websites section  
+        document.querySelectorAll('.website-url-input').forEach(input => {
+          input.disabled = false;
+          input.readOnly = false;
+        });
+        const saveWebsitesBtn = document.getElementById('saveWebsitesBtn');
+        if (saveWebsitesBtn) saveWebsitesBtn.style.display = 'inline-block';
+        
+        // Enable Extras section
+        const saveExtrasBtn = document.getElementById('saveExtrasBtn');
+        if (saveExtrasBtn) saveExtrasBtn.style.display = 'inline-block';
+        const addExtrasCardBtn = document.getElementById('addExtrasCardBtn');
+        if (addExtrasCardBtn) addExtrasCardBtn.style.display = 'inline-block';
+        
+        // Enable Extras contenteditable elements and remove buttons
+        document.querySelectorAll('#extrasGrid [contenteditable]').forEach(el => {
+          el.contentEditable = true;
+          el.style.cursor = 'text';
+        });
+        document.querySelectorAll('#extrasGrid button[onclick*="remove"]').forEach(btn => {
+          btn.style.display = 'inline-block';
+        });
+        
+        // Update gallery images clickable state (disable when in edit mode)
+        document.querySelectorAll('.gallery-imgs img').forEach(img => {
+          const galleryContainer = img.closest('.gallery-imgs');
+          const galleryType = galleryContainer ? galleryContainer.getAttribute('data-gallery-type') : '';
+          makeGalleryImageClickable(img, galleryType);
+        });
+        
+        document.getElementById('editModeBtn').textContent = '💾 Exit Edit Mode';
+        document.getElementById('editModeBtn').onclick = exitEditMode;
+      } catch (error) {
+        console.error('Failed to enter edit mode:', error);
+        alert('Authentication failed: ' + error.message + '\n\nPlease try again to enter edit mode.');
+        // Re-throw to prevent PIN dialog from closing
+        throw error;
       }
-      // Show edit-only elements
-      document.querySelectorAll('.edit-only').forEach(el => {
-        el.style.display = 'block';
-      });
-      
-      // Enable About Me section
-      const aboutMeDescText = document.getElementById('aboutMeDescText');
-      if (aboutMeDescText) aboutMeDescText.contentEditable = true;
-      const funFactsList = document.getElementById('funFactsList');
-      if (funFactsList) funFactsList.contentEditable = true;
-      const favoriteColorText = document.getElementById('favoriteColorText');
-      if (favoriteColorText) favoriteColorText.contentEditable = true;
-      const favoriteSnackText = document.getElementById('favoriteSnackText');
-      if (favoriteSnackText) favoriteSnackText.contentEditable = true;
-      const favoriteDrinkText = document.getElementById('favoriteDrinkText');
-      if (favoriteDrinkText) favoriteDrinkText.contentEditable = true;
-      const favoriteShowText = document.getElementById('favoriteShowText');
-      if (favoriteShowText) favoriteShowText.contentEditable = true;
-      const aboutMeSaveButtons = ['saveAboutMeDescBtn', 'saveFunFactsBtn', 'saveFavoriteColorBtn', 'saveFavoriteSnackBtn', 'saveFavoriteDrinkBtn', 'saveFavoriteShowBtn'];
-      aboutMeSaveButtons.forEach(id => {
-        const btn = document.getElementById(id);
-        if (btn) btn.style.display = 'inline-block';
-      });
-      
-      // Enable Class Roster section
-      const classRosterTextarea = document.getElementById('classRosterTextarea');
-      if (classRosterTextarea) { classRosterTextarea.disabled = false; classRosterTextarea.readOnly = false; }
-      const saveClassRosterBtn = document.getElementById('saveClassRosterBtn');
-      if (saveClassRosterBtn) saveClassRosterBtn.style.display = 'inline-block';
-      
-      // Enable Birthday sections
-      const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
-      months.forEach(month => {
-        const monthTextarea = document.getElementById(`${month}BirthdaysTextarea`);
-        if (monthTextarea) { monthTextarea.disabled = false; monthTextarea.readOnly = false; }
-      });
-      const saveAllBirthdaysBtn = document.getElementById('saveAllBirthdaysBtn');
-      if (saveAllBirthdaysBtn) saveAllBirthdaysBtn.style.display = 'inline-block';
-      
-      // Enable Practice Websites section  
-      document.querySelectorAll('.website-url-input').forEach(input => {
-        input.disabled = false;
-        input.readOnly = false;
-      });
-      const saveWebsitesBtn = document.getElementById('saveWebsitesBtn');
-      if (saveWebsitesBtn) saveWebsitesBtn.style.display = 'inline-block';
-      
-      // Enable Extras section
-      const saveExtrasBtn = document.getElementById('saveExtrasBtn');
-      if (saveExtrasBtn) saveExtrasBtn.style.display = 'inline-block';
-      const addExtrasCardBtn = document.getElementById('addExtrasCardBtn');
-      if (addExtrasCardBtn) addExtrasCardBtn.style.display = 'inline-block';
-      
-      // Enable Extras contenteditable elements and remove buttons
-      document.querySelectorAll('#extrasGrid [contenteditable]').forEach(el => {
-        el.contentEditable = true;
-        el.style.cursor = 'text';
-      });
-      document.querySelectorAll('#extrasGrid button[onclick*="remove"]').forEach(btn => {
-        btn.style.display = 'inline-block';
-      });
-      
-      // Update gallery images clickable state (disable when in edit mode)
-      document.querySelectorAll('.gallery-imgs img').forEach(img => {
-        const galleryContainer = img.closest('.gallery-imgs');
-        const galleryType = galleryContainer ? galleryContainer.getAttribute('data-gallery-type') : '';
-        makeGalleryImageClickable(img, galleryType);
-      });
-      
-      document.getElementById('editModeBtn').textContent = '💾 Exit Edit Mode';
-      document.getElementById('editModeBtn').onclick = exitEditMode;
     }
     function exitEditMode(){
       document.body.classList.remove('editing');
