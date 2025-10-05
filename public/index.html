@@ -59,6 +59,17 @@
       auth = undefined;
       storage = undefined;
     }
+    
+    // Helper function to check authentication before Firestore writes
+    async function ensureAuthenticated() {
+      if (!auth) {
+        throw new Error('Firebase authentication not available');
+      }
+      if (!auth.currentUser) {
+        throw new Error('User not authenticated. Please enter edit mode first.');
+      }
+      return true;
+    }
   </script>
   
   <style>
@@ -805,10 +816,10 @@
         document.getElementById('pinOverlay').classList.remove('show');
         document.getElementById('pinInput').value = '';
       };
-      document.getElementById('pinSubmit').onclick = function() {
+      document.getElementById('pinSubmit').onclick = async function() {
         var pin = document.getElementById('pinInput').value;
         if(pin === TEACHER_PIN){
-          enterEditMode();
+          await enterEditMode();
           document.getElementById('pinOverlay').classList.remove('show');
         }else{
           document.getElementById('pinInput').style.borderColor='#ef4444';
@@ -921,7 +932,27 @@
       });
     }
     
-    function enterEditMode(){
+    async function enterEditMode(){
+      // Authenticate with Firebase before enabling edit mode
+      try {
+        if (auth && !auth.currentUser) {
+          console.log('Authenticating with Firebase...');
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await auth.signInWithPopup(provider);
+          console.log('Firebase authentication successful');
+        } else if (auth && auth.currentUser) {
+          console.log('Already authenticated with Firebase');
+        } else {
+          console.error('Firebase auth not available');
+          alert('Authentication failed. Please refresh the page and try again.');
+          return;
+        }
+      } catch (error) {
+        console.error('Firebase authentication failed:', error);
+        alert('Authentication failed: ' + error.message);
+        return;
+      }
+      
       storeOriginalValues();
       document.body.classList.add('editing');
       document.querySelectorAll('[data-edit="teacher"]').forEach(el=>el.contentEditable=true);
@@ -1329,6 +1360,9 @@
       const originalText = saveBtn.textContent;
       
       try {
+        // Check authentication before saving
+        await ensureAuthenticated();
+        
         // Show saving state
         saveBtn.textContent = '⏳ Saving...';
         saveBtn.disabled = true;
@@ -1504,6 +1538,9 @@
       const originalText = saveBtn.textContent;
       
       try {
+        // Check authentication before saving
+        await ensureAuthenticated();
+        
         // Show saving state
         saveBtn.textContent = '⏳ Saving...';
         saveBtn.disabled = true;
@@ -1543,6 +1580,14 @@
     // Function to save snack data to Firestore
     async function saveSnackDataToFirestore() {
       try {
+        // Authenticate if not already authenticated (for parent snack claims)
+        if (auth && !auth.currentUser) {
+          console.log('Authenticating for snack claim...');
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await auth.signInWithPopup(provider);
+          console.log('Authentication successful');
+        }
+        
         // Collect current snack data
         const snacksGrid = document.getElementById('snacksGrid');
         if (!snacksGrid) return;
@@ -2432,6 +2477,9 @@ async function saveTransportationField(fieldType) {
   const originalText = saveBtn.textContent;
   
   try {
+    // Check authentication before saving
+    await ensureAuthenticated();
+    
     // Show saving state
     saveBtn.textContent = '⏳ Saving...';
     saveBtn.disabled = true;
@@ -2520,6 +2568,9 @@ async function saveBirthdayField(fieldType) {
   const originalText = saveBtn.textContent;
   
   try {
+    // Check authentication before saving
+    await ensureAuthenticated();
+    
     // Show saving state
     saveBtn.textContent = '⏳ Saving...';
     saveBtn.disabled = true;
@@ -2559,6 +2610,9 @@ async function saveAllBirthdays() {
   const originalText = saveBtn.textContent;
   
   try {
+    // Check authentication before saving
+    await ensureAuthenticated();
+    
     // Show saving state
     saveBtn.textContent = '⏳ Saving...';
     saveBtn.disabled = true;
@@ -2653,6 +2707,9 @@ async function saveAboutMeField(fieldType) {
   const originalText = saveBtn.textContent;
   
   try {
+    // Check authentication before saving
+    await ensureAuthenticated();
+    
     // Show saving state
     saveBtn.textContent = '⏳';
     saveBtn.disabled = true;
@@ -2692,6 +2749,9 @@ async function saveExtrasCards() {
   const originalText = saveBtn.textContent;
   
   try {
+    // Check authentication before saving
+    await ensureAuthenticated();
+    
     // Show saving state
     saveBtn.textContent = '⏳ Saving...';
     saveBtn.disabled = true;
@@ -2752,6 +2812,9 @@ async function saveWebsiteUrls() {
   const originalText = saveBtn.textContent;
   
   try {
+    // Check authentication before saving
+    await ensureAuthenticated();
+    
     // Show saving state
     saveBtn.textContent = '⏳ Saving...';
     saveBtn.disabled = true;
