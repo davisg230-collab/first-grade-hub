@@ -10,7 +10,7 @@ The application had Firestore security rules requiring authentication (`request.
 
 ## Solution
 
-Implemented Firebase Anonymous Authentication to sign in users before they perform any write operations.
+Implemented Firebase Google Sign-In Authentication to sign in users before they perform any write operations. Users are prompted with the Google sign-in popup after entering a correct PIN.
 
 ## Implementation Details
 
@@ -32,7 +32,7 @@ async function ensureAuthenticated() {
 
 ### 2. Authentication on Edit Mode Entry
 
-Modified `enterEditMode()` to sign in users anonymously when they enter a valid PIN:
+Modified `enterEditMode()` to sign in users with Google when they enter a valid PIN:
 
 ```javascript
 async function enterEditMode() {
@@ -40,7 +40,8 @@ async function enterEditMode() {
   try {
     if (auth && !auth.currentUser) {
       console.log('Authenticating with Firebase...');
-      await auth.signInAnonymously();
+      const provider = new firebase.auth.GoogleAuthProvider();
+      await auth.signInWithPopup(provider);
       console.log('Firebase authentication successful');
     }
     // ... rest of edit mode logic
@@ -54,7 +55,7 @@ async function enterEditMode() {
 
 ### 3. Authentication for Parent Snack Claims
 
-Since parents can claim snacks without entering edit mode, the `saveSnackDataToFirestore()` function now authenticates users automatically:
+Since parents can claim snacks without entering edit mode, the `saveSnackDataToFirestore()` function now authenticates users automatically with Google Sign-In:
 
 ```javascript
 async function saveSnackDataToFirestore() {
@@ -62,7 +63,8 @@ async function saveSnackDataToFirestore() {
     // Authenticate if not already authenticated (for parent snack claims)
     if (auth && !auth.currentUser) {
       console.log('Authenticating for snack claim...');
-      await auth.signInAnonymously();
+      const provider = new firebase.auth.GoogleAuthProvider();
+      await auth.signInWithPopup(provider);
       console.log('Authentication successful');
     }
     // ... save logic
@@ -105,15 +107,17 @@ match /shoutouts/{document} {
 
 ### For Teachers/Admins
 1. Click "Edit Mode" button
-2. Enter PIN (2213 for teacher, 8875 for owner)
-3. System automatically signs them in with Firebase Auth
-4. All save operations now succeed
+2. Enter PIN (2213 for teacher)
+3. Google Sign-In popup appears
+4. User signs in with their Google account
+5. Edit mode is enabled and all save operations now succeed
 
 ### For Parents (Snack Claims)
 1. Check snack checkbox and enter name
 2. Click "Save" button
-3. System automatically authenticates in background
-4. Snack claim is saved successfully
+3. Google Sign-In popup appears automatically
+4. User signs in with their Google account
+5. Snack claim is saved successfully
 
 ## Error Handling
 
@@ -145,14 +149,15 @@ To verify authentication is working:
 
 ## Security Considerations
 
-### Anonymous Authentication
-- Uses Firebase Anonymous Auth for simplicity
+### Google Sign-In Authentication
+- Uses Firebase Google Sign-In for authentication
 - All authenticated users can write to collections
 - PIN protection provides UI-level access control
-- For stronger security, consider:
-  - Email/password authentication
+- Users authenticate with their Google accounts, providing better accountability
+- For additional security, consider:
   - Custom claims for role-based access
-  - More restrictive Firestore rules
+  - More restrictive Firestore rules based on email domains
+  - Allowlist specific Google accounts
 
 ### Firestore Rules
 Current rules allow any authenticated user to write. For production:
@@ -196,6 +201,6 @@ async function saveNewFeature() {
 - Ensure user is signed in (check `auth.currentUser`)
 
 ### Authentication Not Persisting
-- Anonymous auth sessions are temporary
-- Users need to re-authenticate on page reload
-- This is expected behavior for anonymous auth
+- Google Sign-In sessions persist across page reloads
+- Firebase maintains the authentication state
+- Users may need to re-authenticate if they clear browser data or after session expires

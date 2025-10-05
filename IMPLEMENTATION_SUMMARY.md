@@ -4,40 +4,38 @@
 
 ### 1. Core Authentication Infrastructure
 - ✅ Added `ensureAuthenticated()` helper function
-- ✅ Modified `enterEditMode()` to sign in users with Firebase Anonymous Auth
+- ✅ Modified `enterEditMode()` to sign in users with Firebase Google Sign-In
 - ✅ Updated PIN submit handler to be async
 
 ### 2. Protected Write Operations
-Added authentication checks to **10 save functions**:
+Added authentication checks to **8 save functions**:
 
 1. ✅ `saveChangesToFirestore()` - Main save button
-2. ✅ `saveShoutoutsToFirebase()` - Student shoutouts
-3. ✅ `saveTransportationField()` - Transportation info
-4. ✅ `saveMainMessage()` - TV display message
-5. ✅ `saveBirthdayField()` - Birthday field
-6. ✅ `saveAllBirthdays()` - All birthdays
-7. ✅ `saveAboutMeField()` - About Me fields
-8. ✅ `saveExtrasCards()` - Extras cards
-9. ✅ `saveWebsiteUrls()` - Website URLs
-10. ✅ `saveSnackMessage()` - Snack message
+2. ✅ `saveTransportationField()` - Transportation info
+3. ✅ `saveBirthdayField()` - Birthday field
+4. ✅ `saveAllBirthdays()` - All birthdays
+5. ✅ `saveAboutMeField()` - About Me fields
+6. ✅ `saveExtrasCards()` - Extras cards
+7. ✅ `saveWebsiteUrls()` - Website URLs
+8. ✅ `saveSnackMessage()` - Snack message
 
 ### 3. Special Case: Parent Snack Claims
-- ✅ `saveSnackDataToFirestore()` - Auto-authenticates for parent snack claims
+- ✅ `saveSnackDataToFirestore()` - Auto-authenticates with Google Sign-In for parent snack claims
 
 ### 4. Authentication Flow
 
 **For Teachers/Admins:**
 ```
-Enter PIN → Sign in anonymously → Enable edit mode → Save operations succeed
+Enter PIN → Google Sign-In popup → Authenticate with Google → Enable edit mode → Save operations succeed
 ```
 
 **For Parents (Snacks):**
 ```
-Claim snack → Auto-authenticate in background → Save succeeds
+Claim snack → Google Sign-In popup → Authenticate with Google → Save succeeds
 ```
 
 ### 5. Total Firestore Write Operations Protected
-- **11 total** `db.collection().set()` operations
+- **9 total** `db.collection().set()` operations
 - **All operations** now require authentication
 - **Zero** unprotected writes remain
 
@@ -71,7 +69,9 @@ Claim snack → Auto-authenticate in background → Save succeeds
    - Open app in browser
    - Open browser console
    - Click "Edit Mode"
-   - Enter PIN (2213 or 8875)
+   - Enter PIN (2213)
+   - Verify Google Sign-In popup appears
+   - Sign in with Google account
    - Verify console shows: "Firebase authentication successful"
    - Make changes and click Save
    - Verify console shows: "Data saved successfully to Firestore"
@@ -81,12 +81,15 @@ Claim snack → Auto-authenticate in background → Save succeeds
    - Check a snack box
    - Enter name
    - Click Save
+   - Verify Google Sign-In popup appears
+   - Sign in with Google account
    - Verify console shows: "Authenticating for snack claim..."
    - Verify console shows: "Snack data saved to Firestore successfully"
 
 3. **Error Handling**:
    - If Firebase is unavailable, verify alert shows error message
    - If save fails, verify button shows "❌ Save Failed"
+   - If user cancels Google Sign-In, verify appropriate error message
 
 ### Expected Console Messages
 ```
@@ -100,16 +103,18 @@ Claim snack → Auto-authenticate in background → Save succeeds
 ## Security Notes
 
 ### Current Implementation
-- Uses Firebase Anonymous Authentication
+- Uses Firebase Google Sign-In Authentication
 - All authenticated users can write to collections
 - PIN provides UI-level access control
+- Users authenticate with their Google accounts
 - Firestore rules: `allow write: if request.auth != null;`
 
 ### Future Enhancements (Optional)
-- Consider email/password authentication for stronger security
 - Add custom claims for role-based access control
+- Implement email domain restrictions (e.g., only @school.edu emails)
 - Implement more granular Firestore rules
 - Add data validation rules
+- Maintain allowlist of specific Google accounts
 
 ## Compliance with Requirements
 
