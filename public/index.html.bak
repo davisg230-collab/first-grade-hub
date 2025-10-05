@@ -59,6 +59,14 @@
       auth = undefined;
       storage = undefined;
     }
+    
+    // Ensure the user is signed in before performing Firestore writes
+    async function ensureSignedIn() {
+      const user = firebase.auth().currentUser;
+      if (!user) {
+        await firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider());
+      }
+    }
   </script>
   
   <style>
@@ -921,7 +929,8 @@
       });
     }
     
-    function enterEditMode(){
+    async function enterEditMode(){
+      await ensureSignedIn();
       storeOriginalValues();
       document.body.classList.add('editing');
       document.querySelectorAll('[data-edit="teacher"]').forEach(el=>el.contentEditable=true);
@@ -1329,6 +1338,8 @@
       const originalText = saveBtn.textContent;
       
       try {
+        await ensureSignedIn();
+        
         // Show saving state
         saveBtn.textContent = '⏳ Saving...';
         saveBtn.disabled = true;
@@ -1504,6 +1515,8 @@
       const originalText = saveBtn.textContent;
       
       try {
+        await ensureSignedIn();
+        
         // Show saving state
         saveBtn.textContent = '⏳ Saving...';
         saveBtn.disabled = true;
@@ -1543,6 +1556,8 @@
     // Function to save snack data to Firestore
     async function saveSnackDataToFirestore() {
       try {
+        await ensureSignedIn();
+        
         // Collect current snack data
         const snacksGrid = document.getElementById('snacksGrid');
         if (!snacksGrid) return;
@@ -2432,6 +2447,8 @@ async function saveTransportationField(fieldType) {
   const originalText = saveBtn.textContent;
   
   try {
+    await ensureSignedIn();
+    
     // Show saving state
     saveBtn.textContent = '⏳ Saving...';
     saveBtn.disabled = true;
@@ -2520,6 +2537,8 @@ async function saveBirthdayField(fieldType) {
   const originalText = saveBtn.textContent;
   
   try {
+    await ensureSignedIn();
+    
     // Show saving state
     saveBtn.textContent = '⏳ Saving...';
     saveBtn.disabled = true;
@@ -2559,6 +2578,8 @@ async function saveAllBirthdays() {
   const originalText = saveBtn.textContent;
   
   try {
+    await ensureSignedIn();
+    
     // Show saving state
     saveBtn.textContent = '⏳ Saving...';
     saveBtn.disabled = true;
@@ -2653,6 +2674,8 @@ async function saveAboutMeField(fieldType) {
   const originalText = saveBtn.textContent;
   
   try {
+    await ensureSignedIn();
+    
     // Show saving state
     saveBtn.textContent = '⏳';
     saveBtn.disabled = true;
@@ -2692,6 +2715,8 @@ async function saveExtrasCards() {
   const originalText = saveBtn.textContent;
   
   try {
+    await ensureSignedIn();
+    
     // Show saving state
     saveBtn.textContent = '⏳ Saving...';
     saveBtn.disabled = true;
@@ -2752,6 +2777,8 @@ async function saveWebsiteUrls() {
   const originalText = saveBtn.textContent;
   
   try {
+    await ensureSignedIn();
+    
     // Show saving state
     saveBtn.textContent = '⏳ Saving...';
     saveBtn.disabled = true;
