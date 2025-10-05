@@ -60,33 +60,34 @@
       storage = undefined;
     }
     
-    // Ensure the user is signed in before performing Firestore writes
-    async function ensureSignedIn() {
-      try {
-        if (!auth) {
-          throw new Error('Firebase authentication not available');
-        }
-        const user = auth.currentUser;
-        if (!user) {
-          console.log('Starting Google sign-in...');
-          await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
-          console.log('Google sign-in successful');
-        } else {
-          console.log('Already signed in with Google');
-        }
-      } catch (error) {
-        console.error('Google sign-in failed:', error);
-        // Re-throw with user-friendly message
-        if (error.code === 'auth/popup-closed-by-user') {
-          throw new Error('Sign-in cancelled. Please try again.');
-        } else if (error.code === 'auth/popup-blocked') {
-          throw new Error('Pop-up blocked by browser. Please allow pop-ups and try again.');
-        } else if (error.code === 'auth/network-request-failed') {
-          throw new Error('Network error. Please check your connection and try again.');
-        } else {
-          throw new Error('Sign-in failed: ' + (error.message || 'Unknown error'));
-        }
-      }
+// Ensure the user is signed in before performing Firestore writes
+async function ensureSignedIn() {
+  try {
+    if (!auth) {
+      throw new Error('Firebase authentication not available');
+    }
+    const user = auth.currentUser;
+    if (!user) {
+      console.log('Starting Google sign-in...');
+      await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+      console.log('Google sign-in successful');
+    } else {
+      console.log('Already signed in with Google');
+    }
+  } catch (error) {
+    console.error('Google sign-in failed:', error);
+    // Re-throw with user-friendly message
+    if (error.code === 'auth/popup-closed-by-user') {
+      throw new Error('Sign-in cancelled. Please try again.');
+    } else if (error.code === 'auth/popup-blocked') {
+      throw new Error('Pop-up blocked by browser. Please allow pop-ups and try again.');
+    } else if (error.code === 'auth/network-request-failed') {
+      throw new Error('Network error. Please check your connection and try again.');
+    } else {
+      throw new Error('Sign-in failed: ' + (error.message || 'Unknown error'));
+    }
+  }
+}
     }
   </script>
   
@@ -837,18 +838,17 @@
       document.getElementById('pinSubmit').onclick = async function() {
         var pin = document.getElementById('pinInput').value;
         if(pin === TEACHER_PIN){
-          try {
-            await enterEditMode();
-            // Only close the overlay if authentication succeeded
-            document.getElementById('pinOverlay').classList.remove('show');
-            document.getElementById('pinInput').value = '';
-          } catch (error) {
-            // Keep the overlay open and highlight the input field
-            // The error alert is already shown by enterEditMode()
-            document.getElementById('pinInput').style.borderColor='#ef4444';
-            setTimeout(()=>{document.getElementById('pinInput').style.borderColor='';},2000);
-          }
-        }else{
+try {
+  await enterEditMode();
+  // Only close the overlay if authentication succeeded
+  document.getElementById('pinOverlay').classList.remove('show');
+  document.getElementById('pinInput').value = '';
+} catch (error) {
+  // Keep the overlay open and highlight the input field
+  // The error alert is already shown by enterEditMode()
+  document.getElementById('pinInput').style.borderColor='#ef4444';
+  setTimeout(()=>{document.getElementById('pinInput').style.borderColor='';},2000);
+}
           document.getElementById('pinInput').style.borderColor='#ef4444';
           setTimeout(()=>{document.getElementById('pinInput').style.borderColor='';},900);
         }
@@ -960,46 +960,46 @@
     }
     
     async function enterEditMode(){
-      try {
-        // Require Google Auth before enabling edit mode
-        await ensureSignedIn();
-        
-        storeOriginalValues();
-        document.body.classList.add('editing');
-        document.querySelectorAll('[data-edit="teacher"]').forEach(el=>el.contentEditable=true);
-        document.querySelectorAll('.teacher-only-edit').forEach(el=>{el.disabled=false;el.readOnly=false;});
-        // Enable snack message textarea and show edit controls
-        const snackMessage = document.getElementById('snackMessage');
-        if (snackMessage) {
-          snackMessage.disabled = false;
-          snackMessage.readOnly = false;
-        }
-        // Show edit-only elements
-        document.querySelectorAll('.edit-only').forEach(el => {
-          el.style.display = 'block';
-        });
-        
-        // Enable About Me section
-        const aboutMeDescText = document.getElementById('aboutMeDescText');
-        if (aboutMeDescText) aboutMeDescText.contentEditable = true;
-        const funFactsList = document.getElementById('funFactsList');
-        if (funFactsList) funFactsList.contentEditable = true;
-        const favoriteColorText = document.getElementById('favoriteColorText');
-        if (favoriteColorText) favoriteColorText.contentEditable = true;
-        const favoriteSnackText = document.getElementById('favoriteSnackText');
-        if (favoriteSnackText) favoriteSnackText.contentEditable = true;
-        const favoriteDrinkText = document.getElementById('favoriteDrinkText');
-        if (favoriteDrinkText) favoriteDrinkText.contentEditable = true;
-        const favoriteShowText = document.getElementById('favoriteShowText');
-        if (favoriteShowText) favoriteShowText.contentEditable = true;
-        const aboutMeSaveButtons = ['saveAboutMeDescBtn', 'saveFunFactsBtn', 'saveFavoriteColorBtn', 'saveFavoriteSnackBtn', 'saveFavoriteDrinkBtn', 'saveFavoriteShowBtn'];
-        aboutMeSaveButtons.forEach(id => {
-          const btn = document.getElementById(id);
-          if (btn) btn.style.display = 'inline-block';
-        });
-        
-        // Enable Class Roster section
-        const classRosterTextarea = document.getElementById('classRosterTextarea');
+try {
+  // Require Google Auth before enabling edit mode
+  await ensureSignedIn();
+
+  storeOriginalValues();
+  document.body.classList.add('editing');
+  document.querySelectorAll('[data-edit="teacher"]').forEach(el=>el.contentEditable=true);
+  document.querySelectorAll('.teacher-only-edit').forEach(el=>{el.disabled=false;el.readOnly=false;});
+  // Enable snack message textarea and show edit controls
+  const snackMessage = document.getElementById('snackMessage');
+  if (snackMessage) {
+    snackMessage.disabled = false;
+    snackMessage.readOnly = false;
+  }
+  // Show edit-only elements
+  document.querySelectorAll('.edit-only').forEach(el => {
+    el.style.display = 'block';
+  });
+
+  // Enable About Me section
+  const aboutMeDescText = document.getElementById('aboutMeDescText');
+  if (aboutMeDescText) aboutMeDescText.contentEditable = true;
+  const funFactsList = document.getElementById('funFactsList');
+  if (funFactsList) funFactsList.contentEditable = true;
+  const favoriteColorText = document.getElementById('favoriteColorText');
+  if (favoriteColorText) favoriteColorText.contentEditable = true;
+  const favoriteSnackText = document.getElementById('favoriteSnackText');
+  if (favoriteSnackText) favoriteSnackText.contentEditable = true;
+  const favoriteDrinkText = document.getElementById('favoriteDrinkText');
+  if (favoriteDrinkText) favoriteDrinkText.contentEditable = true;
+  const favoriteShowText = document.getElementById('favoriteShowText');
+  if (favoriteShowText) favoriteShowText.contentEditable = true;
+  const aboutMeSaveButtons = ['saveAboutMeDescBtn', 'saveFunFactsBtn', 'saveFavoriteColorBtn', 'saveFavoriteSnackBtn', 'saveFavoriteDrinkBtn', 'saveFavoriteShowBtn'];
+  aboutMeSaveButtons.forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.style.display = 'inline-block';
+  });
+
+  // Enable Class Roster section
+  const classRosterTextarea = document.getElementById('classRosterTextarea');
         if (classRosterTextarea) { classRosterTextarea.disabled = false; classRosterTextarea.readOnly = false; }
         const saveClassRosterBtn = document.getElementById('saveClassRosterBtn');
         if (saveClassRosterBtn) saveClassRosterBtn.style.display = 'inline-block';
@@ -1377,7 +1377,46 @@
       const originalText = saveBtn.textContent;
       
       try {
-        await ensureSignedIn();
+try {
+  // Require Google Auth before enabling edit mode
+  await ensureSignedIn();
+  
+  storeOriginalValues();
+  document.body.classList.add('editing');
+  document.querySelectorAll('[data-edit="teacher"]').forEach(el=>el.contentEditable=true);
+  document.querySelectorAll('.teacher-only-edit').forEach(el=>{el.disabled=false;el.readOnly=false;});
+  // Enable snack message textarea and show edit controls
+  const snackMessage = document.getElementById('snackMessage');
+  if (snackMessage) {
+    snackMessage.disabled = false;
+    snackMessage.readOnly = false;
+  }
+  // Show edit-only elements
+  document.querySelectorAll('.edit-only').forEach(el => {
+    el.style.display = 'block';
+  });
+  
+  // Enable About Me section
+  const aboutMeDescText = document.getElementById('aboutMeDescText');
+  if (aboutMeDescText) aboutMeDescText.contentEditable = true;
+  const funFactsList = document.getElementById('funFactsList');
+  if (funFactsList) funFactsList.contentEditable = true;
+  const favoriteColorText = document.getElementById('favoriteColorText');
+  if (favoriteColorText) favoriteColorText.contentEditable = true;
+  const favoriteSnackText = document.getElementById('favoriteSnackText');
+  if (favoriteSnackText) favoriteSnackText.contentEditable = true;
+  const favoriteDrinkText = document.getElementById('favoriteDrinkText');
+  if (favoriteDrinkText) favoriteDrinkText.contentEditable = true;
+  const favoriteShowText = document.getElementById('favoriteShowText');
+  if (favoriteShowText) favoriteShowText.contentEditable = true;
+  const aboutMeSaveButtons = ['saveAboutMeDescBtn', 'saveFunFactsBtn', 'saveFavoriteColorBtn', 'saveFavoriteSnackBtn', 'saveFavoriteDrinkBtn', 'saveFavoriteShowBtn'];
+  aboutMeSaveButtons.forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.style.display = 'inline-block';
+  });
+  
+  // Enable Class Roster section
+  const classRosterTextarea = document.getElementById('classRosterTextarea');
         
         // Show saving state
         saveBtn.textContent = '⏳ Saving...';
@@ -1554,7 +1593,7 @@
       const originalText = saveBtn.textContent;
       
       try {
-        await ensureSignedIn();
+await ensureSignedIn();
         
         // Show saving state
         saveBtn.textContent = '⏳ Saving...';
@@ -1595,7 +1634,7 @@
     // Function to save snack data to Firestore
     async function saveSnackDataToFirestore() {
       try {
-        await ensureSignedIn();
+await ensureSignedIn();
         
         // Collect current snack data
         const snacksGrid = document.getElementById('snacksGrid');
@@ -2469,8 +2508,8 @@ async function saveTransportationField(fieldType) {
   const textareaMap = {
     'busRiders': 'busRidersTextarea',
     'carRiders': 'carRidersTextarea',
-    'porchPickup': 'porchPickupTextarea'
-  };
+'porchPickup': 'porchPickupTextarea'
+};
   
   const dataMap = {
     'busRiders': 'bus_riders',
@@ -2486,7 +2525,7 @@ async function saveTransportationField(fieldType) {
   const originalText = saveBtn.textContent;
   
   try {
-    await ensureSignedIn();
+await ensureSignedIn();
     
     // Show saving state
     saveBtn.textContent = '⏳ Saving...';
@@ -2576,7 +2615,7 @@ async function saveBirthdayField(fieldType) {
   const originalText = saveBtn.textContent;
   
   try {
-    await ensureSignedIn();
+await ensureSignedIn();
     
     // Show saving state
     saveBtn.textContent = '⏳ Saving...';
@@ -2617,7 +2656,7 @@ async function saveAllBirthdays() {
   const originalText = saveBtn.textContent;
   
   try {
-    await ensureSignedIn();
+await ensureSignedIn();
     
     // Show saving state
     saveBtn.textContent = '⏳ Saving...';
@@ -2713,7 +2752,7 @@ async function saveAboutMeField(fieldType) {
   const originalText = saveBtn.textContent;
   
   try {
-    await ensureSignedIn();
+await ensureSignedIn();
     
     // Show saving state
     saveBtn.textContent = '⏳';
@@ -2754,7 +2793,7 @@ async function saveExtrasCards() {
   const originalText = saveBtn.textContent;
   
   try {
-    await ensureSignedIn();
+await ensureSignedIn();
     
     // Show saving state
     saveBtn.textContent = '⏳ Saving...';
@@ -2816,7 +2855,7 @@ async function saveWebsiteUrls() {
   const originalText = saveBtn.textContent;
   
   try {
-    await ensureSignedIn();
+await ensureSignedIn();
     
     // Show saving state
     saveBtn.textContent = '⏳ Saving...';
