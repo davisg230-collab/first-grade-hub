@@ -5383,9 +5383,14 @@ function renderWatchMeContent(tab) {
   // Render the list
   const html = links.map((item, index) => {
     if (isEditMode) {
-      // Edit mode: show inputs and delete button
+      // Edit mode: show inputs and delete button with drag handle
       return `
-        <div class="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+        <div class="flex items-center gap-2 p-3 bg-gray-50 rounded-lg watch-me-item" 
+             draggable="true" 
+             data-tab="${tab}"
+             data-index="${index}"
+             style="cursor: move;">
+          <span class="drag-handle text-gray-400 text-xl" style="cursor: grab; user-select: none;">⋮⋮</span>
           <input type="text" value="${escapeHtml(item.title)}" 
                  class="flex-1 px-3 py-2 text-sm border rounded-lg watch-me-title" 
                  data-tab="${tab}"
@@ -5420,6 +5425,93 @@ function renderWatchMeContent(tab) {
   }).join('');
   
   content.innerHTML = html;
+  
+  // Add drag and drop event listeners in edit mode
+  if (isEditMode) {
+    setupWatchMeDragAndDrop(tab);
+  }
+}
+
+// Setup drag and drop for Watch Me items
+function setupWatchMeDragAndDrop(tab) {
+  const items = document.querySelectorAll(`.watch-me-item[data-tab="${tab}"]`);
+  let draggedElement = null;
+  let draggedIndex = null;
+  
+  items.forEach(item => {
+    // Dragstart event
+    item.addEventListener('dragstart', function(e) {
+      draggedElement = this;
+      draggedIndex = parseInt(this.getAttribute('data-index'));
+      this.style.opacity = '0.4';
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/html', this.innerHTML);
+    });
+    
+    // Dragend event
+    item.addEventListener('dragend', function(e) {
+      this.style.opacity = '1';
+      // Remove all drag-over styling
+      items.forEach(item => {
+        item.style.borderTop = '';
+        item.style.borderBottom = '';
+      });
+    });
+    
+    // Dragover event
+    item.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      
+      if (this === draggedElement) return;
+      
+      // Visual feedback: show where item will be dropped
+      const rect = this.getBoundingClientRect();
+      const midpoint = rect.top + rect.height / 2;
+      
+      // Remove previous styling
+      items.forEach(item => {
+        item.style.borderTop = '';
+        item.style.borderBottom = '';
+      });
+      
+      if (e.clientY < midpoint) {
+        this.style.borderTop = '3px solid var(--md-coral)';
+      } else {
+        this.style.borderBottom = '3px solid var(--md-coral)';
+      }
+    });
+    
+    // Drop event
+    item.addEventListener('drop', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      if (this === draggedElement) return;
+      
+      const dropIndex = parseInt(this.getAttribute('data-index'));
+      const rect = this.getBoundingClientRect();
+      const midpoint = rect.top + rect.height / 2;
+      
+      // Determine if we're dropping above or below
+      let targetIndex = dropIndex;
+      if (e.clientY >= midpoint) {
+        targetIndex = dropIndex + 1;
+      }
+      
+      // Adjust target index if dragging down
+      if (draggedIndex < targetIndex) {
+        targetIndex--;
+      }
+      
+      // Reorder the array
+      const movedItem = watchMeData[tab].splice(draggedIndex, 1)[0];
+      watchMeData[tab].splice(targetIndex, 0, movedItem);
+      
+      // Re-render
+      renderWatchMeContent(tab);
+    });
+  });
 }
 
 function addWatchMeLink(tab) {
