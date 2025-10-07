@@ -3044,11 +3044,14 @@
               console.warn('Generated URL failed validation, but proceeding anyway');
             }
             
-            // Update the slot display
-            updateSpecialsSlotDisplay(slot, downloadURL);
+            // Restore DOM structure before updating display
+            restoreSpecialsSlotStructure(slot);
             
             // Store the URL in the slot's data attribute
             slot.setAttribute('data-image-url', downloadURL);
+            
+            // Update the slot display
+            updateSpecialsSlotDisplay(slot, downloadURL);
             
             // Show save button since we have changes
             const saveBtn = document.getElementById('saveChangesBtn');
@@ -3107,7 +3110,8 @@
                 }
               }, 5000);
               
-              // Reset to placeholder state on error
+              // Restore structure and reset to placeholder state on error
+              restoreSpecialsSlotStructure(slot);
               resetSpecialsSlotToPlaceholder(slot);
             } else {
               // Wait before retry
@@ -3198,6 +3202,34 @@
       
       // Clear data attribute
       slot.removeAttribute('data-image-url');
+    }
+    
+    // Restore specials slot DOM structure (img, span, delete button)
+    function restoreSpecialsSlotStructure(slot) {
+      // Check if structure already exists
+      let img = slot.querySelector('img');
+      let plusSpan = slot.querySelector('span:not(.edit-only)');
+      let deleteBtn = slot.querySelector('.edit-only');
+      
+      // If any element is missing, rebuild the entire structure
+      if (!img || !plusSpan || !deleteBtn) {
+        // Get the slot attributes before rebuilding
+        const specialsType = slot.getAttribute('data-specials-type') || '';
+        const slotIndex = slot.getAttribute('data-slot-index') || '0';
+        const imageUrl = slot.getAttribute('data-image-url') || '';
+        
+        // Rebuild structure matching the original HTML
+        slot.innerHTML = `
+          <img src="" alt="${specialsType}" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:0.5rem;">
+          <span class="text-3xl text-gray-400">+</span>
+          <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteSpecialsImage(this, '${specialsType}', ${slotIndex})" title="Delete Photo">✖</button>
+        `;
+        
+        // Restore the data attribute if it existed
+        if (imageUrl) {
+          slot.setAttribute('data-image-url', imageUrl);
+        }
+      }
     }
     
     // Delete image from specials slot
@@ -3674,13 +3706,17 @@ async function updateGalleryPhotos(galleryUrlsJson) {
         // Validate URL before using it
         const urlValid0 = await window.validateStorageUrl(urls[0]);
         if (urlValid0) {
+          // Restore DOM structure before updating display
+          restoreSpecialsSlotStructure(slot0);
           slot0.setAttribute('data-image-url', urls[0]);
           updateSpecialsSlotDisplay(slot0, urls[0]);
         } else {
           console.warn(`Invalid specials image URL for ${type} slot 0:`, urls[0]);
+          restoreSpecialsSlotStructure(slot0);
           resetSpecialsSlotToPlaceholder(slot0);
         }
       } else {
+        restoreSpecialsSlotStructure(slot0);
         resetSpecialsSlotToPlaceholder(slot0);
       }
       
@@ -3689,18 +3725,24 @@ async function updateGalleryPhotos(galleryUrlsJson) {
         // Validate URL before using it
         const urlValid1 = await window.validateStorageUrl(urls[1]);
         if (urlValid1) {
+          // Restore DOM structure before updating display
+          restoreSpecialsSlotStructure(slot1);
           slot1.setAttribute('data-image-url', urls[1]);
           updateSpecialsSlotDisplay(slot1, urls[1]);
         } else {
           console.warn(`Invalid specials image URL for ${type} slot 1:`, urls[1]);
+          restoreSpecialsSlotStructure(slot1);
           resetSpecialsSlotToPlaceholder(slot1);
         }
       } else {
+        restoreSpecialsSlotStructure(slot1);
         resetSpecialsSlotToPlaceholder(slot1);
       }
     } else {
       // No gallery data, reset both slots to placeholder
+      restoreSpecialsSlotStructure(slot0);
       resetSpecialsSlotToPlaceholder(slot0);
+      restoreSpecialsSlotStructure(slot1);
       resetSpecialsSlotToPlaceholder(slot1);
     }
   }
