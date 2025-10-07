@@ -3643,14 +3643,14 @@ async function updateGalleryPhotos(galleryUrlsJson) {
   }
   
   // New format: each subject has an array with exactly 2 slots
-  ['art', 'stem', 'gym', 'music'].forEach(async type => {
+  for (const type of ['art', 'stem', 'gym', 'music']) {
     const galleryData = galleryUrls[type];
     
     // Get both slots for this subject
     const slot0 = document.querySelector(`[data-specials-type="${type}"][data-slot-index="0"]`);
     const slot1 = document.querySelector(`[data-specials-type="${type}"][data-slot-index="1"]`);
     
-    if (!slot0 || !slot1) return;
+    if (!slot0 || !slot1) continue;
     
     if (galleryData) {
       // Support both old format (array of URLs) and new format (array with 2 slots)
@@ -3671,16 +3671,30 @@ async function updateGalleryPhotos(galleryUrlsJson) {
       
       // Update slot 0
       if (urls[0] && urls[0].trim() !== '') {
-        slot0.setAttribute('data-image-url', urls[0]);
-        updateSpecialsSlotDisplay(slot0, urls[0]);
+        // Validate URL before using it
+        const urlValid0 = await window.validateStorageUrl(urls[0]);
+        if (urlValid0) {
+          slot0.setAttribute('data-image-url', urls[0]);
+          updateSpecialsSlotDisplay(slot0, urls[0]);
+        } else {
+          console.warn(`Invalid specials image URL for ${type} slot 0:`, urls[0]);
+          resetSpecialsSlotToPlaceholder(slot0);
+        }
       } else {
         resetSpecialsSlotToPlaceholder(slot0);
       }
       
       // Update slot 1
       if (urls[1] && urls[1].trim() !== '') {
-        slot1.setAttribute('data-image-url', urls[1]);
-        updateSpecialsSlotDisplay(slot1, urls[1]);
+        // Validate URL before using it
+        const urlValid1 = await window.validateStorageUrl(urls[1]);
+        if (urlValid1) {
+          slot1.setAttribute('data-image-url', urls[1]);
+          updateSpecialsSlotDisplay(slot1, urls[1]);
+        } else {
+          console.warn(`Invalid specials image URL for ${type} slot 1:`, urls[1]);
+          resetSpecialsSlotToPlaceholder(slot1);
+        }
       } else {
         resetSpecialsSlotToPlaceholder(slot1);
       }
@@ -3689,7 +3703,7 @@ async function updateGalleryPhotos(galleryUrlsJson) {
       resetSpecialsSlotToPlaceholder(slot0);
       resetSpecialsSlotToPlaceholder(slot1);
     }
-  });
+  }
 }
 
 // Function to update transportation fields with saved data
