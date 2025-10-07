@@ -1131,17 +1131,41 @@
     async function enterEditMode(){
       // Authenticate with Firebase before enabling edit mode
       try {
-        if (auth && !auth.currentUser) {
-          console.log('Authenticating with Firebase...');
-          await auth.signInAnonymously();
-          console.log('Firebase authentication successful');
-        } else if (auth && auth.currentUser) {
-          console.log('Already authenticated with Firebase');
-        } else {
+        if (!auth) {
           console.error('Firebase auth not available');
           alert('Authentication failed. Please refresh the page and try again.');
           return;
         }
+        
+        // Check if user is signed in with Google
+        const isGoogleUser = auth.currentUser && auth.currentUser.providerData.some(
+          provider => provider.providerId === 'google.com'
+        );
+        
+        if (!isGoogleUser) {
+          // Trigger Google Sign-In
+          console.log('Initiating Google Sign-In...');
+          const provider = new firebase.auth.GoogleAuthProvider();
+          try {
+            await auth.signInWithPopup(provider);
+            console.log('Google Sign-In successful');
+          } catch (error) {
+            console.error('Google Sign-In failed:', error);
+            alert('Google Sign-In is required to enter edit mode. Please try again.');
+            return;
+          }
+        }
+        
+        // Validate the user's email
+        if (!auth.currentUser || auth.currentUser.email !== 'davisg230@gmail.com') {
+          console.error('Unauthorized user:', auth.currentUser?.email);
+          alert('Access denied. Only davisg230@gmail.com can edit this page.');
+          // Sign out the unauthorized user
+          await auth.signOut();
+          return;
+        }
+        
+        console.log('Authentication successful for authorized user');
       } catch (error) {
         console.error('Firebase authentication failed:', error);
         alert('Authentication failed: ' + error.message);
