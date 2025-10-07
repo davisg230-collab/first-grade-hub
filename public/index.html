@@ -757,7 +757,7 @@
           <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%);">
             <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">📱</div>
             <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">Clever QR Codes</h3>
-            <button onclick="openCleverQRPanel()" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-white text-sm" style="background: var(--md-mustard);">Manage QR Codes</button>
+            <button onclick="openCleverQRPanel()" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-white text-sm" style="background: var(--md-mustard);">View QR Codes</button>
           </div>
         </div>
       </div>
@@ -1006,6 +1006,11 @@
       <div class="flex items-center justify-between mb-6">
         <h3 class="text-2xl font-display font-bold" style="color: var(--md-mustard);">📱 Clever QR Codes</h3>
         <button onclick="closeCleverQRPanel()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+      </div>
+      <div id="cleverQRSearchBar" class="mb-4" style="display: none;">
+        <input id="cleverQRSearchInput" type="text" placeholder="Type scholar's full first or last name and press Enter" 
+               class="w-full px-4 py-2 text-sm border rounded-lg" 
+               onkeypress="if(event.key === 'Enter') searchCleverQR()">
       </div>
       <div id="cleverQRContent" class="space-y-4">
         <!-- Content will be populated by JavaScript -->
@@ -4915,14 +4920,20 @@ function openCleverQRPanel() {
 
 function closeCleverQRPanel() {
   const panel = document.getElementById('cleverQRPanel');
+  const searchInput = document.getElementById('cleverQRSearchInput');
   if (panel) {
     panel.style.display = 'none';
+  }
+  // Clear search input when closing
+  if (searchInput) {
+    searchInput.value = '';
   }
 }
 
 function renderCleverQRContent() {
   const content = document.getElementById('cleverQRContent');
   const editControls = document.getElementById('cleverQREditControls');
+  const searchBar = document.getElementById('cleverQRSearchBar');
   const isEditMode = document.body.classList.contains('editing');
   
   if (!content) return;
@@ -4932,15 +4943,19 @@ function renderCleverQRContent() {
     editControls.style.display = isEditMode ? 'block' : 'none';
   }
   
+  // Show/hide search bar based on edit mode
+  if (searchBar) {
+    searchBar.style.display = isEditMode ? 'none' : 'block';
+  }
+  
   if (cleverQRData.length === 0) {
     content.innerHTML = '<p class="text-center text-gray-500 py-8">No QR codes added yet.</p>';
     return;
   }
   
-  // Render the list
-  const html = cleverQRData.map((item, index) => {
-    if (isEditMode) {
-      // Edit mode: show inputs and delete button
+  if (isEditMode) {
+    // Edit mode: show all entries with inputs and delete button
+    const html = cleverQRData.map((item, index) => {
       return `
         <div class="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
           <input type="text" value="${escapeHtml(item.name)}" 
@@ -4957,8 +4972,41 @@ function renderCleverQRContent() {
                   style="background: var(--md-coral);">Delete</button>
         </div>
       `;
-    } else {
-      // View mode: show clickable names
+    }).join('');
+    
+    content.innerHTML = html;
+  } else {
+    // View mode: show prompt to search
+    content.innerHTML = '<p class="text-center text-gray-500 py-8">Type a scholar\'s full first or last name and press Enter to view their QR code.</p>';
+  }
+}
+
+function searchCleverQR() {
+  const searchInput = document.getElementById('cleverQRSearchInput');
+  const content = document.getElementById('cleverQRContent');
+  
+  if (!searchInput || !content) return;
+  
+  const searchTerm = searchInput.value.trim().toLowerCase();
+  
+  if (!searchTerm) {
+    content.innerHTML = '<p class="text-center text-gray-500 py-8">Type a scholar\'s full first or last name and press Enter to view their QR code.</p>';
+    return;
+  }
+  
+  // Find exact matches (full first name or full last name)
+  const matches = cleverQRData.filter(item => {
+    const fullName = item.name.toLowerCase();
+    const nameParts = fullName.split(/\s+/); // Split by whitespace
+    
+    // Check if search term exactly matches any name part (first, middle, or last name)
+    return nameParts.some(part => part === searchTerm);
+  });
+  
+  if (matches.length === 0) {
+    content.innerHTML = '<p class="text-center text-gray-500 py-8">No matching scholars found. Please try again with the full first or last name.</p>';
+  } else {
+    const html = matches.map(item => {
       return `
         <div class="p-3 bg-gray-50 rounded-lg">
           <a href="${escapeHtml(item.qrUrl)}" 
@@ -4969,10 +5017,10 @@ function renderCleverQRContent() {
           </a>
         </div>
       `;
-    }
-  }).join('');
-  
-  content.innerHTML = html;
+    }).join('');
+    
+    content.innerHTML = html;
+  }
 }
 
 function escapeHtml(text) {
