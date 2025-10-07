@@ -632,14 +632,17 @@
         <div class="specials-cards-mobile mobile-tab-scroll scrollbar-hide grid md:grid-cols-2 gap-8">
           <!-- Art -->
           <div class="specials-card rounded-2xl overflow-hidden relative" style="background: color-mix(in oklab, var(--md-white) 70%, #ef4444 30%); border: 1px solid color-mix(in oklab, #ef4444 60%, var(--md-white) 40%);">
-            <div class="gallery-imgs aspect-[4/3] bg-white m-4 flex items-center justify-center relative" onclick="editGalleryPhoto(this, 'art')" data-gallery-type="art">
-              <img src="" alt="Art Gallery" style="display:none;">
-              <span class="text-3xl text-gray-400">+</span>
-              <span class="gallery-arrows">
-                <button onclick="event.stopPropagation(); prevGalleryImg(this)">‹</button>
-                <button onclick="event.stopPropagation(); nextGalleryImg(this)">›</button>
-              </span>
-              <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteGalleryPhoto(this, 'art')" title="Delete Photo">✖</button>
+            <div class="grid grid-cols-2 gap-4 m-4">
+              <div class="specials-img-slot aspect-square bg-white rounded-lg flex items-center justify-center relative cursor-pointer" onclick="handleSpecialsImageClick(this, 'art', 0)" data-specials-type="art" data-slot-index="0">
+                <img src="" alt="Art" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:0.5rem;">
+                <span class="text-3xl text-gray-400">+</span>
+                <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteSpecialsImage(this, 'art', 0)" title="Delete Photo">✖</button>
+              </div>
+              <div class="specials-img-slot aspect-square bg-white rounded-lg flex items-center justify-center relative cursor-pointer" onclick="handleSpecialsImageClick(this, 'art', 1)" data-specials-type="art" data-slot-index="1">
+                <img src="" alt="Art" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:0.5rem;">
+                <span class="text-3xl text-gray-400">+</span>
+                <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteSpecialsImage(this, 'art', 1)" title="Delete Photo">✖</button>
+              </div>
             </div>
             <div class="rounded-lg p-4 m-4 bg-white" style="color: var(--md-ink);">
               <h3 class="font-semibold">🎨 Art</h3>
@@ -648,14 +651,17 @@
           </div>
           <!-- STEM -->
           <div class="specials-card rounded-2xl overflow-hidden relative" style="background: color-mix(in oklab, var(--md-white) 70%, #10b981 30%); border: 1px solid color-mix(in oklab, #10b981 60%, var(--md-white) 40%);">
-            <div class="gallery-imgs aspect-[4/3] bg-white m-4 flex items-center justify-center relative" onclick="editGalleryPhoto(this, 'stem')" data-gallery-type="stem">
-              <img src="" alt="STEM Gallery" style="display:none;">
-              <span class="text-3xl text-gray-400">+</span>
-              <span class="gallery-arrows">
-                <button onclick="event.stopPropagation(); prevGalleryImg(this)">‹</button>
-                <button onclick="event.stopPropagation(); nextGalleryImg(this)">›</button>
-              </span>
-              <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteGalleryPhoto(this, 'stem')" title="Delete Photo">✖</button>
+            <div class="grid grid-cols-2 gap-4 m-4">
+              <div class="specials-img-slot aspect-square bg-white rounded-lg flex items-center justify-center relative cursor-pointer" onclick="handleSpecialsImageClick(this, 'stem', 0)" data-specials-type="stem" data-slot-index="0">
+                <img src="" alt="STEM" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:0.5rem;">
+                <span class="text-3xl text-gray-400">+</span>
+                <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteSpecialsImage(this, 'stem', 0)" title="Delete Photo">✖</button>
+              </div>
+              <div class="specials-img-slot aspect-square bg-white rounded-lg flex items-center justify-center relative cursor-pointer" onclick="handleSpecialsImageClick(this, 'stem', 1)" data-specials-type="stem" data-slot-index="1">
+                <img src="" alt="STEM" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:0.5rem;">
+                <span class="text-3xl text-gray-400">+</span>
+                <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteSpecialsImage(this, 'stem', 1)" title="Delete Photo">✖</button>
+              </div>
             </div>
             <div class="rounded-lg p-4 m-4 bg-white" style="color: var(--md-ink);">
               <h3 class="font-semibold">🔬 STEM</h3>
@@ -664,14 +670,17 @@
           </div>
           <!-- Gym -->
           <div class="specials-card rounded-2xl overflow-hidden relative" style="background: color-mix(in oklab, var(--md-white) 70%, #3b82f6 30%); border: 1px solid color-mix(in oklab, #3b82f6 60%, var(--md-white) 40%);">
-            <div class="gallery-imgs aspect-[4/3] bg-white m-4 flex items-center justify-center relative" onclick="editGalleryPhoto(this, 'gym')" data-gallery-type="gym">
-              <img src="" alt="Gym Gallery" style="display:none;">
-              <span class="text-3xl text-gray-400">+</span>
-              <span class="gallery-arrows">
-                <button onclick="event.stopPropagation(); prevGalleryImg(this)">‹</button>
-                <button onclick="event.stopPropagation(); nextGalleryImg(this)">›</button>
-              </span>
-              <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteGalleryPhoto(this, 'gym')" title="Delete Photo">✖</button>
+            <div class="grid grid-cols-2 gap-4 m-4">
+              <div class="specials-img-slot aspect-square bg-white rounded-lg flex items-center justify-center relative cursor-pointer" onclick="handleSpecialsImageClick(this, 'gym', 0)" data-specials-type="gym" data-slot-index="0">
+                <img src="" alt="Gym" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:0.5rem;">
+                <span class="text-3xl text-gray-400">+</span>
+                <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteSpecialsImage(this, 'gym', 0)" title="Delete Photo">✖</button>
+              </div>
+              <div class="specials-img-slot aspect-square bg-white rounded-lg flex items-center justify-center relative cursor-pointer" onclick="handleSpecialsImageClick(this, 'gym', 1)" data-specials-type="gym" data-slot-index="1">
+                <img src="" alt="Gym" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:0.5rem;">
+                <span class="text-3xl text-gray-400">+</span>
+                <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteSpecialsImage(this, 'gym', 1)" title="Delete Photo">✖</button>
+              </div>
             </div>
             <div class="rounded-lg p-4 m-4 bg-white" style="color: var(--md-ink);">
               <h3 class="font-semibold">🏃‍♂️ Gym</h3>
@@ -680,14 +689,17 @@
           </div>
           <!-- Music -->
           <div class="specials-card rounded-2xl overflow-hidden relative" style="background: color-mix(in oklab, var(--md-white) 70%, #8b5cf6 30%); border: 1px solid color-mix(in oklab, #8b5cf6 60%, var(--md-white) 40%);">
-            <div class="gallery-imgs aspect-[4/3] bg-white m-4 flex items-center justify-center relative" onclick="editGalleryPhoto(this, 'music')" data-gallery-type="music">
-              <img src="" alt="Music Gallery" style="display:none;">
-              <span class="text-3xl text-gray-400">+</span>
-              <span class="gallery-arrows">
-                <button onclick="event.stopPropagation(); prevGalleryImg(this)">‹</button>
-                <button onclick="event.stopPropagation(); nextGalleryImg(this)">›</button>
-              </span>
-              <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteGalleryPhoto(this, 'music')" title="Delete Photo">✖</button>
+            <div class="grid grid-cols-2 gap-4 m-4">
+              <div class="specials-img-slot aspect-square bg-white rounded-lg flex items-center justify-center relative cursor-pointer" onclick="handleSpecialsImageClick(this, 'music', 0)" data-specials-type="music" data-slot-index="0">
+                <img src="" alt="Music" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:0.5rem;">
+                <span class="text-3xl text-gray-400">+</span>
+                <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteSpecialsImage(this, 'music', 0)" title="Delete Photo">✖</button>
+              </div>
+              <div class="specials-img-slot aspect-square bg-white rounded-lg flex items-center justify-center relative cursor-pointer" onclick="handleSpecialsImageClick(this, 'music', 1)" data-specials-type="music" data-slot-index="1">
+                <img src="" alt="Music" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:0.5rem;">
+                <span class="text-3xl text-gray-400">+</span>
+                <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteSpecialsImage(this, 'music', 1)" title="Delete Photo">✖</button>
+              </div>
             </div>
             <div class="rounded-lg p-4 m-4 bg-white" style="color: var(--md-ink);">
               <h3 class="font-semibold">🎵 Music</h3>
@@ -1586,26 +1598,18 @@
       });
       data.photo_urls_json = JSON.stringify(photoUrls);
       
-      // Gallery photos URLs
-      const galleries = {};
+      // Specials images URLs (two images per subject)
+      const specialsImages = {};
       ['art', 'stem', 'gym', 'music'].forEach(type => {
-        const galleryEl = document.querySelector(`[data-gallery-type="${type}"]`);
-        if (galleryEl) {
-          const urlsStr = galleryEl.getAttribute('data-gallery-urls');
-          if (urlsStr) {
-            try {
-              galleries[type] = JSON.parse(urlsStr);
-            } catch (e) {
-              // Fallback to old format
-              galleries[type] = galleryEl.getAttribute('data-gallery-url') || '';
-            }
-          } else {
-            // Fallback to old format
-            galleries[type] = galleryEl.getAttribute('data-gallery-url') || '';
-          }
-        }
+        const slot0 = document.querySelector(`[data-specials-type="${type}"][data-slot-index="0"]`);
+        const slot1 = document.querySelector(`[data-specials-type="${type}"][data-slot-index="1"]`);
+        
+        specialsImages[type] = [
+          slot0 ? (slot0.getAttribute('data-image-url') || '') : '',
+          slot1 ? (slot1.getAttribute('data-image-url') || '') : ''
+        ];
       });
-      data.gallery_urls_json = JSON.stringify(galleries);
+      data.gallery_urls_json = JSON.stringify(specialsImages);
       
       // Transportation fields
       const busRidersEl = document.getElementById('busRidersTextarea');
@@ -2960,6 +2964,262 @@
       if (counter) counter.style.display = 'none';
     }
     
+    // NEW FUNCTIONS FOR SPECIALS TAB TWO-IMAGE LAYOUT
+    
+    // Handle click on specials image slot (upload in edit mode, enlarge in view mode)
+    function handleSpecialsImageClick(slot, specialsType, slotIndex) {
+      if (document.body.classList.contains('editing')) {
+        // Edit mode - upload or replace image
+        uploadSpecialsImage(slot, specialsType, slotIndex);
+      } else {
+        // View mode - enlarge image if it exists
+        const img = slot.querySelector('img');
+        if (img && img.style.display !== 'none' && img.src) {
+          openImageModal(img.src);
+        }
+      }
+    }
+    
+    // Upload or replace image in a specials slot
+    function uploadSpecialsImage(slot, specialsType, slotIndex) {
+      // Create file input
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = 'image/*';
+      fileInput.style.display = 'none';
+      
+      fileInput.onchange = async function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        // Validate file size (max 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+          alert('File size too large. Please select an image smaller than 10MB.');
+          return;
+        }
+        
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+          alert('Please select a valid image file.');
+          return;
+        }
+        
+        let attempt = 0;
+        const maxAttempts = 3;
+        const originalContent = slot.innerHTML;
+        
+        while (attempt < maxAttempts) {
+          try {
+            console.log(`Specials image upload attempt ${attempt + 1} for ${specialsType} slot ${slotIndex}`);
+            
+            // Set uploading flag to prevent periodic refresh interference
+            isUploading = true;
+            
+            // Show uploading state
+            slot.innerHTML = '<span class="text-sm text-gray-600">⏳<br>Uploading...</span>';
+            slot.style.pointerEvents = 'none';
+            
+            // Test storage connection first
+            const storageConnected = await window.testStorageConnection();
+            if (!storageConnected) {
+              throw new Error('Firebase Storage connection failed');
+            }
+            
+            // Generate unique filename
+            const timestamp = Date.now();
+            const fileName = `specials_${specialsType}_slot${slotIndex}_${timestamp}_${file.name}`;
+            
+            console.log(`Uploading to: galleries/${fileName}`);
+            
+            // Upload to Firebase Storage
+            const storageRef = storage.ref(`galleries/${fileName}`);
+            const uploadTask = await storageRef.put(file);
+            const downloadURL = await uploadTask.ref.getDownloadURL();
+            
+            console.log('Specials image upload successful, URL:', downloadURL);
+            
+            // Validate the generated URL
+            const urlValid = await window.validateStorageUrl(downloadURL);
+            if (!urlValid) {
+              console.warn('Generated URL failed validation, but proceeding anyway');
+            }
+            
+            // Update the slot display
+            updateSpecialsSlotDisplay(slot, downloadURL);
+            
+            // Store the URL in the slot's data attribute
+            slot.setAttribute('data-image-url', downloadURL);
+            
+            // Show save button since we have changes
+            const saveBtn = document.getElementById('saveChangesBtn');
+            if (saveBtn) saveBtn.style.display = 'block';
+            
+            // Clear uploading flag
+            isUploading = false;
+            
+            // Auto-save after successful upload to ensure persistence
+            setTimeout(() => {
+              if (saveBtn && saveBtn.style.display === 'block' && !isSaving) {
+                console.log('Auto-saving after specials image upload');
+                saveChangesToFirestore();
+              }
+            }, 500);
+            
+            // Success - break out of retry loop
+            break;
+            
+          } catch (error) {
+            attempt++;
+            console.error(`Specials image upload attempt ${attempt} failed:`, error);
+            
+            if (attempt >= maxAttempts) {
+              // Clear uploading flag on final failure
+              isUploading = false;
+              
+              const errorMessage = window.handleUploadError(error, 'specials image upload');
+              
+              // Show user-friendly error in UI
+              const errorDiv = document.createElement('div');
+              errorDiv.className = 'fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg z-50';
+              errorDiv.innerHTML = `
+                <div class="flex">
+                  <div class="flex-shrink-0">
+                    <span class="text-red-500">⚠️</span>
+                  </div>
+                  <div class="ml-3">
+                    <p class="text-sm font-medium">Upload Failed</p>
+                    <p class="text-sm">${errorMessage}</p>
+                  </div>
+                  <div class="ml-auto pl-3">
+                    <button class="text-red-400 hover:text-red-600" onclick="this.parentElement.parentElement.parentElement.remove()">
+                      <span class="sr-only">Dismiss</span>
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              `;
+              document.body.appendChild(errorDiv);
+              
+              // Auto-remove error after 5 seconds
+              setTimeout(() => {
+                if (errorDiv.parentNode) {
+                  errorDiv.parentNode.removeChild(errorDiv);
+                }
+              }, 5000);
+              
+              // Reset to placeholder state on error
+              resetSpecialsSlotToPlaceholder(slot);
+            } else {
+              // Wait before retry
+              await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            }
+          }
+        }
+        
+        slot.style.pointerEvents = 'auto';
+        document.body.removeChild(fileInput);
+      };
+      
+      document.body.appendChild(fileInput);
+      fileInput.click();
+    }
+    
+    // Update specials slot display with image
+    function updateSpecialsSlotDisplay(slot, imageUrl) {
+      const img = slot.querySelector('img');
+      const plusSpan = slot.querySelector('span:not(.edit-only)');
+      const deleteBtn = slot.querySelector('.edit-only');
+      
+      // Validate imageUrl
+      if (!imageUrl || typeof imageUrl !== 'string' || imageUrl.trim() === '') {
+        console.warn('Invalid image URL provided to updateSpecialsSlotDisplay:', imageUrl);
+        resetSpecialsSlotToPlaceholder(slot);
+        return;
+      }
+      
+      if (img && plusSpan) {
+        // Handle successful image load
+        img.onload = function() {
+          img.style.display = 'block';
+          if (plusSpan) plusSpan.style.display = 'none';
+          
+          // Show delete button in edit mode
+          if (deleteBtn && document.body.classList.contains('editing')) {
+            deleteBtn.style.display = 'block';
+          }
+          
+          // Make image clickable for enlargement in view mode
+          if (!document.body.classList.contains('editing')) {
+            img.style.cursor = 'pointer';
+            img.onclick = function(e) {
+              e.stopPropagation();
+              openImageModal(img.src);
+            };
+          } else {
+            img.style.cursor = 'default';
+            img.onclick = null;
+          }
+        };
+        
+        // Handle image load error
+        img.onerror = function() {
+          console.error('Failed to load specials image:', imageUrl);
+          resetSpecialsSlotToPlaceholder(slot);
+        };
+        
+        img.alt = '';
+        img.src = imageUrl;
+      } else {
+        console.error('Specials slot display elements not found');
+        resetSpecialsSlotToPlaceholder(slot);
+      }
+    }
+    
+    // Reset specials slot to placeholder state
+    function resetSpecialsSlotToPlaceholder(slot) {
+      const img = slot.querySelector('img');
+      const plusSpan = slot.querySelector('span:not(.edit-only)');
+      const deleteBtn = slot.querySelector('.edit-only');
+      
+      if (img) {
+        img.style.display = 'none';
+        img.src = '';
+        img.onload = null;
+        img.onerror = null;
+        img.onclick = null;
+      }
+      if (plusSpan) {
+        plusSpan.style.display = 'block';
+        plusSpan.textContent = '+';
+      }
+      if (deleteBtn) {
+        deleteBtn.style.display = 'none';
+      }
+      
+      // Clear data attribute
+      slot.removeAttribute('data-image-url');
+    }
+    
+    // Delete image from specials slot
+    function deleteSpecialsImage(btn, specialsType, slotIndex) {
+      if (!document.body.classList.contains('editing')) {
+        return; // Only allow deletion in edit mode
+      }
+      
+      if (confirm('Are you sure you want to delete this photo?')) {
+        const slot = btn.closest('.specials-img-slot');
+        resetSpecialsSlotToPlaceholder(slot);
+        
+        // Show save button since we have changes
+        const saveBtn = document.getElementById('saveChangesBtn');
+        if (saveBtn) saveBtn.style.display = 'block';
+        
+        console.log(`Deleted photo from ${specialsType} slot ${slotIndex}`);
+      }
+    }
+    
+    // END NEW FUNCTIONS FOR SPECIALS TAB
+    
     // Helper function to reset profile to placeholder state (similar to gallery reset)
     function resetProfileToPlaceholder(element) {
       const img = element.querySelector('img');
@@ -3382,34 +3642,52 @@ async function updateGalleryPhotos(galleryUrlsJson) {
     return;
   }
   
+  // New format: each subject has an array with exactly 2 slots
   ['art', 'stem', 'gym', 'music'].forEach(async type => {
     const galleryData = galleryUrls[type];
-    const galleryEl = document.querySelector(`[data-gallery-type="${type}"]`);
     
-    if (!galleryEl) return;
+    // Get both slots for this subject
+    const slot0 = document.querySelector(`[data-specials-type="${type}"][data-slot-index="0"]`);
+    const slot1 = document.querySelector(`[data-specials-type="${type}"][data-slot-index="1"]`);
+    
+    if (!slot0 || !slot1) return;
     
     if (galleryData) {
-      // Support both old format (single URL) and new format (array of URLs)
+      // Support both old format (array of URLs) and new format (array with 2 slots)
       let urls = [];
       if (typeof galleryData === 'string' && galleryData.trim() !== '') {
-        // Old format - single URL
-        urls = [galleryData];
+        // Old format - single URL string, put in first slot
+        urls = [galleryData, ''];
       } else if (Array.isArray(galleryData)) {
-        // New format - array of URLs, filter out invalid ones
-        urls = galleryData.filter(url => url && typeof url === 'string' && url.trim() !== '');
+        // New format - array with up to 2 URLs
+        urls = galleryData.slice(0, 2); // Only take first 2
+        // Ensure we have exactly 2 slots (pad with empty strings if needed)
+        while (urls.length < 2) {
+          urls.push('');
+        }
+      } else {
+        urls = ['', ''];
       }
       
-      if (urls.length > 0) {
-        galleryEl.setAttribute('data-gallery-urls', JSON.stringify(urls));
-        galleryEl.setAttribute('data-current-index', '0');
-        updateGalleryDisplay(galleryEl, urls[0]);
+      // Update slot 0
+      if (urls[0] && urls[0].trim() !== '') {
+        slot0.setAttribute('data-image-url', urls[0]);
+        updateSpecialsSlotDisplay(slot0, urls[0]);
       } else {
-        // No valid URLs, reset to placeholder
-        resetGalleryToPlaceholder(galleryEl);
+        resetSpecialsSlotToPlaceholder(slot0);
+      }
+      
+      // Update slot 1
+      if (urls[1] && urls[1].trim() !== '') {
+        slot1.setAttribute('data-image-url', urls[1]);
+        updateSpecialsSlotDisplay(slot1, urls[1]);
+      } else {
+        resetSpecialsSlotToPlaceholder(slot1);
       }
     } else {
-      // No gallery data, reset to placeholder
-      resetGalleryToPlaceholder(galleryEl);
+      // No gallery data, reset both slots to placeholder
+      resetSpecialsSlotToPlaceholder(slot0);
+      resetSpecialsSlotToPlaceholder(slot1);
     }
   });
 }
