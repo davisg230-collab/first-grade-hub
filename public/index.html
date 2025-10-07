@@ -109,6 +109,9 @@
     /* Hide Practice Website URL inputs when not in edit mode */
     .website-url-input { display: none; }
     body.editing .website-url-input { display: block; }
+    /* Hide Calendar URL input when not in edit mode */
+    .calendar-url-input { display: none; }
+    body.editing .calendar-url-input { display: block; }
     /* Snack message textarea styling */
     #snackMessage:disabled { background-color: transparent; color: var(--md-ink); cursor: default; border: none; }
     body.editing #snackMessage:not(:disabled) {
@@ -342,8 +345,9 @@
             </div>
             <div class="p-4 rounded-xl mt-6" style="background: color-mix(in oklab, var(--md-white) 70%, #8b5cf6 30%); border: 1px solid color-mix(in oklab, #8b5cf6 60%, var(--md-white) 40%);">
               <h3 class="font-semibold mb-2">📅 School Calendar</h3>
-              <a id="schoolCalendarLink" href="#" class="text-sm text-blue-600 hover:text-blue-800 underline" onclick="editSchoolCalendarLink(event, this)">View School Calendar</a>
+              <a id="schoolCalendarLink" href="#" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 underline">View School Calendar</a>
               <p class="text-xs text-gray-600 mt-1">Click to visit the school calendar</p>
+              <input type="url" id="calendarUrlInput" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg calendar-url-input" placeholder="Enter calendar URL (PDF or webpage)" value="#" onchange="updateCalendarUrl(this)">
             </div>
           </div>
           <div>
@@ -3317,12 +3321,15 @@
       }
     }
     
-    // School calendar link edit
-    function editSchoolCalendarLink(event, linkElement) {
-      if (document.body.classList.contains('editing')) {
-        event.preventDefault();
-        const newUrl = prompt('Enter school calendar URL:', linkElement.href);
-        if (newUrl) linkElement.href = newUrl;
+    // School calendar link update
+    function updateCalendarUrl(input) {
+      const link = document.getElementById('schoolCalendarLink');
+      if (link && input.value) {
+        link.href = input.value;
+        
+        // Show save button since we have changes
+        const saveBtn = document.getElementById('saveChangesBtn');
+        if (saveBtn) saveBtn.style.display = 'block';
       }
     }
   </script>
@@ -3626,6 +3633,8 @@ function populateDataFromSheet(data) {
   if (data.calendar_url) {
     const cal = document.getElementById('schoolCalendarLink');
     if (cal) cal.href = data.calendar_url;
+    const calInput = document.getElementById('calendarUrlInput');
+    if (calInput) calInput.value = data.calendar_url;
   }
 }
 
