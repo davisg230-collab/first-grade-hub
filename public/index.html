@@ -1007,6 +1007,10 @@
         <h3 class="text-2xl font-display font-bold" style="color: var(--md-mustard);">📱 Clever QR Codes</h3>
         <button onclick="closeCleverQRPanel()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
       </div>
+      <div id="cleverQRSearchBar" class="mb-4" style="display: none;">
+        <input id="cleverQRSearchInput" type="text" placeholder="Type scholar's full first or last name and press Enter" class="w-full px-4 py-3 text-sm border rounded-lg" onkeypress="handleCleverQRSearch(event)">
+        <p class="text-xs text-gray-500 mt-2">For privacy, please enter the full first or last name of the scholar.</p>
+      </div>
       <div id="cleverQRContent" class="space-y-4">
         <!-- Content will be populated by JavaScript -->
       </div>
@@ -1032,6 +1036,7 @@
     
     // Clever QR Codes data
     let cleverQRData = []; // Array of {name: string, qrUrl: string}
+    let cleverQRSearchQuery = ''; // Current search query for filtering
     
     // Watch Me data structures for Skills, Listening, and Math tabs
     let watchMeData = {
@@ -4909,6 +4914,11 @@ function openCleverQRPanel() {
   const panel = document.getElementById('cleverQRPanel');
   if (panel) {
     panel.style.display = 'flex';
+    cleverQRSearchQuery = ''; // Reset search query
+    const searchInput = document.getElementById('cleverQRSearchInput');
+    if (searchInput) {
+      searchInput.value = '';
+    }
     renderCleverQRContent();
   }
 }
@@ -4920,16 +4930,44 @@ function closeCleverQRPanel() {
   }
 }
 
+function handleCleverQRSearch(event) {
+  if (event.key === 'Enter') {
+    const searchInput = document.getElementById('cleverQRSearchInput');
+    if (searchInput) {
+      cleverQRSearchQuery = searchInput.value.trim();
+      renderCleverQRContent();
+    }
+  }
+}
+
+function filterCleverQRData() {
+  if (!cleverQRSearchQuery) {
+    return [];
+  }
+  
+  const query = cleverQRSearchQuery.toLowerCase();
+  
+  return cleverQRData.filter(item => {
+    const nameParts = item.name.toLowerCase().split(' ');
+    // Match full first name or full last name only
+    return nameParts.some(part => part === query);
+  });
+}
+
 function renderCleverQRContent() {
   const content = document.getElementById('cleverQRContent');
   const editControls = document.getElementById('cleverQREditControls');
+  const searchBar = document.getElementById('cleverQRSearchBar');
   const isEditMode = document.body.classList.contains('editing');
   
   if (!content) return;
   
-  // Show/hide edit controls based on edit mode
+  // Show/hide edit controls and search bar based on edit mode
   if (editControls) {
     editControls.style.display = isEditMode ? 'block' : 'none';
+  }
+  if (searchBar) {
+    searchBar.style.display = isEditMode ? 'none' : 'block';
   }
   
   if (cleverQRData.length === 0) {
@@ -4937,22 +4975,38 @@ function renderCleverQRContent() {
     return;
   }
   
+  // Determine which data to display
+  let dataToDisplay = cleverQRData;
+  if (!isEditMode) {
+    // In view mode, filter based on search query
+    dataToDisplay = filterCleverQRData();
+    if (cleverQRSearchQuery && dataToDisplay.length === 0) {
+      content.innerHTML = '<p class="text-center text-gray-500 py-8">No scholars found matching that name. Please enter the full first or last name.</p>';
+      return;
+    } else if (!cleverQRSearchQuery) {
+      content.innerHTML = '<p class="text-center text-gray-500 py-8">Please enter a scholar\'s full first or last name in the search box above.</p>';
+      return;
+    }
+  }
+  
   // Render the list
-  const html = cleverQRData.map((item, index) => {
+  const html = dataToDisplay.map((item, index) => {
     if (isEditMode) {
       // Edit mode: show inputs and delete button
+      // Find the original index in cleverQRData
+      const originalIndex = cleverQRData.indexOf(item);
       return `
         <div class="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
           <input type="text" value="${escapeHtml(item.name)}" 
                  class="flex-1 px-3 py-2 text-sm border rounded-lg clever-qr-name" 
-                 data-index="${index}" 
-                 onchange="updateCleverQREntry(${index})">
+                 data-index="${originalIndex}" 
+                 onchange="updateCleverQREntry(${originalIndex})">
           <input type="url" value="${escapeHtml(item.qrUrl)}" 
                  class="flex-1 px-3 py-2 text-sm border rounded-lg clever-qr-url" 
-                 data-index="${index}" 
+                 data-index="${originalIndex}" 
                  placeholder="QR code URL"
-                 onchange="updateCleverQREntry(${index})">
-          <button onclick="deleteCleverQREntry(${index})" 
+                 onchange="updateCleverQREntry(${originalIndex})">
+          <button onclick="deleteCleverQREntry(${originalIndex})" 
                   class="px-3 py-2 rounded-lg text-white text-sm font-semibold" 
                   style="background: var(--md-coral);">Delete</button>
         </div>
