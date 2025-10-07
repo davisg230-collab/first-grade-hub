@@ -476,6 +476,16 @@
           </div>
         </div>
       </div>
+      <!-- Watch Me Box for Skills -->
+      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">🎬 Watch Me</h3>
+          <button id="addSkillsWatchMeBtn" class="edit-only px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral); display: none;" onclick="addWatchMeLink('skills')">+ Add Link</button>
+        </div>
+        <div id="skillsWatchMeContent" class="space-y-2">
+          <!-- Content will be populated by JavaScript -->
+        </div>
+      </div>
     </section>
     <!-- LISTENING & LEARNING TAB -->
     <section data-page-panel="listening" class="pagePanel fade-in">
@@ -495,6 +505,16 @@
               <li>What do you think happens next?</li>
             </ul>
           </div>
+        </div>
+      </div>
+      <!-- Watch Me Box for Listening & Learning -->
+      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xl font-display font-bold" style="color: var(--md-coral);">🎬 Watch Me</h3>
+          <button id="addListeningWatchMeBtn" class="edit-only px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral); display: none;" onclick="addWatchMeLink('listening')">+ Add Link</button>
+        </div>
+        <div id="listeningWatchMeContent" class="space-y-2">
+          <!-- Content will be populated by JavaScript -->
         </div>
       </div>
     </section>
@@ -519,6 +539,16 @@
               <li>Ten frames</li>
             </ul>
           </div>
+        </div>
+      </div>
+      <!-- Watch Me Box for Math -->
+      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">🎬 Watch Me</h3>
+          <button id="addMathWatchMeBtn" class="edit-only px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral); display: none;" onclick="addWatchMeLink('math')">+ Add Link</button>
+        </div>
+        <div id="mathWatchMeContent" class="space-y-2">
+          <!-- Content will be populated by JavaScript -->
         </div>
       </div>
     </section>
@@ -984,6 +1014,13 @@
     // Clever QR Codes data
     let cleverQRData = []; // Array of {name: string, qrUrl: string}
     
+    // Watch Me data structures for Skills, Listening, and Math tabs
+    let watchMeData = {
+      skills: [],    // Array of {title: string, url: string}
+      listening: [], // Array of {title: string, url: string}
+      math: []       // Array of {title: string, url: string}
+    };
+    
     // Tab navigation
     function showPage(pageId) {
       document.querySelectorAll('.pagePanel').forEach(panel => {
@@ -1306,6 +1343,11 @@
       
       document.getElementById('editModeBtn').textContent = '💾 Exit Edit Mode';
       document.getElementById('editModeBtn').onclick = exitEditMode;
+      
+      // Re-render Watch Me boxes for edit mode
+      renderWatchMeContent('skills');
+      renderWatchMeContent('listening');
+      renderWatchMeContent('math');
     }
     function exitEditMode(){
       isOwner = false; // Reset owner status when exiting edit mode
@@ -1424,6 +1466,11 @@
       } else {
         saveBtn.style.display = 'none';
       }
+      
+      // Re-render Watch Me boxes for view mode
+      renderWatchMeContent('skills');
+      renderWatchMeContent('listening');
+      renderWatchMeContent('math');
     }
     function collectEditableFieldData() {
       const data = {};
@@ -1652,6 +1699,9 @@
       if (aboutMeProfileEl) {
         data.about_me_profile_url = aboutMeProfileEl.getAttribute('data-profile-url') || '';
       }
+      
+      // Watch Me links
+      data.watch_me_json = JSON.stringify(watchMeData);
       
       return data;
     }
@@ -3278,6 +3328,9 @@ function populateDataFromSheet(data) {
   // Load Clever QR data
   updateCleverQRData(data.clever_qr_json);
   
+  // Load Watch Me data
+  updateWatchMeData(data.watch_me_json);
+  
   if (data.calendar_url) {
     const cal = document.getElementById('schoolCalendarLink');
     if (cal) cal.href = data.calendar_url;
@@ -4607,6 +4660,128 @@ function updateCleverQRData(cleverQRJson) {
     cleverQRData = [];
   }
 }
+
+// Watch Me functionality
+function renderWatchMeContent(tab) {
+  const content = document.getElementById(`${tab}WatchMeContent`);
+  const isEditMode = document.body.classList.contains('editing');
+  
+  if (!content) return;
+  
+  const links = watchMeData[tab] || [];
+  
+  if (links.length === 0) {
+    content.innerHTML = '<p class="text-center text-gray-500 py-4 text-sm">No links added yet.</p>';
+    return;
+  }
+  
+  // Render the list
+  const html = links.map((item, index) => {
+    if (isEditMode) {
+      // Edit mode: show inputs and delete button
+      return `
+        <div class="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+          <input type="text" value="${escapeHtml(item.title)}" 
+                 class="flex-1 px-3 py-2 text-sm border rounded-lg watch-me-title" 
+                 data-tab="${tab}"
+                 data-index="${index}" 
+                 placeholder="Link title"
+                 onchange="updateWatchMeEntry('${tab}', ${index})">
+          <input type="url" value="${escapeHtml(item.url)}" 
+                 class="flex-1 px-3 py-2 text-sm border rounded-lg watch-me-url" 
+                 data-tab="${tab}"
+                 data-index="${index}" 
+                 placeholder="URL"
+                 onchange="updateWatchMeEntry('${tab}', ${index})">
+          <button onclick="deleteWatchMeEntry('${tab}', ${index})" 
+                  class="px-3 py-2 rounded-lg text-white text-sm font-semibold" 
+                  style="background: var(--md-coral);">Delete</button>
+        </div>
+      `;
+    } else {
+      // View mode: show clickable links
+      return `
+        <div class="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+          <a href="${escapeHtml(item.url)}" 
+             target="_blank" 
+             class="text-base font-medium hover:underline flex items-center gap-2" 
+             style="color: var(--md-slate);">
+            <span>🔗</span>
+            <span>${escapeHtml(item.title)}</span>
+          </a>
+        </div>
+      `;
+    }
+  }).join('');
+  
+  content.innerHTML = html;
+}
+
+function addWatchMeLink(tab) {
+  // Show a simple prompt to get title and URL
+  const title = prompt('Enter link title:');
+  if (!title || title.trim() === '') return;
+  
+  const url = prompt('Enter URL:');
+  if (!url || url.trim() === '') return;
+  
+  // Add to data structure
+  watchMeData[tab].push({ title: title.trim(), url: url.trim() });
+  
+  // Re-render
+  renderWatchMeContent(tab);
+}
+
+function updateWatchMeEntry(tab, index) {
+  const titleInput = document.querySelector(`.watch-me-title[data-tab="${tab}"][data-index="${index}"]`);
+  const urlInput = document.querySelector(`.watch-me-url[data-tab="${tab}"][data-index="${index}"]`);
+  
+  if (titleInput && urlInput && watchMeData[tab][index]) {
+    watchMeData[tab][index].title = titleInput.value.trim();
+    watchMeData[tab][index].url = urlInput.value.trim();
+  }
+}
+
+function deleteWatchMeEntry(tab, index) {
+  if (confirm('Are you sure you want to delete this link?')) {
+    watchMeData[tab].splice(index, 1);
+    renderWatchMeContent(tab);
+  }
+}
+
+function updateWatchMeData(watchMeJson) {
+  if (!watchMeJson) {
+    // Initialize with empty arrays if no data
+    watchMeData = {
+      skills: [],
+      listening: [],
+      math: []
+    };
+  } else {
+    try {
+      const parsed = JSON.parse(watchMeJson);
+      // Ensure all three tabs have data
+      watchMeData = {
+        skills: parsed.skills || [],
+        listening: parsed.listening || [],
+        math: parsed.math || []
+      };
+    } catch (e) {
+      console.error('Failed to parse Watch Me JSON:', e);
+      watchMeData = {
+        skills: [],
+        listening: [],
+        math: []
+      };
+    }
+  }
+  
+  // Render all three tabs
+  renderWatchMeContent('skills');
+  renderWatchMeContent('listening');
+  renderWatchMeContent('math');
+}
+
 
 // Error display functions
 function showDataLoadError(message) {
