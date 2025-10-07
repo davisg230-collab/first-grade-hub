@@ -347,7 +347,10 @@
               <h3 class="font-semibold mb-2">📅 School Calendar</h3>
               <a id="schoolCalendarLink" href="#" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 underline">View School Calendar</a>
               <p class="text-xs text-gray-600 mt-1">Click to visit the school calendar</p>
-              <input type="url" id="calendarUrlInput" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg calendar-url-input" placeholder="Enter calendar URL (PDF or webpage)" value="#" onchange="updateCalendarUrl(this)">
+              <div class="calendar-url-input">
+                <input type="url" id="calendarUrlInput" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg" placeholder="Enter calendar URL (PDF or webpage)" value="#" onchange="updateCalendarUrl(this)">
+                <button id="saveCalendarBtn" class="mt-2 px-3 py-1.5 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveCalendarUrl()">💾 Save Calendar URL</button>
+              </div>
             </div>
           </div>
           <div>
@@ -1589,9 +1592,14 @@
         data.math_vocab_json = JSON.stringify(vocab);
       }
       
-      // Calendar URL
+      // Calendar URL - read from input field, fallback to link href
+      const calendarInput = document.getElementById('calendarUrlInput');
       const calendarLink = document.getElementById('schoolCalendarLink');
-      if (calendarLink) data.calendar_url = calendarLink.href || '';
+      if (calendarInput && calendarInput.value) {
+        data.calendar_url = calendarInput.value;
+      } else if (calendarLink) {
+        data.calendar_url = calendarLink.href || '';
+      }
       
       // Photo cards URLs
       const photoCards = document.querySelectorAll('.photo-card');
@@ -3330,6 +3338,69 @@
         // Show save button since we have changes
         const saveBtn = document.getElementById('saveChangesBtn');
         if (saveBtn) saveBtn.style.display = 'block';
+      }
+    }
+    
+    // Save calendar URL to Firestore
+    async function saveCalendarUrl() {
+      const saveBtn = document.getElementById('saveCalendarBtn');
+      const calendarInput = document.getElementById('calendarUrlInput');
+      
+      if (!saveBtn || !calendarInput) return;
+      
+      const originalText = saveBtn.textContent;
+      
+      try {
+        // Check authentication
+        await ensureAuthenticated();
+        
+        // Validate URL
+        const url = calendarInput.value.trim();
+        if (!url || url === '#') {
+          alert('Please enter a valid calendar URL');
+          return;
+        }
+        
+        // Show saving state
+        saveBtn.textContent = '⏳ Saving...';
+        saveBtn.disabled = true;
+        
+        // Update the link href immediately
+        const link = document.getElementById('schoolCalendarLink');
+        if (link) {
+          link.href = url;
+        }
+        
+        // Prepare data for saving
+        const data = {
+          calendar_url: url
+        };
+        
+        // Save to Firestore
+        await db.collection('classData').doc('current').set(data, { merge: true });
+        
+        console.log('Calendar URL saved successfully:', url);
+        
+        // Show success state
+        saveBtn.textContent = '✅ Saved!';
+        
+        // Reset button after 1 second
+        setTimeout(() => {
+          saveBtn.textContent = originalText;
+          saveBtn.disabled = false;
+        }, 1000);
+        
+      } catch (error) {
+        console.error('Failed to save calendar URL:', error);
+        saveBtn.textContent = '❌ Save Failed';
+        
+        // Show error alert
+        alert('Failed to save calendar URL: ' + (error.message || 'Unknown error'));
+        
+        setTimeout(() => {
+          saveBtn.textContent = originalText;
+          saveBtn.disabled = false;
+        }, 2000);
       }
     }
   </script>

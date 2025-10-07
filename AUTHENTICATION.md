@@ -84,6 +84,7 @@ All save functions now call `ensureAuthenticated()` before writing to Firestore:
 - `saveExtrasCards()` - Extra information cards
 - `saveWebsiteUrls()` - Practice website URLs
 - `saveSnackMessage()` - Snack message
+- `saveCalendarUrl()` - School calendar URL
 
 ## Firestore Security Rules
 
