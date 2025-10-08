@@ -5418,7 +5418,8 @@ function renderWatchMeContent(tab) {
         </div>
       `;
     } else {
-      // View mode: show clickable links
+      // View mode: show clickable links (skip empty entries)
+      if (!item.title || !item.url) return '';
       return `
         <div class="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
           <a href="${escapeHtml(item.url)}" 
@@ -5524,18 +5525,20 @@ function setupWatchMeDragAndDrop(tab) {
 }
 
 function addWatchMeLink(tab) {
-  // Show a simple prompt to get title and URL
-  const title = prompt('Enter link title:');
-  if (!title || title.trim() === '') return;
-  
-  const url = prompt('Enter URL:');
-  if (!url || url.trim() === '') return;
-  
-  // Add to data structure
-  watchMeData[tab].push({ title: title.trim(), url: url.trim() });
+  // Add empty entry directly to the list for inline editing
+  watchMeData[tab].push({ title: '', url: '' });
   
   // Re-render
   renderWatchMeContent(tab);
+  
+  // Focus on the title input of the newly added item
+  setTimeout(() => {
+    const newIndex = watchMeData[tab].length - 1;
+    const titleInput = document.querySelector(`.watch-me-title[data-tab="${tab}"][data-index="${newIndex}"]`);
+    if (titleInput) {
+      titleInput.focus();
+    }
+  }, 50);
 }
 
 function updateWatchMeEntry(tab, index) {
