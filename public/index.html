@@ -733,35 +733,11 @@
           <button id="saveWebsitesBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="saveWebsiteUrls()">💾 Save URLs</button>
         </div>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-slate) 60%, var(--md-white) 40%);">
-            <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">📱</div>
-            <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">ClassDojo</h3>
-            <a href="https://classdojo.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-white text-sm" style="background: var(--md-slate);">Visit Site</a>
-            <input type="url" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://classdojo.com" onchange="updateWebsiteUrl(this)">
-          </div>
           <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%);">
             <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">🎯</div>
             <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">Clever – Learning Portal</h3>
             <a href="https://clever.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-white text-sm" style="background: var(--md-mustard);">Visit Site</a>
             <input type="url" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://clever.com" onchange="updateWebsiteUrl(this)">
-          </div>
-          <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-coral) 60%, var(--md-white) 40%);">
-            <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">📘</div>
-            <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">Math Practice</h3>
-            <a href="https://mathplayground.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-white text-sm" style="background: var(--md-coral);">Visit Site</a>
-            <input type="url" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://mathplayground.com" onchange="updateWebsiteUrl(this)">
-          </div>
-          <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-blush) 60%, var(--md-white) 40%);">
-            <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">📚</div>
-            <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">Skills Practice</h3>
-            <a href="https://readingeggs.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold" style="background: var(--md-blush); color: var(--md-ink);">Visit Site</a>
-            <input type="url" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://readingeggs.com" onchange="updateWebsiteUrl(this)">
-          </div>
-          <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-pebble) 60%, var(--md-white) 40%);">
-            <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">🔤</div>
-            <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">Blending Practice</h3>
-            <a href="https://starfall.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-sm" style="background: var(--md-pebble); color: var(--md-ink);">Visit Site</a>
-            <input type="url" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://starfall.com" onchange="updateWebsiteUrl(this)">
           </div>
           <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%);">
             <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">📱</div>
@@ -770,8 +746,32 @@
           </div>
           <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-slate) 60%, var(--md-white) 40%);">
             <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">📱</div>
+            <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">ClassDojo</h3>
+            <a href="https://classdojo.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-white text-sm" style="background: var(--md-slate);">Visit Site</a>
+            <input type="url" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://classdojo.com" onchange="updateWebsiteUrl(this)">
+          </div>
+          <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-slate) 60%, var(--md-white) 40%);">
+            <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">📱</div>
             <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">ClassDojo QR Codes</h3>
             <button onclick="openClassDojoQRPanel()" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-white text-sm" style="background: var(--md-slate);">View QR Codes</button>
+          </div>
+          <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-pebble) 60%, var(--md-white) 40%);">
+            <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">🔤</div>
+            <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">Blending Practice</h3>
+            <a href="https://starfall.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-sm" style="background: var(--md-pebble); color: var(--md-ink);">Visit Site</a>
+            <input type="url" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://starfall.com" onchange="updateWebsiteUrl(this)">
+          </div>
+          <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-blush) 60%, var(--md-white) 40%);">
+            <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">📚</div>
+            <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">Skills Practice</h3>
+            <a href="https://readingeggs.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold" style="background: var(--md-blush); color: var(--md-ink);">Visit Site</a>
+            <input type="url" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://readingeggs.com" onchange="updateWebsiteUrl(this)">
+          </div>
+          <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-coral) 60%, var(--md-white) 40%);">
+            <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">📘</div>
+            <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">Math Practice</h3>
+            <a href="https://mathplayground.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-white text-sm" style="background: var(--md-coral);">Visit Site</a>
+            <input type="url" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://mathplayground.com" onchange="updateWebsiteUrl(this)">
           </div>
         </div>
       </div>
