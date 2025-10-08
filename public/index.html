@@ -109,6 +109,13 @@
     /* Hide Practice Website URL inputs when not in edit mode */
     .website-url-input { display: none; }
     body.editing .website-url-input { display: block; }
+    /* Website card drag-and-drop styles */
+    .website-card[draggable="true"] {
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    .website-card[draggable="true"]:hover {
+      transform: scale(1.02);
+    }
     /* Hide Calendar URL input when not in edit mode */
     .calendar-url-input { display: none; }
     body.editing .calendar-url-input { display: block; }
@@ -730,44 +737,47 @@
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--md-cream);">
         <div class="flex items-center justify-between mb-5">
           <h2 class="text-2xl font-display font-bold" style="color: var(--md-slate);">🌐 Practice Websites</h2>
-          <button id="saveWebsitesBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="saveWebsiteUrls()">💾 Save URLs</button>
+          <div class="flex gap-2">
+            <button id="saveWebsiteOrderBtn" class="edit-only px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral); display: none;" onclick="saveWebsiteOrder()">💾 Save Order</button>
+            <button id="saveWebsitesBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="saveWebsiteUrls()">💾 Save URLs</button>
+          </div>
         </div>
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%);">
+        <div id="websitesGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="website-card text-center p-6 rounded-xl bg-white" draggable="false" data-order="0" style="border: 1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%);">
             <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">🎯</div>
             <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">Clever – Learning Portal</h3>
             <a href="https://clever.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-white text-sm" style="background: var(--md-mustard);">Visit Site</a>
             <input type="url" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://clever.com" onchange="updateWebsiteUrl(this)">
           </div>
-          <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%);">
+          <div class="website-card text-center p-6 rounded-xl bg-white" draggable="false" data-order="1" style="border: 1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%);">
             <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">📱</div>
             <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">Clever QR Codes</h3>
             <button onclick="openCleverQRPanel()" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-white text-sm" style="background: var(--md-mustard);">View QR Codes</button>
           </div>
-          <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-slate) 60%, var(--md-white) 40%);">
+          <div class="website-card text-center p-6 rounded-xl bg-white" draggable="false" data-order="2" style="border: 1px solid color-mix(in oklab, var(--md-slate) 60%, var(--md-white) 40%);">
             <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">📱</div>
             <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">ClassDojo</h3>
             <a href="https://classdojo.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-white text-sm" style="background: var(--md-slate);">Visit Site</a>
             <input type="url" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://classdojo.com" onchange="updateWebsiteUrl(this)">
           </div>
-          <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-slate) 60%, var(--md-white) 40%);">
+          <div class="website-card text-center p-6 rounded-xl bg-white" draggable="false" data-order="3" style="border: 1px solid color-mix(in oklab, var(--md-slate) 60%, var(--md-white) 40%);">
             <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">📱</div>
             <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">ClassDojo QR Codes</h3>
             <button onclick="openClassDojoQRPanel()" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-white text-sm" style="background: var(--md-slate);">View QR Codes</button>
           </div>
-          <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-pebble) 60%, var(--md-white) 40%);">
+          <div class="website-card text-center p-6 rounded-xl bg-white" draggable="false" data-order="4" style="border: 1px solid color-mix(in oklab, var(--md-pebble) 60%, var(--md-white) 40%);">
             <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">🔤</div>
             <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">Blending Practice</h3>
             <a href="https://starfall.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-sm" style="background: var(--md-pebble); color: var(--md-ink);">Visit Site</a>
             <input type="url" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://starfall.com" onchange="updateWebsiteUrl(this)">
           </div>
-          <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-blush) 60%, var(--md-white) 40%);">
+          <div class="website-card text-center p-6 rounded-xl bg-white" draggable="false" data-order="5" style="border: 1px solid color-mix(in oklab, var(--md-blush) 60%, var(--md-white) 40%);">
             <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">📚</div>
             <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">Skills Practice</h3>
             <a href="https://readingeggs.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold" style="background: var(--md-blush); color: var(--md-ink);">Visit Site</a>
             <input type="url" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg website-url-input" placeholder="Enter website URL" value="https://readingeggs.com" onchange="updateWebsiteUrl(this)">
           </div>
-          <div class="website-card text-center p-6 rounded-xl bg-white" style="border: 1px solid color-mix(in oklab, var(--md-coral) 60%, var(--md-white) 40%);">
+          <div class="website-card text-center p-6 rounded-xl bg-white" draggable="false" data-order="6" style="border: 1px solid color-mix(in oklab, var(--md-coral) 60%, var(--md-white) 40%);">
             <div class="text-4xl mb-3" data-edit="teacher" contenteditable="false">📘</div>
             <h3 class="website-title font-semibold mb-2" data-edit="teacher" contenteditable="false">Math Practice</h3>
             <a href="https://mathplayground.com" target="_blank" class="website-link inline-block px-4 py-2 rounded-lg font-semibold text-white text-sm" style="background: var(--md-coral);">Visit Site</a>
@@ -1232,6 +1242,11 @@
       });
       const saveWebsitesBtn = document.getElementById('saveWebsitesBtn');
       if (saveWebsitesBtn) saveWebsitesBtn.style.display = 'none';
+      const saveWebsiteOrderBtn = document.getElementById('saveWebsiteOrderBtn');
+      if (saveWebsiteOrderBtn) saveWebsiteOrderBtn.style.display = 'none';
+      
+      // Disable drag-and-drop for website cards
+      disableWebsiteDragAndDrop();
       
       // Disable Extras section
       const saveExtrasBtn = document.getElementById('saveExtrasBtn');
@@ -1367,6 +1382,11 @@
       });
       const saveWebsitesBtn = document.getElementById('saveWebsitesBtn');
       if (saveWebsitesBtn) saveWebsitesBtn.style.display = 'inline-block';
+      const saveWebsiteOrderBtn = document.getElementById('saveWebsiteOrderBtn');
+      if (saveWebsiteOrderBtn) saveWebsiteOrderBtn.style.display = 'inline-block';
+      
+      // Enable drag-and-drop for website cards
+      setupWebsiteDragAndDrop();
       
       // Enable Extras section
       const saveExtrasBtn = document.getElementById('saveExtrasBtn');
@@ -1474,6 +1494,11 @@
       });
       const saveWebsitesBtn = document.getElementById('saveWebsitesBtn');
       if (saveWebsitesBtn) saveWebsitesBtn.style.display = 'none';
+      const saveWebsiteOrderBtn2 = document.getElementById('saveWebsiteOrderBtn');
+      if (saveWebsiteOrderBtn2) saveWebsiteOrderBtn2.style.display = 'none';
+      
+      // Disable drag-and-drop for website cards
+      disableWebsiteDragAndDrop();
       
       // Disable Extras section
       const saveExtrasBtn = document.getElementById('saveExtrasBtn');
@@ -4621,7 +4646,7 @@ function updateTVDisplay() {
   display.innerHTML = `<div style="color: var(--md-white);">${mainTVMessage}</div>`;
 }
 
-// Function to update website cards with saved URLs
+// Function to update website cards with saved URLs and order
 function updateWebsiteCards(websitesJson) {
   if (!websitesJson) return;
   
@@ -4633,19 +4658,61 @@ function updateWebsiteCards(websitesJson) {
     return;
   }
   
-  const websiteCards = document.querySelectorAll('.website-card');
-  websiteCards.forEach((card, index) => {
-    const website = websites[index];
-    if (website && website.url) {
-      const urlInput = card.querySelector('.website-url-input');
-      const linkEl = card.querySelector('.website-link');
+  // Check if order information is present
+  const hasOrder = websites.length > 0 && websites[0].hasOwnProperty('order');
+  
+  if (hasOrder) {
+    // Sort websites by order
+    websites.sort((a, b) => (a.order || 0) - (b.order || 0));
+    
+    // Rebuild the grid with saved order
+    const grid = document.getElementById('websitesGrid');
+    if (!grid) return;
+    
+    const websiteCards = [...grid.querySelectorAll('.website-card')];
+    
+    // Create a map of titles to cards for matching
+    const cardMap = new Map();
+    websiteCards.forEach(card => {
       const titleEl = card.querySelector('.website-title');
-      
-      if (urlInput) urlInput.value = website.url;
-      if (linkEl) linkEl.href = website.url;
-      if (titleEl && website.title) titleEl.textContent = website.title;
-    }
-  });
+      if (titleEl) {
+        cardMap.set(titleEl.textContent.trim(), card);
+      }
+    });
+    
+    // Reorder cards based on saved order
+    websites.forEach((website, index) => {
+      const card = cardMap.get(website.title.trim());
+      if (card) {
+        grid.appendChild(card);
+        card.setAttribute('data-order', index);
+        
+        // Update URL and title
+        const urlInput = card.querySelector('.website-url-input');
+        const linkEl = card.querySelector('.website-link');
+        const titleEl = card.querySelector('.website-title');
+        
+        if (urlInput && website.url) urlInput.value = website.url;
+        if (linkEl && website.url) linkEl.href = website.url;
+        if (titleEl && website.title) titleEl.textContent = website.title;
+      }
+    });
+  } else {
+    // Legacy format: just update URLs without reordering
+    const websiteCards = document.querySelectorAll('.website-card');
+    websiteCards.forEach((card, index) => {
+      const website = websites[index];
+      if (website && website.url) {
+        const urlInput = card.querySelector('.website-url-input');
+        const linkEl = card.querySelector('.website-link');
+        const titleEl = card.querySelector('.website-title');
+        
+        if (urlInput) urlInput.value = website.url;
+        if (linkEl) linkEl.href = website.url;
+        if (titleEl && website.title) titleEl.textContent = website.title;
+      }
+    });
+  }
 }
 
 // Function to save individual birthday fields
@@ -4913,15 +4980,22 @@ async function saveWebsiteUrls() {
     const websiteCards = document.querySelectorAll('.website-card');
     const websites = [];
     
-    websiteCards.forEach(card => {
+    websiteCards.forEach((card, index) => {
       const titleEl = card.querySelector('.website-title');
       const urlInput = card.querySelector('.website-url-input');
       const linkEl = card.querySelector('.website-link');
+      const emojiEl = card.querySelector('.text-4xl');
       
-      if (titleEl && urlInput) {
+      if (titleEl) {
         websites.push({
+          order: index,
           title: titleEl.textContent || '',
-          url: urlInput.value || linkEl?.href || ''
+          url: urlInput?.value || linkEl?.href || '',
+          emoji: emojiEl?.textContent || '',
+          styles: {
+            border: card.style.border || '',
+            background: linkEl?.style.background || ''
+          }
         });
       }
     });
@@ -4951,6 +5025,167 @@ async function saveWebsiteUrls() {
       saveBtn.disabled = false;
     }, 2000);
   }
+}
+
+// Function to save website order
+async function saveWebsiteOrder() {
+  const saveBtn = document.getElementById('saveWebsiteOrderBtn');
+  
+  if (!saveBtn) return;
+  
+  const originalText = saveBtn.textContent;
+  
+  try {
+    // Check authentication
+    await ensureAuthenticated();
+    
+    // Show saving state
+    saveBtn.textContent = '⏳ Saving...';
+    saveBtn.disabled = true;
+    
+    // Collect website data with order
+    const websiteCards = document.querySelectorAll('.website-card');
+    const websites = [];
+    
+    websiteCards.forEach((card, index) => {
+      const titleEl = card.querySelector('.website-title');
+      const urlInput = card.querySelector('.website-url-input');
+      const linkEl = card.querySelector('.website-link');
+      const emojiEl = card.querySelector('.text-4xl');
+      
+      if (titleEl) {
+        websites.push({
+          order: index,
+          title: titleEl.textContent || '',
+          url: urlInput?.value || linkEl?.href || '',
+          emoji: emojiEl?.textContent || '',
+          styles: {
+            border: card.style.border || '',
+            background: linkEl?.style.background || ''
+          }
+        });
+      }
+    });
+    
+    // Prepare data for saving
+    const data = {
+      websites_json: JSON.stringify(websites)
+    };
+    
+    // Save to Firestore
+    await db.collection('classData').doc('current').set(data, { merge: true });
+    
+    // Show success state
+    saveBtn.textContent = '✅ Saved!';
+    
+    // Reset button after 1 second
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 1000);
+    
+  } catch (error) {
+    console.error('Failed to save website order:', error);
+    saveBtn.textContent = '❌ Save Failed';
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 2000);
+  }
+}
+
+// Drag and drop functionality for website cards
+let draggedCard = null;
+
+function setupWebsiteDragAndDrop() {
+  const websiteCards = document.querySelectorAll('.website-card');
+  
+  websiteCards.forEach(card => {
+    card.setAttribute('draggable', 'true');
+    card.style.cursor = 'move';
+    
+    card.addEventListener('dragstart', handleDragStart);
+    card.addEventListener('dragover', handleDragOver);
+    card.addEventListener('drop', handleDrop);
+    card.addEventListener('dragend', handleDragEnd);
+    card.addEventListener('dragleave', handleDragLeave);
+  });
+}
+
+function disableWebsiteDragAndDrop() {
+  const websiteCards = document.querySelectorAll('.website-card');
+  
+  websiteCards.forEach(card => {
+    card.setAttribute('draggable', 'false');
+    card.style.cursor = 'default';
+    
+    card.removeEventListener('dragstart', handleDragStart);
+    card.removeEventListener('dragover', handleDragOver);
+    card.removeEventListener('drop', handleDrop);
+    card.removeEventListener('dragend', handleDragEnd);
+    card.removeEventListener('dragleave', handleDragLeave);
+  });
+}
+
+function handleDragStart(e) {
+  draggedCard = this;
+  this.style.opacity = '0.4';
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/html', this.innerHTML);
+}
+
+function handleDragOver(e) {
+  if (e.preventDefault) {
+    e.preventDefault();
+  }
+  e.dataTransfer.dropEffect = 'move';
+  
+  if (this !== draggedCard) {
+    this.style.borderTop = '3px solid var(--md-coral)';
+  }
+  
+  return false;
+}
+
+function handleDragLeave(e) {
+  this.style.borderTop = '';
+}
+
+function handleDrop(e) {
+  if (e.stopPropagation) {
+    e.stopPropagation();
+  }
+  
+  if (draggedCard !== this) {
+    const grid = document.getElementById('websitesGrid');
+    const allCards = [...grid.querySelectorAll('.website-card')];
+    const draggedIndex = allCards.indexOf(draggedCard);
+    const targetIndex = allCards.indexOf(this);
+    
+    if (draggedIndex < targetIndex) {
+      this.parentNode.insertBefore(draggedCard, this.nextSibling);
+    } else {
+      this.parentNode.insertBefore(draggedCard, this);
+    }
+    
+    // Update data-order attributes
+    const cards = grid.querySelectorAll('.website-card');
+    cards.forEach((card, index) => {
+      card.setAttribute('data-order', index);
+    });
+  }
+  
+  this.style.borderTop = '';
+  return false;
+}
+
+function handleDragEnd(e) {
+  this.style.opacity = '1';
+  
+  const allCards = document.querySelectorAll('.website-card');
+  allCards.forEach(card => {
+    card.style.borderTop = '';
+  });
 }
 
 // Clever QR Codes functions
