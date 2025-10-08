@@ -261,7 +261,8 @@
               data-page="home" style="background: var(--md-coral);">
         <span>🏠</span><span>Home</span>
       </button>
-      <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
+      <button id="aboutMeDavisBtn"
+              class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
               data-page="aboutme" style="background: var(--md-coral);">
         <span>👨‍🏫</span><span>About Mr. Davis</span>
       </button>
@@ -281,7 +282,7 @@
       <button id="familyHubBtn"
               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
               style="background: var(--md-coral);">
-        <span>👨‍👩‍👧‍👦</span><span>Family Hub</span>
+        <span>🏫</span><span>Family Hub</span>
       </button>
       <button id="toggleHighContrast"
               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-[color:var(--md-ink)] font-semibold hover:opacity-90">
@@ -4174,6 +4175,23 @@ function closeFamilyHubModal() {
   }
 }
 
+// About Mr. Davis Modal Functions
+function openAboutMeDavisModal() {
+  const modal = document.getElementById('aboutMeDavisModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeAboutMeDavisModal() {
+  const modal = document.getElementById('aboutMeDavisModal');
+  if (modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+}
+
 // Shoutout Modal Functions
 function openShoutoutModal() {
   const modal = document.getElementById('shoutoutModal');
@@ -6173,6 +6191,11 @@ document.addEventListener('DOMContentLoaded', function() {
     familyHubBtn.addEventListener('click', openFamilyHubModal);
   }
   
+  const aboutMeDavisBtn = document.getElementById('aboutMeDavisBtn');
+  if (aboutMeDavisBtn) {
+    aboutMeDavisBtn.addEventListener('click', openAboutMeDavisModal);
+  }
+  
   const shoutoutBtn = document.getElementById('shoutoutBtn');
   if (shoutoutBtn) {
     shoutoutBtn.addEventListener('click', function(e) {
@@ -6572,7 +6595,7 @@ document.head.appendChild(style);
           </div>
           <div class="bg-white rounded-xl p-4" style="border: 1px solid var(--md-coral);">
             <div class="text-sm font-semibold text-gray-600 mb-2">📞 Phone</div>
-            <a href="tel:816-482-1708" class="text-[color:var(--md-coral)] font-semibold hover:underline">
+            <a href="tel:8164821708" class="text-[color:var(--md-coral)] font-semibold hover:underline">
               816-482-1708
             </a>
           </div>
@@ -6619,7 +6642,7 @@ document.head.appendChild(style);
   <div id="familyHubModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9998; justify-content: center; align-items: center;" onclick="closeFamilyHubModal()">
     <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-8 max-w-md mx-4" onclick="event.stopPropagation();" style="border: 3px solid var(--md-coral);">
       <div class="text-center">
-        <div class="text-5xl mb-4">👨‍👩‍👧‍👦</div>
+        <div class="text-5xl mb-4">🏫</div>
         <h3 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">Family Hub</h3>
         <div class="space-y-3">
           <a href="https://classdojo.com" target="_blank"
@@ -6641,6 +6664,24 @@ document.head.appendChild(style);
           </button>
         </div>
         <button onclick="closeFamilyHubModal()" class="mt-6 px-6 py-2 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- About Mr. Davis Popup Modal -->
+  <div id="aboutMeDavisModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9998; justify-content: center; align-items: center;" onclick="closeAboutMeDavisModal()">
+    <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-8 max-w-md mx-4" onclick="event.stopPropagation();" style="border: 3px solid var(--md-coral);">
+      <div class="text-center">
+        <div class="text-5xl mb-4">👨‍🏫</div>
+        <h3 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">About Mr. Davis</h3>
+        <div class="space-y-3">
+          <button onclick="closeAboutMeDavisModal(); openContactModal();" class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
+            <span>📧</span><span>Contact Me</span>
+          </button>
+        </div>
+        <button onclick="closeAboutMeDavisModal()" class="mt-6 px-6 py-2 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
           Close
         </button>
       </div>
