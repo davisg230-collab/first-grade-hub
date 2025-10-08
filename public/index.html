@@ -284,10 +284,6 @@
               style="background: var(--md-coral);">
         <span>🏫</span><span>Family Hub</span>
       </button>
-      <button id="toggleHighContrast"
-              class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-[color:var(--md-ink)] font-semibold hover:opacity-90">
-        <span>🌓</span><span>Light/Dark</span>
-      </button>
       <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white"
               data-page="extras" style="background:#6b7280;">
         <span>📰</span><span>Extra News</span>
@@ -733,8 +729,7 @@
         <div class="flex items-center justify-between mb-5">
           <h2 class="text-2xl font-display font-bold" style="color: var(--md-slate);">🌐 Practice Websites</h2>
           <div class="flex gap-2">
-            <button id="saveWebsiteOrderBtn" class="edit-only px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral); display: none;" onclick="saveWebsiteOrder()">💾 Save Order</button>
-            <button id="saveWebsitesBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="saveWebsiteUrls()">💾 Save URLs</button>
+            <button id="saveWebsitesBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="saveWebsiteUrls()">💾 Save</button>
           </div>
         </div>
         <div id="websitesGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -998,6 +993,10 @@
         <div class="flex gap-3">
           <button id="saveChangesBtn" class="px-4 py-2 rounded-xl font-semibold text-white shadow-soft" style="background: var(--md-coral); display: none;">
             💾 Save Changes
+          </button>
+          <button id="toggleHighContrast"
+                  class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-[color:var(--md-ink)] font-semibold hover:opacity-90">
+            <span>🌓</span><span>Light/Dark</span>
           </button>
           <button id="editModeBtn" class="px-4 py-2 rounded-xl font-semibold text-white shadow-soft" style="background: var(--md-slate);">
             ✏️ Edit Mode
@@ -4733,14 +4732,16 @@ function updateWebsiteCards(websitesJson) {
         grid.appendChild(card);
         card.setAttribute('data-order', index);
         
-        // Update URL and title
+        // Update URL, title, and emoji
         const urlInput = card.querySelector('.website-url-input');
         const linkEl = card.querySelector('.website-link');
         const titleEl = card.querySelector('.website-title');
+        const emojiEl = card.querySelector('.text-4xl');
         
         if (urlInput && website.url) urlInput.value = website.url;
         if (linkEl && website.url) linkEl.href = website.url;
         if (titleEl && website.title) titleEl.textContent = website.title;
+        if (emojiEl && website.emoji) emojiEl.textContent = website.emoji;
       }
     });
   } else {
@@ -4752,10 +4753,12 @@ function updateWebsiteCards(websitesJson) {
         const urlInput = card.querySelector('.website-url-input');
         const linkEl = card.querySelector('.website-link');
         const titleEl = card.querySelector('.website-title');
+        const emojiEl = card.querySelector('.text-4xl');
         
         if (urlInput) urlInput.value = website.url;
         if (linkEl) linkEl.href = website.url;
         if (titleEl && website.title) titleEl.textContent = website.title;
+        if (emojiEl && website.emoji) emojiEl.textContent = website.emoji;
       }
     });
   }
@@ -5022,7 +5025,7 @@ async function saveWebsiteUrls() {
     saveBtn.textContent = '⏳ Saving...';
     saveBtn.disabled = true;
     
-    // Collect website data
+    // Collect website data including order, emojis, and titles
     const websiteCards = document.querySelectorAll('.website-card');
     const websites = [];
     
