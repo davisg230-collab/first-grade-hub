@@ -241,40 +241,13 @@
     <button id="shoutoutBtn" class="absolute top-4 right-4 md:top-6 md:right-6 bg-[color:var(--md-coral)] text-white px-4 py-2 rounded-full font-semibold shadow-lg hover:opacity-90 transition-opacity z-10" style="border-radius: 20px;" data-page="shoutouts">
       💬 Shoutout Your Scholar!
     </button>
-    <div class="max-w-6xl mx-auto px-6 py-10 sm:py-12">
-      <h1 class="text-3xl sm:text-4xl lg:text-5xl font-display font-extrabold text-white">
+    <div class="max-w-6xl mx-auto px-6 py-8 sm:py-10">
+      <h1 id="mainHeading" class="text-4xl sm:text-5xl lg:text-6xl font-display font-extrabold text-white"
+          data-edit="teacher" contenteditable="false">
         Hey Hey First Grade!
       </h1>
       <p id="weekText" class="mt-2 text-white/95 font-semibold"
          data-edit="teacher" contenteditable="false">Week of September 1–5</p>
-      <div class="mt-6 flex flex-wrap items-center gap-3 mobile-tab-scroll scrollbar-hide">
-        <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
-                data-page="aboutme" style="background: var(--md-coral);">
-          <span>👨‍🏫</span><span>About Mr. Davis</span>
-        </button>
-        <button id="contactMeBtn"
-           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
-           style="background: var(--md-coral);">
-          <span>📧</span><span>Contact Me</span>
-        </button>
-        <a id="classDojoBtn" href="https://classdojo.com" target="_blank"
-           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
-           style="background:#6b7280;">
-          <span>🎯</span><span>Class Dojo</span>
-        </a>
-        <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
-                data-page="transportation" style="background: var(--md-slate);">
-          <span>🚌</span><span>Transportation</span>
-        </button>
-        <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
-                data-page="birthdays" style="background: var(--md-coral);">
-          <span>🎂</span><span>Birthdays</span>
-        </button>
-        <button id="toggleHighContrast"
-                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-[color:var(--md-ink)] font-semibold hover:opacity-90">
-          <span>🌓</span><span>Light/Dark</span>
-        </button>
-      </div>
     </div>
   </header>
   <!-- Tab Separator -->
@@ -282,23 +255,42 @@
     <div class="border-t-4" style="border-color: color-mix(in oklab, var(--md-slate) 70%, var(--md-white) 30%); box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></div>
   </div>
   <main class="max-w-6xl mx-auto px-6 pb-16">
-    <nav id="tabs" class="mt-6 mb-4 flex flex-wrap gap-2 mobile-tab-scroll scrollbar-hide">
-      <button class="pageTab active ring-4 ring-white/40 px-4 py-2 rounded-xl font-semibold text-white"
-              data-page="home" style="background: var(--md-coral);">Home</button>
-      <button class="pageTab px-4 py-2 rounded-xl font-semibold text-white"
-              data-page="scholar" style="background: var(--md-mustard);">Scholar of the Week!!</button>
-      <button class="pageTab px-4 py-2 rounded-xl font-semibold text-white"
-              data-page="extras" style="background:#6b7280;">Extras</button>
-      <button class="pageTab px-4 py-2 rounded-xl font-semibold text-white"
-              data-page="practice" style="background: var(--md-pebble); color: var(--md-ink);">Practice Websites</button>
-      <button class="pageTab px-4 py-2 rounded-xl font-semibold text-white"
-              data-page="skills" style="background: var(--md-slate);">Skills</button>
-      <button class="pageTab px-4 py-2 rounded-xl font-semibold text-white"
-              data-page="listening" style="background: var(--md-coral);">Listening & Learning</button>
-      <button class="pageTab px-4 py-2 rounded-xl font-semibold text-[color:var(--md-ink)]"
-              data-page="math" style="background: var(--md-blush);">Math</button>
-      <button class="pageTab px-4 py-2 rounded-xl font-semibold text-white"
-              data-page="specials" style="background:#f59e0b;">Specials</button>
+    <!-- Top Navigation Bar -->
+    <nav id="topNav" class="mt-6 mb-4 flex flex-wrap items-center gap-3 mobile-tab-scroll scrollbar-hide">
+      <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
+              data-page="home" style="background: var(--md-coral);">
+        <span>🏠</span><span>Home</span>
+      </button>
+      <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
+              data-page="aboutme" style="background: var(--md-coral);">
+        <span>👨‍🏫</span><span>About Mr. Davis</span>
+      </button>
+      <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white"
+              data-page="scholar" style="background: var(--md-mustard);">
+        <span>⭐</span><span>Scholar of the Week</span>
+      </button>
+      <button id="learningHubBtn"
+              class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
+              style="background: var(--md-slate);">
+        <span>📚</span><span>Learning Hub</span>
+      </button>
+      <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white"
+              data-page="specials" style="background:#f59e0b;">
+        <span>🎨</span><span>Specials</span>
+      </button>
+      <button id="familyHubBtn"
+              class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
+              style="background: var(--md-coral);">
+        <span>👨‍👩‍👧‍👦</span><span>Family Hub</span>
+      </button>
+      <button id="toggleHighContrast"
+              class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-[color:var(--md-ink)] font-semibold hover:opacity-90">
+        <span>🌓</span><span>Light/Dark</span>
+      </button>
+      <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white"
+              data-page="extras" style="background:#6b7280;">
+        <span>📰</span><span>Extra News</span>
+      </button>
     </nav>
     <!-- HOME TAB -->
     <section data-page-panel="home" class="pagePanel fade-in active">
@@ -368,78 +360,6 @@
                 <li>• Parent-teacher conferences</li>
                 <li>• Winter concert practice begins</li>
               </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- Snack Helpers -->
-      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
-        <div class="flex items-center justify-between mb-5">
-          <div>
-            <h2 class="text-2xl font-display font-bold">🥨 Snack Helpers</h2>
-            <p class="text-sm text-[color:var(--md-ink)]/80 mt-1">Check an item and add your name.</p>
-          </div>
-          <button id="snackAdd" class="px-3 py-2 rounded-lg text-white" style="background: var(--md-coral);" onclick="addSnackItem()">+ Add other snack</button>
-        </div>
-        <!-- Snack importance message -->
-        <div class="mb-4 p-3 rounded-lg" style="background: color-mix(in oklab, var(--md-mustard) 20%, var(--md-white) 80%); border: 1px solid color-mix(in oklab, var(--md-mustard) 40%, var(--md-white) 60%);">
-          <div class="flex justify-between items-start mb-2 edit-only" style="display: none;">
-            <h4 class="font-semibold text-sm">Snack Message</h4>
-            <button id="saveSnackMessageBtn" class="px-3 py-1 rounded-lg text-white text-xs font-semibold" style="background: var(--md-coral);" onclick="saveSnackMessage()">💾 Save</button>
-          </div>
-          <textarea 
-            id="snackMessage" 
-            class="w-full text-sm border-0 resize-none" 
-            style="background: transparent; outline: none;" 
-            placeholder="Click to add a message about why snacks are important..."
-            disabled 
-            readonly
-            rows="4">Snacks help keep our energy up during learning time and teach us about sharing and community!</textarea>
-        </div>
-        <div id="snacksGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <!-- Default snack cards - always visible, names only editable by teacher/admin -->
-          <div class="p-4 rounded-xl bg-white default-snack-card" data-default-snack="true" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
-            <div class="flex items-center gap-3 mb-3">
-              <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="1">
-              <span class="text-xl">🥯</span>
-              <span class="font-medium snack-title" data-edit="teacher" contenteditable="false">Breakfast Bars</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="2">
-              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="3">Save</button>
-            </div>
-          </div>
-          <div class="p-4 rounded-xl bg-white default-snack-card" data-default-snack="true" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
-            <div class="flex items-center gap-3 mb-3">
-              <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="4">
-              <span class="text-xl">🍬</span>
-              <span class="font-medium snack-title" data-edit="teacher" contenteditable="false">Gummies</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="5">
-              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="6">Save</button>
-            </div>
-          </div>
-          <div class="p-4 rounded-xl bg-white default-snack-card" data-default-snack="true" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
-            <div class="flex items-center gap-3 mb-3">
-              <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="7">
-              <span class="text-xl">🍚</span>
-              <span class="font-medium snack-title" data-edit="teacher" contenteditable="false">Rice Krispy Treats</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="8">
-              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="9">Save</button>
-            </div>
-          </div>
-          <div class="p-4 rounded-xl bg-white default-snack-card" data-default-snack="true" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
-            <div class="flex items-center gap-3 mb-3">
-              <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="10">
-              <span class="text-xl">🧃</span>
-              <span class="font-medium snack-title" data-edit="teacher" contenteditable="false">Juice</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="11">
-              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="12">Save</button>
             </div>
           </div>
         </div>
@@ -572,6 +492,80 @@
         </div>
         <div id="mathWatchMeContent" class="space-y-2">
           <!-- Content will be populated by JavaScript -->
+        </div>
+      </div>
+    </section>
+    <!-- SNACKS TAB -->
+    <section data-page-panel="snacks" class="pagePanel fade-in">
+      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
+        <div class="flex items-center justify-between mb-5">
+          <div>
+            <h2 class="text-2xl font-display font-bold">🥨 Snack Helpers</h2>
+            <p class="text-sm text-[color:var(--md-ink)]/80 mt-1">Check an item and add your name.</p>
+          </div>
+          <button id="snackAdd" class="px-3 py-2 rounded-lg text-white" style="background: var(--md-coral);" onclick="addSnackItem()">+ Add other snack</button>
+        </div>
+        <!-- Snack importance message -->
+        <div class="mb-4 p-3 rounded-lg" style="background: color-mix(in oklab, var(--md-mustard) 20%, var(--md-white) 80%); border: 1px solid color-mix(in oklab, var(--md-mustard) 40%, var(--md-white) 60%);">
+          <div class="flex justify-between items-start mb-2 edit-only" style="display: none;">
+            <h4 class="font-semibold text-sm">Snack Message</h4>
+            <button id="saveSnackMessageBtn" class="px-3 py-1 rounded-lg text-white text-xs font-semibold" style="background: var(--md-coral);" onclick="saveSnackMessage()">💾 Save</button>
+          </div>
+          <textarea 
+            id="snackMessage" 
+            class="w-full text-sm border-0 resize-none" 
+            style="background: transparent; outline: none;" 
+            placeholder="Click to add a message about why snacks are important..."
+            disabled 
+            readonly
+            rows="4">Snacks help keep our energy up during learning time and teach us about sharing and community!</textarea>
+        </div>
+        <div id="snacksGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Default snack cards - always visible, names only editable by teacher/admin -->
+          <div class="p-4 rounded-xl bg-white default-snack-card" data-default-snack="true" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
+            <div class="flex items-center gap-3 mb-3">
+              <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="1">
+              <span class="text-xl">🥯</span>
+              <span class="font-medium snack-title" data-edit="teacher" contenteditable="false">Breakfast Bars</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="2">
+              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="3">Save</button>
+            </div>
+          </div>
+          <div class="p-4 rounded-xl bg-white default-snack-card" data-default-snack="true" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
+            <div class="flex items-center gap-3 mb-3">
+              <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="4">
+              <span class="text-xl">🍬</span>
+              <span class="font-medium snack-title" data-edit="teacher" contenteditable="false">Gummies</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="5">
+              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="6">Save</button>
+            </div>
+          </div>
+          <div class="p-4 rounded-xl bg-white default-snack-card" data-default-snack="true" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
+            <div class="flex items-center gap-3 mb-3">
+              <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="7">
+              <span class="text-xl">🍚</span>
+              <span class="font-medium snack-title" data-edit="teacher" contenteditable="false">Rice Krispy Treats</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="8">
+              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="9">Save</button>
+            </div>
+          </div>
+          <div class="p-4 rounded-xl bg-white default-snack-card" data-default-snack="true" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
+            <div class="flex items-center gap-3 mb-3">
+              <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="10">
+              <span class="text-xl">🧃</span>
+              <span class="font-medium snack-title" data-edit="teacher" contenteditable="false">Juice</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="11">
+              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="12">Save</button>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -4146,6 +4140,40 @@ function closeContactModal() {
   }
 }
 
+// Learning Hub Modal Functions
+function openLearningHubModal() {
+  const modal = document.getElementById('learningHubModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeLearningHubModal() {
+  const modal = document.getElementById('learningHubModal');
+  if (modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+}
+
+// Family Hub Modal Functions
+function openFamilyHubModal() {
+  const modal = document.getElementById('familyHubModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeFamilyHubModal() {
+  const modal = document.getElementById('familyHubModal');
+  if (modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+}
+
 // Shoutout Modal Functions
 function openShoutoutModal() {
   const modal = document.getElementById('shoutoutModal');
@@ -6135,6 +6163,16 @@ document.addEventListener('DOMContentLoaded', function() {
     contactBtn.addEventListener('click', openContactModal);
   }
   
+  const learningHubBtn = document.getElementById('learningHubBtn');
+  if (learningHubBtn) {
+    learningHubBtn.addEventListener('click', openLearningHubModal);
+  }
+  
+  const familyHubBtn = document.getElementById('familyHubBtn');
+  if (familyHubBtn) {
+    familyHubBtn.addEventListener('click', openFamilyHubModal);
+  }
+  
   const shoutoutBtn = document.getElementById('shoutoutBtn');
   if (shoutoutBtn) {
     shoutoutBtn.addEventListener('click', function(e) {
@@ -6540,6 +6578,69 @@ document.head.appendChild(style);
           </div>
         </div>
         <button onclick="closeContactModal()" class="mt-6 px-6 py-2 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Learning Hub Popup Modal -->
+  <div id="learningHubModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9998; justify-content: center; align-items: center;" onclick="closeLearningHubModal()">
+    <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-8 max-w-md mx-4" onclick="event.stopPropagation();" style="border: 3px solid var(--md-slate);">
+      <div class="text-center">
+        <div class="text-5xl mb-4">📚</div>
+        <h3 class="text-2xl font-display font-bold mb-6" style="color: var(--md-slate);">Learning Hub</h3>
+        <div class="space-y-3">
+          <button class="pageTab w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90"
+                  data-page="skills" style="background: var(--md-slate);" onclick="closeLearningHubModal(); showPage('skills');">
+            <span>📖</span><span>Skills</span>
+          </button>
+          <button class="pageTab w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90"
+                  data-page="listening" style="background: var(--md-coral);" onclick="closeLearningHubModal(); showPage('listening');">
+            <span>👂</span><span>Listening & Learning</span>
+          </button>
+          <button class="pageTab w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-[color:var(--md-ink)] hover:opacity-90"
+                  data-page="math" style="background: var(--md-blush);" onclick="closeLearningHubModal(); showPage('math');">
+            <span>🧮</span><span>Math</span>
+          </button>
+          <button class="pageTab w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-white hover:opacity-90"
+                  data-page="practice" style="background: var(--md-pebble); color: var(--md-ink);" onclick="closeLearningHubModal(); showPage('practice');">
+            <span>💻</span><span>Practice Websites</span>
+          </button>
+        </div>
+        <button onclick="closeLearningHubModal()" class="mt-6 px-6 py-2 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-slate);">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Family Hub Popup Modal -->
+  <div id="familyHubModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9998; justify-content: center; align-items: center;" onclick="closeFamilyHubModal()">
+    <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-8 max-w-md mx-4" onclick="event.stopPropagation();" style="border: 3px solid var(--md-coral);">
+      <div class="text-center">
+        <div class="text-5xl mb-4">👨‍👩‍👧‍👦</div>
+        <h3 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">Family Hub</h3>
+        <div class="space-y-3">
+          <a href="https://classdojo.com" target="_blank"
+             class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90"
+             style="background:#6b7280;">
+            <span>🎯</span><span>ClassDojo</span>
+          </a>
+          <button class="pageTab w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90"
+                  data-page="transportation" style="background: var(--md-slate);" onclick="closeFamilyHubModal(); showPage('transportation');">
+            <span>🚌</span><span>Transportation</span>
+          </button>
+          <button class="pageTab w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90"
+                  data-page="birthdays" style="background: var(--md-coral);" onclick="closeFamilyHubModal(); showPage('birthdays');">
+            <span>🎂</span><span>Birthdays</span>
+          </button>
+          <button class="pageTab w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90"
+                  data-page="snacks" style="background: var(--md-mustard);" onclick="closeFamilyHubModal(); showPage('snacks');">
+            <span>🥨</span><span>Snack Helpers</span>
+          </button>
+        </div>
+        <button onclick="closeFamilyHubModal()" class="mt-6 px-6 py-2 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
           Close
         </button>
       </div>
