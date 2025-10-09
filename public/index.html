@@ -2073,11 +2073,45 @@
     // Function to save snack data to Firestore
     async function saveSnackDataToFirestore() {
       try {
-        // Authenticate if not already authenticated (for parent snack claims)
-        if (auth && !auth.currentUser) {
-          console.log('Authenticating for snack claim...');
-          await auth.signInAnonymously();
-          console.log('Authentication successful');
+        // Ensure valid authentication for parent snack claims
+        if (auth) {
+          // Check if user is already authenticated
+          if (auth.currentUser) {
+            // Check if it's a Google user (from edit mode) or anonymous
+            const isGoogleUser = auth.currentUser.providerData.some(
+              provider => provider.providerId === 'google.com'
+            );
+            
+            if (isGoogleUser) {
+              // Google user exists, verify token is still valid by refreshing it
+              try {
+                await auth.currentUser.getIdToken(true);
+                console.log('Using existing Google authentication for snack claim');
+              } catch (error) {
+                // Token refresh failed, sign out and use anonymous auth
+                console.log('Google auth token expired, switching to anonymous auth');
+                await auth.signOut();
+                await auth.signInAnonymously();
+                console.log('Authentication successful');
+              }
+            } else {
+              // Already have anonymous auth, verify it's still valid
+              try {
+                await auth.currentUser.getIdToken(true);
+                console.log('Using existing anonymous authentication for snack claim');
+              } catch (error) {
+                // Token refresh failed, re-authenticate
+                console.log('Anonymous auth token expired, re-authenticating');
+                await auth.signInAnonymously();
+                console.log('Authentication successful');
+              }
+            }
+          } else {
+            // No user signed in, use anonymous auth
+            console.log('Authenticating for snack claim...');
+            await auth.signInAnonymously();
+            console.log('Authentication successful');
+          }
         }
         
         // Collect current snack data
