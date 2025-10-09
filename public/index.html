@@ -4243,14 +4243,42 @@ function closeShoutoutPinModal() {
 
 // Shoutout messages array
 const shoutoutMessages = [
-  "We're cheering for you and all your hard work.",
-  "You're a superstar scholar!",
-  "Your curiosity and questions make our classroom amazing!",
-  "Keep being the wonderful student you are!",
-  "Your hard work is paying off - we're so proud!",
-  "You bring so much joy to our learning adventures!",
-  "Your kindness and friendship make our class special!",
-  "You're growing so much as a learner - fantastic job!"
+  "for showing amazing focus and trying your best all week!",
+  "for being such a kind and respectful friend in class!",
+  "for staying positive and finishing your work in a snap!",
+  "for helping your classmates and spreading kindness!",
+  "for showing grit and never giving up, even when it's hard!",
+  "for being a great listener during lessons and discussions!",
+  "for giving 100% effort during math time — great perseverance!",
+  "for your creativity and excitement during writing time!",
+  "for your great attitude and leadership in group work!",
+  "for always having a smile and lifting up our class!",
+  "for showing focus and determination in your learning!",
+  "for working hard and being a role model for others!",
+  "for showing respect and responsibility every single day!",
+  "for asking thoughtful questions and being curious about learning!",
+  "for making our classroom a fun and caring place to be!",
+  "for your exceptional work ethic and dedication to learning!",
+  "for demonstrating outstanding character and kindness this week!",
+  "for your willingness to help others and be a team player!",
+  "for showing incredible growth in reading and math!",
+  "for being brave and trying new things even when they're challenging!",
+  "for your positive energy that brightens everyone's day!",
+  "for following directions the first time and being so responsible!",
+  "for your creative thinking and unique ideas in class!",
+  "for being a problem-solver and thinking things through!",
+  "for making good choices and showing self-control!",
+  "for your enthusiasm and love for learning new things!",
+  "for being a compassionate friend who cares about others!",
+  "for showing patience and persistence in your work!",
+  "for your excellent behavior and setting a great example!",
+  "for making everyone feel included and welcome in our class!"
+];
+
+// Scholar names for random generation
+const scholarNames = [
+  "Emmalina", "Makaylah", "Rudy", "Mila", "Oliver", "Elon", "Javier", 
+  "Andrei", "Ayda", "Dominic", "Ezra", "Zenaida", "Bryley", "Aliyah", "Aren"
 ];
 
 let currentShoutoutPinTarget = null;
@@ -4314,6 +4342,20 @@ function closeCreateShoutoutModal() {
   }
 }
 
+// Generate random shoutout
+function generateShoutout() {
+  // Randomly select a scholar name
+  const randomScholar = scholarNames[Math.floor(Math.random() * scholarNames.length)];
+  
+  // Randomly select a message
+  const randomMessage = shoutoutMessages[Math.floor(Math.random() * shoutoutMessages.length)];
+  
+  // Fill the form fields
+  document.getElementById('scholarNameInput').value = randomScholar;
+  document.getElementById('messageInput').value = randomMessage;
+  document.getElementById('fromInput').value = 'Mr. Davis';
+}
+
 // Submit new shoutout
 async function submitShoutout() {
   const scholarName = document.getElementById('scholarNameInput').value.trim();
@@ -4337,8 +4379,9 @@ async function submitShoutout() {
   // Add to local array
   allShoutouts.push(shoutout);
   
-  // Save to Firebase
-  const saveSuccess = await saveShoutoutsToFirebase();
+  // Save to Firebase (don't show error popup, we'll show it in the TV display)
+  // Use requireAuth=false for parent submissions (they use anonymous auth)
+  const saveSuccess = await saveShoutoutsToFirebase(false, false);
   
   closeCreateShoutoutModal();
   
@@ -4436,9 +4479,13 @@ function refreshAdminShoutouts(filter = 'all') {
   
   let shoutsToShow = allShoutouts;
   if (filter === 'pending') {
-    shoutsToShow = allShoutouts.filter(s => !s.approved);
+    shoutsToShow = allShoutouts.filter(s => !s.approved && !s.archived);
   } else if (filter === 'approved') {
-    shoutsToShow = allShoutouts.filter(s => s.approved);
+    shoutsToShow = allShoutouts.filter(s => s.approved && !s.archived);
+  } else if (filter === 'archived') {
+    shoutsToShow = allShoutouts.filter(s => s.archived);
+  } else if (filter === 'all') {
+    shoutsToShow = allShoutouts.filter(s => !s.archived);
   }
   
   if (shoutsToShow.length === 0) {
@@ -4447,14 +4494,16 @@ function refreshAdminShoutouts(filter = 'all') {
   }
   
   container.innerHTML = shoutsToShow.map(shoutout => `
-    <div class="bg-white rounded-lg p-4 border ${shoutout.approved ? 'border-green-200 bg-green-50' : 'border-yellow-200 bg-yellow-50'}">
+    <div class="bg-white rounded-lg p-4 border ${shoutout.archived ? 'border-gray-300 bg-gray-50' : shoutout.approved ? 'border-green-200 bg-green-50' : 'border-yellow-200 bg-yellow-50'}">
       <div class="flex justify-between items-start mb-2">
         <div>
           <strong style="color: var(--md-slate);">${shoutout.scholarName}</strong>
           <span class="text-sm text-gray-500"> from ${shoutout.from}</span>
         </div>
         <div class="flex gap-1">
-          ${!shoutout.approved ? `<button onclick="approveShoutout('${shoutout.id}')" class="px-2 py-1 bg-green-500 text-white rounded text-xs">Approve</button>` : ''}
+          ${!shoutout.approved && !shoutout.archived ? `<button onclick="approveShoutout('${shoutout.id}')" class="px-2 py-1 bg-green-500 text-white rounded text-xs">Approve</button>` : ''}
+          ${!shoutout.archived ? `<button onclick="archiveShoutout('${shoutout.id}')" class="px-2 py-1 bg-gray-500 text-white rounded text-xs">Archive</button>` : ''}
+          ${shoutout.archived ? `<button onclick="unarchiveShoutout('${shoutout.id}')" class="px-2 py-1 bg-blue-500 text-white rounded text-xs">Unarchive</button>` : ''}
           <button onclick="editShoutoutAdmin('${shoutout.id}')" class="px-2 py-1 bg-blue-500 text-white rounded text-xs">Edit</button>
           <button onclick="deleteShoutout('${shoutout.id}')" class="px-2 py-1 bg-red-500 text-white rounded text-xs">Delete</button>
         </div>
@@ -4473,6 +4522,34 @@ async function approveShoutout(id) {
     if (!saveSuccess) {
       // Revert the change if save failed
       shoutout.approved = false;
+    }
+    updateApprovedShoutouts();
+    refreshAdminShoutouts();
+  }
+}
+
+async function archiveShoutout(id) {
+  const shoutout = allShoutouts.find(s => s.id === id);
+  if (shoutout) {
+    shoutout.archived = true;
+    const saveSuccess = await saveShoutoutsToFirebase();
+    if (!saveSuccess) {
+      // Revert the change if save failed
+      delete shoutout.archived;
+    }
+    updateApprovedShoutouts();
+    refreshAdminShoutouts();
+  }
+}
+
+async function unarchiveShoutout(id) {
+  const shoutout = allShoutouts.find(s => s.id === id);
+  if (shoutout) {
+    shoutout.archived = false;
+    const saveSuccess = await saveShoutoutsToFirebase();
+    if (!saveSuccess) {
+      // Revert the change if save failed
+      shoutout.archived = true;
     }
     updateApprovedShoutouts();
     refreshAdminShoutouts();
@@ -4512,15 +4589,26 @@ function editShoutoutAdmin(id) {
 }
 
 // Data persistence functions
-async function saveShoutoutsToFirebase() {
+async function saveShoutoutsToFirebase(showErrorPopup = true, requireAuth = true) {
   if (!db) {
-    showShoutoutError('Not connected to Firebase. Your shoutout was not saved.');
+    if (showErrorPopup) {
+      showShoutoutError('Not connected to Firebase. Your shoutout was not saved.');
+    }
     return false;
   }
   
   try {
     // Check authentication before saving
-    await ensureAuthenticated();
+    if (requireAuth) {
+      await ensureAuthenticated();
+    } else {
+      // For public submissions (parents), use anonymous auth if not already authenticated
+      if (auth && !auth.currentUser) {
+        console.log('Authenticating for shoutout submission...');
+        await auth.signInAnonymously();
+        console.log('Anonymous authentication successful');
+      }
+    }
     
     await db.collection('shoutouts').doc('data').set({
       shoutouts: allShoutouts,
@@ -4530,7 +4618,9 @@ async function saveShoutoutsToFirebase() {
     return true;
   } catch (error) {
     console.error('Failed to save shoutouts:', error);
-    showShoutoutError('Failed to save shoutout. Please try again or contact support.');
+    if (showErrorPopup) {
+      showShoutoutError('Failed to save shoutout. Please try again or contact support.');
+    }
     return false;
   }
 }
@@ -4564,7 +4654,7 @@ async function loadShoutoutsFromFirebase() {
 }
 
 function updateApprovedShoutouts() {
-  approvedShoutouts = allShoutouts.filter(s => s.approved);
+  approvedShoutouts = allShoutouts.filter(s => s.approved && !s.archived);
   
   // Don't automatically shuffle when shoutouts are updated
   // Let the user manually shuffle to see shoutouts
@@ -6781,7 +6871,13 @@ document.head.appendChild(style);
           </div>
         </form>
         
-        <div class="flex gap-3 justify-center mt-6">
+        <div class="flex gap-3 justify-center mt-4 mb-4 edit-only" style="display: none;">
+          <button onclick="generateShoutout()" class="px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-mustard);">
+            🎲 Generate
+          </button>
+        </div>
+        
+        <div class="flex gap-3 justify-center">
           <button onclick="closeCreateShoutoutModal()" class="px-6 py-3 rounded-xl border font-semibold">Cancel</button>
           <button onclick="submitShoutout()" class="px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
             Send Shoutout! 💌
@@ -6800,6 +6896,7 @@ document.head.appendChild(style);
           <button id="filterAll" class="px-3 py-1 rounded-lg text-sm font-semibold filter-btn active" onclick="filterShoutouts('all')">All</button>
           <button id="filterPending" class="px-3 py-1 rounded-lg text-sm font-semibold filter-btn" onclick="filterShoutouts('pending')">Pending</button>
           <button id="filterApproved" class="px-3 py-1 rounded-lg text-sm font-semibold filter-btn" onclick="filterShoutouts('approved')">Approved</button>
+          <button id="filterArchived" class="px-3 py-1 rounded-lg text-sm font-semibold filter-btn" onclick="filterShoutouts('archived')">Archived</button>
         </div>
       </div>
       
