@@ -4243,34 +4243,42 @@ function closeShoutoutPinModal() {
 
 // Shoutout messages array
 const shoutoutMessages = [
-  "We're cheering for you and all your hard work.",
-  "You're a superstar scholar!",
-  "Your curiosity and questions make our classroom amazing!",
-  "Keep being the wonderful student you are!",
-  "Your hard work is paying off - we're so proud!",
-  "You bring so much joy to our learning adventures!",
-  "Your kindness and friendship make our class special!",
-  "You're growing so much as a learner - fantastic job!",
-  "Your creativity brightens our classroom every day!",
-  "You're making incredible progress - keep it up!",
-  "Your enthusiasm for learning is contagious!",
-  "We love seeing you help your classmates!",
-  "Your positive attitude makes learning fun for everyone!",
-  "You're a fantastic problem solver!",
-  "Your smile lights up our classroom!",
-  "We're amazed by your determination!",
-  "You're becoming such a confident learner!",
-  "Your thoughtfulness toward others is wonderful!",
-  "Keep reaching for the stars - you're doing great!",
-  "You make our classroom a better place!"
+  "for showing amazing focus and trying your best all week!",
+  "for being such a kind and respectful friend in class!",
+  "for staying positive and finishing your work in a snap!",
+  "for helping your classmates and spreading kindness!",
+  "for showing grit and never giving up, even when it's hard!",
+  "for being a great listener during lessons and discussions!",
+  "for giving 100% effort during math time — great perseverance!",
+  "for your creativity and excitement during writing time!",
+  "for your great attitude and leadership in group work!",
+  "for always having a smile and lifting up our class!",
+  "for showing focus and determination in your learning!",
+  "for working hard and being a role model for others!",
+  "for showing respect and responsibility every single day!",
+  "for asking thoughtful questions and being curious about learning!",
+  "for making our classroom a fun and caring place to be!",
+  "for your exceptional work ethic and dedication to learning!",
+  "for demonstrating outstanding character and kindness this week!",
+  "for your willingness to help others and be a team player!",
+  "for showing incredible growth in reading and math!",
+  "for being brave and trying new things even when they're challenging!",
+  "for your positive energy that brightens everyone's day!",
+  "for following directions the first time and being so responsible!",
+  "for your creative thinking and unique ideas in class!",
+  "for being a problem-solver and thinking things through!",
+  "for making good choices and showing self-control!",
+  "for your enthusiasm and love for learning new things!",
+  "for being a compassionate friend who cares about others!",
+  "for showing patience and persistence in your work!",
+  "for your excellent behavior and setting a great example!",
+  "for making everyone feel included and welcome in our class!"
 ];
 
 // Scholar names for random generation
 const scholarNames = [
-  "Aaliyah", "Aiden", "Amara", "Anthony", "Ava", "Benjamin", "Camila", "Carlos",
-  "Charlotte", "Daniel", "Emily", "Ethan", "Giovanni", "Grace", "Isabella", "Jackson",
-  "Jayden", "Julia", "Liam", "Lucas", "Luna", "Mia", "Noah", "Olivia",
-  "Rudy", "Santiago", "Sophia", "Valentina", "William", "Zoey"
+  "Emmalina", "Makaylah", "Rudy", "Mila", "Oliver", "Elon", "Javier", 
+  "Andrei", "Ayda", "Dominic", "Ezra", "Zenaida", "Bryley", "Aliyah", "Aren"
 ];
 
 let currentShoutoutPinTarget = null;
@@ -4372,7 +4380,8 @@ async function submitShoutout() {
   allShoutouts.push(shoutout);
   
   // Save to Firebase (don't show error popup, we'll show it in the TV display)
-  const saveSuccess = await saveShoutoutsToFirebase(false);
+  // Use requireAuth=false for parent submissions (they use anonymous auth)
+  const saveSuccess = await saveShoutoutsToFirebase(false, false);
   
   closeCreateShoutoutModal();
   
@@ -4580,7 +4589,7 @@ function editShoutoutAdmin(id) {
 }
 
 // Data persistence functions
-async function saveShoutoutsToFirebase(showErrorPopup = true) {
+async function saveShoutoutsToFirebase(showErrorPopup = true, requireAuth = true) {
   if (!db) {
     if (showErrorPopup) {
       showShoutoutError('Not connected to Firebase. Your shoutout was not saved.');
@@ -4590,7 +4599,16 @@ async function saveShoutoutsToFirebase(showErrorPopup = true) {
   
   try {
     // Check authentication before saving
-    await ensureAuthenticated();
+    if (requireAuth) {
+      await ensureAuthenticated();
+    } else {
+      // For public submissions (parents), use anonymous auth if not already authenticated
+      if (auth && !auth.currentUser) {
+        console.log('Authenticating for shoutout submission...');
+        await auth.signInAnonymously();
+        console.log('Anonymous authentication successful');
+      }
+    }
     
     await db.collection('shoutouts').doc('data').set({
       shoutouts: allShoutouts,
