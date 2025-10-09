@@ -268,7 +268,7 @@
       </button>
       <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white"
               data-page="scholar" style="background: var(--md-mustard);">
-        <span>⭐</span><span>Scholar of the Week</span>
+        <span>⭐</span><span>Scholar of the Month</span>
       </button>
       <button id="learningHubBtn"
               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
@@ -369,9 +369,9 @@
           <div class="w-40 h-40 sm:w-48 sm:h-48 rounded-full border-4 img-frame photo-card overflow-hidden mx-auto lg:mx-0" 
                style="border-color: var(--md-mustard);" onclick="editProfilePhoto(this, 'scholar')"></div>
           <div class="text-center lg:text-left relative">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4" style="background: color-mix(in oklab, var(--md-mustard) 25%, var(--md-white));">
-              <span>🌟</span>
-              <span class="text-sm font-semibold">Scholar of the Week</span>
+            <h2 class="text-2xl font-display font-bold mb-4" style="color: var(--md-mustard);">This month's scholar skill is ...</h2>
+            <div class="rounded-xl p-4 mb-6" style="background: color-mix(in oklab, var(--md-mustard) 20%, var(--md-white)); border: 2px solid color-mix(in oklab, var(--md-mustard) 50%, var(--md-white));">
+              <p class="text-lg font-semibold" data-edit="teacher" contenteditable="false">Kindness and helping others</p>
             </div>
             <h3 class="text-3xl sm:text-4xl font-display font-extrabold mb-4" data-edit="teacher" contenteditable="false">Emma S.</h3>
             <p class="text-lg leading-relaxed mb-6" data-edit="teacher" contenteditable="false">
@@ -1624,8 +1624,11 @@
       const scholarNameEl = document.querySelector('[data-page-panel="scholar"] h3[data-edit="teacher"]');
       if (scholarNameEl) data.scholar_name = scholarNameEl.textContent || '';
       
-      const scholarBlurbEl = document.querySelector('[data-page-panel="scholar"] p[data-edit="teacher"]');
+      const scholarBlurbEl = document.querySelector('[data-page-panel="scholar"] p[data-edit="teacher"]:not(.text-lg.font-semibold)');
       if (scholarBlurbEl) data.scholar_blurb = scholarBlurbEl.textContent || '';
+      
+      const scholarSkillEl = document.querySelector('[data-page-panel="scholar"] p.text-lg.font-semibold[data-edit="teacher"]');
+      if (scholarSkillEl) data.scholar_skill = scholarSkillEl.textContent || '';
       
       // Skills section
       const skillsDescEl = document.querySelector('[data-page-panel="skills"] p[data-edit="teacher"]');
@@ -3622,11 +3625,13 @@ function updateSnackMessage(snack_message) {
     messageEl.value = snack_message;
   }
 }
-function updateScholarInfo(scholar_name, scholar_blurb) {
+function updateScholarInfo(scholar_name, scholar_blurb, scholar_skill) {
   const nameEl = document.querySelector('[data-page-panel="scholar"] h3[data-edit="teacher"]');
-  const descEl = document.querySelector('[data-page-panel="scholar"] p[data-edit="teacher"]');
+  const descEl = document.querySelector('[data-page-panel="scholar"] p[data-edit="teacher"]:not(.text-lg.font-semibold)');
+  const skillEl = document.querySelector('[data-page-panel="scholar"] p.text-lg.font-semibold[data-edit="teacher"]');
   if (nameEl && scholar_name) nameEl.textContent = scholar_name;
   if (descEl && scholar_blurb) descEl.textContent = scholar_blurb;
+  if (skillEl && scholar_skill) skillEl.textContent = scholar_skill;
 }
 function updateSkillsSection(skills_text, sounds_json) {
   const descEl = document.querySelector('[data-page-panel="skills"] p[data-edit="teacher"]');
@@ -3746,7 +3751,7 @@ function populateDataFromSheet(data) {
   updateLookingAhead(data.looking_ahead);
   updateSnacksGrid(data.snacks_json);
   updateSnackMessage(data.snack_message);
-  updateScholarInfo(data.scholar_name, data.scholar_blurb);
+  updateScholarInfo(data.scholar_name, data.scholar_blurb, data.scholar_skill);
   updateSkillsSection(data.skills_text, data.sounds_json);
   updateListeningSection(data.listening_text, data.ask_json);
   updateMathSection(data.math_text, data.math_vocab_json);
@@ -5998,8 +6003,9 @@ function getDefaultFallbackData() {
       { emoji: "🧃", item: "Juice", claimed_by: "", checked: false, is_default: true }
     ]),
     snack_message: "Snacks help keep our energy up during learning time and teach us about sharing and community!",
-    scholar_name: "Scholar of the Week",
+    scholar_name: "Scholar of the Month",
     scholar_blurb: "Our scholar will be announced soon!",
+    scholar_skill: "Kindness and helping others",
     skills_text: "This week we focused on phonics and reading skills.",
     sounds_json: JSON.stringify(["ch", "sh", "th", "wh"]),
     listening_text: "We practiced active listening and following directions.",
