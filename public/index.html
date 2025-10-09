@@ -4345,9 +4345,7 @@ function generateShoutout() {
   // Fill the form fields
   document.getElementById('scholarNameInput').value = randomScholar;
   document.getElementById('messageInput').value = randomMessage;
-  
-  // Leave "From" field empty so user can fill it in
-  document.getElementById('fromInput').focus();
+  document.getElementById('fromInput').value = 'Mr. Davis';
 }
 
 // Submit new shoutout
@@ -4373,8 +4371,8 @@ async function submitShoutout() {
   // Add to local array
   allShoutouts.push(shoutout);
   
-  // Save to Firebase
-  const saveSuccess = await saveShoutoutsToFirebase();
+  // Save to Firebase (don't show error popup, we'll show it in the TV display)
+  const saveSuccess = await saveShoutoutsToFirebase(false);
   
   closeCreateShoutoutModal();
   
@@ -4582,9 +4580,11 @@ function editShoutoutAdmin(id) {
 }
 
 // Data persistence functions
-async function saveShoutoutsToFirebase() {
+async function saveShoutoutsToFirebase(showErrorPopup = true) {
   if (!db) {
-    showShoutoutError('Not connected to Firebase. Your shoutout was not saved.');
+    if (showErrorPopup) {
+      showShoutoutError('Not connected to Firebase. Your shoutout was not saved.');
+    }
     return false;
   }
   
@@ -4600,7 +4600,9 @@ async function saveShoutoutsToFirebase() {
     return true;
   } catch (error) {
     console.error('Failed to save shoutouts:', error);
-    showShoutoutError('Failed to save shoutout. Please try again or contact support.');
+    if (showErrorPopup) {
+      showShoutoutError('Failed to save shoutout. Please try again or contact support.');
+    }
     return false;
   }
 }
@@ -6851,7 +6853,7 @@ document.head.appendChild(style);
           </div>
         </form>
         
-        <div class="flex gap-3 justify-center mt-4 mb-4">
+        <div class="flex gap-3 justify-center mt-4 mb-4 edit-only" style="display: none;">
           <button onclick="generateShoutout()" class="px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-mustard);">
             🎲 Generate
           </button>
