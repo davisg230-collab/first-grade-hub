@@ -4379,9 +4379,9 @@ async function submitShoutout() {
   // Add to local array
   allShoutouts.push(shoutout);
   
-  // Save to Firebase (don't show error popup, we'll show it in the TV display)
+  // Save to Firebase using arrayUnion to append safely without overwriting
   // Use requireAuth=false for parent submissions (they use anonymous auth)
-  const saveSuccess = await saveShoutoutsToFirebase(false, false);
+  const saveSuccess = await saveShoutoutsToFirebase(false, false, shoutout);
   
   closeCreateShoutoutModal();
   
@@ -4589,7 +4589,7 @@ function editShoutoutAdmin(id) {
 }
 
 // Data persistence functions
-async function saveShoutoutsToFirebase(showErrorPopup = true, requireAuth = true) {
+async function saveShoutoutsToFirebase(showErrorPopup = true, requireAuth = true, newShoutout = null) {
   if (!db) {
     if (showErrorPopup) {
       showShoutoutError('Not connected to Firebase. Your shoutout was not saved.');
@@ -4610,11 +4610,22 @@ async function saveShoutoutsToFirebase(showErrorPopup = true, requireAuth = true
       }
     }
     
-    await db.collection('shoutouts').doc('data').set({
-      shoutouts: allShoutouts,
-      lastUpdated: new Date().toISOString()
-    });
-    console.log('Shoutouts saved to Firebase');
+    // If a new shoutout is provided, use arrayUnion to append safely
+    // This prevents overwriting existing shoutouts when parents submit
+    if (newShoutout) {
+      await db.collection('shoutouts').doc('data').set({
+        shoutouts: firebase.firestore.FieldValue.arrayUnion(newShoutout),
+        lastUpdated: new Date().toISOString()
+      }, { merge: true });
+      console.log('Shoutout appended to Firebase using arrayUnion');
+    } else {
+      // For admin operations (approve/delete/edit), replace entire array
+      await db.collection('shoutouts').doc('data').set({
+        shoutouts: allShoutouts,
+        lastUpdated: new Date().toISOString()
+      });
+      console.log('Shoutouts saved to Firebase');
+    }
     return true;
   } catch (error) {
     console.error('Failed to save shoutouts:', error);
