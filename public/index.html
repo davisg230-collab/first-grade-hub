@@ -4250,7 +4250,27 @@ const shoutoutMessages = [
   "Your hard work is paying off - we're so proud!",
   "You bring so much joy to our learning adventures!",
   "Your kindness and friendship make our class special!",
-  "You're growing so much as a learner - fantastic job!"
+  "You're growing so much as a learner - fantastic job!",
+  "Your creativity brightens our classroom every day!",
+  "You're making incredible progress - keep it up!",
+  "Your enthusiasm for learning is contagious!",
+  "We love seeing you help your classmates!",
+  "Your positive attitude makes learning fun for everyone!",
+  "You're a fantastic problem solver!",
+  "Your smile lights up our classroom!",
+  "We're amazed by your determination!",
+  "You're becoming such a confident learner!",
+  "Your thoughtfulness toward others is wonderful!",
+  "Keep reaching for the stars - you're doing great!",
+  "You make our classroom a better place!"
+];
+
+// Scholar names for random generation
+const scholarNames = [
+  "Aaliyah", "Aiden", "Amara", "Anthony", "Ava", "Benjamin", "Camila", "Carlos",
+  "Charlotte", "Daniel", "Emily", "Ethan", "Giovanni", "Grace", "Isabella", "Jackson",
+  "Jayden", "Julia", "Liam", "Lucas", "Luna", "Mia", "Noah", "Olivia",
+  "Rudy", "Santiago", "Sophia", "Valentina", "William", "Zoey"
 ];
 
 let currentShoutoutPinTarget = null;
@@ -4312,6 +4332,22 @@ function closeCreateShoutoutModal() {
     modal.style.display = 'none';
     document.body.style.overflow = '';
   }
+}
+
+// Generate random shoutout
+function generateShoutout() {
+  // Randomly select a scholar name
+  const randomScholar = scholarNames[Math.floor(Math.random() * scholarNames.length)];
+  
+  // Randomly select a message
+  const randomMessage = shoutoutMessages[Math.floor(Math.random() * shoutoutMessages.length)];
+  
+  // Fill the form fields
+  document.getElementById('scholarNameInput').value = randomScholar;
+  document.getElementById('messageInput').value = randomMessage;
+  
+  // Leave "From" field empty so user can fill it in
+  document.getElementById('fromInput').focus();
 }
 
 // Submit new shoutout
@@ -4436,9 +4472,13 @@ function refreshAdminShoutouts(filter = 'all') {
   
   let shoutsToShow = allShoutouts;
   if (filter === 'pending') {
-    shoutsToShow = allShoutouts.filter(s => !s.approved);
+    shoutsToShow = allShoutouts.filter(s => !s.approved && !s.archived);
   } else if (filter === 'approved') {
-    shoutsToShow = allShoutouts.filter(s => s.approved);
+    shoutsToShow = allShoutouts.filter(s => s.approved && !s.archived);
+  } else if (filter === 'archived') {
+    shoutsToShow = allShoutouts.filter(s => s.archived);
+  } else if (filter === 'all') {
+    shoutsToShow = allShoutouts.filter(s => !s.archived);
   }
   
   if (shoutsToShow.length === 0) {
@@ -4447,14 +4487,16 @@ function refreshAdminShoutouts(filter = 'all') {
   }
   
   container.innerHTML = shoutsToShow.map(shoutout => `
-    <div class="bg-white rounded-lg p-4 border ${shoutout.approved ? 'border-green-200 bg-green-50' : 'border-yellow-200 bg-yellow-50'}">
+    <div class="bg-white rounded-lg p-4 border ${shoutout.archived ? 'border-gray-300 bg-gray-50' : shoutout.approved ? 'border-green-200 bg-green-50' : 'border-yellow-200 bg-yellow-50'}">
       <div class="flex justify-between items-start mb-2">
         <div>
           <strong style="color: var(--md-slate);">${shoutout.scholarName}</strong>
           <span class="text-sm text-gray-500"> from ${shoutout.from}</span>
         </div>
         <div class="flex gap-1">
-          ${!shoutout.approved ? `<button onclick="approveShoutout('${shoutout.id}')" class="px-2 py-1 bg-green-500 text-white rounded text-xs">Approve</button>` : ''}
+          ${!shoutout.approved && !shoutout.archived ? `<button onclick="approveShoutout('${shoutout.id}')" class="px-2 py-1 bg-green-500 text-white rounded text-xs">Approve</button>` : ''}
+          ${!shoutout.archived ? `<button onclick="archiveShoutout('${shoutout.id}')" class="px-2 py-1 bg-gray-500 text-white rounded text-xs">Archive</button>` : ''}
+          ${shoutout.archived ? `<button onclick="unarchiveShoutout('${shoutout.id}')" class="px-2 py-1 bg-blue-500 text-white rounded text-xs">Unarchive</button>` : ''}
           <button onclick="editShoutoutAdmin('${shoutout.id}')" class="px-2 py-1 bg-blue-500 text-white rounded text-xs">Edit</button>
           <button onclick="deleteShoutout('${shoutout.id}')" class="px-2 py-1 bg-red-500 text-white rounded text-xs">Delete</button>
         </div>
@@ -4473,6 +4515,34 @@ async function approveShoutout(id) {
     if (!saveSuccess) {
       // Revert the change if save failed
       shoutout.approved = false;
+    }
+    updateApprovedShoutouts();
+    refreshAdminShoutouts();
+  }
+}
+
+async function archiveShoutout(id) {
+  const shoutout = allShoutouts.find(s => s.id === id);
+  if (shoutout) {
+    shoutout.archived = true;
+    const saveSuccess = await saveShoutoutsToFirebase();
+    if (!saveSuccess) {
+      // Revert the change if save failed
+      delete shoutout.archived;
+    }
+    updateApprovedShoutouts();
+    refreshAdminShoutouts();
+  }
+}
+
+async function unarchiveShoutout(id) {
+  const shoutout = allShoutouts.find(s => s.id === id);
+  if (shoutout) {
+    shoutout.archived = false;
+    const saveSuccess = await saveShoutoutsToFirebase();
+    if (!saveSuccess) {
+      // Revert the change if save failed
+      shoutout.archived = true;
     }
     updateApprovedShoutouts();
     refreshAdminShoutouts();
@@ -4564,7 +4634,7 @@ async function loadShoutoutsFromFirebase() {
 }
 
 function updateApprovedShoutouts() {
-  approvedShoutouts = allShoutouts.filter(s => s.approved);
+  approvedShoutouts = allShoutouts.filter(s => s.approved && !s.archived);
   
   // Don't automatically shuffle when shoutouts are updated
   // Let the user manually shuffle to see shoutouts
@@ -6781,7 +6851,13 @@ document.head.appendChild(style);
           </div>
         </form>
         
-        <div class="flex gap-3 justify-center mt-6">
+        <div class="flex gap-3 justify-center mt-4 mb-4">
+          <button onclick="generateShoutout()" class="px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-mustard);">
+            🎲 Generate
+          </button>
+        </div>
+        
+        <div class="flex gap-3 justify-center">
           <button onclick="closeCreateShoutoutModal()" class="px-6 py-3 rounded-xl border font-semibold">Cancel</button>
           <button onclick="submitShoutout()" class="px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
             Send Shoutout! 💌
@@ -6800,6 +6876,7 @@ document.head.appendChild(style);
           <button id="filterAll" class="px-3 py-1 rounded-lg text-sm font-semibold filter-btn active" onclick="filterShoutouts('all')">All</button>
           <button id="filterPending" class="px-3 py-1 rounded-lg text-sm font-semibold filter-btn" onclick="filterShoutouts('pending')">Pending</button>
           <button id="filterApproved" class="px-3 py-1 rounded-lg text-sm font-semibold filter-btn" onclick="filterShoutouts('approved')">Approved</button>
+          <button id="filterArchived" class="px-3 py-1 rounded-lg text-sm font-semibold filter-btn" onclick="filterShoutouts('archived')">Archived</button>
         </div>
       </div>
       
