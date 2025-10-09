@@ -231,120 +231,6 @@
         overflow-x: visible !important;
       }
     }
-    
-    /* Mobile Accordion Navigation Styles */
-    @media (max-width: 768px) {
-      /* Hide the desktop carousel navigation on mobile */
-      #topNav {
-        display: none !important;
-      }
-      
-      /* Show mobile accordion navigation */
-      #mobileAccordionNav {
-        display: flex !important;
-        flex-direction: column;
-        gap: 0.75rem;
-      }
-      
-      /* Accordion item styles */
-      .mobile-accordion-item {
-        width: 100%;
-        border-radius: 0.75rem;
-        overflow: hidden;
-        transition: all 0.3s ease;
-      }
-      
-      /* Accordion header (the clickable tab) */
-      .mobile-accordion-header {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 1rem 1.25rem;
-        font-weight: 600;
-        color: white;
-        cursor: pointer;
-        transition: opacity 0.2s ease;
-      }
-      
-      .mobile-accordion-header:hover {
-        opacity: 0.9;
-      }
-      
-      .mobile-accordion-header-content {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-      
-      .mobile-accordion-icon {
-        font-size: 1.25rem;
-        transition: transform 0.3s ease;
-      }
-      
-      .mobile-accordion-item.active .mobile-accordion-icon.chevron {
-        transform: rotate(180deg);
-      }
-      
-      /* Accordion content panel */
-      .mobile-accordion-content {
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.3s ease;
-      }
-      
-      .mobile-accordion-item.active .mobile-accordion-content {
-        max-height: 2000px;
-      }
-      
-      .mobile-accordion-content-inner {
-        padding: 1rem 1.25rem;
-        background: white;
-      }
-      
-      /* Mobile header adjustments */
-      #shoutoutBtn {
-        position: relative !important;
-        top: auto !important;
-        right: auto !important;
-        width: 100%;
-        text-align: center;
-        margin-bottom: 1rem;
-      }
-      
-      .mobile-header-section {
-        margin-bottom: 1rem;
-      }
-      
-      .mobile-title-box {
-        background: var(--card-bg);
-        padding: 1rem;
-        border-radius: 0.75rem;
-        margin-bottom: 0.75rem;
-      }
-      
-      .mobile-date-box {
-        background: var(--card-bg);
-        padding: 0.75rem 1rem;
-        border-radius: 0.75rem;
-        margin-bottom: 0.75rem;
-      }
-      
-      .mobile-divider {
-        height: 2px;
-        background: var(--md-slate);
-        opacity: 0.3;
-        margin-bottom: 1rem;
-      }
-    }
-    
-    /* Desktop - hide mobile accordion navigation */
-    @media (min-width: 769px) {
-      #mobileAccordionNav {
-        display: none !important;
-      }
-    }
-    
     .filter-btn.active { background: var(--md-coral); color: white; }
   </style>
 </head>
@@ -369,145 +255,6 @@
     <div class="border-t-4" style="border-color: color-mix(in oklab, var(--md-slate) 70%, var(--md-white) 30%); box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></div>
   </div>
   <main class="max-w-6xl mx-auto px-6 pb-16">
-    <!-- Mobile Accordion Navigation (visible only on mobile) -->
-    <nav id="mobileAccordionNav" style="display: none;">
-      <!-- Shoutout Button (mobile) -->
-      <button id="shoutoutBtnMobile" class="bg-[color:var(--md-coral)] text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:opacity-90 transition-opacity" style="border-radius: 0.75rem;" onclick="showPage('shoutouts')">
-        💬 Shoutout Your Scholar!
-      </button>
-      
-      <!-- Mobile Header Section -->
-      <div class="mobile-header-section">
-        <div class="mobile-title-box">
-          <h2 id="mobileTitleText" class="text-xl font-display font-bold">Hey Hey First Grade!</h2>
-        </div>
-        <div class="mobile-date-box">
-          <p id="mobileDateText" class="text-sm font-semibold">Week of September 1–5</p>
-        </div>
-        <div class="mobile-divider"></div>
-      </div>
-      
-      <!-- Home Accordion -->
-      <div class="mobile-accordion-item" style="background: var(--md-coral);">
-        <div class="mobile-accordion-header" onclick="toggleMobileAccordion(this)">
-          <div class="mobile-accordion-header-content">
-            <span>🏠</span>
-            <span>Home</span>
-          </div>
-          <span class="mobile-accordion-icon chevron">▼</span>
-        </div>
-        <div class="mobile-accordion-content">
-          <div class="mobile-accordion-content-inner">
-            <button class="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors" onclick="showPageFromMobileAccordion('home')">
-              View Home
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Important Dates Accordion -->
-      <div class="mobile-accordion-item" style="background: var(--md-mustard);">
-        <div class="mobile-accordion-header" onclick="toggleMobileAccordion(this)">
-          <div class="mobile-accordion-header-content">
-            <span>📅</span>
-            <span>Important Dates</span>
-          </div>
-          <span class="mobile-accordion-icon chevron">▼</span>
-        </div>
-        <div class="mobile-accordion-content">
-          <div class="mobile-accordion-content-inner">
-            <button class="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors" onclick="showPageFromMobileAccordion('dates')">
-              View Important Dates
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Mr. Davis (Modal - no accordion) -->
-      <div class="mobile-accordion-item" style="background: var(--md-coral);">
-        <div class="mobile-accordion-header" onclick="openAboutMeDavisModal()">
-          <div class="mobile-accordion-header-content">
-            <span>👨‍🏫</span>
-            <span>Mr. Davis</span>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Scholar of the Month Accordion -->
-      <div class="mobile-accordion-item" style="background: var(--md-mustard);">
-        <div class="mobile-accordion-header" onclick="toggleMobileAccordion(this)">
-          <div class="mobile-accordion-header-content">
-            <span>⭐</span>
-            <span>Scholar of the Month</span>
-          </div>
-          <span class="mobile-accordion-icon chevron">▼</span>
-        </div>
-        <div class="mobile-accordion-content">
-          <div class="mobile-accordion-content-inner">
-            <button class="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors" onclick="showPageFromMobileAccordion('scholar')">
-              View Scholar of the Month
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Learning Hub (Modal - no accordion) -->
-      <div class="mobile-accordion-item" style="background: var(--md-slate);">
-        <div class="mobile-accordion-header" onclick="openLearningHubModal()">
-          <div class="mobile-accordion-header-content">
-            <span>📚</span>
-            <span>Learning Hub</span>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Student Services (Modal - no accordion) -->
-      <div class="mobile-accordion-item" style="background: var(--md-coral);">
-        <div class="mobile-accordion-header" onclick="openFamilyHubModal()">
-          <div class="mobile-accordion-header-content">
-            <span>🏫</span>
-            <span>Student Services</span>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Specials Accordion -->
-      <div class="mobile-accordion-item" style="background: #f59e0b;">
-        <div class="mobile-accordion-header" onclick="toggleMobileAccordion(this)">
-          <div class="mobile-accordion-header-content">
-            <span>🎨</span>
-            <span>Specials</span>
-          </div>
-          <span class="mobile-accordion-icon chevron">▼</span>
-        </div>
-        <div class="mobile-accordion-content">
-          <div class="mobile-accordion-content-inner">
-            <button class="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors" onclick="showPageFromMobileAccordion('specials')">
-              View Specials
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Extra News Accordion -->
-      <div class="mobile-accordion-item" style="background: #6b7280;">
-        <div class="mobile-accordion-header" onclick="toggleMobileAccordion(this)">
-          <div class="mobile-accordion-header-content">
-            <span>📰</span>
-            <span>Extra News</span>
-          </div>
-          <span class="mobile-accordion-icon chevron">▼</span>
-        </div>
-        <div class="mobile-accordion-content">
-          <div class="mobile-accordion-content-inner">
-            <button class="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors" onclick="showPageFromMobileAccordion('extras')">
-              View Extra News
-            </button>
-          </div>
-        </div>
-      </div>
-    </nav>
-    
     <!-- Top Navigation Bar -->
     <nav id="topNav" class="mt-6 mb-4 flex flex-wrap items-center gap-3 mobile-tab-scroll scrollbar-hide">
       <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
@@ -517,7 +264,7 @@
       <button id="aboutMeDavisBtn"
               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
               data-page="aboutme" style="background: var(--md-coral);">
-        <span>👨‍🏫</span><span>Mr. Davis</span>
+        <span>👨‍🏫</span><span>About Mr. Davis</span>
       </button>
       <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white"
               data-page="scholar" style="background: var(--md-mustard);">
@@ -535,7 +282,7 @@
       <button id="familyHubBtn"
               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
               style="background: var(--md-coral);">
-        <span>🏫</span><span>Student Services</span>
+        <span>🏫</span><span>Family Hub</span>
       </button>
       <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white"
               data-page="extras" style="background:#6b7280;">
@@ -599,50 +346,6 @@
               <div class="calendar-url-input">
                 <input type="url" id="calendarUrlInput" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg" placeholder="Enter calendar URL (PDF or webpage)" value="#" onchange="updateCalendarUrl(this)">
                 <button id="saveCalendarBtn" class="mt-2 px-3 py-1.5 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveCalendarUrl()">💾 Save Calendar URL</button>
-              </div>
-            </div>
-          </div>
-          <div>
-            <div class="rounded-2xl p-5 h-full" style="background: color-mix(in oklab, var(--md-white) 68%, var(--md-blush) 32%); border: 1px solid color-mix(in oklab, var(--md-blush) 60%, var(--md-white) 40%);">
-              <h3 class="font-semibold mb-3">🔮 Looking Ahead</h3>
-              <ul class="space-y-2 text-sm" data-edit="teacher" contenteditable="false">
-                <li>• Field trip permission slips due</li>
-                <li>• Parent-teacher conferences</li>
-                <li>• Winter concert practice begins</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-    <!-- IMPORTANT DATES TAB -->
-    <section data-page-panel="dates" class="pagePanel fade-in">
-      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
-        <div class="grid md:grid-cols-3 gap-6">
-          <div class="md:col-span-2">
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-2xl font-display font-bold">Important Dates</h2>
-              <button class="edit-only px-4 py-2 rounded-xl text-white font-semibold" style="background: var(--md-coral);" onclick="addEvent()">+ Add Event</button>
-            </div>
-            <div id="eventsListDates" class="space-y-4">
-              <div class="event-item flex items-center gap-3 p-3 rounded-xl bg-yellow-50 border" style="border-color:var(--md-mustard)">
-                <span class="event-emoji text-xl" data-edit="teacher" contenteditable="false">🎃</span>
-                <span class="event-text font-semibold flex-1" data-edit="teacher" contenteditable="false">Halloween Party - October 31st at 2pm</span>
-                <button class="edit-only text-red-500 hover:text-red-700" onclick="this.parentNode.remove()">✖</button>
-              </div>
-              <div class="event-item flex items-center gap-3 p-3 rounded-xl bg-blue-50 border" style="border-color:var(--md-slate)">
-                <span class="event-emoji text-xl" data-edit="teacher" contenteditable="false">🦃</span>
-                <span class="event-text font-semibold flex-1" data-edit="teacher" contenteditable="false">Thanksgiving Break - November 23-27</span>
-                <button class="edit-only text-red-500 hover:text-red-700" onclick="this.parentNode.remove()">✖</button>
-              </div>
-            </div>
-            <div class="p-4 rounded-xl mt-6" style="background: color-mix(in oklab, var(--md-white) 70%, #8b5cf6 30%); border: 1px solid color-mix(in oklab, #8b5cf6 60%, var(--md-white) 40%);">
-              <h3 class="font-semibold mb-2">📅 School Calendar</h3>
-              <a id="schoolCalendarLinkDates" href="#" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 underline">View School Calendar</a>
-              <p class="text-xs text-gray-600 mt-1">Click to visit the school calendar</p>
-              <div class="calendar-url-input">
-                <input type="url" id="calendarUrlInputDates" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg" placeholder="Enter calendar URL (PDF or webpage)" value="#" onchange="updateCalendarUrl(this)">
-                <button id="saveCalendarBtnDates" class="mt-2 px-3 py-1.5 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveCalendarUrl()">💾 Save Calendar URL</button>
               </div>
             </div>
           </div>
@@ -1403,41 +1106,6 @@
         }
       });
     }
-    
-    // Mobile accordion navigation functions
-    function toggleMobileAccordion(header) {
-      const accordionItem = header.parentElement;
-      const isActive = accordionItem.classList.contains('active');
-      
-      // Toggle the current accordion
-      if (isActive) {
-        accordionItem.classList.remove('active');
-      } else {
-        accordionItem.classList.add('active');
-      }
-    }
-    
-    function showPageFromMobileAccordion(pageId) {
-      showPage(pageId);
-      // Optionally scroll to top after showing page
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    
-    // Sync mobile header with main header
-    function syncMobileHeader() {
-      const mainHeading = document.getElementById('mainHeading');
-      const weekText = document.getElementById('weekText');
-      const mobileTitleText = document.getElementById('mobileTitleText');
-      const mobileDateText = document.getElementById('mobileDateText');
-      
-      if (mainHeading && mobileTitleText) {
-        mobileTitleText.textContent = mainHeading.textContent;
-      }
-      if (weekText && mobileDateText) {
-        mobileDateText.textContent = weekText.textContent;
-      }
-    }
-    
     document.addEventListener('DOMContentLoaded',function(){
       showPage('home');
       document.querySelectorAll('.pageTab').forEach(btn=>{
@@ -1452,9 +1120,6 @@
       
       // Initialize read-only state on page load
       initializeReadOnlyState();
-      
-      // Sync mobile header with main header
-      syncMobileHeader();
       
       document.getElementById('editModeBtn').onclick = function() {
         document.getElementById('pinOverlay').classList.add('show');
@@ -7169,7 +6834,7 @@ document.head.appendChild(style);
     <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-8 max-w-md mx-4" onclick="event.stopPropagation();" style="border: 3px solid var(--md-coral);">
       <div class="text-center">
         <div class="text-5xl mb-4">🏫</div>
-        <h3 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">Student Services</h3>
+        <h3 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">Family Hub</h3>
         <div class="space-y-3">
           <a href="https://classdojo.com" target="_blank"
              class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90"
@@ -7204,7 +6869,7 @@ document.head.appendChild(style);
         <h3 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">About Mr. Davis</h3>
         <div class="space-y-3">
           <button onclick="closeAboutMeDavisModal(); showPage('aboutme');" class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
-            <span>👨‍🏫</span><span>About Mr. Davis</span>
+            <span>👨‍🏫</span><span>Mr. Davis</span>
           </button>
           <button onclick="closeAboutMeDavisModal(); openContactModal();" class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
             <span>📧</span><span>Contact Me</span>
