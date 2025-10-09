@@ -231,6 +231,109 @@
         overflow-x: visible !important;
       }
     }
+    
+    /* Mobile vertical accordion tabs - MOBILE ONLY */
+    @media (max-width: 768px) {
+      #topNav {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+        flex-wrap: nowrap !important;
+        overflow-x: visible !important;
+        padding-bottom: 0 !important;
+      }
+      
+      .mobile-accordion-tab {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .mobile-tab-header {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+      }
+      
+      .mobile-tab-header button {
+        flex: 1;
+        justify-content: flex-start;
+        pointer-events: none;
+      }
+      
+      .mobile-tab-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+        background: white;
+        border-radius: 0.75rem;
+        margin-top: 0.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+      
+      .mobile-tab-content.active {
+        max-height: 2000px;
+        transition: max-height 0.5s ease-in;
+      }
+      
+      .mobile-tab-arrow {
+        transition: transform 0.3s ease;
+        font-size: 0.875rem;
+        color: white;
+        background: rgba(0,0,0,0.2);
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.375rem;
+        margin-right: 0.5rem;
+      }
+      
+      .mobile-tab-arrow.rotated {
+        transform: rotate(180deg);
+      }
+      
+      /* Make modal-opening buttons work on mobile */
+      .mobile-accordion-tab #aboutMeDavisBtn,
+      .mobile-accordion-tab #learningHubBtn,
+      .mobile-accordion-tab #familyHubBtn {
+        pointer-events: auto !important;
+        width: 100%;
+      }
+      
+      /* Make regular page tabs still work but not switch pages on accordion click */
+      .mobile-accordion-tab .pageTab {
+        width: 100%;
+      }
+      
+      /* Hide Important Dates tab on mobile (it's only for accordion) */
+      .mobile-accordion-tab.dates-only {
+        display: flex;
+      }
+    }
+    
+    /* Desktop behavior - ensure no changes to desktop */
+    @media (min-width: 769px) {
+      .mobile-accordion-tab {
+        display: contents;
+      }
+      
+      .mobile-tab-header {
+        display: contents;
+      }
+      
+      .mobile-tab-content {
+        display: none !important;
+      }
+      
+      .mobile-tab-arrow {
+        display: none !important;
+      }
+      
+      /* Hide Important Dates tab on desktop */
+      .mobile-accordion-tab.dates-only {
+        display: none !important;
+      }
+    }
+    
     .filter-btn.active { background: var(--md-coral); color: white; }
   </style>
 </head>
@@ -257,37 +360,91 @@
   <main class="max-w-6xl mx-auto px-6 pb-16">
     <!-- Top Navigation Bar -->
     <nav id="topNav" class="mt-6 mb-4 flex flex-wrap items-center gap-3 mobile-tab-scroll scrollbar-hide">
-      <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
-              data-page="home" style="background: var(--md-coral);">
-        <span>🏠</span><span>Home</span>
-      </button>
-      <button id="aboutMeDavisBtn"
-              class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
-              data-page="aboutme" style="background: var(--md-coral);">
-        <span>👨‍🏫</span><span>About Mr. Davis</span>
-      </button>
-      <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white"
-              data-page="scholar" style="background: var(--md-mustard);">
-        <span>⭐</span><span>Scholar of the Month</span>
-      </button>
-      <button id="learningHubBtn"
-              class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
-              style="background: var(--md-slate);">
-        <span>📚</span><span>Learning Hub</span>
-      </button>
-      <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white"
-              data-page="specials" style="background:#f59e0b;">
-        <span>🎨</span><span>Specials</span>
-      </button>
-      <button id="familyHubBtn"
-              class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
-              style="background: var(--md-coral);">
-        <span>🏫</span><span>Family Hub</span>
-      </button>
-      <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white"
-              data-page="extras" style="background:#6b7280;">
-        <span>📰</span><span>Extra News</span>
-      </button>
+      <!-- Home Tab with Mobile Accordion -->
+      <div class="mobile-accordion-tab">
+        <div class="mobile-tab-header">
+          <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
+                  data-page="home" style="background: var(--md-coral);">
+            <span>🏠</span><span>Home</span>
+          </button>
+          <span class="mobile-tab-arrow">▼</span>
+        </div>
+        <div class="mobile-tab-content" id="homeAccordion">
+          <div class="p-4">
+            <h3 class="font-bold text-lg mb-3" style="color: var(--md-coral);">What We Did This Week</h3>
+            <p id="mobileRecapText" class="text-sm leading-relaxed text-gray-700">
+              This week we explored magical stories and practiced our sight words. The students loved reading about brave characters and sharing their favorite parts!
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Mr. Davis Tab - Opens Modal on Mobile -->
+      <div class="mobile-accordion-tab">
+        <button id="aboutMeDavisBtn"
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
+                data-page="aboutme" style="background: var(--md-coral);">
+          <span>👨‍🏫</span><span>Mr. Davis</span>
+        </button>
+      </div>
+      
+      <!-- Important Dates Tab with Mobile Accordion (Mobile Only) -->
+      <div class="mobile-accordion-tab dates-only">
+        <div class="mobile-tab-header">
+          <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
+                  data-page="home" style="background: var(--md-mustard);">
+            <span>📅</span><span>Important Dates</span>
+          </button>
+          <span class="mobile-tab-arrow">▼</span>
+        </div>
+        <div class="mobile-tab-content" id="datesAccordion">
+          <div class="p-4" id="mobileDatesList">
+            <!-- Dates will be populated here -->
+          </div>
+        </div>
+      </div>
+      
+      <!-- Scholar Tab -->
+      <div class="mobile-accordion-tab">
+        <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white"
+                data-page="scholar" style="background: var(--md-mustard);">
+          <span>⭐</span><span>Scholar of the Month</span>
+        </button>
+      </div>
+      
+      <!-- Learning Hub Tab - Opens Modal -->
+      <div class="mobile-accordion-tab">
+        <button id="learningHubBtn"
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
+                style="background: var(--md-slate);">
+          <span>📚</span><span>Learning Hub</span>
+        </button>
+      </div>
+      
+      <!-- Specials Tab -->
+      <div class="mobile-accordion-tab">
+        <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white"
+                data-page="specials" style="background:#f59e0b;">
+          <span>🎨</span><span>Specials</span>
+        </button>
+      </div>
+      
+      <!-- Family Hub Tab - Opens Modal -->
+      <div class="mobile-accordion-tab">
+        <button id="familyHubBtn"
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
+                style="background: var(--md-coral);">
+          <span>🏫</span><span>Family Hub</span>
+        </button>
+      </div>
+      
+      <!-- Extra News Tab -->
+      <div class="mobile-accordion-tab">
+        <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white"
+                data-page="extras" style="background:#6b7280;">
+          <span>📰</span><span>Extra News</span>
+        </button>
+      </div>
     </nav>
     <!-- HOME TAB -->
     <section data-page-panel="home" class="pagePanel fade-in active">
@@ -6387,6 +6544,85 @@ document.addEventListener('DOMContentLoaded', function() {
     aboutMeDavisBtn.addEventListener('click', openAboutMeDavisModal);
   }
   
+  // Mobile accordion functionality for navigation tabs
+  function initMobileAccordion() {
+    const isMobile = window.innerWidth <= 768;
+    
+    if (!isMobile) return; // Only run on mobile
+    
+    // Get all accordion headers
+    const accordionHeaders = document.querySelectorAll('.mobile-tab-header');
+    
+    accordionHeaders.forEach(header => {
+      header.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const content = this.nextElementSibling;
+        const arrow = this.querySelector('.mobile-tab-arrow');
+        
+        // Toggle this accordion
+        if (content && content.classList.contains('mobile-tab-content')) {
+          content.classList.toggle('active');
+          if (arrow) {
+            arrow.classList.toggle('rotated');
+          }
+        }
+      });
+    });
+    
+    // Sync recap text to mobile accordion
+    function syncRecapText() {
+      const desktopRecap = document.getElementById('recapText');
+      const mobileRecap = document.getElementById('mobileRecapText');
+      if (desktopRecap && mobileRecap) {
+        mobileRecap.textContent = desktopRecap.textContent;
+      }
+    }
+    
+    // Sync dates to mobile accordion
+    function syncDates() {
+      const desktopEventsList = document.getElementById('eventsList');
+      const mobileDatesList = document.getElementById('mobileDatesList');
+      
+      if (desktopEventsList && mobileDatesList) {
+        const events = desktopEventsList.querySelectorAll('.event-item');
+        mobileDatesList.innerHTML = '';
+        
+        events.forEach(event => {
+          const emoji = event.querySelector('.event-emoji')?.textContent || '';
+          const text = event.querySelector('.event-text')?.textContent || '';
+          
+          const dateItem = document.createElement('div');
+          dateItem.className = 'flex items-center gap-2 mb-2 text-sm';
+          dateItem.innerHTML = `<span class="text-lg">${emoji}</span><span>${text}</span>`;
+          mobileDatesList.appendChild(dateItem);
+        });
+      }
+    }
+    
+    // Initial sync
+    syncRecapText();
+    syncDates();
+    
+    // Observe changes to sync automatically
+    const recapText = document.getElementById('recapText');
+    if (recapText) {
+      const observer = new MutationObserver(syncRecapText);
+      observer.observe(recapText, { childList: true, characterData: true, subtree: true });
+    }
+    
+    const eventsList = document.getElementById('eventsList');
+    if (eventsList) {
+      const observer = new MutationObserver(syncDates);
+      observer.observe(eventsList, { childList: true, subtree: true });
+    }
+  }
+  
+  // Initialize mobile accordion on load and resize
+  initMobileAccordion();
+  window.addEventListener('resize', initMobileAccordion);
+  
   const shoutoutBtn = document.getElementById('shoutoutBtn');
   if (shoutoutBtn) {
     shoutoutBtn.addEventListener('click', function(e) {
@@ -6869,7 +7105,7 @@ document.head.appendChild(style);
         <h3 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">About Mr. Davis</h3>
         <div class="space-y-3">
           <button onclick="closeAboutMeDavisModal(); showPage('aboutme');" class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
-            <span>👨‍🏫</span><span>Mr. Davis</span>
+            <span>👨‍🏫</span><span>About Mr. Davis</span>
           </button>
           <button onclick="closeAboutMeDavisModal(); openContactModal();" class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
             <span>📧</span><span>Contact Me</span>
