@@ -173,7 +173,15 @@
     
     /* Mobile tab carousel styles */
     @media (max-width: 768px) {
-      .mobile-tab-scroll {
+      /* Navigation tabs use same layout as desktop (flex-wrap) */
+      #topNav.mobile-tab-scroll {
+        display: flex;
+        flex-wrap: wrap !important;
+        overflow-x: visible !important;
+      }
+      
+      /* Other carousels keep scrolling behavior */
+      .mobile-tab-scroll:not(#topNav) {
         display: flex;
         flex-wrap: nowrap !important;
         overflow-x: auto;
@@ -183,15 +191,15 @@
         scroll-snap-type: x proximity;
       }
       
-      .mobile-tab-scroll > * {
+      .mobile-tab-scroll:not(#topNav) > * {
         flex-shrink: 0;
         scroll-snap-align: start;
       }
       
-      /* Ensure tabs don't wrap on mobile */
-      .mobile-tab-scroll .pageTab,
-      .mobile-tab-scroll button,
-      .mobile-tab-scroll a {
+      /* Ensure non-nav tabs don't wrap on mobile */
+      .mobile-tab-scroll:not(#topNav) .pageTab,
+      .mobile-tab-scroll:not(#topNav) button,
+      .mobile-tab-scroll:not(#topNav) a {
         white-space: nowrap;
         min-width: max-content;
       }
@@ -264,7 +272,7 @@
       <button id="aboutMeDavisBtn"
               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
               data-page="aboutme" style="background: var(--md-coral);">
-        <span>👨‍🏫</span><span>About Mr. Davis</span>
+        <span>👨‍🏫</span><span>Mr. Davis</span>
       </button>
       <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white"
               data-page="scholar" style="background: var(--md-mustard);">
@@ -282,7 +290,7 @@
       <button id="familyHubBtn"
               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
               style="background: var(--md-coral);">
-        <span>🏫</span><span>Family Hub</span>
+        <span>🎯</span><span>Student Services</span>
       </button>
       <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white"
               data-page="extras" style="background:#6b7280;">
@@ -4205,7 +4213,7 @@ function closeLearningHubModal() {
   }
 }
 
-// Family Hub Modal Functions
+// Student Services Modal Functions
 function openFamilyHubModal() {
   const modal = document.getElementById('familyHubModal');
   if (modal) {
@@ -6829,12 +6837,12 @@ document.head.appendChild(style);
     </div>
   </div>
 
-  <!-- Family Hub Popup Modal -->
+  <!-- Student Services Popup Modal -->
   <div id="familyHubModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9998; justify-content: center; align-items: center;" onclick="closeFamilyHubModal()">
     <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-8 max-w-md mx-4" onclick="event.stopPropagation();" style="border: 3px solid var(--md-coral);">
       <div class="text-center">
-        <div class="text-5xl mb-4">🏫</div>
-        <h3 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">Family Hub</h3>
+        <div class="text-5xl mb-4">🎯</div>
+        <h3 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">Student Services</h3>
         <div class="space-y-3">
           <a href="https://classdojo.com" target="_blank"
              class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90"
@@ -6869,7 +6877,7 @@ document.head.appendChild(style);
         <h3 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">About Mr. Davis</h3>
         <div class="space-y-3">
           <button onclick="closeAboutMeDavisModal(); showPage('aboutme');" class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
-            <span>👨‍🏫</span><span>Mr. Davis</span>
+            <span>👨‍🏫</span><span>About Mr. Davis</span>
           </button>
           <button onclick="closeAboutMeDavisModal(); openContactModal();" class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
             <span>📧</span><span>Contact Me</span>
