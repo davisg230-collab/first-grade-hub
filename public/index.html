@@ -4363,6 +4363,29 @@ function editShoutout() {
 
 // NEW SHOUTOUT PAGE FUNCTIONS
 
+// Word count function for message validation
+function updateWordCount() {
+  const messageInput = document.getElementById('messageInput');
+  const wordCountSpan = document.getElementById('wordCount');
+  const wordCountDisplay = document.getElementById('wordCountDisplay');
+  
+  if (!messageInput || !wordCountSpan) return;
+  
+  const message = messageInput.value.trim();
+  const wordCount = message === '' ? 0 : message.split(/\s+/).length;
+  
+  wordCountSpan.textContent = wordCount;
+  
+  // Change color based on word count
+  if (wordCount > 30) {
+    wordCountDisplay.style.color = 'var(--md-coral)';
+    wordCountDisplay.style.fontWeight = 'bold';
+  } else {
+    wordCountDisplay.style.color = 'var(--md-slate)';
+    wordCountDisplay.style.fontWeight = 'normal';
+  }
+}
+
 // Create Shoutout Modal Functions
 function openCreateShoutoutModal() {
   const modal = document.getElementById('createShoutoutModal');
@@ -4373,6 +4396,16 @@ function openCreateShoutoutModal() {
     document.getElementById('scholarNameInput').value = '';
     document.getElementById('fromInput').value = '';
     document.getElementById('messageInput').value = '';
+    
+    // Reset word count
+    updateWordCount();
+    
+    // Add event listener for word count updates
+    const messageInput = document.getElementById('messageInput');
+    if (messageInput) {
+      messageInput.removeEventListener('input', updateWordCount);
+      messageInput.addEventListener('input', updateWordCount);
+    }
   }
 }
 
@@ -4396,6 +4429,9 @@ function generateShoutout() {
   document.getElementById('scholarNameInput').value = randomScholar;
   document.getElementById('messageInput').value = randomMessage;
   document.getElementById('fromInput').value = 'Mr. Davis';
+  
+  // Update word count display
+  updateWordCount();
 }
 
 // Submit new shoutout
@@ -4406,6 +4442,13 @@ async function submitShoutout() {
   
   if (!scholarName || !from || !message) {
     alert('Please fill in all fields!');
+    return;
+  }
+  
+  // Check word count (max 30 words)
+  const wordCount = message === '' ? 0 : message.split(/\s+/).length;
+  if (wordCount > 30) {
+    alert('Message is too long! Please shorten your message to 30 words or less. Current word count: ' + wordCount + ' words.');
     return;
   }
   
@@ -6955,6 +6998,9 @@ document.head.appendChild(style);
 • Keep up the great work!
 • You are amazing!
 • Your hard work makes us smile!"></textarea>
+            <div id="wordCountDisplay" class="text-sm mt-1" style="color: var(--md-slate);">
+              Word count: <span id="wordCount">0</span>/30
+            </div>
           </div>
         </form>
         
