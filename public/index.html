@@ -3993,6 +3993,19 @@ function updateMathSection(math_text, math_vocab_json) {
     });
   }
 }
+function linkifyText(text) {
+  // Convert URLs in text to clickable anchor tags
+  // Matches http://, https://, and www. patterns
+  const urlPattern = /(https?:\/\/[^\s]+|www\.[^\s]+)/gi;
+  return text.replace(urlPattern, (url) => {
+    // Ensure the URL has a protocol for the href
+    let href = url;
+    if (url.startsWith('www.')) {
+      href = 'http://' + url;
+    }
+    return `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color: var(--md-slate); text-decoration: underline;">${url}</a>`;
+  });
+}
 function updateExtrasSection(extras_json) {
   const extrasContainer = document.getElementById('extrasGrid');
   if (!extrasContainer) return;
@@ -4006,12 +4019,27 @@ function updateExtrasSection(extras_json) {
     div.className = 'text-center p-8 rounded-2xl';
     div.style.background = 'color-mix(in oklab, var(--md-white) 70%, var(--md-mustard) 30%)';
     div.style.border = '1px solid color-mix(in oklab, var(--md-mustard) 60%, var(--md-white) 40%)';
+    
+    // Create paragraph element and set innerHTML with linkified text
+    const pElement = document.createElement('p');
+    pElement.className = 'text-sm';
+    pElement.contentEditable = 'true';
+    pElement.style.cursor = 'text';
+    pElement.innerHTML = linkifyText(body_html);
+    
     div.innerHTML = `
       <div class="text-6xl mb-4 emoji-edit" contenteditable="true" style="cursor: text;">${emoji}</div>
       <h3 class="font-semibold mb-2" contenteditable="true" style="cursor: text;">${title}</h3>
-      <p class="text-sm" contenteditable="true" style="cursor: text;">${body_html}</p>
-      <button class="mt-2 text-red-500 hover:text-red-700 text-xs" onclick="this.closest('.text-center').remove();" style="display: none;">Remove Card</button>
     `;
+    div.appendChild(pElement);
+    
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'mt-2 text-red-500 hover:text-red-700 text-xs';
+    removeBtn.onclick = function() { this.closest('.text-center').remove(); };
+    removeBtn.style.display = 'none';
+    removeBtn.textContent = 'Remove Card';
+    div.appendChild(removeBtn);
+    
     extrasContainer.appendChild(div);
   });
 }
