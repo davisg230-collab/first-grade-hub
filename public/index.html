@@ -230,6 +230,19 @@
       .specials-card {
         min-width: 250px;
       }
+      
+      /* Fix specials image slots to prevent elongation on mobile */
+      .specials-img-slot {
+        max-height: 150px !important;
+        height: 150px !important;
+      }
+      
+      .specials-img-slot img {
+        max-height: 150px !important;
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+      }
     }
     
     /* Desktop keeps flex-wrap behavior */
