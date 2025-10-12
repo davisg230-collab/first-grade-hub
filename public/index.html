@@ -483,6 +483,11 @@
                       disabled readonly></textarea>
           </div>
           
+          <!-- Save Button (Edit Mode Only) -->
+          <div class="edit-only mb-6" style="display: none;">
+            <button id="saveClassSkillMeterBtn" class="px-4 py-2 rounded-lg text-white font-semibold" style="background: var(--md-coral);" onclick="saveClassSkillMeter()">💾 Save Class Skill Meter</button>
+          </div>
+          
           <!-- History Section (Edit Mode Only) -->
           <div id="classSkillMeterHistory" class="edit-only" style="display: none;">
             <label class="block text-sm font-semibold mb-2" style="color: var(--md-mustard);">History:</label>
@@ -3950,6 +3955,64 @@ function updateClassSkillMeter(skill, progress, familyNote, historyJson) {
   
   // Render history if in edit mode
   renderClassSkillMeterHistory();
+}
+async function saveClassSkillMeter() {
+  const saveBtn = document.getElementById('saveClassSkillMeterBtn');
+  
+  if (!saveBtn) return;
+  
+  const originalText = saveBtn.textContent;
+  
+  try {
+    // Check authentication
+    await ensureAuthenticated();
+    
+    // Show saving state
+    saveBtn.textContent = '⏳ Saving...';
+    saveBtn.disabled = true;
+    
+    // Prepare data to save
+    const data = {};
+    
+    // Get Class Skill Meter values
+    const classSkillMeterSkill = document.getElementById('classSkillMeterSkill');
+    if (classSkillMeterSkill) data.class_skill_meter_skill = classSkillMeterSkill.value || 'Kindness';
+    
+    const classSkillMeterProgress = document.getElementById('classSkillMeterProgress');
+    if (classSkillMeterProgress) data.class_skill_meter_progress = parseInt(classSkillMeterProgress.value) || 0;
+    
+    const classSkillMeterFamilyNote = document.getElementById('classSkillMeterFamilyNote');
+    if (classSkillMeterFamilyNote) data.class_skill_meter_family_note = classSkillMeterFamilyNote.value || '';
+    
+    // Save history if it exists
+    if (typeof classSkillMeterHistory !== 'undefined' && classSkillMeterHistory) {
+      data.class_skill_meter_history = JSON.stringify(classSkillMeterHistory);
+    }
+    
+    console.log('Saving Class Skill Meter data to Firestore:', data);
+    
+    // Save to Firestore
+    await db.collection('classData').doc('current').set(data, { merge: true });
+    
+    console.log('Class Skill Meter data saved successfully');
+    
+    // Show success state
+    saveBtn.textContent = '✅ Saved!';
+    
+    // Reset button after 1 second
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 1000);
+    
+  } catch (error) {
+    console.error('Failed to save Class Skill Meter:', error);
+    saveBtn.textContent = '❌ Save Failed';
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 2000);
+  }
 }
 function updateSkillsSection(skills_text, sounds_json) {
   const descEl = document.querySelector('[data-page-panel="skills"] p[data-edit="teacher"]');
