@@ -296,14 +296,14 @@
               style="background: var(--md-slate);">
         <span>📚</span><span>Learning Hub</span>
       </button>
-      <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white"
-              data-page="specials" style="background:#f59e0b;">
-        <span>🎨</span><span>Specials</span>
-      </button>
       <button id="familyHubBtn"
               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
               style="background: var(--md-coral);">
         <span>🎯</span><span>Student Services</span>
+      </button>
+      <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white"
+              data-page="specials" style="background:#f59e0b;">
+        <span>🎨</span><span>Specials</span>
       </button>
       <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white"
               data-page="extras" style="background:#6b7280;">
@@ -409,22 +409,18 @@
 
       <!-- Class Skill Meter Section -->
       <div class="rounded-2xl shadow-soft p-6 sm:p-10 mb-8 relative overflow-hidden" 
-           style="background: linear-gradient(135deg, var(--md-white) 0%, #e0f2fe 100%); border: 1px solid color-mix(in oklab, #7dd3fc 50%, var(--md-white) 50%);">
-        <!-- Cloud decorations -->
-        <div style="position: absolute; top: 20px; right: 30px; width: 80px; height: 40px; background: rgba(255, 255, 255, 0.6); border-radius: 50%; filter: blur(15px);"></div>
-        <div style="position: absolute; bottom: 30px; left: 40px; width: 100px; height: 50px; background: rgba(255, 255, 255, 0.5); border-radius: 50%; filter: blur(20px);"></div>
-        <div style="position: absolute; top: 50%; right: 15%; width: 60px; height: 30px; background: rgba(255, 255, 255, 0.4); border-radius: 50%; filter: blur(12px);"></div>
+           style="background: var(--md-white); border: 1px solid color-mix(in oklab, var(--md-mustard) 50%, var(--md-white) 50%);">
         
         <div style="position: relative; z-index: 1;">
-          <h2 class="text-2xl font-display font-bold mb-6" style="color: #0369a1;" data-edit="teacher" contenteditable="false">
+          <h2 class="text-2xl font-display font-bold mb-6 text-center" style="color: var(--md-mustard);" data-edit="teacher" contenteditable="false">
             Class Skill Meter
           </h2>
           
           <!-- Scholar Skill Selection -->
           <div class="mb-6">
-            <label class="block text-sm font-semibold mb-2" style="color: #0c4a6e;">Scholar Skill:</label>
+            <label class="block text-sm font-semibold mb-2" style="color: var(--md-mustard);">Scholar Skill:</label>
             <select id="classSkillMeterSkill" class="w-full sm:w-64 px-4 py-2 rounded-lg border-2 teacher-only-edit" 
-                    style="border-color: #7dd3fc; background: var(--md-white);" disabled>
+                    style="border-color: var(--md-mustard); background: var(--md-white);" disabled>
               <option value="Grit">Grit</option>
               <option value="Self-Control">Self-Control</option>
               <option value="Preparedness">Preparedness</option>
@@ -433,67 +429,65 @@
             </select>
           </div>
           
-          <!-- Period Type and Label -->
-          <div class="grid sm:grid-cols-2 gap-4 mb-6">
-            <div>
-              <label class="block text-sm font-semibold mb-2" style="color: #0c4a6e;">Period Type:</label>
-              <select id="classSkillMeterPeriodType" class="w-full px-4 py-2 rounded-lg border-2 teacher-only-edit" 
-                      style="border-color: #7dd3fc; background: var(--md-white);" 
-                      onchange="updatePeriodLabel()" disabled>
-                <option value="Day">Day</option>
-                <option value="Week">Week</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-semibold mb-2" style="color: #0c4a6e;">Period Label:</label>
-              <input type="text" id="classSkillMeterPeriodLabel" 
-                     class="w-full px-4 py-2 rounded-lg border-2 teacher-only-edit" 
-                     style="border-color: #7dd3fc; background: var(--md-white);" 
-                     placeholder="Week of [date]" readonly disabled>
-            </div>
-          </div>
-          
           <!-- Progress Bar -->
           <div class="mb-4">
             <div class="flex items-center justify-between mb-2">
-              <label class="text-sm font-semibold" style="color: #0c4a6e;">Class Progress:</label>
+              <label class="text-sm font-semibold" style="color: var(--md-mustard);">Class Progress:</label>
               <div class="flex items-center gap-2">
                 <input type="number" id="classSkillMeterProgress" 
-                       class="w-20 px-2 py-1 rounded border-2 text-center teacher-only-edit" 
-                       style="border-color: #7dd3fc; background: var(--md-white);" 
+                       class="w-20 px-2 py-1 rounded border-2 text-center teacher-only-edit edit-only" 
+                       style="border-color: var(--md-mustard); background: var(--md-white); display: none;" 
                        min="0" max="100" value="0" 
                        onchange="updateProgressBar()" disabled>
-                <span class="text-sm font-semibold" style="color: #0c4a6e;">%</span>
+                <span class="text-sm font-semibold edit-only" style="color: var(--md-mustard); display: none;">%</span>
                 <span id="classSkillMeterEmoji" class="text-2xl">🚦</span>
               </div>
             </div>
-            <div class="w-full h-8 rounded-full overflow-hidden" style="background: rgba(255, 255, 255, 0.7); border: 2px solid #7dd3fc;">
+            <div class="w-full h-12 rounded-full overflow-hidden" style="background: color-mix(in oklab, var(--md-mustard) 20%, var(--md-white)); border: 2px solid color-mix(in oklab, var(--md-mustard) 50%, var(--md-white));">
               <div id="classSkillMeterProgressBar" class="h-full rounded-full transition-all duration-300" 
                    style="width: 0%; background: linear-gradient(90deg, #fbbf24 0%, #22c55e 100%);"></div>
             </div>
           </div>
           
           <!-- Progress Labels -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs sm:text-sm">
-            <div class="text-center p-2 rounded" style="background: rgba(255, 255, 255, 0.5);">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs sm:text-sm mb-6">
+            <div class="text-center p-2 rounded" style="background: color-mix(in oklab, var(--md-mustard) 10%, var(--md-white));">
               <div class="text-lg mb-1">🚦</div>
               <div class="font-semibold" style="color: #dc2626;">Needs Work</div>
               <div style="color: #6b7280;">0-24%</div>
             </div>
-            <div class="text-center p-2 rounded" style="background: rgba(255, 255, 255, 0.5);">
+            <div class="text-center p-2 rounded" style="background: color-mix(in oklab, var(--md-mustard) 10%, var(--md-white));">
               <div class="text-lg mb-1">🙂</div>
               <div class="font-semibold" style="color: #f59e0b;">Getting There</div>
               <div style="color: #6b7280;">25-49%</div>
             </div>
-            <div class="text-center p-2 rounded" style="background: rgba(255, 255, 255, 0.5);">
+            <div class="text-center p-2 rounded" style="background: color-mix(in oklab, var(--md-mustard) 10%, var(--md-white));">
               <div class="text-lg mb-1">💪</div>
               <div class="font-semibold" style="color: #3b82f6;">Doing Great</div>
               <div style="color: #6b7280;">50-79%</div>
             </div>
-            <div class="text-center p-2 rounded" style="background: rgba(255, 255, 255, 0.5);">
+            <div class="text-center p-2 rounded" style="background: color-mix(in oklab, var(--md-mustard) 10%, var(--md-white));">
               <div class="text-lg mb-1">🌟</div>
               <div class="font-semibold" style="color: #22c55e;">Rockstars</div>
               <div style="color: #6b7280;">80-100%</div>
+            </div>
+          </div>
+          
+          <!-- Family Note -->
+          <div class="mb-6">
+            <label class="block text-sm font-semibold mb-2" style="color: var(--md-mustard);">Family Note:</label>
+            <textarea id="classSkillMeterFamilyNote" 
+                      class="w-full h-24 px-4 py-2 rounded-lg border-2 teacher-only-edit" 
+                      style="border-color: var(--md-mustard); background: var(--md-white); resize: vertical;" 
+                      placeholder="Add a note for families about this week's skill..." 
+                      disabled readonly></textarea>
+          </div>
+          
+          <!-- History Section (Edit Mode Only) -->
+          <div id="classSkillMeterHistory" class="edit-only" style="display: none;">
+            <label class="block text-sm font-semibold mb-2" style="color: var(--md-mustard);">History:</label>
+            <div id="classSkillMeterHistoryList" class="space-y-2 max-h-60 overflow-y-auto">
+              <!-- History items will be populated by JavaScript -->
             </div>
           </div>
         </div>
@@ -1203,6 +1197,9 @@
       math: []       // Array of {title: string, url: string}
     };
     
+    // Class Skill Meter history
+    let classSkillMeterHistory = []; // Array of {skill: string, progress: number, date: string, note: string}
+    
     // Tab navigation
     function showPage(pageId) {
       document.querySelectorAll('.pagePanel').forEach(panel => {
@@ -1540,6 +1537,9 @@
       renderWatchMeContent('skills');
       renderWatchMeContent('listening');
       renderWatchMeContent('math');
+      
+      // Render Class Skill Meter history
+      renderClassSkillMeterHistory();
     }
     function exitEditMode(){
       isOwner = false; // Reset owner status when exiting edit mode
@@ -1747,14 +1747,16 @@
       const classSkillMeterSkill = document.getElementById('classSkillMeterSkill');
       if (classSkillMeterSkill) data.class_skill_meter_skill = classSkillMeterSkill.value || 'Kindness';
       
-      const classSkillMeterPeriodType = document.getElementById('classSkillMeterPeriodType');
-      if (classSkillMeterPeriodType) data.class_skill_meter_period_type = classSkillMeterPeriodType.value || 'Week';
-      
-      const classSkillMeterPeriodLabel = document.getElementById('classSkillMeterPeriodLabel');
-      if (classSkillMeterPeriodLabel) data.class_skill_meter_period_label = classSkillMeterPeriodLabel.value || '';
-      
       const classSkillMeterProgress = document.getElementById('classSkillMeterProgress');
       if (classSkillMeterProgress) data.class_skill_meter_progress = parseInt(classSkillMeterProgress.value) || 0;
+      
+      const classSkillMeterFamilyNote = document.getElementById('classSkillMeterFamilyNote');
+      if (classSkillMeterFamilyNote) data.class_skill_meter_family_note = classSkillMeterFamilyNote.value || '';
+      
+      // Save history to an array if it exists in memory (history is managed separately)
+      if (typeof classSkillMeterHistory !== 'undefined' && classSkillMeterHistory) {
+        data.class_skill_meter_history = JSON.stringify(classSkillMeterHistory);
+      }
       
       // Skills section
       const skillsDescEl = document.querySelector('[data-page-panel="skills"] p[data-edit="teacher"]');
@@ -3852,19 +3854,102 @@ function updatePeriodLabel() {
   }
 }
 
-function updateClassSkillMeter(skill, periodType, periodLabel, progress) {
+// Render Class Skill Meter History (visible only in edit mode)
+function renderClassSkillMeterHistory() {
+  const historyList = document.getElementById('classSkillMeterHistoryList');
+  if (!historyList) return;
+  
+  // Clear existing content
+  historyList.innerHTML = '';
+  
+  if (!classSkillMeterHistory || classSkillMeterHistory.length === 0) {
+    historyList.innerHTML = '<p class="text-sm text-gray-500 italic">No history recorded yet.</p>';
+    return;
+  }
+  
+  // Sort by date (newest first)
+  const sortedHistory = [...classSkillMeterHistory].sort((a, b) => {
+    return new Date(b.date) - new Date(a.date);
+  });
+  
+  // Render each history item
+  sortedHistory.forEach((item, index) => {
+    const historyItem = document.createElement('div');
+    historyItem.className = 'p-3 rounded-lg border';
+    historyItem.style.cssText = 'background: color-mix(in oklab, var(--md-mustard) 10%, var(--md-white)); border-color: color-mix(in oklab, var(--md-mustard) 30%, var(--md-white));';
+    
+    const date = new Date(item.date);
+    const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    
+    historyItem.innerHTML = `
+      <div class="flex items-start justify-between mb-1">
+        <div class="font-semibold" style="color: var(--md-mustard);">${item.skill}</div>
+        <div class="text-xs text-gray-500">${formattedDate}</div>
+      </div>
+      <div class="text-sm mb-1">Progress: <span class="font-semibold">${item.progress}%</span></div>
+      ${item.note ? `<div class="text-sm text-gray-700 mt-2">${item.note}</div>` : ''}
+    `;
+    
+    historyList.appendChild(historyItem);
+  });
+}
+
+// Add current skill meter state to history (called when saving in edit mode)
+function addToClassSkillMeterHistory() {
   const skillSelect = document.getElementById('classSkillMeterSkill');
-  const periodTypeSelect = document.getElementById('classSkillMeterPeriodType');
-  const periodLabelInput = document.getElementById('classSkillMeterPeriodLabel');
   const progressInput = document.getElementById('classSkillMeterProgress');
+  const familyNoteTextarea = document.getElementById('classSkillMeterFamilyNote');
+  
+  if (!skillSelect || !progressInput) return;
+  
+  const historyItem = {
+    skill: skillSelect.value,
+    progress: parseInt(progressInput.value) || 0,
+    date: new Date().toISOString(),
+    note: familyNoteTextarea ? familyNoteTextarea.value : ''
+  };
+  
+  // Add to beginning of array (newest first)
+  classSkillMeterHistory.unshift(historyItem);
+  
+  // Keep only last 20 items
+  if (classSkillMeterHistory.length > 20) {
+    classSkillMeterHistory = classSkillMeterHistory.slice(0, 20);
+  }
+  
+  // Re-render history
+  renderClassSkillMeterHistory();
+}
+
+
+function updateClassSkillMeter(skill, progress, familyNote, historyJson) {
+  const skillSelect = document.getElementById('classSkillMeterSkill');
+  const progressInput = document.getElementById('classSkillMeterProgress');
+  const familyNoteTextarea = document.getElementById('classSkillMeterFamilyNote');
   
   if (skillSelect && skill) skillSelect.value = skill;
-  if (periodTypeSelect && periodType) periodTypeSelect.value = periodType;
-  if (periodLabelInput && periodLabel) periodLabelInput.value = periodLabel;
   if (progressInput && progress !== undefined) {
     progressInput.value = progress;
     updateProgressBar();
   }
+  if (familyNoteTextarea && familyNote !== undefined) {
+    familyNoteTextarea.value = familyNote || '';
+  }
+  
+  // Load history into global variable
+  if (historyJson) {
+    try {
+      classSkillMeterHistory = JSON.parse(historyJson);
+    } catch (e) {
+      console.error('Failed to parse history JSON:', e);
+      classSkillMeterHistory = [];
+    }
+  } else {
+    classSkillMeterHistory = [];
+  }
+  
+  // Render history if in edit mode
+  renderClassSkillMeterHistory();
 }
 function updateSkillsSection(skills_text, sounds_json) {
   const descEl = document.querySelector('[data-page-panel="skills"] p[data-edit="teacher"]');
@@ -3985,7 +4070,7 @@ function populateDataFromSheet(data) {
   updateSnacksGrid(data.snacks_json);
   updateSnackMessage(data.snack_message);
   updateScholarInfo(data.scholar_name, data.scholar_blurb, data.scholar_skill);
-  updateClassSkillMeter(data.class_skill_meter_skill, data.class_skill_meter_period_type, data.class_skill_meter_period_label, data.class_skill_meter_progress);
+  updateClassSkillMeter(data.class_skill_meter_skill, data.class_skill_meter_progress, data.class_skill_meter_family_note, data.class_skill_meter_history);
   updateSkillsSection(data.skills_text, data.sounds_json);
   updateListeningSection(data.listening_text, data.ask_json);
   updateMathSection(data.math_text, data.math_vocab_json);
@@ -6419,9 +6504,9 @@ function getDefaultFallbackData() {
     scholar_blurb: "Our scholar will be announced soon!",
     scholar_skill: "Kindness and helping others",
     class_skill_meter_skill: "Kindness",
-    class_skill_meter_period_type: "Week",
-    class_skill_meter_period_label: "Week of Oct 7–11",
     class_skill_meter_progress: 65,
+    class_skill_meter_family_note: "This week we are focusing on showing kindness to others. Please reinforce this skill at home!",
+    class_skill_meter_history: JSON.stringify([]),
     skills_text: "This week we focused on phonics and reading skills.",
     sounds_json: JSON.stringify(["ch", "sh", "th", "wh"]),
     listening_text: "We practiced active listening and following directions.",
