@@ -1283,7 +1283,7 @@
     let skillsUnitsData = []; // Array of 7 units, each: {title: string, sections: [{title: string, bullets: [string]}]}
     
     // Math Modules data structure
-    let mathModulesData = []; // Array of 6 modules, each: {title: string, cards: [{id: string, content: string, color: string}]}
+    let mathModulesData = []; // Array of 6 modules, each: {title: string, sections: [{title: string, bulletPoints: [string]}]}
     
     // Tab navigation
     function showPage(pageId) {
@@ -7365,7 +7365,11 @@ function initializeMathModules() {
     for (let i = 1; i <= 6; i++) {
       mathModulesData.push({
         title: `Module ${i}`,
-        cards: []
+        sections: [
+          { title: 'Section 1', bulletPoints: [] },
+          { title: 'Section 2', bulletPoints: [] },
+          { title: 'Section 3', bulletPoints: [] }
+        ]
       });
     }
   }
@@ -7417,51 +7421,40 @@ function renderMathModules() {
     titleContainer.appendChild(toggleIcon);
     titleContainer.appendChild(titleEl);
     
-    const addButton = document.createElement('button');
-    addButton.className = 'edit-only px-3 py-2 rounded-lg text-white text-sm font-semibold';
-    addButton.style.background = 'var(--md-slate)';
-    addButton.style.display = isEditMode ? 'block' : 'none';
-    addButton.textContent = '+ Add Card';
-    addButton.onclick = (e) => {
-      e.stopPropagation();
-      addMathModuleCard(moduleIndex);
-    };
-    
     headerDiv.appendChild(titleContainer);
-    headerDiv.appendChild(addButton);
     moduleDiv.appendChild(headerDiv);
     
-    // Cards container
-    const cardsContainer = document.createElement('div');
-    cardsContainer.className = 'mobile-tab-scroll scrollbar-hide flex gap-4 overflow-x-auto pb-2';
-    cardsContainer.style.display = moduleIndex === 0 ? 'flex' : 'none';
-    cardsContainer.style.transition = 'all 0.3s ease';
-    cardsContainer.setAttribute('data-math-cards-container', moduleIndex);
+    // Sections container (3 columns)
+    const sectionsContainer = document.createElement('div');
+    sectionsContainer.className = 'grid grid-cols-1 md:grid-cols-3 gap-4';
+    sectionsContainer.style.display = moduleIndex === 0 ? 'grid' : 'none';
+    sectionsContainer.style.transition = 'all 0.3s ease';
+    sectionsContainer.setAttribute('data-math-sections-container', moduleIndex);
     
-    if (module.cards && module.cards.length > 0) {
-      module.cards.forEach((card, cardIndex) => {
-        cardsContainer.appendChild(createMathModuleCard(card, moduleIndex, cardIndex, isEditMode));
-      });
-    } else {
-      const emptyMsg = document.createElement('div');
-      emptyMsg.className = 'text-gray-400 text-sm italic py-4';
-      emptyMsg.textContent = isEditMode ? 'Click "Add Card" to add content to this module' : 'No cards in this module yet';
-      cardsContainer.appendChild(emptyMsg);
+    // Ensure module has 3 sections
+    if (!module.sections || module.sections.length === 0) {
+      module.sections = [
+        { title: 'Section 1', bulletPoints: [] },
+        { title: 'Section 2', bulletPoints: [] },
+        { title: 'Section 3', bulletPoints: [] }
+      ];
     }
     
-    moduleDiv.appendChild(cardsContainer);
+    // Create three sections
+    module.sections.forEach((section, sectionIndex) => {
+      const sectionDiv = createMathModuleSection(section, moduleIndex, sectionIndex, isEditMode);
+      sectionsContainer.appendChild(sectionDiv);
+    });
+    
+    moduleDiv.appendChild(sectionsContainer);
     container.appendChild(moduleDiv);
   });
-  
-  // Setup drag and drop for cards
-  if (isEditMode) {
-    setupMathModulesDragDrop();
-  }
 }
+
 
 // Toggle math module expansion
 function toggleMathModule(moduleIndex) {
-  const allContainers = document.querySelectorAll('[data-math-cards-container]');
+  const allContainers = document.querySelectorAll('[data-math-sections-container]');
   const allIcons = document.querySelectorAll('[data-math-toggle-icon]');
   
   // Create a map of icons by their data attribute for efficient lookup
@@ -7472,12 +7465,12 @@ function toggleMathModule(moduleIndex) {
   });
   
   allContainers.forEach((container) => {
-    const containerIndex = container.getAttribute('data-math-cards-container');
+    const containerIndex = container.getAttribute('data-math-sections-container');
     const icon = iconMap.get(containerIndex);
     
     if (containerIndex === moduleIndex.toString()) {
       const isHidden = container.style.display === 'none';
-      container.style.display = isHidden ? 'flex' : 'none';
+      container.style.display = isHidden ? 'grid' : 'none';
       if (icon) icon.textContent = isHidden ? '▼' : '▶';
     } else {
       container.style.display = 'none';
@@ -7486,188 +7479,109 @@ function toggleMathModule(moduleIndex) {
   });
 }
 
-// Create a single card element for math module
-function createMathModuleCard(card, moduleIndex, cardIndex, isEditMode) {
-  const cardDiv = document.createElement('div');
-  cardDiv.className = 'min-w-[180px] p-3 rounded-xl shadow-sm';
-  cardDiv.style.border = '2px solid color-mix(in oklab, var(--md-slate) 40%, var(--md-white) 60%)';
-  cardDiv.style.background = card.color || 'var(--md-white)';
-  cardDiv.setAttribute('data-math-card-id', card.id);
-  cardDiv.setAttribute('draggable', isEditMode);
+// Create a single section element for math module
+function createMathModuleSection(section, moduleIndex, sectionIndex, isEditMode) {
+  const sectionDiv = document.createElement('div');
+  sectionDiv.className = 'p-4 rounded-xl shadow-sm';
+  sectionDiv.style.border = '2px solid color-mix(in oklab, var(--md-slate) 40%, var(--md-white) 60%)';
+  sectionDiv.style.background = 'var(--md-white)';
   
-  // Content area
-  const contentDiv = document.createElement('div');
-  contentDiv.className = 'prose prose-sm max-w-none';
-  contentDiv.contentEditable = isEditMode;
-  contentDiv.innerHTML = card.content || '<p>Click to edit...</p>';
-  contentDiv.style.minHeight = '50px';
-  contentDiv.style.fontSize = '0.875rem';
-  contentDiv.style.cursor = isEditMode ? 'text' : 'default';
-  contentDiv.addEventListener('blur', () => {
-    mathModulesData[moduleIndex].cards[cardIndex].content = contentDiv.innerHTML;
+  // Section title
+  const titleEl = document.createElement('h4');
+  titleEl.className = 'text-lg font-semibold mb-3';
+  titleEl.style.color = 'var(--md-slate)';
+  titleEl.contentEditable = isEditMode;
+  titleEl.textContent = section.title;
+  titleEl.addEventListener('blur', () => {
+    mathModulesData[moduleIndex].sections[sectionIndex].title = titleEl.textContent;
   });
+  sectionDiv.appendChild(titleEl);
   
-  cardDiv.appendChild(contentDiv);
+  // Bullet points container
+  const bulletsContainer = document.createElement('div');
+  bulletsContainer.className = 'space-y-2';
+  bulletsContainer.setAttribute('data-section-bullets', `${moduleIndex}-${sectionIndex}`);
   
-  // Edit controls
-  if (isEditMode) {
-    const controlsDiv = document.createElement('div');
-    controlsDiv.className = 'flex gap-2 mt-3 pt-3 border-t border-gray-200';
-    
-    // Color picker
-    const colorLabel = document.createElement('label');
-    colorLabel.className = 'text-xs font-semibold text-gray-600';
-    colorLabel.textContent = 'Color: ';
-    
-    const colorSelect = document.createElement('select');
-    colorSelect.className = 'text-xs px-2 py-1 rounded border';
-    const colors = [
-      { name: 'White', value: 'var(--md-white)' },
-      { name: 'Mustard', value: 'color-mix(in oklab, var(--md-white) 70%, var(--md-mustard) 30%)' },
-      { name: 'Slate', value: 'color-mix(in oklab, var(--md-white) 70%, var(--md-slate) 30%)' },
-      { name: 'Coral', value: 'color-mix(in oklab, var(--md-white) 70%, var(--md-coral) 30%)' },
-      { name: 'Blush', value: 'color-mix(in oklab, var(--md-white) 70%, var(--md-blush) 30%)' },
-      { name: 'Cream', value: 'color-mix(in oklab, var(--md-white) 70%, var(--md-pebble) 30%)' }
-    ];
-    
-    colors.forEach(c => {
-      const option = document.createElement('option');
-      option.value = c.value;
-      option.textContent = c.name;
-      if (card.color === c.value) option.selected = true;
-      colorSelect.appendChild(option);
+  // Render existing bullet points
+  if (section.bulletPoints && section.bulletPoints.length > 0) {
+    section.bulletPoints.forEach((bullet, bulletIndex) => {
+      const bulletDiv = createBulletPointElement(bullet, moduleIndex, sectionIndex, bulletIndex, isEditMode);
+      bulletsContainer.appendChild(bulletDiv);
     });
-    
-    colorSelect.onchange = () => {
-      cardDiv.style.background = colorSelect.value;
-      mathModulesData[moduleIndex].cards[cardIndex].color = colorSelect.value;
-    };
-    
-    colorLabel.appendChild(colorSelect);
-    controlsDiv.appendChild(colorLabel);
-    
-    // Remove button
-    const removeBtn = document.createElement('button');
-    removeBtn.className = 'ml-auto text-xs px-2 py-1 rounded text-white';
-    removeBtn.style.background = 'var(--md-slate)';
-    removeBtn.textContent = 'Remove';
-    removeBtn.onclick = () => removeMathModuleCard(moduleIndex, cardIndex);
-    
-    controlsDiv.appendChild(removeBtn);
-    cardDiv.appendChild(controlsDiv);
+  } else if (!isEditMode) {
+    const emptyMsg = document.createElement('div');
+    emptyMsg.className = 'text-gray-400 text-sm italic py-2';
+    emptyMsg.textContent = 'No items yet';
+    bulletsContainer.appendChild(emptyMsg);
   }
   
-  return cardDiv;
+  sectionDiv.appendChild(bulletsContainer);
+  
+  // Add button (edit mode only)
+  if (isEditMode) {
+    const addBtn = document.createElement('button');
+    addBtn.className = 'mt-3 px-3 py-1 rounded-lg text-white text-sm font-semibold';
+    addBtn.style.background = 'var(--md-slate)';
+    addBtn.textContent = '+ Add Item';
+    addBtn.onclick = () => addBulletPoint(moduleIndex, sectionIndex);
+    sectionDiv.appendChild(addBtn);
+  }
+  
+  return sectionDiv;
 }
 
-// Add a new card to a math module
-function addMathModuleCard(moduleIndex) {
-  const newCard = {
-    id: `math-card-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    content: '<p>New card - click to edit</p>',
-    color: 'var(--md-white)'
-  };
+// Create a bullet point element
+function createBulletPointElement(bulletText, moduleIndex, sectionIndex, bulletIndex, isEditMode) {
+  const bulletDiv = document.createElement('div');
+  bulletDiv.className = 'flex items-start gap-2 group';
   
-  mathModulesData[moduleIndex].cards.push(newCard);
+  // Bullet point marker
+  const marker = document.createElement('span');
+  marker.className = 'text-gray-600 mt-1';
+  marker.textContent = '•';
+  marker.style.fontSize = '1rem';
+  bulletDiv.appendChild(marker);
+  
+  // Bullet point text
+  const textDiv = document.createElement('div');
+  textDiv.className = 'flex-1 text-sm';
+  textDiv.contentEditable = isEditMode;
+  textDiv.textContent = bulletText;
+  textDiv.style.cursor = isEditMode ? 'text' : 'default';
+  textDiv.style.minHeight = '1.5rem';
+  textDiv.addEventListener('blur', () => {
+    mathModulesData[moduleIndex].sections[sectionIndex].bulletPoints[bulletIndex] = textDiv.textContent;
+  });
+  bulletDiv.appendChild(textDiv);
+  
+  // Remove button (edit mode only)
+  if (isEditMode) {
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 rounded text-white text-xs';
+    removeBtn.style.background = 'var(--md-coral)';
+    removeBtn.textContent = '×';
+    removeBtn.onclick = () => removeBulletPoint(moduleIndex, sectionIndex, bulletIndex);
+    bulletDiv.appendChild(removeBtn);
+  }
+  
+  return bulletDiv;
+}
+
+// Add a new bullet point to a section
+function addBulletPoint(moduleIndex, sectionIndex) {
+  if (!mathModulesData[moduleIndex].sections[sectionIndex].bulletPoints) {
+    mathModulesData[moduleIndex].sections[sectionIndex].bulletPoints = [];
+  }
+  mathModulesData[moduleIndex].sections[sectionIndex].bulletPoints.push('New item');
   renderMathModules();
 }
 
-// Remove a card from a math module
-function removeMathModuleCard(moduleIndex, cardIndex) {
-  if (confirm('Remove this card?')) {
-    mathModulesData[moduleIndex].cards.splice(cardIndex, 1);
+// Remove a bullet point from a section
+function removeBulletPoint(moduleIndex, sectionIndex, bulletIndex) {
+  if (confirm('Remove this item?')) {
+    mathModulesData[moduleIndex].sections[sectionIndex].bulletPoints.splice(bulletIndex, 1);
     renderMathModules();
   }
-}
-
-// Setup drag and drop for math module cards
-let draggedMathCard = null;
-let draggedMathCardModule = null;
-let draggedMathCardIndex = null;
-
-function setupMathModulesDragDrop() {
-  document.querySelectorAll('[data-math-cards-container]').forEach(container => {
-    const cards = container.querySelectorAll('[data-math-card-id]');
-    
-    cards.forEach(card => {
-      card.addEventListener('dragstart', handleMathCardDragStart);
-      card.addEventListener('dragover', handleMathCardDragOver);
-      card.addEventListener('drop', handleMathCardDrop);
-      card.addEventListener('dragend', handleMathCardDragEnd);
-      card.addEventListener('dragleave', handleMathCardDragLeave);
-    });
-    
-    // Allow dropping on empty containers
-    container.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-    });
-    
-    container.addEventListener('drop', (e) => {
-      e.preventDefault();
-      if (draggedMathCard) {
-        const targetModule = parseInt(container.getAttribute('data-math-cards-container'));
-        // Move card to end of target module
-        const card = mathModulesData[draggedMathCardModule].cards.splice(draggedMathCardIndex, 1)[0];
-        mathModulesData[targetModule].cards.push(card);
-        renderMathModules();
-      }
-    });
-  });
-}
-
-function handleMathCardDragStart(e) {
-  draggedMathCard = this;
-  const container = this.closest('[data-math-cards-container]');
-  draggedMathCardModule = parseInt(container.getAttribute('data-math-cards-container'));
-  
-  const cards = Array.from(container.querySelectorAll('[data-math-card-id]'));
-  draggedMathCardIndex = cards.indexOf(this);
-  
-  this.style.opacity = '0.4';
-  e.dataTransfer.effectAllowed = 'move';
-}
-
-function handleMathCardDragOver(e) {
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'move';
-  
-  if (this !== draggedMathCard) {
-    this.style.borderLeft = '3px solid var(--md-slate)';
-  }
-}
-
-function handleMathCardDragLeave(e) {
-  this.style.borderLeft = '';
-}
-
-function handleMathCardDrop(e) {
-  e.stopPropagation();
-  e.preventDefault();
-  
-  if (draggedMathCard !== this) {
-    const targetContainer = this.closest('[data-math-cards-container]');
-    const targetModule = parseInt(targetContainer.getAttribute('data-math-cards-container'));
-    const targetCards = Array.from(targetContainer.querySelectorAll('[data-math-card-id]'));
-    const targetIndex = targetCards.indexOf(this);
-    
-    // Remove from source
-    const card = mathModulesData[draggedMathCardModule].cards.splice(draggedMathCardIndex, 1)[0];
-    
-    // Insert at target
-    mathModulesData[targetModule].cards.splice(targetIndex, 0, card);
-    
-    renderMathModules();
-  }
-  
-  this.style.borderLeft = '';
-}
-
-function handleMathCardDragEnd(e) {
-  this.style.opacity = '1';
-  document.querySelectorAll('[data-math-card-id]').forEach(card => {
-    card.style.borderLeft = '';
-  });
 }
 
 // Save math modules to Firestore
@@ -7696,13 +7610,45 @@ function updateMathModulesData(modulesJson) {
   } else {
     try {
       mathModulesData = JSON.parse(modulesJson);
+      
+      // Migration: Convert old card-based format to new section-based format
+      mathModulesData = mathModulesData.map(module => {
+        if (module.cards && !module.sections) {
+          // Old format detected, migrate to new format
+          return {
+            title: module.title,
+            sections: [
+              { title: 'Section 1', bulletPoints: [] },
+              { title: 'Section 2', bulletPoints: [] },
+              { title: 'Section 3', bulletPoints: [] }
+            ]
+          };
+        }
+        return module;
+      });
+      
       // Ensure we have 6 modules
       while (mathModulesData.length < 6) {
         mathModulesData.push({
           title: `Module ${mathModulesData.length + 1}`,
-          cards: []
+          sections: [
+            { title: 'Section 1', bulletPoints: [] },
+            { title: 'Section 2', bulletPoints: [] },
+            { title: 'Section 3', bulletPoints: [] }
+          ]
         });
       }
+      
+      // Ensure each module has 3 sections
+      mathModulesData.forEach(module => {
+        if (!module.sections || module.sections.length < 3) {
+          module.sections = [
+            { title: 'Section 1', bulletPoints: [] },
+            { title: 'Section 2', bulletPoints: [] },
+            { title: 'Section 3', bulletPoints: [] }
+          ];
+        }
+      });
     } catch (e) {
       console.error('Failed to parse math modules JSON:', e);
       initializeMathModules();
