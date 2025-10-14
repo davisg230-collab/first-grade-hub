@@ -7425,6 +7425,8 @@ function renderMathModules() {
     moduleDiv.appendChild(headerDiv);
     
     // Sections container (3 columns)
+    // Using auto-fit grid for responsive layout that adapts to screen size
+    // On mobile: stacks vertically; On tablet: 2 columns; On desktop: 3 columns
     const sectionsContainer = document.createElement('div');
     sectionsContainer.style.display = moduleIndex === 0 ? 'grid' : 'none';
     sectionsContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(250px, 1fr))';
