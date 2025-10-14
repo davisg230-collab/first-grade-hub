@@ -1508,6 +1508,11 @@
         el.contentEditable = true;
         el.style.cursor = 'text';
       });
+      // Make links within contentEditable elements clickable by setting contentEditable=false on them
+      document.querySelectorAll('#extrasGrid a').forEach(link => {
+        link.contentEditable = false;
+        link.style.cursor = 'pointer';
+      });
       document.querySelectorAll('#extrasGrid button[onclick*="remove"]').forEach(btn => {
         btn.style.display = 'inline-block';
       });
@@ -1706,7 +1711,12 @@
       if (lookingAheadSection) {
         const ul = lookingAheadSection.querySelector('ul[data-edit="teacher"]');
         if (ul) {
-          const items = Array.from(ul.querySelectorAll('li')).map(li => li.textContent.replace(/^•\s*/, ''));
+          // Get the text content and split by newlines, filtering out empty lines
+          // This handles cases where the ul structure might be broken during editing
+          const text = ul.innerText || ul.textContent || '';
+          const items = text.split(/\r?\n/)
+            .map(line => line.trim().replace(/^[•\-\*]\s*/, '')) // Remove bullet characters
+            .filter(line => line.length > 0); // Remove empty lines
           data.looking_ahead = items.join('\n');
         }
       }
@@ -4086,13 +4096,13 @@ function updateExtrasSection(extras_json) {
     // Create paragraph element and set innerHTML with linkified text
     const pElement = document.createElement('p');
     pElement.className = 'text-sm';
-    pElement.contentEditable = 'true';
-    pElement.style.cursor = 'text';
+    pElement.contentEditable = 'false';
+    pElement.style.cursor = 'default';
     pElement.innerHTML = linkifyText(body_html);
     
     div.innerHTML = `
-      <div class="text-6xl mb-4 emoji-edit" contenteditable="true" style="cursor: text;">${emoji}</div>
-      <h3 class="font-semibold mb-2" contenteditable="true" style="cursor: text;">${title}</h3>
+      <div class="text-6xl mb-4 emoji-edit" contenteditable="false" style="cursor: default;">${emoji}</div>
+      <h3 class="font-semibold mb-2" contenteditable="false" style="cursor: default;">${title}</h3>
     `;
     div.appendChild(pElement);
     
