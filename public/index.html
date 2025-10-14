@@ -682,6 +682,50 @@
         </div>
       </div>
     </section>
+    <!-- VOLUNTEER OPPORTUNITIES TAB -->
+    <section data-page-panel="volunteers" class="pagePanel fade-in">
+      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
+        <div class="flex items-center justify-between mb-5">
+          <div>
+            <h2 class="text-2xl font-display font-bold">🤝 Volunteer Opportunities</h2>
+            <p class="text-sm text-[color:var(--md-ink)]/80 mt-1">Sign up to help with classroom events</p>
+          </div>
+        </div>
+        
+        <!-- Background Check Link Section -->
+        <div class="mb-6 p-4 rounded-lg" style="background: color-mix(in oklab, var(--md-mustard) 20%, var(--md-white) 80%); border: 1px solid color-mix(in oklab, var(--md-mustard) 40%, var(--md-white) 60%);">
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="font-semibold">Background Check Information</h4>
+            <div class="edit-only flex gap-2" style="display: none;">
+              <button id="saveBackgroundCheckBtn" class="px-3 py-1 rounded-lg text-white text-xs font-semibold" style="background: var(--md-coral);" onclick="saveBackgroundCheckLink()">💾 Save</button>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm">Link:</span>
+            <input 
+              id="backgroundCheckLink" 
+              type="text" 
+              class="flex-1 px-3 py-2 rounded-lg text-sm" 
+              style="background: var(--md-white); border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);" 
+              placeholder="Enter background check URL..."
+              disabled 
+              readonly
+            >
+            <a id="backgroundCheckLinkBtn" href="#" target="_blank" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral); display: none;">Open Link</a>
+          </div>
+        </div>
+
+        <!-- Upcoming Events Title Section -->
+        <div class="mb-4">
+          <h3 class="text-xl font-display font-bold" data-edit="teacher" contenteditable="false" id="volunteerEventsTitle">Upcoming Events</h3>
+        </div>
+
+        <!-- Monthly Volunteer Sections -->
+        <div id="volunteerMonthsContainer" class="space-y-6">
+          <!-- Each month will be dynamically created here -->
+        </div>
+      </div>
+    </section>
     <!-- EXTRAS TAB -->
     <section data-page-panel="extras" class="pagePanel fade-in">
       <div class="rounded-2xl shadow-soft p-6 sm:p-8" style="background: var(--card-bg);">
@@ -1595,6 +1639,26 @@
       renderSkillsUnits();
       renderMathModules();
       
+      // Enable volunteer page editing
+      const backgroundCheckLink = document.getElementById('backgroundCheckLink');
+      if (backgroundCheckLink) {
+        backgroundCheckLink.disabled = false;
+        backgroundCheckLink.readOnly = false;
+      }
+      document.querySelectorAll('.volunteer-event-card .event-emoji, .volunteer-event-card .event-title, .volunteer-event-card .event-details').forEach(el => {
+        el.contentEditable = true;
+        el.style.cursor = 'text';
+      });
+      document.querySelectorAll('.month-title').forEach(el => {
+        el.contentEditable = true;
+        el.style.cursor = 'text';
+      });
+      const volunteerEventsTitle = document.getElementById('volunteerEventsTitle');
+      if (volunteerEventsTitle) {
+        volunteerEventsTitle.contentEditable = true;
+        volunteerEventsTitle.style.cursor = 'text';
+      }
+      
       // Render Class Skill Meter history
       renderClassSkillMeterHistory();
     }
@@ -1688,6 +1752,26 @@
       }
       if (saveTransportationInstructionsBtn) saveTransportationInstructionsBtn.style.display = 'none';
 
+      
+      // Disable volunteer page editing
+      const backgroundCheckLink = document.getElementById('backgroundCheckLink');
+      if (backgroundCheckLink) {
+        backgroundCheckLink.disabled = true;
+        backgroundCheckLink.readOnly = true;
+      }
+      document.querySelectorAll('.volunteer-event-card .event-emoji, .volunteer-event-card .event-title, .volunteer-event-card .event-details').forEach(el => {
+        el.contentEditable = false;
+        el.style.cursor = 'default';
+      });
+      document.querySelectorAll('.month-title').forEach(el => {
+        el.contentEditable = false;
+        el.style.cursor = 'default';
+      });
+      const volunteerEventsTitle = document.getElementById('volunteerEventsTitle');
+      if (volunteerEventsTitle) {
+        volunteerEventsTitle.contentEditable = false;
+        volunteerEventsTitle.style.cursor = 'default';
+      }
       
       // Update gallery images clickable state (enable when not in edit mode)
       document.querySelectorAll('.gallery-imgs img').forEach(img => {
@@ -1989,6 +2073,11 @@
       
       // Watch Me links
       data.watch_me_json = JSON.stringify(watchMeData);
+      
+      // Volunteer data
+      const volunteerDataCollected = collectVolunteerData();
+      data.volunteers_json = JSON.stringify(volunteerDataCollected);
+      data.volunteer_background_check_link = document.getElementById('backgroundCheckLink')?.value || '';
       
       return data;
     }
@@ -4260,6 +4349,10 @@ function populateDataFromSheet(data) {
   // Load Math Modules data
   updateMathModulesData(data.math_modules_json);
   
+  // Initialize and load volunteer data
+  initializeVolunteerMonths();
+  loadVolunteerData(data);
+  
   if (data.calendar_url) {
     const cal = document.getElementById('schoolCalendarLink');
     if (cal) cal.href = data.calendar_url;
@@ -4662,6 +4755,380 @@ function closeFamilyHubModal() {
   if (modal) {
     modal.style.display = 'none';
     document.body.style.overflow = '';
+  }
+}
+
+// Volunteer Opportunities Functions
+const months = ['August', 'September', 'October', 'November', 'December', 'January', 'February', 'March', 'April', 'May', 'June', 'July'];
+
+// Initialize volunteer data structure
+let volunteerData = {
+  backgroundCheckLink: '',
+  eventsTitle: 'Upcoming Events',
+  months: months.map(month => ({
+    name: month,
+    events: []
+  }))
+};
+
+// Initialize volunteer months on page load
+function initializeVolunteerMonths() {
+  const container = document.getElementById('volunteerMonthsContainer');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  
+  months.forEach((month, monthIndex) => {
+    const monthSection = document.createElement('div');
+    monthSection.className = 'month-section p-4 rounded-xl mb-4';
+    monthSection.style.background = 'color-mix(in oklab, var(--md-white) 95%, var(--md-slate) 5%)';
+    monthSection.style.border = '1px solid color-mix(in oklab, var(--md-slate) 20%, var(--md-white) 80%)';
+    monthSection.setAttribute('data-month-index', monthIndex);
+    
+    monthSection.innerHTML = `
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-lg font-bold month-title" data-edit="teacher" contenteditable="false">${month}</h3>
+        <button class="edit-only px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral); display: none;" onclick="addVolunteerEvent(${monthIndex})">+ Add Event</button>
+      </div>
+      <div class="volunteer-events-grid grid sm:grid-cols-2 lg:grid-cols-3 gap-4" data-month-index="${monthIndex}">
+        <!-- Event cards will be added here -->
+      </div>
+    `;
+    
+    container.appendChild(monthSection);
+  });
+}
+
+// Add a volunteer event card to a specific month
+function addVolunteerEvent(monthIndex) {
+  const grid = document.querySelector(`.volunteer-events-grid[data-month-index="${monthIndex}"]`);
+  if (!grid) return;
+  
+  const eventId = Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  
+  const eventCard = document.createElement('div');
+  eventCard.className = 'volunteer-event-card p-4 rounded-xl bg-white';
+  eventCard.style.border = '1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%)';
+  eventCard.setAttribute('data-event-id', eventId);
+  
+  eventCard.innerHTML = `
+    <div class="mb-3">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xl event-emoji" data-edit="teacher" contenteditable="true" style="cursor: text;">🎉</span>
+        <button class="edit-only text-red-500 hover:text-red-700 text-sm" onclick="removeVolunteerEvent(this)" style="display: none;">✖</button>
+      </div>
+      <div class="event-title font-semibold mb-2" data-edit="teacher" contenteditable="true" style="cursor: text; min-height: 1.5rem;">Event Title</div>
+      <div class="event-details text-sm text-gray-600 mb-3" data-edit="teacher" contenteditable="true" style="cursor: text; min-height: 2rem;">Date and time details...</div>
+    </div>
+    <div class="border-t pt-3" style="border-color: color-mix(in oklab, var(--md-slate) 20%, var(--md-white) 80%);">
+      <div class="flex items-center gap-3 mb-2">
+        <input type="checkbox" class="volunteer-checkbox" onchange="toggleVolunteerInput(this)">
+        <span class="text-sm font-medium">I can help!</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm volunteer-name" style="background: var(--md-cream); border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);" disabled>
+        <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold volunteer-save-btn" style="background: var(--md-coral);" onclick="claimVolunteerSlot(this)" disabled>Save</button>
+      </div>
+    </div>
+  `;
+  
+  grid.appendChild(eventCard);
+  
+  // Focus on the title for editing
+  const titleEl = eventCard.querySelector('.event-title');
+  if (titleEl) {
+    titleEl.focus();
+    // Select all text
+    if (window.getSelection && document.createRange) {
+      const range = document.createRange();
+      range.selectNodeContents(titleEl);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+  }
+}
+
+// Remove a volunteer event card
+function removeVolunteerEvent(btn) {
+  const card = btn.closest('.volunteer-event-card');
+  if (card && confirm('Remove this volunteer opportunity?')) {
+    card.remove();
+  }
+}
+
+// Toggle volunteer input based on checkbox state
+function toggleVolunteerInput(checkbox) {
+  const card = checkbox.closest('.volunteer-event-card');
+  const nameInput = card.querySelector('.volunteer-name');
+  const saveButton = card.querySelector('.volunteer-save-btn');
+  
+  if (checkbox.checked) {
+    nameInput.disabled = false;
+    saveButton.disabled = false;
+    nameInput.focus();
+    // Add visual feedback
+    card.style.backgroundColor = 'rgba(16, 185, 129, 0.05)';
+  } else {
+    nameInput.disabled = true;
+    saveButton.disabled = true;
+    nameInput.value = '';
+    // Reset background
+    card.style.backgroundColor = 'white';
+    
+    // Save the unclaimed state
+    saveVolunteerDataToFirestore().catch((error) => {
+      console.error('Failed to save unclaim state:', error);
+    });
+  }
+}
+
+// Claim a volunteer slot
+function claimVolunteerSlot(btn) {
+  const card = btn.closest('.volunteer-event-card');
+  const checkbox = card.querySelector('.volunteer-checkbox');
+  const name = card.querySelector('.volunteer-name').value.trim();
+  
+  if (checkbox && checkbox.checked && name) {
+    card.classList.add('volunteer-claimed');
+    btn.textContent = 'Saving...';
+    btn.disabled = true;
+    
+    // Save to Firestore immediately
+    saveVolunteerDataToFirestore().then(() => {
+      btn.textContent = 'Saved!';
+      setTimeout(() => {
+        btn.textContent = 'Save';
+        btn.disabled = false;
+      }, 1800);
+    }).catch((error) => {
+      console.error('Failed to save volunteer data:', error);
+      btn.textContent = 'Save Failed';
+      setTimeout(() => {
+        btn.textContent = 'Save';
+        btn.disabled = false;
+      }, 2000);
+    });
+  } else if (!checkbox || !checkbox.checked) {
+    alert('Please check the box first to volunteer.');
+  } else if (!name) {
+    alert('Please enter your name to volunteer.');
+  }
+}
+
+// Save background check link
+async function saveBackgroundCheckLink() {
+  const linkInput = document.getElementById('backgroundCheckLink');
+  const saveBtn = document.getElementById('saveBackgroundCheckBtn');
+  
+  if (!linkInput || !saveBtn) return;
+  
+  const originalText = saveBtn.textContent;
+  
+  try {
+    await ensureAuthenticated();
+    
+    saveBtn.textContent = '⏳ Saving...';
+    saveBtn.disabled = true;
+    
+    const link = linkInput.value || '';
+    
+    if (typeof db !== 'undefined') {
+      await db.collection('classData').doc('current').set(
+        { volunteer_background_check_link: link }, 
+        { merge: true }
+      );
+    }
+    
+    saveBtn.textContent = '✅ Saved!';
+    
+    // Update the "Open Link" button
+    updateBackgroundCheckLinkButton();
+    
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 1500);
+    
+  } catch (error) {
+    console.error('Failed to save background check link:', error);
+    alert('Save failed: ' + error.message);
+    saveBtn.textContent = originalText;
+    saveBtn.disabled = false;
+  }
+}
+
+// Update background check link button
+function updateBackgroundCheckLinkButton() {
+  const linkInput = document.getElementById('backgroundCheckLink');
+  const linkBtn = document.getElementById('backgroundCheckLinkBtn');
+  
+  if (!linkInput || !linkBtn) return;
+  
+  const link = linkInput.value.trim();
+  if (link && link.startsWith('http')) {
+    linkBtn.href = link;
+    linkBtn.style.display = 'inline-block';
+  } else {
+    linkBtn.style.display = 'none';
+  }
+}
+
+// Save volunteer data to Firestore
+async function saveVolunteerDataToFirestore() {
+  try {
+    // Authenticate if not already authenticated (for parent volunteer claims)
+    if (auth && !auth.currentUser) {
+      console.log('Authenticating for volunteer claim...');
+      await auth.signInAnonymously();
+      console.log('Authentication successful');
+    }
+    
+    // Collect volunteer data from the page
+    const data = collectVolunteerData();
+    
+    if (typeof db !== 'undefined') {
+      await db.collection('classData').doc('current').set(
+        { volunteers_json: JSON.stringify(data) }, 
+        { merge: true }
+      );
+      console.log('Volunteer data saved to Firestore successfully');
+    } else {
+      // Fallback to localStorage
+      localStorage.setItem('classData_volunteers_json', JSON.stringify(data));
+      console.log('Volunteer data saved to localStorage (fallback)');
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Failed to save volunteer data:', error);
+    throw error;
+  }
+}
+
+// Collect volunteer data from the page
+function collectVolunteerData() {
+  const data = {
+    backgroundCheckLink: document.getElementById('backgroundCheckLink')?.value || '',
+    eventsTitle: document.getElementById('volunteerEventsTitle')?.textContent || 'Upcoming Events',
+    months: []
+  };
+  
+  // Collect data from each month
+  document.querySelectorAll('.month-section').forEach((monthSection, monthIndex) => {
+    const monthTitle = monthSection.querySelector('.month-title')?.textContent || months[monthIndex];
+    const events = [];
+    
+    monthSection.querySelectorAll('.volunteer-event-card').forEach(card => {
+      const eventId = card.getAttribute('data-event-id');
+      const emoji = card.querySelector('.event-emoji')?.textContent || '🎉';
+      const title = card.querySelector('.event-title')?.textContent || '';
+      const details = card.querySelector('.event-details')?.textContent || '';
+      const checkbox = card.querySelector('.volunteer-checkbox');
+      const name = card.querySelector('.volunteer-name')?.value || '';
+      
+      events.push({
+        id: eventId,
+        emoji: emoji,
+        title: title,
+        details: details,
+        claimed: checkbox?.checked || false,
+        volunteerName: name
+      });
+    });
+    
+    data.months.push({
+      name: monthTitle,
+      events: events
+    });
+  });
+  
+  return data;
+}
+
+// Load volunteer data from Firestore
+function loadVolunteerData(data) {
+  if (!data) return;
+  
+  // Load background check link
+  if (data.volunteer_background_check_link) {
+    const linkInput = document.getElementById('backgroundCheckLink');
+    if (linkInput) {
+      linkInput.value = data.volunteer_background_check_link;
+      updateBackgroundCheckLinkButton();
+    }
+  }
+  
+  // Load volunteer events data
+  if (data.volunteers_json) {
+    try {
+      const volunteersData = typeof data.volunteers_json === 'string' 
+        ? JSON.parse(data.volunteers_json) 
+        : data.volunteers_json;
+      
+      // Load events title
+      if (volunteersData.eventsTitle) {
+        const titleEl = document.getElementById('volunteerEventsTitle');
+        if (titleEl) titleEl.textContent = volunteersData.eventsTitle;
+      }
+      
+      // Load month data
+      if (volunteersData.months && Array.isArray(volunteersData.months)) {
+        volunteersData.months.forEach((monthData, monthIndex) => {
+          const monthSection = document.querySelector(`.month-section[data-month-index="${monthIndex}"]`);
+          if (!monthSection) return;
+          
+          // Update month title if customized
+          if (monthData.name) {
+            const monthTitle = monthSection.querySelector('.month-title');
+            if (monthTitle) monthTitle.textContent = monthData.name;
+          }
+          
+          // Load events for this month
+          const grid = monthSection.querySelector('.volunteer-events-grid');
+          if (grid && monthData.events && Array.isArray(monthData.events)) {
+            grid.innerHTML = '';
+            
+            monthData.events.forEach(event => {
+              const eventCard = document.createElement('div');
+              eventCard.className = 'volunteer-event-card p-4 rounded-xl bg-white';
+              eventCard.style.border = '1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%)';
+              eventCard.setAttribute('data-event-id', event.id);
+              
+              if (event.claimed && event.volunteerName) {
+                eventCard.classList.add('volunteer-claimed');
+                eventCard.style.backgroundColor = 'rgba(16, 185, 129, 0.05)';
+              }
+              
+              eventCard.innerHTML = `
+                <div class="mb-3">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-xl event-emoji" data-edit="teacher" contenteditable="false" style="cursor: default;">${event.emoji || '🎉'}</span>
+                    <button class="edit-only text-red-500 hover:text-red-700 text-sm" onclick="removeVolunteerEvent(this)" style="display: none;">✖</button>
+                  </div>
+                  <div class="event-title font-semibold mb-2" data-edit="teacher" contenteditable="false" style="cursor: default;">${event.title || 'Event Title'}</div>
+                  <div class="event-details text-sm text-gray-600 mb-3" data-edit="teacher" contenteditable="false" style="cursor: default;">${event.details || ''}</div>
+                </div>
+                <div class="border-t pt-3" style="border-color: color-mix(in oklab, var(--md-slate) 20%, var(--md-white) 80%);">
+                  <div class="flex items-center gap-3 mb-2">
+                    <input type="checkbox" class="volunteer-checkbox" onchange="toggleVolunteerInput(this)" ${event.claimed ? 'checked' : ''}>
+                    <span class="text-sm font-medium">I can help!</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm volunteer-name" style="background: var(--md-cream); border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);" value="${event.volunteerName || ''}" ${event.claimed ? '' : 'disabled'}>
+                    <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold volunteer-save-btn" style="background: var(--md-coral);" onclick="claimVolunteerSlot(this)" ${event.claimed ? '' : 'disabled'}>Save</button>
+                  </div>
+                </div>
+              `;
+              
+              grid.appendChild(eventCard);
+            });
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Failed to parse volunteer data:', error);
+    }
   }
 }
 
@@ -7952,6 +8419,10 @@ document.head.appendChild(style);
           <button class="pageTab w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90"
                   data-page="snacks" style="background: var(--md-mustard);" onclick="closeFamilyHubModal(); showPage('snacks');">
             <span>🥨</span><span>Snack Helpers</span>
+          </button>
+          <button class="pageTab w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90"
+                  data-page="volunteers" style="background: #10b981;" onclick="closeFamilyHubModal(); showPage('volunteers');">
+            <span>🤝</span><span>Volunteer Opportunities</span>
           </button>
         </div>
         <button onclick="closeFamilyHubModal()" class="mt-6 px-6 py-2 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
