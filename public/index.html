@@ -501,7 +501,10 @@
     <!-- SKILLS TAB -->
     <section data-page-panel="skills" class="pagePanel fade-in">
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
-        <h2 class="text-2xl font-display font-bold mb-4" style="color: var(--md-coral);">📖 Skills Spotlight</h2>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-display font-bold" style="color: var(--md-coral);">📖 Skills Spotlight</h2>
+          <button onclick="showPage('skills-units')" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);">📚 View by Unit</button>
+        </div>
         <div class="grid md:grid-cols-3 gap-6">
           <div class="md:col-span-2">
             <p class="leading-relaxed" data-edit="teacher" contenteditable="false">
@@ -572,6 +575,7 @@
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
         <div class="flex items-center justify-between mb-5">
           <h2 class="text-2xl font-display font-bold" style="color: var(--md-slate);">🧮 Math Adventures</h2>
+          <button onclick="showPage('math-modules')" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);">📐 View by Module</button>
         </div>
         <div class="grid md:grid-cols-3 gap-6">
           <div class="md:col-span-2">
@@ -1012,6 +1016,32 @@
         </div>
       </div>
     </section>
+    <!-- SKILLS UNITS PAGE -->
+    <section data-page-panel="skills-units" class="pagePanel fade-in">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-display font-bold" style="color: var(--md-coral);">📚 Skills by Unit</h2>
+        <button onclick="showPage('skills')" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);">← Back to Skills</button>
+      </div>
+      <div class="space-y-6" id="skillsUnitsContainer">
+        <!-- Units will be dynamically rendered here -->
+      </div>
+      <div class="mt-6 flex gap-3 edit-only" style="display: none;">
+        <button onclick="saveSkillsUnits()" class="px-4 py-2 rounded-lg text-white font-semibold" style="background: var(--md-coral);">💾 Save All Changes</button>
+      </div>
+    </section>
+    <!-- MATH MODULES PAGE -->
+    <section data-page-panel="math-modules" class="pagePanel fade-in">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-display font-bold" style="color: var(--md-slate);">📐 Math by Module</h2>
+        <button onclick="showPage('math')" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);">← Back to Math</button>
+      </div>
+      <div class="space-y-6" id="mathModulesContainer">
+        <!-- Modules will be dynamically rendered here -->
+      </div>
+      <div class="mt-6 flex gap-3 edit-only" style="display: none;">
+        <button onclick="saveMathModules()" class="px-4 py-2 rounded-lg text-white font-semibold" style="background: var(--md-slate);">💾 Save All Changes</button>
+      </div>
+    </section>
     <!-- BIRTHDAYS TAB -->
     <section data-page-panel="birthdays" class="pagePanel fade-in">
       <h2 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">🎂 Birthdays</h2>
@@ -1205,6 +1235,12 @@
     // Class Skill Meter history
     let classSkillMeterHistory = []; // Array of {skill: string, progress: number, date: string, note: string}
     
+    // Skills Units data structure
+    let skillsUnitsData = []; // Array of 7 units, each: {title: string, cards: [{id: string, content: string, color: string}]}
+    
+    // Math Modules data structure
+    let mathModulesData = []; // Array of 6 modules, each: {title: string, cards: [{id: string, content: string, color: string}]}
+    
     // Tab navigation
     function showPage(pageId) {
       document.querySelectorAll('.pagePanel').forEach(panel => {
@@ -1220,6 +1256,13 @@
           btn.classList.add('active','ring-4','ring-white/40');
         }
       });
+      
+      // Render special pages when they become visible
+      if (pageId === 'skills-units') {
+        renderSkillsUnits();
+      } else if (pageId === 'math-modules') {
+        renderMathModules();
+      }
     }
     document.addEventListener('DOMContentLoaded',function(){
       showPage('home');
@@ -1548,6 +1591,10 @@
       renderWatchMeContent('listening');
       renderWatchMeContent('math');
       
+      // Re-render Skills Units and Math Modules for edit mode
+      renderSkillsUnits();
+      renderMathModules();
+      
       // Render Class Skill Meter history
       renderClassSkillMeterHistory();
     }
@@ -1678,6 +1725,10 @@
       renderWatchMeContent('skills');
       renderWatchMeContent('listening');
       renderWatchMeContent('math');
+      
+      // Re-render Skills Units and Math Modules for view mode
+      renderSkillsUnits();
+      renderMathModules();
     }
     function collectEditableFieldData() {
       const data = {};
@@ -4203,6 +4254,12 @@ function populateDataFromSheet(data) {
   // Load Watch Me data
   updateWatchMeData(data.watch_me_json);
   
+  // Load Skills Units data
+  updateSkillsUnitsData(data.skills_units_json);
+  
+  // Load Math Modules data
+  updateMathModulesData(data.math_modules_json);
+  
   if (data.calendar_url) {
     const cal = document.getElementById('schoolCalendarLink');
     if (cal) cal.href = data.calendar_url;
@@ -6503,6 +6560,616 @@ async function saveWatchMeLinks(tab) {
       saveBtn.textContent = originalText;
       saveBtn.disabled = false;
     }, 3000);
+  }
+}
+
+// ============================================
+// SKILLS UNITS FUNCTIONS
+// ============================================
+
+// Initialize skills units with default structure
+function initializeSkillsUnits() {
+  if (!skillsUnitsData || skillsUnitsData.length === 0) {
+    skillsUnitsData = [];
+    for (let i = 1; i <= 7; i++) {
+      skillsUnitsData.push({
+        title: `Unit ${i}`,
+        cards: []
+      });
+    }
+  }
+}
+
+// Render skills units
+function renderSkillsUnits() {
+  const container = document.getElementById('skillsUnitsContainer');
+  if (!container) return;
+  
+  const isEditMode = document.body.classList.contains('editing');
+  initializeSkillsUnits();
+  
+  container.innerHTML = '';
+  
+  skillsUnitsData.forEach((unit, unitIndex) => {
+    const unitDiv = document.createElement('div');
+    unitDiv.className = 'rounded-2xl shadow-soft p-6 bg-white';
+    unitDiv.setAttribute('data-unit-index', unitIndex);
+    
+    // Unit header
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'flex items-center justify-between mb-4';
+    
+    const titleEl = document.createElement('h3');
+    titleEl.className = 'text-xl font-display font-bold';
+    titleEl.style.color = 'var(--md-coral)';
+    titleEl.contentEditable = isEditMode;
+    titleEl.textContent = unit.title;
+    titleEl.addEventListener('blur', () => {
+      skillsUnitsData[unitIndex].title = titleEl.textContent;
+    });
+    
+    const addButton = document.createElement('button');
+    addButton.className = 'edit-only px-3 py-2 rounded-lg text-white text-sm font-semibold';
+    addButton.style.background = 'var(--md-slate)';
+    addButton.style.display = isEditMode ? 'block' : 'none';
+    addButton.textContent = '+ Add Card';
+    addButton.onclick = () => addSkillsUnitCard(unitIndex);
+    
+    headerDiv.appendChild(titleEl);
+    headerDiv.appendChild(addButton);
+    unitDiv.appendChild(headerDiv);
+    
+    // Cards container
+    const cardsContainer = document.createElement('div');
+    cardsContainer.className = 'mobile-tab-scroll scrollbar-hide flex gap-4 overflow-x-auto pb-2';
+    cardsContainer.setAttribute('data-cards-container', unitIndex);
+    
+    if (unit.cards && unit.cards.length > 0) {
+      unit.cards.forEach((card, cardIndex) => {
+        cardsContainer.appendChild(createSkillsUnitCard(card, unitIndex, cardIndex, isEditMode));
+      });
+    } else {
+      const emptyMsg = document.createElement('div');
+      emptyMsg.className = 'text-gray-400 text-sm italic py-4';
+      emptyMsg.textContent = isEditMode ? 'Click "Add Card" to add content to this unit' : 'No cards in this unit yet';
+      cardsContainer.appendChild(emptyMsg);
+    }
+    
+    unitDiv.appendChild(cardsContainer);
+    container.appendChild(unitDiv);
+  });
+  
+  // Setup drag and drop for cards
+  if (isEditMode) {
+    setupSkillsUnitsDragDrop();
+  }
+}
+
+// Create a single card element for skills unit
+function createSkillsUnitCard(card, unitIndex, cardIndex, isEditMode) {
+  const cardDiv = document.createElement('div');
+  cardDiv.className = 'min-w-[250px] p-4 rounded-xl shadow-sm';
+  cardDiv.style.border = '2px solid color-mix(in oklab, var(--md-coral) 40%, var(--md-white) 60%)';
+  cardDiv.style.background = card.color || 'var(--md-white)';
+  cardDiv.setAttribute('data-card-id', card.id);
+  cardDiv.setAttribute('draggable', isEditMode);
+  
+  // Content area
+  const contentDiv = document.createElement('div');
+  contentDiv.className = 'prose prose-sm max-w-none';
+  contentDiv.contentEditable = isEditMode;
+  contentDiv.innerHTML = card.content || '<p>Click to edit...</p>';
+  contentDiv.style.minHeight = '60px';
+  contentDiv.style.cursor = isEditMode ? 'text' : 'default';
+  contentDiv.addEventListener('blur', () => {
+    skillsUnitsData[unitIndex].cards[cardIndex].content = contentDiv.innerHTML;
+  });
+  
+  cardDiv.appendChild(contentDiv);
+  
+  // Edit controls
+  if (isEditMode) {
+    const controlsDiv = document.createElement('div');
+    controlsDiv.className = 'flex gap-2 mt-3 pt-3 border-t border-gray-200';
+    
+    // Color picker
+    const colorLabel = document.createElement('label');
+    colorLabel.className = 'text-xs font-semibold text-gray-600';
+    colorLabel.textContent = 'Color: ';
+    
+    const colorSelect = document.createElement('select');
+    colorSelect.className = 'text-xs px-2 py-1 rounded border';
+    const colors = [
+      { name: 'White', value: 'var(--md-white)' },
+      { name: 'Mustard', value: 'color-mix(in oklab, var(--md-white) 70%, var(--md-mustard) 30%)' },
+      { name: 'Slate', value: 'color-mix(in oklab, var(--md-white) 70%, var(--md-slate) 30%)' },
+      { name: 'Coral', value: 'color-mix(in oklab, var(--md-white) 70%, var(--md-coral) 30%)' },
+      { name: 'Blush', value: 'color-mix(in oklab, var(--md-white) 70%, var(--md-blush) 30%)' },
+      { name: 'Cream', value: 'color-mix(in oklab, var(--md-white) 70%, var(--md-pebble) 30%)' }
+    ];
+    
+    colors.forEach(c => {
+      const option = document.createElement('option');
+      option.value = c.value;
+      option.textContent = c.name;
+      if (card.color === c.value) option.selected = true;
+      colorSelect.appendChild(option);
+    });
+    
+    colorSelect.onchange = () => {
+      cardDiv.style.background = colorSelect.value;
+      skillsUnitsData[unitIndex].cards[cardIndex].color = colorSelect.value;
+    };
+    
+    colorLabel.appendChild(colorSelect);
+    controlsDiv.appendChild(colorLabel);
+    
+    // Remove button
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'ml-auto text-xs px-2 py-1 rounded text-white';
+    removeBtn.style.background = 'var(--md-coral)';
+    removeBtn.textContent = 'Remove';
+    removeBtn.onclick = () => removeSkillsUnitCard(unitIndex, cardIndex);
+    
+    controlsDiv.appendChild(removeBtn);
+    cardDiv.appendChild(controlsDiv);
+  }
+  
+  return cardDiv;
+}
+
+// Add a new card to a skills unit
+function addSkillsUnitCard(unitIndex) {
+  const newCard = {
+    id: `skills-card-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    content: '<p>New card - click to edit</p>',
+    color: 'var(--md-white)'
+  };
+  
+  skillsUnitsData[unitIndex].cards.push(newCard);
+  renderSkillsUnits();
+}
+
+// Remove a card from a skills unit
+function removeSkillsUnitCard(unitIndex, cardIndex) {
+  if (confirm('Remove this card?')) {
+    skillsUnitsData[unitIndex].cards.splice(cardIndex, 1);
+    renderSkillsUnits();
+  }
+}
+
+// Setup drag and drop for skills unit cards
+let draggedSkillsCard = null;
+let draggedSkillsCardUnit = null;
+let draggedSkillsCardIndex = null;
+
+function setupSkillsUnitsDragDrop() {
+  document.querySelectorAll('[data-cards-container]').forEach(container => {
+    const cards = container.querySelectorAll('[data-card-id]');
+    
+    cards.forEach(card => {
+      card.addEventListener('dragstart', handleSkillsCardDragStart);
+      card.addEventListener('dragover', handleSkillsCardDragOver);
+      card.addEventListener('drop', handleSkillsCardDrop);
+      card.addEventListener('dragend', handleSkillsCardDragEnd);
+      card.addEventListener('dragleave', handleSkillsCardDragLeave);
+    });
+    
+    // Allow dropping on empty containers
+    container.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    });
+    
+    container.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (draggedSkillsCard) {
+        const targetUnit = parseInt(container.getAttribute('data-cards-container'));
+        // Move card to end of target unit
+        const card = skillsUnitsData[draggedSkillsCardUnit].cards.splice(draggedSkillsCardIndex, 1)[0];
+        skillsUnitsData[targetUnit].cards.push(card);
+        renderSkillsUnits();
+      }
+    });
+  });
+}
+
+function handleSkillsCardDragStart(e) {
+  draggedSkillsCard = this;
+  const container = this.closest('[data-cards-container]');
+  draggedSkillsCardUnit = parseInt(container.getAttribute('data-cards-container'));
+  
+  const cards = Array.from(container.querySelectorAll('[data-card-id]'));
+  draggedSkillsCardIndex = cards.indexOf(this);
+  
+  this.style.opacity = '0.4';
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function handleSkillsCardDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  
+  if (this !== draggedSkillsCard) {
+    this.style.borderLeft = '3px solid var(--md-coral)';
+  }
+}
+
+function handleSkillsCardDragLeave(e) {
+  this.style.borderLeft = '';
+}
+
+function handleSkillsCardDrop(e) {
+  e.stopPropagation();
+  e.preventDefault();
+  
+  if (draggedSkillsCard !== this) {
+    const targetContainer = this.closest('[data-cards-container]');
+    const targetUnit = parseInt(targetContainer.getAttribute('data-cards-container'));
+    const targetCards = Array.from(targetContainer.querySelectorAll('[data-card-id]'));
+    const targetIndex = targetCards.indexOf(this);
+    
+    // Remove from source
+    const card = skillsUnitsData[draggedSkillsCardUnit].cards.splice(draggedSkillsCardIndex, 1)[0];
+    
+    // Insert at target
+    skillsUnitsData[targetUnit].cards.splice(targetIndex, 0, card);
+    
+    renderSkillsUnits();
+  }
+  
+  this.style.borderLeft = '';
+}
+
+function handleSkillsCardDragEnd(e) {
+  this.style.opacity = '1';
+  document.querySelectorAll('[data-card-id]').forEach(card => {
+    card.style.borderLeft = '';
+  });
+}
+
+// Save skills units to Firestore
+async function saveSkillsUnits() {
+  try {
+    await ensureAuthenticated();
+    
+    const data = {
+      skills_units_json: JSON.stringify(skillsUnitsData)
+    };
+    
+    console.log('Saving skills units to Firestore:', skillsUnitsData);
+    await db.collection('classData').doc('current').set(data, { merge: true });
+    
+    alert('✅ Skills units saved successfully!');
+  } catch (error) {
+    console.error('Failed to save skills units:', error);
+    alert(`Failed to save: ${error.message}`);
+  }
+}
+
+// Update skills units from Firestore data
+function updateSkillsUnitsData(unitsJson) {
+  if (!unitsJson) {
+    initializeSkillsUnits();
+  } else {
+    try {
+      skillsUnitsData = JSON.parse(unitsJson);
+      // Ensure we have 7 units
+      while (skillsUnitsData.length < 7) {
+        skillsUnitsData.push({
+          title: `Unit ${skillsUnitsData.length + 1}`,
+          cards: []
+        });
+      }
+    } catch (e) {
+      console.error('Failed to parse skills units JSON:', e);
+      initializeSkillsUnits();
+    }
+  }
+}
+
+// ============================================
+// MATH MODULES FUNCTIONS
+// ============================================
+
+// Initialize math modules with default structure
+function initializeMathModules() {
+  if (!mathModulesData || mathModulesData.length === 0) {
+    mathModulesData = [];
+    for (let i = 1; i <= 6; i++) {
+      mathModulesData.push({
+        title: `Module ${i}`,
+        cards: []
+      });
+    }
+  }
+}
+
+// Render math modules
+function renderMathModules() {
+  const container = document.getElementById('mathModulesContainer');
+  if (!container) return;
+  
+  const isEditMode = document.body.classList.contains('editing');
+  initializeMathModules();
+  
+  container.innerHTML = '';
+  
+  mathModulesData.forEach((module, moduleIndex) => {
+    const moduleDiv = document.createElement('div');
+    moduleDiv.className = 'rounded-2xl shadow-soft p-6 bg-white';
+    moduleDiv.setAttribute('data-module-index', moduleIndex);
+    
+    // Module header
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'flex items-center justify-between mb-4';
+    
+    const titleEl = document.createElement('h3');
+    titleEl.className = 'text-xl font-display font-bold';
+    titleEl.style.color = 'var(--md-slate)';
+    titleEl.contentEditable = isEditMode;
+    titleEl.textContent = module.title;
+    titleEl.addEventListener('blur', () => {
+      mathModulesData[moduleIndex].title = titleEl.textContent;
+    });
+    
+    const addButton = document.createElement('button');
+    addButton.className = 'edit-only px-3 py-2 rounded-lg text-white text-sm font-semibold';
+    addButton.style.background = 'var(--md-slate)';
+    addButton.style.display = isEditMode ? 'block' : 'none';
+    addButton.textContent = '+ Add Card';
+    addButton.onclick = () => addMathModuleCard(moduleIndex);
+    
+    headerDiv.appendChild(titleEl);
+    headerDiv.appendChild(addButton);
+    moduleDiv.appendChild(headerDiv);
+    
+    // Cards container
+    const cardsContainer = document.createElement('div');
+    cardsContainer.className = 'mobile-tab-scroll scrollbar-hide flex gap-4 overflow-x-auto pb-2';
+    cardsContainer.setAttribute('data-math-cards-container', moduleIndex);
+    
+    if (module.cards && module.cards.length > 0) {
+      module.cards.forEach((card, cardIndex) => {
+        cardsContainer.appendChild(createMathModuleCard(card, moduleIndex, cardIndex, isEditMode));
+      });
+    } else {
+      const emptyMsg = document.createElement('div');
+      emptyMsg.className = 'text-gray-400 text-sm italic py-4';
+      emptyMsg.textContent = isEditMode ? 'Click "Add Card" to add content to this module' : 'No cards in this module yet';
+      cardsContainer.appendChild(emptyMsg);
+    }
+    
+    moduleDiv.appendChild(cardsContainer);
+    container.appendChild(moduleDiv);
+  });
+  
+  // Setup drag and drop for cards
+  if (isEditMode) {
+    setupMathModulesDragDrop();
+  }
+}
+
+// Create a single card element for math module
+function createMathModuleCard(card, moduleIndex, cardIndex, isEditMode) {
+  const cardDiv = document.createElement('div');
+  cardDiv.className = 'min-w-[250px] p-4 rounded-xl shadow-sm';
+  cardDiv.style.border = '2px solid color-mix(in oklab, var(--md-slate) 40%, var(--md-white) 60%)';
+  cardDiv.style.background = card.color || 'var(--md-white)';
+  cardDiv.setAttribute('data-math-card-id', card.id);
+  cardDiv.setAttribute('draggable', isEditMode);
+  
+  // Content area
+  const contentDiv = document.createElement('div');
+  contentDiv.className = 'prose prose-sm max-w-none';
+  contentDiv.contentEditable = isEditMode;
+  contentDiv.innerHTML = card.content || '<p>Click to edit...</p>';
+  contentDiv.style.minHeight = '60px';
+  contentDiv.style.cursor = isEditMode ? 'text' : 'default';
+  contentDiv.addEventListener('blur', () => {
+    mathModulesData[moduleIndex].cards[cardIndex].content = contentDiv.innerHTML;
+  });
+  
+  cardDiv.appendChild(contentDiv);
+  
+  // Edit controls
+  if (isEditMode) {
+    const controlsDiv = document.createElement('div');
+    controlsDiv.className = 'flex gap-2 mt-3 pt-3 border-t border-gray-200';
+    
+    // Color picker
+    const colorLabel = document.createElement('label');
+    colorLabel.className = 'text-xs font-semibold text-gray-600';
+    colorLabel.textContent = 'Color: ';
+    
+    const colorSelect = document.createElement('select');
+    colorSelect.className = 'text-xs px-2 py-1 rounded border';
+    const colors = [
+      { name: 'White', value: 'var(--md-white)' },
+      { name: 'Mustard', value: 'color-mix(in oklab, var(--md-white) 70%, var(--md-mustard) 30%)' },
+      { name: 'Slate', value: 'color-mix(in oklab, var(--md-white) 70%, var(--md-slate) 30%)' },
+      { name: 'Coral', value: 'color-mix(in oklab, var(--md-white) 70%, var(--md-coral) 30%)' },
+      { name: 'Blush', value: 'color-mix(in oklab, var(--md-white) 70%, var(--md-blush) 30%)' },
+      { name: 'Cream', value: 'color-mix(in oklab, var(--md-white) 70%, var(--md-pebble) 30%)' }
+    ];
+    
+    colors.forEach(c => {
+      const option = document.createElement('option');
+      option.value = c.value;
+      option.textContent = c.name;
+      if (card.color === c.value) option.selected = true;
+      colorSelect.appendChild(option);
+    });
+    
+    colorSelect.onchange = () => {
+      cardDiv.style.background = colorSelect.value;
+      mathModulesData[moduleIndex].cards[cardIndex].color = colorSelect.value;
+    };
+    
+    colorLabel.appendChild(colorSelect);
+    controlsDiv.appendChild(colorLabel);
+    
+    // Remove button
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'ml-auto text-xs px-2 py-1 rounded text-white';
+    removeBtn.style.background = 'var(--md-slate)';
+    removeBtn.textContent = 'Remove';
+    removeBtn.onclick = () => removeMathModuleCard(moduleIndex, cardIndex);
+    
+    controlsDiv.appendChild(removeBtn);
+    cardDiv.appendChild(controlsDiv);
+  }
+  
+  return cardDiv;
+}
+
+// Add a new card to a math module
+function addMathModuleCard(moduleIndex) {
+  const newCard = {
+    id: `math-card-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    content: '<p>New card - click to edit</p>',
+    color: 'var(--md-white)'
+  };
+  
+  mathModulesData[moduleIndex].cards.push(newCard);
+  renderMathModules();
+}
+
+// Remove a card from a math module
+function removeMathModuleCard(moduleIndex, cardIndex) {
+  if (confirm('Remove this card?')) {
+    mathModulesData[moduleIndex].cards.splice(cardIndex, 1);
+    renderMathModules();
+  }
+}
+
+// Setup drag and drop for math module cards
+let draggedMathCard = null;
+let draggedMathCardModule = null;
+let draggedMathCardIndex = null;
+
+function setupMathModulesDragDrop() {
+  document.querySelectorAll('[data-math-cards-container]').forEach(container => {
+    const cards = container.querySelectorAll('[data-math-card-id]');
+    
+    cards.forEach(card => {
+      card.addEventListener('dragstart', handleMathCardDragStart);
+      card.addEventListener('dragover', handleMathCardDragOver);
+      card.addEventListener('drop', handleMathCardDrop);
+      card.addEventListener('dragend', handleMathCardDragEnd);
+      card.addEventListener('dragleave', handleMathCardDragLeave);
+    });
+    
+    // Allow dropping on empty containers
+    container.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    });
+    
+    container.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (draggedMathCard) {
+        const targetModule = parseInt(container.getAttribute('data-math-cards-container'));
+        // Move card to end of target module
+        const card = mathModulesData[draggedMathCardModule].cards.splice(draggedMathCardIndex, 1)[0];
+        mathModulesData[targetModule].cards.push(card);
+        renderMathModules();
+      }
+    });
+  });
+}
+
+function handleMathCardDragStart(e) {
+  draggedMathCard = this;
+  const container = this.closest('[data-math-cards-container]');
+  draggedMathCardModule = parseInt(container.getAttribute('data-math-cards-container'));
+  
+  const cards = Array.from(container.querySelectorAll('[data-math-card-id]'));
+  draggedMathCardIndex = cards.indexOf(this);
+  
+  this.style.opacity = '0.4';
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function handleMathCardDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  
+  if (this !== draggedMathCard) {
+    this.style.borderLeft = '3px solid var(--md-slate)';
+  }
+}
+
+function handleMathCardDragLeave(e) {
+  this.style.borderLeft = '';
+}
+
+function handleMathCardDrop(e) {
+  e.stopPropagation();
+  e.preventDefault();
+  
+  if (draggedMathCard !== this) {
+    const targetContainer = this.closest('[data-math-cards-container]');
+    const targetModule = parseInt(targetContainer.getAttribute('data-math-cards-container'));
+    const targetCards = Array.from(targetContainer.querySelectorAll('[data-math-card-id]'));
+    const targetIndex = targetCards.indexOf(this);
+    
+    // Remove from source
+    const card = mathModulesData[draggedMathCardModule].cards.splice(draggedMathCardIndex, 1)[0];
+    
+    // Insert at target
+    mathModulesData[targetModule].cards.splice(targetIndex, 0, card);
+    
+    renderMathModules();
+  }
+  
+  this.style.borderLeft = '';
+}
+
+function handleMathCardDragEnd(e) {
+  this.style.opacity = '1';
+  document.querySelectorAll('[data-math-card-id]').forEach(card => {
+    card.style.borderLeft = '';
+  });
+}
+
+// Save math modules to Firestore
+async function saveMathModules() {
+  try {
+    await ensureAuthenticated();
+    
+    const data = {
+      math_modules_json: JSON.stringify(mathModulesData)
+    };
+    
+    console.log('Saving math modules to Firestore:', mathModulesData);
+    await db.collection('classData').doc('current').set(data, { merge: true });
+    
+    alert('✅ Math modules saved successfully!');
+  } catch (error) {
+    console.error('Failed to save math modules:', error);
+    alert(`Failed to save: ${error.message}`);
+  }
+}
+
+// Update math modules from Firestore data
+function updateMathModulesData(modulesJson) {
+  if (!modulesJson) {
+    initializeMathModules();
+  } else {
+    try {
+      mathModulesData = JSON.parse(modulesJson);
+      // Ensure we have 6 modules
+      while (mathModulesData.length < 6) {
+        mathModulesData.push({
+          title: `Module ${mathModulesData.length + 1}`,
+          cards: []
+        });
+      }
+    } catch (e) {
+      console.error('Failed to parse math modules JSON:', e);
+      initializeMathModules();
+    }
   }
 }
 
