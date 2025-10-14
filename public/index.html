@@ -7138,17 +7138,18 @@ function renderSkillsUnits() {
 // Toggle skills unit expansion
 function toggleSkillsUnit(unitIndex) {
   const allContainers = document.querySelectorAll('[data-cards-container]');
-  const allIcons = document.querySelectorAll('[data-toggle-icon]');
   
-  allContainers.forEach((container, idx) => {
-    const icon = allIcons[idx];
-    if (parseInt(container.getAttribute('data-cards-container')) === unitIndex) {
+  allContainers.forEach((container) => {
+    const containerIndex = container.getAttribute('data-cards-container');
+    const icon = document.querySelector(`[data-toggle-icon="${containerIndex}"]`);
+    
+    if (containerIndex === unitIndex.toString()) {
       const isHidden = container.style.display === 'none';
       container.style.display = isHidden ? 'flex' : 'none';
-      icon.textContent = isHidden ? '▼' : '▶';
+      if (icon) icon.textContent = isHidden ? '▼' : '▶';
     } else {
       container.style.display = 'none';
-      icon.textContent = '▶';
+      if (icon) icon.textContent = '▶';
     }
   });
 }
@@ -7485,17 +7486,18 @@ function renderMathModules() {
 // Toggle math module expansion
 function toggleMathModule(moduleIndex) {
   const allContainers = document.querySelectorAll('[data-math-cards-container]');
-  const allIcons = document.querySelectorAll('[data-math-toggle-icon]');
   
-  allContainers.forEach((container, idx) => {
-    const icon = allIcons[idx];
-    if (parseInt(container.getAttribute('data-math-cards-container')) === moduleIndex) {
+  allContainers.forEach((container) => {
+    const containerIndex = container.getAttribute('data-math-cards-container');
+    const icon = document.querySelector(`[data-math-toggle-icon="${containerIndex}"]`);
+    
+    if (containerIndex === moduleIndex.toString()) {
       const isHidden = container.style.display === 'none';
       container.style.display = isHidden ? 'flex' : 'none';
-      icon.textContent = isHidden ? '▼' : '▶';
+      if (icon) icon.textContent = isHidden ? '▼' : '▶';
     } else {
       container.style.display = 'none';
-      icon.textContent = '▶';
+      if (icon) icon.textContent = '▶';
     }
   });
 }
