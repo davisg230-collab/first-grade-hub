@@ -7138,10 +7138,18 @@ function renderSkillsUnits() {
 // Toggle skills unit expansion
 function toggleSkillsUnit(unitIndex) {
   const allContainers = document.querySelectorAll('[data-cards-container]');
+  const allIcons = document.querySelectorAll('[data-toggle-icon]');
+  
+  // Create a map of icons by their data attribute for efficient lookup
+  const iconMap = new Map();
+  allIcons.forEach(icon => {
+    const index = icon.getAttribute('data-toggle-icon');
+    if (index !== null) iconMap.set(index, icon);
+  });
   
   allContainers.forEach((container) => {
     const containerIndex = container.getAttribute('data-cards-container');
-    const icon = document.querySelector(`[data-toggle-icon="${containerIndex}"]`);
+    const icon = iconMap.get(containerIndex);
     
     if (containerIndex === unitIndex.toString()) {
       const isHidden = container.style.display === 'none';
@@ -7486,10 +7494,18 @@ function renderMathModules() {
 // Toggle math module expansion
 function toggleMathModule(moduleIndex) {
   const allContainers = document.querySelectorAll('[data-math-cards-container]');
+  const allIcons = document.querySelectorAll('[data-math-toggle-icon]');
+  
+  // Create a map of icons by their data attribute for efficient lookup
+  const iconMap = new Map();
+  allIcons.forEach(icon => {
+    const index = icon.getAttribute('data-math-toggle-icon');
+    if (index !== null) iconMap.set(index, icon);
+  });
   
   allContainers.forEach((container) => {
     const containerIndex = container.getAttribute('data-math-cards-container');
-    const icon = document.querySelector(`[data-math-toggle-icon="${containerIndex}"]`);
+    const icon = iconMap.get(containerIndex);
     
     if (containerIndex === moduleIndex.toString()) {
       const isHidden = container.style.display === 'none';
