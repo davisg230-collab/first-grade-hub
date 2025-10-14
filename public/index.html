@@ -7203,6 +7203,7 @@ function createBulletElement(bullet, unitIndex, sectionIndex, bulletIndex, isEdi
   const bulletDiv = document.createElement('div');
   bulletDiv.className = 'flex items-start gap-2 p-2 rounded';
   bulletDiv.style.background = 'color-mix(in oklab, var(--md-coral) 5%, var(--md-white) 95%)';
+  bulletDiv.setAttribute('data-bullet-index', bulletIndex);
   
   // Bullet point icon
   const bulletIcon = document.createElement('span');
@@ -7219,8 +7220,15 @@ function createBulletElement(bullet, unitIndex, sectionIndex, bulletIndex, isEdi
   bulletText.textContent = bullet;
   bulletText.style.minHeight = '1.5rem';
   bulletText.style.outline = 'none';
-  bulletText.addEventListener('blur', () => {
-    skillsUnitsData[unitIndex].sections[sectionIndex].bullets[bulletIndex] = bulletText.textContent;
+  bulletText.addEventListener('blur', (e) => {
+    // Find current index at time of blur to handle deletions
+    const currentDiv = e.target.closest('[data-bullet-index]');
+    const container = currentDiv.closest('[data-bullets-container]');
+    const allBullets = Array.from(container.querySelectorAll('[data-bullet-index]'));
+    const currentIndex = allBullets.indexOf(currentDiv);
+    if (currentIndex >= 0 && currentIndex < skillsUnitsData[unitIndex].sections[sectionIndex].bullets.length) {
+      skillsUnitsData[unitIndex].sections[sectionIndex].bullets[currentIndex] = bulletText.textContent;
+    }
   });
   if (!isEditMode) {
     bulletText.style.cursor = 'default';
@@ -7236,7 +7244,16 @@ function createBulletElement(bullet, unitIndex, sectionIndex, bulletIndex, isEdi
     removeBtn.style.background = 'var(--md-coral)';
     removeBtn.textContent = '×';
     removeBtn.title = 'Remove';
-    removeBtn.onclick = () => removeBulletPoint(unitIndex, sectionIndex, bulletIndex);
+    removeBtn.onclick = (e) => {
+      // Find current index at time of click to handle deletions
+      const currentDiv = e.target.closest('[data-bullet-index]');
+      const container = currentDiv.closest('[data-bullets-container]');
+      const allBullets = Array.from(container.querySelectorAll('[data-bullet-index]'));
+      const currentIndex = allBullets.indexOf(currentDiv);
+      if (currentIndex >= 0) {
+        removeBulletPoint(unitIndex, sectionIndex, currentIndex);
+      }
+    };
     bulletDiv.appendChild(removeBtn);
   }
   
@@ -7288,10 +7305,18 @@ function updateSkillsUnitsData(unitsJson) {
       skillsUnitsData = skillsUnitsData.map(unit => {
         // If unit has old 'cards' structure, migrate it
         if (unit.cards && !unit.sections) {
+          // Extract text content from old cards and convert to bullets
+          const bullets = unit.cards.map(card => {
+            // Strip HTML tags and get plain text
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = card.content || '';
+            return tempDiv.textContent.trim() || 'Migrated content';
+          }).filter(text => text && text !== 'Click to edit...');
+          
           return {
             title: unit.title,
             sections: [
-              { title: 'Section 1', bullets: [] },
+              { title: 'Section 1', bullets: bullets.length > 0 ? bullets : [] },
               { title: 'Section 2', bullets: [] },
               { title: 'Section 3', bullets: [] }
             ]
