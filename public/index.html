@@ -7426,7 +7426,6 @@ function renderMathModules() {
     
     // Sections container (3 columns)
     const sectionsContainer = document.createElement('div');
-    sectionsContainer.className = 'grid grid-cols-1 md:grid-cols-3 gap-4';
     sectionsContainer.style.display = moduleIndex === 0 ? 'grid' : 'none';
     sectionsContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(250px, 1fr))';
     sectionsContainer.style.gap = '1rem';
