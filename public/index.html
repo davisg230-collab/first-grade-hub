@@ -1280,7 +1280,7 @@
     let classSkillMeterHistory = []; // Array of {skill: string, progress: number, date: string, note: string}
     
     // Skills Units data structure
-    let skillsUnitsData = []; // Array of 7 units, each: {title: string, cards: [{id: string, content: string, color: string}]}
+    let skillsUnitsData = []; // Array of 7 units, each: {title: string, sections: [{title: string, bullets: [string]}]}
     
     // Math Modules data structure
     let mathModulesData = []; // Array of 6 modules, each: {title: string, cards: [{id: string, content: string, color: string}]}
@@ -7041,7 +7041,11 @@ function initializeSkillsUnits() {
     for (let i = 1; i <= 7; i++) {
       skillsUnitsData.push({
         title: `Unit ${i}`,
-        cards: []
+        sections: [
+          { title: 'Section 1', bullets: [] },
+          { title: 'Section 2', bullets: [] },
+          { title: 'Section 3', bullets: [] }
+        ]
       });
     }
   }
@@ -7093,51 +7097,30 @@ function renderSkillsUnits() {
     titleContainer.appendChild(toggleIcon);
     titleContainer.appendChild(titleEl);
     
-    const addButton = document.createElement('button');
-    addButton.className = 'edit-only px-3 py-2 rounded-lg text-white text-sm font-semibold';
-    addButton.style.background = 'var(--md-slate)';
-    addButton.style.display = isEditMode ? 'block' : 'none';
-    addButton.textContent = '+ Add Card';
-    addButton.onclick = (e) => {
-      e.stopPropagation();
-      addSkillsUnitCard(unitIndex);
-    };
-    
     headerDiv.appendChild(titleContainer);
-    headerDiv.appendChild(addButton);
     unitDiv.appendChild(headerDiv);
     
-    // Cards container
-    const cardsContainer = document.createElement('div');
-    cardsContainer.className = 'mobile-tab-scroll scrollbar-hide flex gap-4 overflow-x-auto pb-2';
-    cardsContainer.style.display = unitIndex === 0 ? 'flex' : 'none';
-    cardsContainer.style.transition = 'all 0.3s ease';
-    cardsContainer.setAttribute('data-cards-container', unitIndex);
+    // Sections container (3 columns)
+    const sectionsContainer = document.createElement('div');
+    sectionsContainer.className = 'grid grid-cols-1 md:grid-cols-3 gap-4';
+    sectionsContainer.style.display = unitIndex === 0 ? 'grid' : 'none';
+    sectionsContainer.style.transition = 'all 0.3s ease';
+    sectionsContainer.setAttribute('data-sections-container', unitIndex);
     
-    if (unit.cards && unit.cards.length > 0) {
-      unit.cards.forEach((card, cardIndex) => {
-        cardsContainer.appendChild(createSkillsUnitCard(card, unitIndex, cardIndex, isEditMode));
+    if (unit.sections && unit.sections.length > 0) {
+      unit.sections.forEach((section, sectionIndex) => {
+        sectionsContainer.appendChild(createSkillsUnitSection(section, unitIndex, sectionIndex, isEditMode));
       });
-    } else {
-      const emptyMsg = document.createElement('div');
-      emptyMsg.className = 'text-gray-400 text-sm italic py-4';
-      emptyMsg.textContent = isEditMode ? 'Click "Add Card" to add content to this unit' : 'No cards in this unit yet';
-      cardsContainer.appendChild(emptyMsg);
     }
     
-    unitDiv.appendChild(cardsContainer);
+    unitDiv.appendChild(sectionsContainer);
     container.appendChild(unitDiv);
   });
-  
-  // Setup drag and drop for cards
-  if (isEditMode) {
-    setupSkillsUnitsDragDrop();
-  }
 }
 
 // Toggle skills unit expansion
 function toggleSkillsUnit(unitIndex) {
-  const allContainers = document.querySelectorAll('[data-cards-container]');
+  const allContainers = document.querySelectorAll('[data-sections-container]');
   const allIcons = document.querySelectorAll('[data-toggle-icon]');
   
   // Create a map of icons by their data attribute for efficient lookup
@@ -7148,12 +7131,12 @@ function toggleSkillsUnit(unitIndex) {
   });
   
   allContainers.forEach((container) => {
-    const containerIndex = container.getAttribute('data-cards-container');
+    const containerIndex = container.getAttribute('data-sections-container');
     const icon = iconMap.get(containerIndex);
     
     if (containerIndex === unitIndex.toString()) {
       const isHidden = container.style.display === 'none';
-      container.style.display = isHidden ? 'flex' : 'none';
+      container.style.display = isHidden ? 'grid' : 'none';
       if (icon) icon.textContent = isHidden ? '▼' : '▶';
     } else {
       container.style.display = 'none';
@@ -7162,188 +7145,116 @@ function toggleSkillsUnit(unitIndex) {
   });
 }
 
-// Create a single card element for skills unit
-function createSkillsUnitCard(card, unitIndex, cardIndex, isEditMode) {
-  const cardDiv = document.createElement('div');
-  cardDiv.className = 'min-w-[180px] p-3 rounded-xl shadow-sm';
-  cardDiv.style.border = '2px solid color-mix(in oklab, var(--md-coral) 40%, var(--md-white) 60%)';
-  cardDiv.style.background = card.color || 'var(--md-white)';
-  cardDiv.setAttribute('data-card-id', card.id);
-  cardDiv.setAttribute('draggable', isEditMode);
+// Create a single section element (column) for skills unit
+function createSkillsUnitSection(section, unitIndex, sectionIndex, isEditMode) {
+  const sectionDiv = document.createElement('div');
+  sectionDiv.className = 'p-4 rounded-xl border-2';
+  sectionDiv.style.borderColor = 'color-mix(in oklab, var(--md-coral) 40%, var(--md-white) 60%)';
+  sectionDiv.style.background = 'var(--md-white)';
   
-  // Content area
-  const contentDiv = document.createElement('div');
-  contentDiv.className = 'prose prose-sm max-w-none';
-  contentDiv.contentEditable = isEditMode;
-  contentDiv.innerHTML = card.content || '<p>Click to edit...</p>';
-  contentDiv.style.minHeight = '50px';
-  contentDiv.style.fontSize = '0.875rem';
-  contentDiv.style.cursor = isEditMode ? 'text' : 'default';
-  contentDiv.addEventListener('blur', () => {
-    skillsUnitsData[unitIndex].cards[cardIndex].content = contentDiv.innerHTML;
+  // Section title
+  const titleEl = document.createElement('h4');
+  titleEl.className = 'text-lg font-semibold mb-3 px-2 py-1 rounded';
+  titleEl.style.color = 'var(--md-coral)';
+  titleEl.contentEditable = isEditMode;
+  titleEl.textContent = section.title;
+  titleEl.addEventListener('blur', () => {
+    skillsUnitsData[unitIndex].sections[sectionIndex].title = titleEl.textContent;
   });
-  
-  cardDiv.appendChild(contentDiv);
-  
-  // Edit controls
-  if (isEditMode) {
-    const controlsDiv = document.createElement('div');
-    controlsDiv.className = 'flex gap-2 mt-3 pt-3 border-t border-gray-200';
-    
-    // Color picker
-    const colorLabel = document.createElement('label');
-    colorLabel.className = 'text-xs font-semibold text-gray-600';
-    colorLabel.textContent = 'Color: ';
-    
-    const colorSelect = document.createElement('select');
-    colorSelect.className = 'text-xs px-2 py-1 rounded border';
-    const colors = [
-      { name: 'White', value: 'var(--md-white)' },
-      { name: 'Mustard', value: 'color-mix(in oklab, var(--md-white) 70%, var(--md-mustard) 30%)' },
-      { name: 'Slate', value: 'color-mix(in oklab, var(--md-white) 70%, var(--md-slate) 30%)' },
-      { name: 'Coral', value: 'color-mix(in oklab, var(--md-white) 70%, var(--md-coral) 30%)' },
-      { name: 'Blush', value: 'color-mix(in oklab, var(--md-white) 70%, var(--md-blush) 30%)' },
-      { name: 'Cream', value: 'color-mix(in oklab, var(--md-white) 70%, var(--md-pebble) 30%)' }
-    ];
-    
-    colors.forEach(c => {
-      const option = document.createElement('option');
-      option.value = c.value;
-      option.textContent = c.name;
-      if (card.color === c.value) option.selected = true;
-      colorSelect.appendChild(option);
-    });
-    
-    colorSelect.onchange = () => {
-      cardDiv.style.background = colorSelect.value;
-      skillsUnitsData[unitIndex].cards[cardIndex].color = colorSelect.value;
-    };
-    
-    colorLabel.appendChild(colorSelect);
-    controlsDiv.appendChild(colorLabel);
-    
-    // Remove button
-    const removeBtn = document.createElement('button');
-    removeBtn.className = 'ml-auto text-xs px-2 py-1 rounded text-white';
-    removeBtn.style.background = 'var(--md-coral)';
-    removeBtn.textContent = 'Remove';
-    removeBtn.onclick = () => removeSkillsUnitCard(unitIndex, cardIndex);
-    
-    controlsDiv.appendChild(removeBtn);
-    cardDiv.appendChild(controlsDiv);
+  if (!isEditMode) {
+    titleEl.style.cursor = 'default';
   }
   
-  return cardDiv;
+  sectionDiv.appendChild(titleEl);
+  
+  // Bullets container
+  const bulletsContainer = document.createElement('div');
+  bulletsContainer.className = 'space-y-2';
+  bulletsContainer.setAttribute('data-bullets-container', `${unitIndex}-${sectionIndex}`);
+  
+  if (section.bullets && section.bullets.length > 0) {
+    section.bullets.forEach((bullet, bulletIndex) => {
+      bulletsContainer.appendChild(createBulletElement(bullet, unitIndex, sectionIndex, bulletIndex, isEditMode));
+    });
+  } else if (!isEditMode) {
+    const emptyMsg = document.createElement('div');
+    emptyMsg.className = 'text-gray-400 text-sm italic px-2';
+    emptyMsg.textContent = 'No items yet';
+    bulletsContainer.appendChild(emptyMsg);
+  }
+  
+  sectionDiv.appendChild(bulletsContainer);
+  
+  // Add bullet button (edit mode only)
+  if (isEditMode) {
+    const addBtn = document.createElement('button');
+    addBtn.className = 'mt-3 w-full px-3 py-2 rounded-lg text-white text-sm font-semibold';
+    addBtn.style.background = 'var(--md-slate)';
+    addBtn.textContent = '+ Add Item';
+    addBtn.onclick = () => addBulletPoint(unitIndex, sectionIndex);
+    sectionDiv.appendChild(addBtn);
+  }
+  
+  return sectionDiv;
 }
 
-// Add a new card to a skills unit
-function addSkillsUnitCard(unitIndex) {
-  const newCard = {
-    id: `skills-card-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    content: '<p>New card - click to edit</p>',
-    color: 'var(--md-white)'
-  };
+// Create a single bullet point element
+function createBulletElement(bullet, unitIndex, sectionIndex, bulletIndex, isEditMode) {
+  const bulletDiv = document.createElement('div');
+  bulletDiv.className = 'flex items-start gap-2 p-2 rounded';
+  bulletDiv.style.background = 'color-mix(in oklab, var(--md-coral) 5%, var(--md-white) 95%)';
   
-  skillsUnitsData[unitIndex].cards.push(newCard);
+  // Bullet point icon
+  const bulletIcon = document.createElement('span');
+  bulletIcon.className = 'text-coral mt-0.5';
+  bulletIcon.textContent = '•';
+  bulletIcon.style.color = 'var(--md-coral)';
+  bulletIcon.style.fontSize = '1.25rem';
+  bulletIcon.style.flexShrink = '0';
+  
+  // Bullet text
+  const bulletText = document.createElement('div');
+  bulletText.className = 'flex-1 text-sm';
+  bulletText.contentEditable = isEditMode;
+  bulletText.textContent = bullet;
+  bulletText.style.minHeight = '1.5rem';
+  bulletText.style.outline = 'none';
+  bulletText.addEventListener('blur', () => {
+    skillsUnitsData[unitIndex].sections[sectionIndex].bullets[bulletIndex] = bulletText.textContent;
+  });
+  if (!isEditMode) {
+    bulletText.style.cursor = 'default';
+  }
+  
+  bulletDiv.appendChild(bulletIcon);
+  bulletDiv.appendChild(bulletText);
+  
+  // Remove button (edit mode only)
+  if (isEditMode) {
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'text-xs px-2 py-1 rounded text-white flex-shrink-0';
+    removeBtn.style.background = 'var(--md-coral)';
+    removeBtn.textContent = '×';
+    removeBtn.title = 'Remove';
+    removeBtn.onclick = () => removeBulletPoint(unitIndex, sectionIndex, bulletIndex);
+    bulletDiv.appendChild(removeBtn);
+  }
+  
+  return bulletDiv;
+}
+
+// Add a new bullet point to a section
+function addBulletPoint(unitIndex, sectionIndex) {
+  skillsUnitsData[unitIndex].sections[sectionIndex].bullets.push('New item - click to edit');
   renderSkillsUnits();
 }
 
-// Remove a card from a skills unit
-function removeSkillsUnitCard(unitIndex, cardIndex) {
-  if (confirm('Remove this card?')) {
-    skillsUnitsData[unitIndex].cards.splice(cardIndex, 1);
+// Remove a bullet point from a section
+function removeBulletPoint(unitIndex, sectionIndex, bulletIndex) {
+  if (confirm('Remove this item?')) {
+    skillsUnitsData[unitIndex].sections[sectionIndex].bullets.splice(bulletIndex, 1);
     renderSkillsUnits();
   }
-}
-
-// Setup drag and drop for skills unit cards
-let draggedSkillsCard = null;
-let draggedSkillsCardUnit = null;
-let draggedSkillsCardIndex = null;
-
-function setupSkillsUnitsDragDrop() {
-  document.querySelectorAll('[data-cards-container]').forEach(container => {
-    const cards = container.querySelectorAll('[data-card-id]');
-    
-    cards.forEach(card => {
-      card.addEventListener('dragstart', handleSkillsCardDragStart);
-      card.addEventListener('dragover', handleSkillsCardDragOver);
-      card.addEventListener('drop', handleSkillsCardDrop);
-      card.addEventListener('dragend', handleSkillsCardDragEnd);
-      card.addEventListener('dragleave', handleSkillsCardDragLeave);
-    });
-    
-    // Allow dropping on empty containers
-    container.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-    });
-    
-    container.addEventListener('drop', (e) => {
-      e.preventDefault();
-      if (draggedSkillsCard) {
-        const targetUnit = parseInt(container.getAttribute('data-cards-container'));
-        // Move card to end of target unit
-        const card = skillsUnitsData[draggedSkillsCardUnit].cards.splice(draggedSkillsCardIndex, 1)[0];
-        skillsUnitsData[targetUnit].cards.push(card);
-        renderSkillsUnits();
-      }
-    });
-  });
-}
-
-function handleSkillsCardDragStart(e) {
-  draggedSkillsCard = this;
-  const container = this.closest('[data-cards-container]');
-  draggedSkillsCardUnit = parseInt(container.getAttribute('data-cards-container'));
-  
-  const cards = Array.from(container.querySelectorAll('[data-card-id]'));
-  draggedSkillsCardIndex = cards.indexOf(this);
-  
-  this.style.opacity = '0.4';
-  e.dataTransfer.effectAllowed = 'move';
-}
-
-function handleSkillsCardDragOver(e) {
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'move';
-  
-  if (this !== draggedSkillsCard) {
-    this.style.borderLeft = '3px solid var(--md-coral)';
-  }
-}
-
-function handleSkillsCardDragLeave(e) {
-  this.style.borderLeft = '';
-}
-
-function handleSkillsCardDrop(e) {
-  e.stopPropagation();
-  e.preventDefault();
-  
-  if (draggedSkillsCard !== this) {
-    const targetContainer = this.closest('[data-cards-container]');
-    const targetUnit = parseInt(targetContainer.getAttribute('data-cards-container'));
-    const targetCards = Array.from(targetContainer.querySelectorAll('[data-card-id]'));
-    const targetIndex = targetCards.indexOf(this);
-    
-    // Remove from source
-    const card = skillsUnitsData[draggedSkillsCardUnit].cards.splice(draggedSkillsCardIndex, 1)[0];
-    
-    // Insert at target
-    skillsUnitsData[targetUnit].cards.splice(targetIndex, 0, card);
-    
-    renderSkillsUnits();
-  }
-  
-  this.style.borderLeft = '';
-}
-
-function handleSkillsCardDragEnd(e) {
-  this.style.opacity = '1';
-  document.querySelectorAll('[data-card-id]').forEach(card => {
-    card.style.borderLeft = '';
-  });
 }
 
 // Save skills units to Firestore
@@ -7372,11 +7283,43 @@ function updateSkillsUnitsData(unitsJson) {
   } else {
     try {
       skillsUnitsData = JSON.parse(unitsJson);
+      
+      // Migrate old data structure (cards) to new structure (sections)
+      skillsUnitsData = skillsUnitsData.map(unit => {
+        // If unit has old 'cards' structure, migrate it
+        if (unit.cards && !unit.sections) {
+          return {
+            title: unit.title,
+            sections: [
+              { title: 'Section 1', bullets: [] },
+              { title: 'Section 2', bullets: [] },
+              { title: 'Section 3', bullets: [] }
+            ]
+          };
+        }
+        // Ensure each unit has 3 sections
+        if (!unit.sections || unit.sections.length < 3) {
+          const sections = unit.sections || [];
+          while (sections.length < 3) {
+            sections.push({
+              title: `Section ${sections.length + 1}`,
+              bullets: []
+            });
+          }
+          return { ...unit, sections };
+        }
+        return unit;
+      });
+      
       // Ensure we have 7 units
       while (skillsUnitsData.length < 7) {
         skillsUnitsData.push({
           title: `Unit ${skillsUnitsData.length + 1}`,
-          cards: []
+          sections: [
+            { title: 'Section 1', bullets: [] },
+            { title: 'Section 2', bullets: [] },
+            { title: 'Section 3', bullets: [] }
+          ]
         });
       }
     } catch (e) {
