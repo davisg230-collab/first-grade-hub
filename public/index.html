@@ -7064,31 +7064,54 @@ function renderSkillsUnits() {
     
     // Unit header
     const headerDiv = document.createElement('div');
-    headerDiv.className = 'flex items-center justify-between mb-4';
+    headerDiv.className = 'flex items-center justify-between mb-4 cursor-pointer';
+    headerDiv.onclick = () => toggleSkillsUnit(unitIndex);
+    
+    const titleContainer = document.createElement('div');
+    titleContainer.className = 'flex items-center gap-3';
+    
+    const toggleIcon = document.createElement('span');
+    toggleIcon.className = 'toggle-icon text-xl';
+    toggleIcon.textContent = unitIndex === 0 ? '▼' : '▶';
+    toggleIcon.style.color = 'var(--md-coral)';
+    toggleIcon.setAttribute('data-toggle-icon', unitIndex);
     
     const titleEl = document.createElement('h3');
     titleEl.className = 'text-xl font-display font-bold';
     titleEl.style.color = 'var(--md-coral)';
     titleEl.contentEditable = isEditMode;
     titleEl.textContent = unit.title;
+    titleEl.onclick = (e) => {
+      if (isEditMode) {
+        e.stopPropagation();
+      }
+    };
     titleEl.addEventListener('blur', () => {
       skillsUnitsData[unitIndex].title = titleEl.textContent;
     });
+    
+    titleContainer.appendChild(toggleIcon);
+    titleContainer.appendChild(titleEl);
     
     const addButton = document.createElement('button');
     addButton.className = 'edit-only px-3 py-2 rounded-lg text-white text-sm font-semibold';
     addButton.style.background = 'var(--md-slate)';
     addButton.style.display = isEditMode ? 'block' : 'none';
     addButton.textContent = '+ Add Card';
-    addButton.onclick = () => addSkillsUnitCard(unitIndex);
+    addButton.onclick = (e) => {
+      e.stopPropagation();
+      addSkillsUnitCard(unitIndex);
+    };
     
-    headerDiv.appendChild(titleEl);
+    headerDiv.appendChild(titleContainer);
     headerDiv.appendChild(addButton);
     unitDiv.appendChild(headerDiv);
     
     // Cards container
     const cardsContainer = document.createElement('div');
     cardsContainer.className = 'mobile-tab-scroll scrollbar-hide flex gap-4 overflow-x-auto pb-2';
+    cardsContainer.style.display = unitIndex === 0 ? 'flex' : 'none';
+    cardsContainer.style.transition = 'all 0.3s ease';
     cardsContainer.setAttribute('data-cards-container', unitIndex);
     
     if (unit.cards && unit.cards.length > 0) {
@@ -7112,10 +7135,28 @@ function renderSkillsUnits() {
   }
 }
 
+// Toggle skills unit expansion
+function toggleSkillsUnit(unitIndex) {
+  const allContainers = document.querySelectorAll('[data-cards-container]');
+  const allIcons = document.querySelectorAll('[data-toggle-icon]');
+  
+  allContainers.forEach((container, idx) => {
+    const icon = allIcons[idx];
+    if (parseInt(container.getAttribute('data-cards-container')) === unitIndex) {
+      const isHidden = container.style.display === 'none';
+      container.style.display = isHidden ? 'flex' : 'none';
+      icon.textContent = isHidden ? '▼' : '▶';
+    } else {
+      container.style.display = 'none';
+      icon.textContent = '▶';
+    }
+  });
+}
+
 // Create a single card element for skills unit
 function createSkillsUnitCard(card, unitIndex, cardIndex, isEditMode) {
   const cardDiv = document.createElement('div');
-  cardDiv.className = 'min-w-[250px] p-4 rounded-xl shadow-sm';
+  cardDiv.className = 'min-w-[180px] p-3 rounded-xl shadow-sm';
   cardDiv.style.border = '2px solid color-mix(in oklab, var(--md-coral) 40%, var(--md-white) 60%)';
   cardDiv.style.background = card.color || 'var(--md-white)';
   cardDiv.setAttribute('data-card-id', card.id);
@@ -7126,7 +7167,8 @@ function createSkillsUnitCard(card, unitIndex, cardIndex, isEditMode) {
   contentDiv.className = 'prose prose-sm max-w-none';
   contentDiv.contentEditable = isEditMode;
   contentDiv.innerHTML = card.content || '<p>Click to edit...</p>';
-  contentDiv.style.minHeight = '60px';
+  contentDiv.style.minHeight = '50px';
+  contentDiv.style.fontSize = '0.875rem';
   contentDiv.style.cursor = isEditMode ? 'text' : 'default';
   contentDiv.addEventListener('blur', () => {
     skillsUnitsData[unitIndex].cards[cardIndex].content = contentDiv.innerHTML;
@@ -7369,31 +7411,54 @@ function renderMathModules() {
     
     // Module header
     const headerDiv = document.createElement('div');
-    headerDiv.className = 'flex items-center justify-between mb-4';
+    headerDiv.className = 'flex items-center justify-between mb-4 cursor-pointer';
+    headerDiv.onclick = () => toggleMathModule(moduleIndex);
+    
+    const titleContainer = document.createElement('div');
+    titleContainer.className = 'flex items-center gap-3';
+    
+    const toggleIcon = document.createElement('span');
+    toggleIcon.className = 'toggle-icon text-xl';
+    toggleIcon.textContent = moduleIndex === 0 ? '▼' : '▶';
+    toggleIcon.style.color = 'var(--md-slate)';
+    toggleIcon.setAttribute('data-math-toggle-icon', moduleIndex);
     
     const titleEl = document.createElement('h3');
     titleEl.className = 'text-xl font-display font-bold';
     titleEl.style.color = 'var(--md-slate)';
     titleEl.contentEditable = isEditMode;
     titleEl.textContent = module.title;
+    titleEl.onclick = (e) => {
+      if (isEditMode) {
+        e.stopPropagation();
+      }
+    };
     titleEl.addEventListener('blur', () => {
       mathModulesData[moduleIndex].title = titleEl.textContent;
     });
+    
+    titleContainer.appendChild(toggleIcon);
+    titleContainer.appendChild(titleEl);
     
     const addButton = document.createElement('button');
     addButton.className = 'edit-only px-3 py-2 rounded-lg text-white text-sm font-semibold';
     addButton.style.background = 'var(--md-slate)';
     addButton.style.display = isEditMode ? 'block' : 'none';
     addButton.textContent = '+ Add Card';
-    addButton.onclick = () => addMathModuleCard(moduleIndex);
+    addButton.onclick = (e) => {
+      e.stopPropagation();
+      addMathModuleCard(moduleIndex);
+    };
     
-    headerDiv.appendChild(titleEl);
+    headerDiv.appendChild(titleContainer);
     headerDiv.appendChild(addButton);
     moduleDiv.appendChild(headerDiv);
     
     // Cards container
     const cardsContainer = document.createElement('div');
     cardsContainer.className = 'mobile-tab-scroll scrollbar-hide flex gap-4 overflow-x-auto pb-2';
+    cardsContainer.style.display = moduleIndex === 0 ? 'flex' : 'none';
+    cardsContainer.style.transition = 'all 0.3s ease';
     cardsContainer.setAttribute('data-math-cards-container', moduleIndex);
     
     if (module.cards && module.cards.length > 0) {
@@ -7417,10 +7482,28 @@ function renderMathModules() {
   }
 }
 
+// Toggle math module expansion
+function toggleMathModule(moduleIndex) {
+  const allContainers = document.querySelectorAll('[data-math-cards-container]');
+  const allIcons = document.querySelectorAll('[data-math-toggle-icon]');
+  
+  allContainers.forEach((container, idx) => {
+    const icon = allIcons[idx];
+    if (parseInt(container.getAttribute('data-math-cards-container')) === moduleIndex) {
+      const isHidden = container.style.display === 'none';
+      container.style.display = isHidden ? 'flex' : 'none';
+      icon.textContent = isHidden ? '▼' : '▶';
+    } else {
+      container.style.display = 'none';
+      icon.textContent = '▶';
+    }
+  });
+}
+
 // Create a single card element for math module
 function createMathModuleCard(card, moduleIndex, cardIndex, isEditMode) {
   const cardDiv = document.createElement('div');
-  cardDiv.className = 'min-w-[250px] p-4 rounded-xl shadow-sm';
+  cardDiv.className = 'min-w-[180px] p-3 rounded-xl shadow-sm';
   cardDiv.style.border = '2px solid color-mix(in oklab, var(--md-slate) 40%, var(--md-white) 60%)';
   cardDiv.style.background = card.color || 'var(--md-white)';
   cardDiv.setAttribute('data-math-card-id', card.id);
@@ -7431,7 +7514,8 @@ function createMathModuleCard(card, moduleIndex, cardIndex, isEditMode) {
   contentDiv.className = 'prose prose-sm max-w-none';
   contentDiv.contentEditable = isEditMode;
   contentDiv.innerHTML = card.content || '<p>Click to edit...</p>';
-  contentDiv.style.minHeight = '60px';
+  contentDiv.style.minHeight = '50px';
+  contentDiv.style.fontSize = '0.875rem';
   contentDiv.style.cursor = isEditMode ? 'text' : 'default';
   contentDiv.addEventListener('blur', () => {
     mathModulesData[moduleIndex].cards[cardIndex].content = contentDiv.innerHTML;
