@@ -1283,7 +1283,7 @@
     let skillsUnitsData = []; // Array of 7 units, each: {title: string, sections: [{title: string, bullets: [string]}]}
     
     // Math Modules data structure
-    let mathModulesData = []; // Array of 6 modules, each: {title: string, sections: [{title: string, bulletPoints: [string]}]}
+    let mathModulesData = []; // Array of 6 modules, each: {title: string, sections: [{title: string, bulletPoints: [string]}]} - 2 sections per module
     
     // Tab navigation
     function showPage(pageId) {
@@ -7367,8 +7367,7 @@ function initializeMathModules() {
         title: `Module ${i}`,
         sections: [
           { title: 'Section 1', bulletPoints: [] },
-          { title: 'Section 2', bulletPoints: [] },
-          { title: 'Section 3', bulletPoints: [] }
+          { title: 'Section 2', bulletPoints: [] }
         ]
       });
     }
@@ -7434,16 +7433,15 @@ function renderMathModules() {
     sectionsContainer.style.transition = 'all 0.3s ease';
     sectionsContainer.setAttribute('data-math-sections-container', moduleIndex);
     
-    // Ensure module has 3 sections
+    // Ensure module has 2 sections
     if (!module.sections || module.sections.length === 0) {
       module.sections = [
         { title: 'Section 1', bulletPoints: [] },
-        { title: 'Section 2', bulletPoints: [] },
-        { title: 'Section 3', bulletPoints: [] }
+        { title: 'Section 2', bulletPoints: [] }
       ];
     }
     
-    // Create three sections
+    // Create two sections
     module.sections.forEach((section, sectionIndex) => {
       const sectionDiv = createMathModuleSection(section, moduleIndex, sectionIndex, isEditMode);
       sectionsContainer.appendChild(sectionDiv);
@@ -7622,9 +7620,16 @@ function updateMathModulesData(modulesJson) {
             title: module.title,
             sections: [
               { title: 'Section 1', bulletPoints: [] },
-              { title: 'Section 2', bulletPoints: [] },
-              { title: 'Section 3', bulletPoints: [] }
+              { title: 'Section 2', bulletPoints: [] }
             ]
+          };
+        }
+        // Migrate from 3 sections to 2 sections if needed
+        if (module.sections && module.sections.length > 2) {
+          // Keep only the first 2 sections
+          return {
+            title: module.title,
+            sections: module.sections.slice(0, 2)
           };
         }
         return module;
@@ -7636,20 +7641,21 @@ function updateMathModulesData(modulesJson) {
           title: `Module ${mathModulesData.length + 1}`,
           sections: [
             { title: 'Section 1', bulletPoints: [] },
-            { title: 'Section 2', bulletPoints: [] },
-            { title: 'Section 3', bulletPoints: [] }
+            { title: 'Section 2', bulletPoints: [] }
           ]
         });
       }
       
-      // Ensure each module has 3 sections
+      // Ensure each module has 2 sections
       mathModulesData.forEach(module => {
-        if (!module.sections || module.sections.length < 3) {
+        if (!module.sections || module.sections.length < 2) {
           module.sections = [
             { title: 'Section 1', bulletPoints: [] },
-            { title: 'Section 2', bulletPoints: [] },
-            { title: 'Section 3', bulletPoints: [] }
+            { title: 'Section 2', bulletPoints: [] }
           ];
+        } else if (module.sections.length > 2) {
+          // Trim to 2 sections if more exist
+          module.sections = module.sections.slice(0, 2);
         }
       });
     } catch (e) {
