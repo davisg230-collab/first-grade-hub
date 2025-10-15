@@ -109,20 +109,18 @@
     /* Hide Practice Website URL inputs when not in edit mode */
     .website-url-input { display: none; }
     body.editing .website-url-input { display: block; }
-    /* Website card drag-and-drop styles */
-    .website-card[draggable="true"] {
-      transition: opacity 0.2s ease, transform 0.2s ease;
-    }
-    .website-card[draggable="true"]:hover {
-      transform: scale(1.02);
-    }
-    /* Event card drag-and-drop styles */
+    /* Shared drag-and-drop styles */
+    .website-card[draggable="true"],
     .event-item[draggable="true"] {
       transition: opacity 0.2s ease, transform 0.2s ease;
-      cursor: move;
     }
+    .website-card[draggable="true"]:hover,
     .event-item[draggable="true"]:hover {
       transform: scale(1.02);
+    }
+    /* Event-specific drag styles */
+    .event-item[draggable="true"] {
+      cursor: move;
     }
     /* Hide Calendar URL input when not in edit mode */
     .calendar-url-input { display: none; }
@@ -2203,13 +2201,7 @@
       
       // Set up drag-and-drop for the new event if in edit mode
       if (document.body.classList.contains('editing')) {
-        div.setAttribute('draggable', 'true');
-        div.style.cursor = 'move';
-        div.addEventListener('dragstart', handleEventDragStart);
-        div.addEventListener('dragover', handleEventDragOver);
-        div.addEventListener('drop', handleEventDrop);
-        div.addEventListener('dragend', handleEventDragEnd);
-        div.addEventListener('dragleave', handleEventDragLeave);
+        makeEventDraggable(div);
       }
       
       // Auto-focus the text field for immediate editing
@@ -6405,19 +6397,19 @@ function handleDragEnd(e) {
 // Drag and drop functionality for event cards
 let draggedEvent = null;
 
+// Helper function to make an event item draggable
+function makeEventDraggable(item) {
+  item.setAttribute('draggable', 'true');
+  item.addEventListener('dragstart', handleEventDragStart);
+  item.addEventListener('dragover', handleEventDragOver);
+  item.addEventListener('drop', handleEventDrop);
+  item.addEventListener('dragend', handleEventDragEnd);
+  item.addEventListener('dragleave', handleEventDragLeave);
+}
+
 function setupEventDragAndDrop() {
   const eventItems = document.querySelectorAll('.event-item');
-  
-  eventItems.forEach(item => {
-    item.setAttribute('draggable', 'true');
-    item.style.cursor = 'move';
-    
-    item.addEventListener('dragstart', handleEventDragStart);
-    item.addEventListener('dragover', handleEventDragOver);
-    item.addEventListener('drop', handleEventDrop);
-    item.addEventListener('dragend', handleEventDragEnd);
-    item.addEventListener('dragleave', handleEventDragLeave);
-  });
+  eventItems.forEach(item => makeEventDraggable(item));
 }
 
 function disableEventDragAndDrop() {
@@ -6425,7 +6417,6 @@ function disableEventDragAndDrop() {
   
   eventItems.forEach(item => {
     item.setAttribute('draggable', 'false');
-    item.style.cursor = 'default';
     
     item.removeEventListener('dragstart', handleEventDragStart);
     item.removeEventListener('dragover', handleEventDragOver);
