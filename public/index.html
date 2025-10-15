@@ -116,6 +116,14 @@
     .website-card[draggable="true"]:hover {
       transform: scale(1.02);
     }
+    /* Event card drag-and-drop styles */
+    .event-item[draggable="true"] {
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      cursor: move;
+    }
+    .event-item[draggable="true"]:hover {
+      transform: scale(1.02);
+    }
     /* Hide Calendar URL input when not in edit mode */
     .calendar-url-input { display: none; }
     body.editing .calendar-url-input { display: block; }
@@ -1584,6 +1592,9 @@
       // Enable drag-and-drop for website cards
       setupWebsiteDragAndDrop();
       
+      // Enable drag-and-drop for event cards
+      setupEventDragAndDrop();
+      
       // Enable Extras section
       const saveExtrasBtn = document.getElementById('saveExtrasBtn');
       if (saveExtrasBtn) saveExtrasBtn.style.display = 'inline-block';
@@ -1727,6 +1738,9 @@
       
       // Disable drag-and-drop for website cards
       disableWebsiteDragAndDrop();
+      
+      // Disable drag-and-drop for event cards
+      disableEventDragAndDrop();
       
       // Disable Extras section
       const saveExtrasBtn = document.getElementById('saveExtrasBtn');
@@ -2186,6 +2200,17 @@
         <button class="edit-only text-red-500 hover:text-red-700" onclick="this.parentNode.remove()">✖</button>
       `;
       document.getElementById('eventsList').appendChild(div);
+      
+      // Set up drag-and-drop for the new event if in edit mode
+      if (document.body.classList.contains('editing')) {
+        div.setAttribute('draggable', 'true');
+        div.style.cursor = 'move';
+        div.addEventListener('dragstart', handleEventDragStart);
+        div.addEventListener('dragover', handleEventDragOver);
+        div.addEventListener('drop', handleEventDrop);
+        div.addEventListener('dragend', handleEventDragEnd);
+        div.addEventListener('dragleave', handleEventDragLeave);
+      }
       
       // Auto-focus the text field for immediate editing
       const textSpan = div.querySelector('.event-text');
@@ -6374,6 +6399,94 @@ function handleDragEnd(e) {
   const allCards = document.querySelectorAll('.website-card');
   allCards.forEach(card => {
     card.style.borderTop = '';
+  });
+}
+
+// Drag and drop functionality for event cards
+let draggedEvent = null;
+
+function setupEventDragAndDrop() {
+  const eventItems = document.querySelectorAll('.event-item');
+  
+  eventItems.forEach(item => {
+    item.setAttribute('draggable', 'true');
+    item.style.cursor = 'move';
+    
+    item.addEventListener('dragstart', handleEventDragStart);
+    item.addEventListener('dragover', handleEventDragOver);
+    item.addEventListener('drop', handleEventDrop);
+    item.addEventListener('dragend', handleEventDragEnd);
+    item.addEventListener('dragleave', handleEventDragLeave);
+  });
+}
+
+function disableEventDragAndDrop() {
+  const eventItems = document.querySelectorAll('.event-item');
+  
+  eventItems.forEach(item => {
+    item.setAttribute('draggable', 'false');
+    item.style.cursor = 'default';
+    
+    item.removeEventListener('dragstart', handleEventDragStart);
+    item.removeEventListener('dragover', handleEventDragOver);
+    item.removeEventListener('drop', handleEventDrop);
+    item.removeEventListener('dragend', handleEventDragEnd);
+    item.removeEventListener('dragleave', handleEventDragLeave);
+  });
+}
+
+function handleEventDragStart(e) {
+  draggedEvent = this;
+  this.style.opacity = '0.4';
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/html', this.innerHTML);
+}
+
+function handleEventDragOver(e) {
+  if (e.preventDefault) {
+    e.preventDefault();
+  }
+  e.dataTransfer.dropEffect = 'move';
+  
+  if (this !== draggedEvent) {
+    this.style.borderTop = '3px solid var(--md-coral)';
+  }
+  
+  return false;
+}
+
+function handleEventDragLeave(e) {
+  this.style.borderTop = '';
+}
+
+function handleEventDrop(e) {
+  if (e.stopPropagation) {
+    e.stopPropagation();
+  }
+  
+  if (draggedEvent !== this) {
+    const container = document.getElementById('eventsList');
+    const allItems = [...container.querySelectorAll('.event-item')];
+    const draggedIndex = allItems.indexOf(draggedEvent);
+    const targetIndex = allItems.indexOf(this);
+    
+    if (draggedIndex < targetIndex) {
+      this.parentNode.insertBefore(draggedEvent, this.nextSibling);
+    } else {
+      this.parentNode.insertBefore(draggedEvent, this);
+    }
+  }
+  
+  this.style.borderTop = '';
+  return false;
+}
+
+function handleEventDragEnd(e) {
+  this.style.opacity = '1';
+  
+  const allItems = document.querySelectorAll('.event-item');
+  allItems.forEach(item => {
+    item.style.borderTop = '';
   });
 }
 
