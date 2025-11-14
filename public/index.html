@@ -296,6 +296,11 @@
               data-page="aboutme" style="background: var(--md-coral);">
         <span>👨‍🏫</span><span>Mr. Davis</span>
       </button>
+      <button id="aboutMeWilliamsBtn"
+              class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
+              style="background: var(--md-coral);">
+        <span>👩‍🏫</span><span>Ms. Williams</span>
+      </button>
       <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white"
               data-page="scholar" style="background: var(--md-mustard);">
         <span>⭐</span><span>Scholar of the Month</span>
@@ -321,28 +326,56 @@
     </nav>
     <!-- HOME TAB -->
     <section data-page-panel="home" class="pagePanel fade-in active">
-      <!-- What We Did -->
+      <!-- What We Did - Mr. Davis -->
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
-        <h2 class="text-2xl font-display font-bold mb-5 text-center">What We Did This Week</h2>
+        <h2 id="whatWeDidDavisTitle" class="text-2xl font-display font-bold mb-5 text-center" data-edit="teacher" contenteditable="false">What We Did This Week - Mr. Davis</h2>
         <div class="grid md:grid-cols-3 gap-6">
           <!-- 2 small + 1 large photo grid -->
           <div class="col-span-1 flex flex-col gap-4">
             <div class="grid grid-cols-2 gap-4 mb-4">
-              <div class="photo-card rounded-xl aspect-[4/3] bg-[color:var(--md-blush)] flex items-center justify-center text-3xl font-bold relative" onclick="handleHomePhotoClick(this)">+
-                <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteHomePhoto(this)" title="Delete Photo">✖</button>
+              <div class="photo-card rounded-xl aspect-[4/3] bg-[color:var(--md-blush)] flex items-center justify-center text-3xl font-bold relative" onclick="handleHomePhotoClick(this, 'davis')">+
+                <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteHomePhoto(this, 'davis')" title="Delete Photo">✖</button>
               </div>
-              <div class="photo-card rounded-xl aspect-[4/3] bg-[color:var(--md-blush)] flex items-center justify-center text-3xl font-bold relative" onclick="handleHomePhotoClick(this)">+
-                <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteHomePhoto(this)" title="Delete Photo">✖</button>
+              <div class="photo-card rounded-xl aspect-[4/3] bg-[color:var(--md-blush)] flex items-center justify-center text-3xl font-bold relative" onclick="handleHomePhotoClick(this, 'davis')">+
+                <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteHomePhoto(this, 'davis')" title="Delete Photo">✖</button>
               </div>
             </div>
-            <div class="photo-card rounded-xl aspect-[4/3] bg-[color:var(--md-blush)] flex items-center justify-center text-3xl font-bold relative" onclick="handleHomePhotoClick(this)">+
-              <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteHomePhoto(this)" title="Delete Photo">✖</button>
+            <div class="photo-card rounded-xl aspect-[4/3] bg-[color:var(--md-blush)] flex items-center justify-center text-3xl font-bold relative" onclick="handleHomePhotoClick(this, 'davis')">+
+              <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteHomePhoto(this, 'davis')" title="Delete Photo">✖</button>
             </div>
           </div>
           <!-- Editable recap -->
           <div class="md:col-span-2">
             <div class="rounded-xl p-4 sm:p-5 h-full flex items-center" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-blush) 30%); border: 1px solid color-mix(in oklab, var(--md-blush) 60%, var(--md-white) 40%);">
-              <p id="recapText" class="leading-relaxed w-full" data-edit="teacher" contenteditable="false">
+              <p id="recapTextDavis" class="leading-relaxed w-full" data-edit="teacher" contenteditable="false">
+                This week we explored magical stories and practiced our sight words. The students loved reading about brave characters and sharing their favorite parts! We also worked on counting by 5s and 10s using fun games and manipulatives. Our art projects focused on fall colors and textures - the students created beautiful leaf collages and practiced writing descriptive words.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- What We Did - Ms. Williams -->
+      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
+        <h2 id="whatWeDidWilliamsTitle" class="text-2xl font-display font-bold mb-5 text-center" data-edit="teacher" contenteditable="false">What We Did This Week - Ms. Williams</h2>
+        <div class="grid md:grid-cols-3 gap-6">
+          <!-- 2 small + 1 large photo grid -->
+          <div class="col-span-1 flex flex-col gap-4">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div class="photo-card rounded-xl aspect-[4/3] bg-[color:var(--md-blush)] flex items-center justify-center text-3xl font-bold relative" onclick="handleHomePhotoClick(this, 'williams')">+
+                <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteHomePhoto(this, 'williams')" title="Delete Photo">✖</button>
+              </div>
+              <div class="photo-card rounded-xl aspect-[4/3] bg-[color:var(--md-blush)] flex items-center justify-center text-3xl font-bold relative" onclick="handleHomePhotoClick(this, 'williams')">+
+                <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteHomePhoto(this, 'williams')" title="Delete Photo">✖</button>
+              </div>
+            </div>
+            <div class="photo-card rounded-xl aspect-[4/3] bg-[color:var(--md-blush)] flex items-center justify-center text-3xl font-bold relative" onclick="handleHomePhotoClick(this, 'williams')">+
+              <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteHomePhoto(this, 'williams')" title="Delete Photo">✖</button>
+            </div>
+          </div>
+          <!-- Editable recap -->
+          <div class="md:col-span-2">
+            <div class="rounded-xl p-4 sm:p-5 h-full flex items-center" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-blush) 30%); border: 1px solid color-mix(in oklab, var(--md-blush) 60%, var(--md-white) 40%);">
+              <p id="recapTextWilliams" class="leading-relaxed w-full" data-edit="teacher" contenteditable="false">
                 This week we explored magical stories and practiced our sight words. The students loved reading about brave characters and sharing their favorite parts! We also worked on counting by 5s and 10s using fun games and manipulatives. Our art projects focused on fall colors and textures - the students created beautiful leaf collages and practiced writing descriptive words.
               </p>
             </div>
@@ -1836,7 +1869,22 @@
       const weekEl = document.getElementById('weekText');
       if (weekEl) data.week = weekEl.textContent || '';
       
-      // Recap text
+      // What We Did section titles
+      const whatWeDidDavisTitleEl = document.getElementById('whatWeDidDavisTitle');
+      if (whatWeDidDavisTitleEl) data.what_we_did_davis_title = whatWeDidDavisTitleEl.textContent || 'What We Did This Week - Mr. Davis';
+      
+      const whatWeDidWilliamsTitleEl = document.getElementById('whatWeDidWilliamsTitle');
+      if (whatWeDidWilliamsTitleEl) data.what_we_did_williams_title = whatWeDidWilliamsTitleEl.textContent || 'What We Did This Week - Ms. Williams';
+      
+      // Recap text for Mr. Davis
+      const recapDavisEl = document.getElementById('recapTextDavis');
+      if (recapDavisEl) data.recap_davis = recapDavisEl.textContent || '';
+      
+      // Recap text for Ms. Williams
+      const recapWilliamsEl = document.getElementById('recapTextWilliams');
+      if (recapWilliamsEl) data.recap_williams = recapWilliamsEl.textContent || '';
+      
+      // Keep old recap field for backward compatibility
       const recapEl = document.getElementById('recapText');
       if (recapEl) data.recap = recapEl.textContent || '';
       
@@ -1962,10 +2010,27 @@
         data.calendar_url = calendarLink.href || '';
       }
       
-      // Photo cards URLs
-      const photoCards = document.querySelectorAll('.photo-card');
+      // Photo cards URLs - separate for Davis and Williams
+      const davisPhotoCards = document.querySelectorAll('.photo-card[data-teacher="davis"], .photo-card[onclick*="davis"]');
+      const davisPhotoUrls = [];
+      davisPhotoCards.forEach(card => {
+        const url = card.getAttribute('data-photo-url') || '';
+        davisPhotoUrls.push(url);
+      });
+      data.photo_urls_davis_json = JSON.stringify(davisPhotoUrls);
+      
+      const williamsPhotoCards = document.querySelectorAll('.photo-card[data-teacher="williams"], .photo-card[onclick*="williams"]');
+      const williamsPhotoUrls = [];
+      williamsPhotoCards.forEach(card => {
+        const url = card.getAttribute('data-photo-url') || '';
+        williamsPhotoUrls.push(url);
+      });
+      data.photo_urls_williams_json = JSON.stringify(williamsPhotoUrls);
+      
+      // Keep old field for backward compatibility with existing data
+      const allPhotoCards = document.querySelectorAll('.photo-card');
       const photoUrls = [];
-      photoCards.forEach(card => {
+      allPhotoCards.forEach(card => {
         const url = card.getAttribute('data-photo-url') || '';
         photoUrls.push(url);
       });
@@ -2006,7 +2071,7 @@
         if (monthEl) data[`${month}_birthdays`] = monthEl.value || '';
       });
       
-      // About Me fields
+      // About Me fields - Mr. Davis
       const aboutMeDescEl = document.getElementById('aboutMeDescText');
       if (aboutMeDescEl) data.about_me_html = aboutMeDescEl.innerHTML || '';
       
@@ -2028,6 +2093,10 @@
       
       const favoriteShowEl = document.getElementById('favoriteShowText');
       if (favoriteShowEl) data.favorite_show = favoriteShowEl.textContent || '';
+      
+      // About Me Williams
+      const aboutMeWilliamsEl = document.getElementById('aboutMeWilliamsText');
+      if (aboutMeWilliamsEl) data.about_me_williams_text = aboutMeWilliamsEl.textContent || '';
       
       // Extras cards
       const extrasGrid = document.getElementById('extrasGrid');
@@ -2869,10 +2938,15 @@
     };
     
     // Editable photo cards: file upload functionality
-    function editPhoto(el) {
+    function editPhoto(el, teacher) {
       // Only allow editing in edit mode
       if (!document.body.classList.contains('editing')) {
         return;
+      }
+      
+      // Store teacher context in element if provided
+      if (teacher) {
+        el.setAttribute('data-teacher', teacher);
       }
       
       // Create file input
@@ -2902,7 +2976,8 @@
         
         while (attempt < maxAttempts) {
           try {
-            console.log(`Photo card upload attempt ${attempt + 1}`);
+            const teacherContext = el.getAttribute('data-teacher') || '';
+            console.log(`Photo card upload attempt ${attempt + 1}${teacherContext ? ' for ' + teacherContext : ''}`);
             
             // Set uploading flag to prevent periodic refresh interference
             isUploading = true;
@@ -2937,7 +3012,7 @@
             }
             
             // Update the photo card display
-            updatePhotoCardDisplay(el, downloadURL);
+            updatePhotoCardDisplay(el, downloadURL, teacherContext);
             
             // Store the photo URL in the element for later collection
             el.setAttribute('data-photo-url', downloadURL);
@@ -3017,11 +3092,11 @@
     }
     
     // Helper function to update photo card display
-    function updatePhotoCardDisplay(element, imageUrl) {
+    function updatePhotoCardDisplay(element, imageUrl, teacher) {
       // Validate imageUrl
       if (!imageUrl || typeof imageUrl !== 'string' || imageUrl.trim() === '') {
         console.warn('Invalid image URL provided to updatePhotoCardDisplay:', imageUrl);
-        resetPhotoCardToPlaceholder(element);
+        resetPhotoCardToPlaceholder(element, teacher);
         return;
       }
 
@@ -3038,13 +3113,13 @@
         element.innerHTML = '';
         element.appendChild(img);
         
-        // Add delete button
+        // Add delete button with teacher context
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only';
         deleteBtn.style.display = 'none';
         deleteBtn.onclick = function(event) {
           event.stopPropagation();
-          deleteHomePhoto(this);
+          deleteHomePhoto(this, teacher);
         };
         deleteBtn.title = 'Delete Photo';
         deleteBtn.textContent = '✖';
@@ -3054,15 +3129,16 @@
       // Handle image load error
       img.onerror = function() {
         console.error('Failed to load image:', imageUrl);
-        resetPhotoCardToPlaceholder(element);
+        resetPhotoCardToPlaceholder(element, teacher);
       };
       
       img.src = imageUrl;
     }
 
     // Helper function to reset photo card to placeholder state
-    function resetPhotoCardToPlaceholder(element) {
-      element.innerHTML = '+';
+    function resetPhotoCardToPlaceholder(element, teacher) {
+      const teacherAttr = teacher ? `, '${teacher}'` : '';
+      element.innerHTML = '+<button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteHomePhoto(this' + teacherAttr + ')" title="Delete Photo">✖</button>';
       element.style.display = 'flex';
       element.style.alignItems = 'center';
       element.style.justifyContent = 'center';
@@ -3072,11 +3148,11 @@
     }
     
     // Handle clicks on home page photo cards - either edit or view in modal
-    function handleHomePhotoClick(element) {
+    function handleHomePhotoClick(element, teacher) {
       // Check if we're in edit mode
       if (document.body.classList.contains('editing')) {
         // In edit mode, allow editing
-        editPhoto(element);
+        editPhoto(element, teacher);
       } else {
         // Not in edit mode, check if there's an image to display in modal
         const img = element.querySelector('img');
@@ -3087,7 +3163,7 @@
     }
     
     // Delete home page photo function
-    function deleteHomePhoto(btn) {
+    function deleteHomePhoto(btn, teacher) {
       if (!document.body.classList.contains('editing')) {
         return; // Only allow deletion in edit mode
       }
@@ -3096,14 +3172,14 @@
         const photoCard = btn.closest('.photo-card');
         
         // Reset to empty state
-        photoCard.innerHTML = '+<button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteHomePhoto(this)" title="Delete Photo">✖</button>';
+        photoCard.innerHTML = '+<button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteHomePhoto(this, \'' + teacher + '\')" title="Delete Photo">✖</button>';
         photoCard.removeAttribute('data-photo-url');
         
         // Show save button since we have changes
         const saveBtn = document.getElementById('saveChangesBtn');
         if (saveBtn) saveBtn.style.display = 'block';
         
-        console.log('Deleted photo from home page');
+        console.log('Deleted photo from home page for ' + teacher);
       }
     }
     
@@ -3833,9 +3909,31 @@ function updateWeekText(week) {
   const el = document.getElementById('weekText');
   if (el && week) el.textContent = week;
 }
-function updateRecapText(recap) {
+function updateRecapText(recapDavis, recapWilliams) {
+  // Update Davis recap
+  const elDavis = document.getElementById('recapTextDavis');
+  if (elDavis && recapDavis) elDavis.textContent = recapDavis;
+  
+  // Update Williams recap
+  const elWilliams = document.getElementById('recapTextWilliams');
+  if (elWilliams && recapWilliams) elWilliams.textContent = recapWilliams;
+  
+  // For backward compatibility with old single recap field
   const el = document.getElementById('recapText');
-  if (el && recap) el.textContent = recap;
+  if (el && recapDavis) el.textContent = recapDavis;
+}
+
+function updateWhatWeDidTitles(davisTitle, williamsTitle) {
+  const elDavis = document.getElementById('whatWeDidDavisTitle');
+  if (elDavis && davisTitle) elDavis.textContent = davisTitle;
+  
+  const elWilliams = document.getElementById('whatWeDidWilliamsTitle');
+  if (elWilliams && williamsTitle) elWilliams.textContent = williamsTitle;
+}
+
+function updateAboutMeWilliams(text) {
+  const el = document.getElementById('aboutMeWilliamsText');
+  if (el && text) el.textContent = text;
 }
 function updateEventsList(dates_json) {
   const eventsContainer = document.getElementById('eventsList');
@@ -4325,7 +4423,8 @@ function populateDataFromSheet(data) {
   }
   
   updateWeekText(data.week);
-  updateRecapText(data.recap);
+  updateWhatWeDidTitles(data.what_we_did_davis_title, data.what_we_did_williams_title);
+  updateRecapText(data.recap_davis || data.recap, data.recap_williams || data.recap);
   updateEventsList(data.dates_json);
   updateLookingAhead(data.looking_ahead);
   updateSnacksGrid(data.snacks_json);
@@ -4337,9 +4436,15 @@ function populateDataFromSheet(data) {
   updateMathSection(data.math_text, data.math_vocab_json);
   updateExtrasSection(data.extras_json);
   updateAboutMeSection(data);
+  updateAboutMeWilliams(data.about_me_williams_text);
   
-  // Load photo cards
-  updatePhotoCards(data.photo_urls_json);
+  // Load photo cards - separate for Davis and Williams
+  updatePhotoCards(data.photo_urls_davis_json, 'davis');
+  updatePhotoCards(data.photo_urls_williams_json, 'williams');
+  // For backward compatibility, also load old format if new format not available
+  if (!data.photo_urls_davis_json && !data.photo_urls_williams_json && data.photo_urls_json) {
+    updatePhotoCards(data.photo_urls_json, 'davis');
+  }
   
   // Load gallery photos
   updateGalleryPhotos(data.gallery_urls_json);
@@ -4382,7 +4487,7 @@ function populateDataFromSheet(data) {
 }
 
 // Function to update photo cards with saved URLs
-async function updatePhotoCards(photoUrlsJson) {
+async function updatePhotoCards(photoUrlsJson, teacher) {
   if (!photoUrlsJson) return;
   
   let photoUrls = [];
@@ -4393,7 +4498,17 @@ async function updatePhotoCards(photoUrlsJson) {
     return;
   }
   
-  const photoCards = document.querySelectorAll('.photo-card');
+  // Select photo cards for the specific teacher
+  let photoCards;
+  if (teacher === 'davis') {
+    photoCards = document.querySelectorAll('.photo-card[onclick*="davis"]');
+  } else if (teacher === 'williams') {
+    photoCards = document.querySelectorAll('.photo-card[onclick*="williams"]');
+  } else {
+    // Fallback to all cards if no teacher specified (backward compatibility)
+    photoCards = document.querySelectorAll('.photo-card');
+  }
+  
   photoCards.forEach(async (card, index) => {
     const url = photoUrls[index];
     if (url && typeof url === 'string' && url.trim() !== '') {
@@ -4401,15 +4516,16 @@ async function updatePhotoCards(photoUrlsJson) {
       const urlValid = await window.validateStorageUrl(url);
       if (urlValid) {
         card.setAttribute('data-photo-url', url);
-        updatePhotoCardDisplay(card, url);
+        card.setAttribute('data-teacher', teacher || '');
+        updatePhotoCardDisplay(card, url, teacher);
       } else {
         console.warn(`Invalid photo URL at index ${index}:`, url);
         // Reset to placeholder if URL is invalid
-        resetPhotoCardToPlaceholder(card);
+        resetPhotoCardToPlaceholder(card, teacher);
       }
     } else {
       // Reset to placeholder if URL is invalid
-      resetPhotoCardToPlaceholder(card);
+      resetPhotoCardToPlaceholder(card, teacher);
     }
   });
 }
@@ -5163,6 +5279,22 @@ function openAboutMeDavisModal() {
 
 function closeAboutMeDavisModal() {
   const modal = document.getElementById('aboutMeDavisModal');
+  if (modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+}
+
+function openAboutMeWilliamsModal() {
+  const modal = document.getElementById('aboutMeWilliamsModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeAboutMeWilliamsModal() {
+  const modal = document.getElementById('aboutMeWilliamsModal');
   if (modal) {
     modal.style.display = 'none';
     document.body.style.overflow = '';
@@ -8086,6 +8218,11 @@ document.addEventListener('DOMContentLoaded', function() {
     aboutMeDavisBtn.addEventListener('click', openAboutMeDavisModal);
   }
   
+  const aboutMeWilliamsBtn = document.getElementById('aboutMeWilliamsBtn');
+  if (aboutMeWilliamsBtn) {
+    aboutMeWilliamsBtn.addEventListener('click', openAboutMeWilliamsModal);
+  }
+  
   const shoutoutBtn = document.getElementById('shoutoutBtn');
   if (shoutoutBtn) {
     shoutoutBtn.addEventListener('click', function(e) {
@@ -8579,6 +8716,39 @@ document.head.appendChild(style);
           </button>
         </div>
         <button onclick="closeAboutMeDavisModal()" class="mt-6 px-6 py-2 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- About Ms. Williams Popup Modal -->
+  <div id="aboutMeWilliamsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9998; justify-content: center; align-items: center;" onclick="closeAboutMeWilliamsModal()">
+    <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-8 max-w-md mx-4" onclick="event.stopPropagation();" style="border: 3px solid var(--md-coral);">
+      <div class="text-center">
+        <div class="text-5xl mb-4">👩‍🏫</div>
+        <h3 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">About Ms. Williams</h3>
+        <div class="space-y-3">
+          <div class="bg-white rounded-xl p-6 text-left" style="border: 1px solid var(--md-coral);">
+            <h4 class="font-semibold mb-3">About Ms. Williams</h4>
+            <p id="aboutMeWilliamsText" class="text-sm leading-relaxed" data-edit="teacher" contenteditable="false" style="min-height: 60px;">
+              Ms. Williams is passionate about helping young learners discover their potential and develop a love for learning.
+            </p>
+          </div>
+          <div class="bg-white rounded-xl p-4" style="border: 1px solid var(--md-coral);">
+            <div class="text-sm font-semibold text-gray-600 mb-2">📧 Email</div>
+            <a href="mailto:rwilliams2@crossroadsschoolskc.org" class="text-[color:var(--md-coral)] font-semibold hover:underline">
+              rwilliams2@crossroadsschoolskc.org
+            </a>
+          </div>
+          <div class="bg-white rounded-xl p-4" style="border: 1px solid var(--md-coral);">
+            <div class="text-sm font-semibold text-gray-600 mb-2">📞 Phone</div>
+            <a href="tel:8163798950" class="text-[color:var(--md-coral)] font-semibold hover:underline">
+              816-379-8950
+            </a>
+          </div>
+        </div>
+        <button onclick="closeAboutMeWilliamsModal()" class="mt-6 px-6 py-2 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
           Close
         </button>
       </div>
