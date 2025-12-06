@@ -8097,7 +8097,7 @@ function createSkillsUnitSection(section, unitIndex, sectionIndex, isEditMode) {
     addBtn.className = 'mt-3 w-full px-3 py-2 rounded-lg text-white text-sm font-semibold';
     addBtn.style.background = 'var(--md-slate)';
     addBtn.textContent = '+ Add Item';
-    addBtn.onclick = () => addBulletPoint(unitIndex, sectionIndex);
+    addBtn.onclick = () => addSkillsBulletPoint(unitIndex, sectionIndex);
     sectionDiv.appendChild(addBtn);
   }
   
@@ -8157,7 +8157,7 @@ function createBulletElement(bullet, unitIndex, sectionIndex, bulletIndex, isEdi
       const allBullets = Array.from(container.querySelectorAll('[data-bullet-index]'));
       const currentIndex = allBullets.indexOf(currentDiv);
       if (currentIndex >= 0) {
-        removeBulletPoint(unitIndex, sectionIndex, currentIndex);
+        removeSkillsBulletPoint(unitIndex, sectionIndex, currentIndex);
       }
     };
     bulletDiv.appendChild(removeBtn);
@@ -8167,13 +8167,28 @@ function createBulletElement(bullet, unitIndex, sectionIndex, bulletIndex, isEdi
 }
 
 // Add a new bullet point to a section
-function addBulletPoint(unitIndex, sectionIndex) {
-  skillsUnitsData[unitIndex].sections[sectionIndex].bullets.push('New item - click to edit');
+function addSkillsBulletPoint(unitIndex, sectionIndex) {
+  skillsUnitsData[unitIndex].sections[sectionIndex].bullets.push('');
   renderSkillsUnits();
+  
+  // Focus the newly added bullet point after render
+  setTimeout(() => {
+    const container = document.querySelector(`[data-bullets-container="${unitIndex}-${sectionIndex}"]`);
+    if (container) {
+      const bullets = container.querySelectorAll('[data-bullet-index]');
+      const newBullet = bullets[bullets.length - 1];
+      if (newBullet) {
+        const textDiv = newBullet.querySelector('[contenteditable="true"]');
+        if (textDiv) {
+          textDiv.focus();
+        }
+      }
+    }
+  }, 0);
 }
 
 // Remove a bullet point from a section
-function removeBulletPoint(unitIndex, sectionIndex, bulletIndex) {
+function removeSkillsBulletPoint(unitIndex, sectionIndex, bulletIndex) {
   if (confirm('Remove this item?')) {
     skillsUnitsData[unitIndex].sections[sectionIndex].bullets.splice(bulletIndex, 1);
     renderSkillsUnits();
@@ -8430,7 +8445,7 @@ function createMathModuleSection(section, moduleIndex, sectionIndex, isEditMode)
     addBtn.className = 'mt-3 px-3 py-1 rounded-lg text-white text-sm font-semibold';
     addBtn.style.background = 'var(--md-slate)';
     addBtn.textContent = '+ Add Item';
-    addBtn.onclick = () => addBulletPoint(moduleIndex, sectionIndex);
+    addBtn.onclick = () => addMathBulletPoint(moduleIndex, sectionIndex);
     sectionDiv.appendChild(addBtn);
   }
   
@@ -8467,7 +8482,7 @@ function createBulletPointElement(bulletText, moduleIndex, sectionIndex, bulletI
     removeBtn.className = 'opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 rounded text-white text-xs';
     removeBtn.style.background = 'var(--md-coral)';
     removeBtn.textContent = '×';
-    removeBtn.onclick = () => removeBulletPoint(moduleIndex, sectionIndex, bulletIndex);
+    removeBtn.onclick = () => removeMathBulletPoint(moduleIndex, sectionIndex, bulletIndex);
     bulletDiv.appendChild(removeBtn);
   }
   
@@ -8475,16 +8490,28 @@ function createBulletPointElement(bulletText, moduleIndex, sectionIndex, bulletI
 }
 
 // Add a new bullet point to a section
-function addBulletPoint(moduleIndex, sectionIndex) {
+function addMathBulletPoint(moduleIndex, sectionIndex) {
   if (!mathModulesData[moduleIndex].sections[sectionIndex].bulletPoints) {
     mathModulesData[moduleIndex].sections[sectionIndex].bulletPoints = [];
   }
-  mathModulesData[moduleIndex].sections[sectionIndex].bulletPoints.push('New item');
+  mathModulesData[moduleIndex].sections[sectionIndex].bulletPoints.push('');
   renderMathModules();
+  
+  // Focus the newly added bullet point after render
+  setTimeout(() => {
+    const container = document.querySelector(`[data-section-bullets="${moduleIndex}-${sectionIndex}"]`);
+    if (container) {
+      const bullets = container.querySelectorAll('[contenteditable="true"]');
+      const newBullet = bullets[bullets.length - 1];
+      if (newBullet) {
+        newBullet.focus();
+      }
+    }
+  }, 0);
 }
 
 // Remove a bullet point from a section
-function removeBulletPoint(moduleIndex, sectionIndex, bulletIndex) {
+function removeMathBulletPoint(moduleIndex, sectionIndex, bulletIndex) {
   if (confirm('Remove this item?')) {
     mathModulesData[moduleIndex].sections[sectionIndex].bulletPoints.splice(bulletIndex, 1);
     renderMathModules();
