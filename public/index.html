@@ -1369,14 +1369,14 @@
     <!-- SKILLS UNITS PAGE -->
     <section data-page-panel="skills-units" class="pagePanel fade-in">
       <div class="flex items-center justify-between mb-6">
-        <h2 class="text-2xl font-display font-bold" style="color: var(--md-coral);">📚 Skills by Unit</h2>
+        <h2 class="text-2xl font-display font-bold" style="color: var(--md-slate);">📚 Skills by Unit</h2>
         <button onclick="showPage('skills')" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);">← Back to Skills</button>
       </div>
       <div class="space-y-6" id="skillsUnitsContainer">
         <!-- Units will be dynamically rendered here -->
       </div>
       <div class="mt-6 flex gap-3 edit-only" style="display: none;">
-        <button onclick="saveSkillsUnits()" class="px-4 py-2 rounded-lg text-white font-semibold" style="background: var(--md-coral);">💾 Save All Changes</button>
+        <button onclick="saveSkillsUnits()" class="px-4 py-2 rounded-lg text-white font-semibold" style="background: var(--md-slate);">💾 Save All Changes</button>
       </div>
     </section>
     <!-- MATH MODULES PAGE -->
@@ -7983,12 +7983,12 @@ function renderSkillsUnits() {
     const toggleIcon = document.createElement('span');
     toggleIcon.className = 'toggle-icon text-xl';
     toggleIcon.textContent = unitIndex === 0 ? '▼' : '▶';
-    toggleIcon.style.color = 'var(--md-coral)';
+    toggleIcon.style.color = 'var(--md-slate)';
     toggleIcon.setAttribute('data-toggle-icon', unitIndex);
     
     const titleEl = document.createElement('h3');
     titleEl.className = 'text-xl font-display font-bold';
-    titleEl.style.color = 'var(--md-coral)';
+    titleEl.style.color = 'var(--md-slate)';
     titleEl.contentEditable = isEditMode;
     titleEl.textContent = unit.title;
     titleEl.onclick = (e) => {
@@ -8007,9 +8007,12 @@ function renderSkillsUnits() {
     unitDiv.appendChild(headerDiv);
     
     // Sections container (3 columns)
+    // Using auto-fit grid for responsive layout that adapts to screen size
+    // On mobile: stacks vertically; On tablet: 2 columns; On desktop: 3 columns
     const sectionsContainer = document.createElement('div');
-    sectionsContainer.className = 'grid grid-cols-1 md:grid-cols-3 gap-4';
     sectionsContainer.style.display = unitIndex === 0 ? 'grid' : 'none';
+    sectionsContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(250px, 1fr))';
+    sectionsContainer.style.gap = '1rem';
     sectionsContainer.style.transition = 'all 0.3s ease';
     sectionsContainer.setAttribute('data-sections-container', unitIndex);
     
@@ -8054,22 +8057,19 @@ function toggleSkillsUnit(unitIndex) {
 // Create a single section element (column) for skills unit
 function createSkillsUnitSection(section, unitIndex, sectionIndex, isEditMode) {
   const sectionDiv = document.createElement('div');
-  sectionDiv.className = 'p-4 rounded-xl border-2';
-  sectionDiv.style.borderColor = 'color-mix(in oklab, var(--md-coral) 40%, var(--md-white) 60%)';
+  sectionDiv.className = 'p-4 rounded-xl shadow-sm';
+  sectionDiv.style.border = '2px solid color-mix(in oklab, var(--md-slate) 40%, var(--md-white) 60%)';
   sectionDiv.style.background = 'var(--md-white)';
   
   // Section title
   const titleEl = document.createElement('h4');
-  titleEl.className = 'text-lg font-semibold mb-3 px-2 py-1 rounded';
-  titleEl.style.color = 'var(--md-coral)';
+  titleEl.className = 'text-lg font-semibold mb-3';
+  titleEl.style.color = 'var(--md-slate)';
   titleEl.contentEditable = isEditMode;
   titleEl.textContent = section.title;
   titleEl.addEventListener('blur', () => {
     skillsUnitsData[unitIndex].sections[sectionIndex].title = titleEl.textContent;
   });
-  if (!isEditMode) {
-    titleEl.style.cursor = 'default';
-  }
   
   sectionDiv.appendChild(titleEl);
   
@@ -8094,7 +8094,7 @@ function createSkillsUnitSection(section, unitIndex, sectionIndex, isEditMode) {
   // Add bullet button (edit mode only)
   if (isEditMode) {
     const addBtn = document.createElement('button');
-    addBtn.className = 'mt-3 w-full px-3 py-2 rounded-lg text-white text-sm font-semibold';
+    addBtn.className = 'mt-3 px-3 py-1 rounded-lg text-white text-sm font-semibold';
     addBtn.style.background = 'var(--md-slate)';
     addBtn.textContent = '+ Add Item';
     addBtn.onclick = () => addSkillsBulletPoint(unitIndex, sectionIndex);
@@ -8107,49 +8107,42 @@ function createSkillsUnitSection(section, unitIndex, sectionIndex, isEditMode) {
 // Create a single bullet point element
 function createBulletElement(bullet, unitIndex, sectionIndex, bulletIndex, isEditMode) {
   const bulletDiv = document.createElement('div');
-  bulletDiv.className = 'flex items-start gap-2 p-2 rounded';
-  bulletDiv.style.background = 'color-mix(in oklab, var(--md-coral) 5%, var(--md-white) 95%)';
+  bulletDiv.className = 'flex items-start gap-2 group';
   bulletDiv.setAttribute('data-bullet-index', bulletIndex);
   
-  // Bullet point icon
-  const bulletIcon = document.createElement('span');
-  bulletIcon.className = 'text-coral mt-0.5';
-  bulletIcon.textContent = '•';
-  bulletIcon.style.color = 'var(--md-coral)';
-  bulletIcon.style.fontSize = '1.25rem';
-  bulletIcon.style.flexShrink = '0';
+  // Bullet point marker
+  const marker = document.createElement('span');
+  marker.className = 'text-gray-600 mt-1';
+  marker.textContent = '•';
+  marker.style.fontSize = '1rem';
   
   // Bullet text
-  const bulletText = document.createElement('div');
-  bulletText.className = 'flex-1 text-sm';
-  bulletText.contentEditable = isEditMode;
-  bulletText.textContent = bullet;
-  bulletText.style.minHeight = '1.5rem';
-  bulletText.style.outline = 'none';
-  bulletText.addEventListener('blur', (e) => {
+  const textDiv = document.createElement('div');
+  textDiv.className = 'flex-1 text-sm';
+  textDiv.contentEditable = isEditMode;
+  textDiv.textContent = bullet;
+  textDiv.style.cursor = isEditMode ? 'text' : 'default';
+  textDiv.style.minHeight = '1.5rem';
+  textDiv.addEventListener('blur', (e) => {
     // Find current index at time of blur to handle deletions
     const currentDiv = e.target.closest('[data-bullet-index]');
     const container = currentDiv.closest('[data-bullets-container]');
     const allBullets = Array.from(container.querySelectorAll('[data-bullet-index]'));
     const currentIndex = allBullets.indexOf(currentDiv);
     if (currentIndex >= 0 && currentIndex < skillsUnitsData[unitIndex].sections[sectionIndex].bullets.length) {
-      skillsUnitsData[unitIndex].sections[sectionIndex].bullets[currentIndex] = bulletText.textContent;
+      skillsUnitsData[unitIndex].sections[sectionIndex].bullets[currentIndex] = textDiv.textContent;
     }
   });
-  if (!isEditMode) {
-    bulletText.style.cursor = 'default';
-  }
   
-  bulletDiv.appendChild(bulletIcon);
-  bulletDiv.appendChild(bulletText);
+  bulletDiv.appendChild(marker);
+  bulletDiv.appendChild(textDiv);
   
   // Remove button (edit mode only)
   if (isEditMode) {
     const removeBtn = document.createElement('button');
-    removeBtn.className = 'text-xs px-2 py-1 rounded text-white flex-shrink-0';
+    removeBtn.className = 'opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 rounded text-white text-xs';
     removeBtn.style.background = 'var(--md-coral)';
     removeBtn.textContent = '×';
-    removeBtn.title = 'Remove';
     removeBtn.onclick = (e) => {
       // Find current index at time of click to handle deletions
       const currentDiv = e.target.closest('[data-bullet-index]');
@@ -8168,23 +8161,32 @@ function createBulletElement(bullet, unitIndex, sectionIndex, bulletIndex, isEdi
 
 // Add a new bullet point to a section
 function addSkillsBulletPoint(unitIndex, sectionIndex) {
-  skillsUnitsData[unitIndex].sections[sectionIndex].bullets.push('');
-  renderSkillsUnits();
+  const isEditMode = document.body.classList.contains('editing');
+  const newBulletText = '';
+  const bulletIndex = skillsUnitsData[unitIndex].sections[sectionIndex].bullets.length;
   
-  // Focus the newly added bullet point after render
-  setTimeout(() => {
-    const container = document.querySelector(`[data-bullets-container="${unitIndex}-${sectionIndex}"]`);
-    if (container) {
-      const bullets = container.querySelectorAll('[data-bullet-index]');
-      const newBullet = bullets[bullets.length - 1];
-      if (newBullet) {
-        const textDiv = newBullet.querySelector('[contenteditable="true"]');
-        if (textDiv) {
-          textDiv.focus();
-        }
-      }
+  // Add to data
+  skillsUnitsData[unitIndex].sections[sectionIndex].bullets.push(newBulletText);
+  
+  // Create and insert new bullet element without full re-render
+  const container = document.querySelector(`[data-bullets-container="${unitIndex}-${sectionIndex}"]`);
+  if (container) {
+    // Remove "No items yet" message if it exists
+    const emptyMsg = container.querySelector('.text-gray-400.italic');
+    if (emptyMsg) {
+      emptyMsg.remove();
     }
-  }, 0);
+    
+    // Create new bullet element
+    const newBulletElement = createBulletElement(newBulletText, unitIndex, sectionIndex, bulletIndex, isEditMode);
+    container.appendChild(newBulletElement);
+    
+    // Focus the newly added bullet point
+    const textDiv = newBulletElement.querySelector('[contenteditable="true"]');
+    if (textDiv) {
+      textDiv.focus();
+    }
+  }
 }
 
 // Remove a bullet point from a section
@@ -8491,23 +8493,36 @@ function createBulletPointElement(bulletText, moduleIndex, sectionIndex, bulletI
 
 // Add a new bullet point to a section
 function addMathBulletPoint(moduleIndex, sectionIndex) {
+  const isEditMode = document.body.classList.contains('editing');
   if (!mathModulesData[moduleIndex].sections[sectionIndex].bulletPoints) {
     mathModulesData[moduleIndex].sections[sectionIndex].bulletPoints = [];
   }
-  mathModulesData[moduleIndex].sections[sectionIndex].bulletPoints.push('');
-  renderMathModules();
   
-  // Focus the newly added bullet point after render
-  setTimeout(() => {
-    const container = document.querySelector(`[data-section-bullets="${moduleIndex}-${sectionIndex}"]`);
-    if (container) {
-      const bullets = container.querySelectorAll('[contenteditable="true"]');
-      const newBullet = bullets[bullets.length - 1];
-      if (newBullet) {
-        newBullet.focus();
-      }
+  const newBulletText = '';
+  const bulletIndex = mathModulesData[moduleIndex].sections[sectionIndex].bulletPoints.length;
+  
+  // Add to data
+  mathModulesData[moduleIndex].sections[sectionIndex].bulletPoints.push(newBulletText);
+  
+  // Create and insert new bullet element without full re-render
+  const container = document.querySelector(`[data-section-bullets="${moduleIndex}-${sectionIndex}"]`);
+  if (container) {
+    // Remove "No items yet" message if it exists
+    const emptyMsg = container.querySelector('.text-gray-400.italic');
+    if (emptyMsg) {
+      emptyMsg.remove();
     }
-  }, 0);
+    
+    // Create new bullet element
+    const newBulletElement = createBulletPointElement(newBulletText, moduleIndex, sectionIndex, bulletIndex, isEditMode);
+    container.appendChild(newBulletElement);
+    
+    // Focus the newly added bullet point
+    const textDiv = newBulletElement.querySelector('[contenteditable="true"]');
+    if (textDiv) {
+      textDiv.focus();
+    }
+  }
 }
 
 // Remove a bullet point from a section
