@@ -8191,9 +8191,29 @@ function addSkillsBulletPoint(unitIndex, sectionIndex) {
 
 // Remove a bullet point from a section
 function removeSkillsBulletPoint(unitIndex, sectionIndex, bulletIndex) {
-  if (confirm('Remove this item?')) {
-    skillsUnitsData[unitIndex].sections[sectionIndex].bullets.splice(bulletIndex, 1);
-    renderSkillsUnits();
+  // Remove from data
+  skillsUnitsData[unitIndex].sections[sectionIndex].bullets.splice(bulletIndex, 1);
+  
+  // Find and remove the DOM element directly to preserve scroll position
+  const container = document.querySelector(`[data-bullets-container="${unitIndex}-${sectionIndex}"]`);
+  if (container) {
+    const allBullets = Array.from(container.querySelectorAll('[data-bullet-index]'));
+    if (allBullets[bulletIndex]) {
+      allBullets[bulletIndex].remove();
+      
+      // Update remaining bullet indices
+      allBullets.slice(bulletIndex + 1).forEach((bullet, idx) => {
+        bullet.setAttribute('data-bullet-index', bulletIndex + idx);
+      });
+      
+      // Show "No items yet" if this was the last item
+      if (allBullets.length === 1 && !document.body.classList.contains('editing')) {
+        const emptyMsg = document.createElement('div');
+        emptyMsg.className = 'text-gray-400 text-sm italic px-2';
+        emptyMsg.textContent = 'No items yet';
+        container.appendChild(emptyMsg);
+      }
+    }
   }
 }
 
@@ -8527,9 +8547,24 @@ function addMathBulletPoint(moduleIndex, sectionIndex) {
 
 // Remove a bullet point from a section
 function removeMathBulletPoint(moduleIndex, sectionIndex, bulletIndex) {
-  if (confirm('Remove this item?')) {
-    mathModulesData[moduleIndex].sections[sectionIndex].bulletPoints.splice(bulletIndex, 1);
-    renderMathModules();
+  // Remove from data
+  mathModulesData[moduleIndex].sections[sectionIndex].bulletPoints.splice(bulletIndex, 1);
+  
+  // Find and remove the DOM element directly to preserve scroll position
+  const container = document.querySelector(`[data-section-bullets="${moduleIndex}-${sectionIndex}"]`);
+  if (container) {
+    const allBullets = Array.from(container.children);
+    if (allBullets[bulletIndex]) {
+      allBullets[bulletIndex].remove();
+      
+      // Show "No items yet" if this was the last item
+      if (allBullets.length === 1 && !document.body.classList.contains('editing')) {
+        const emptyMsg = document.createElement('div');
+        emptyMsg.className = 'text-gray-400 text-sm italic py-2';
+        emptyMsg.textContent = 'No items yet';
+        container.appendChild(emptyMsg);
+      }
+    }
   }
 }
 
