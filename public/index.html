@@ -305,6 +305,10 @@
               style="background: var(--md-mustard);">
         <span>⭐</span><span>Scholar of the Month</span>
       </button>
+      <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white hover:opacity-90"
+              data-page="grades" style="background: #10b981;">
+        <span>📊</span><span>Grades</span>
+      </button>
       <button id="learningHubBtn"
               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
               style="background: var(--md-slate);">
@@ -653,6 +657,29 @@
             <div id="classSkillMeterHistoryListWilliams" class="space-y-2 max-h-60 overflow-y-auto">
               <!-- History items will be populated by JavaScript -->
             </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- GRADES TAB -->
+    <section data-page-panel="grades" class="pagePanel fade-in">
+      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
+        <h2 id="gradesTitle" class="text-2xl font-display font-bold mb-6 text-center" data-edit="teacher" contenteditable="false">Mr. Davis Class</h2>
+        
+        <div class="rounded-xl p-6 mb-6" style="background: color-mix(in oklab, var(--md-white) 70%, #10b981 30%); border: 1px solid color-mix(in oklab, #10b981 60%, var(--md-white) 40%);">
+          <p id="gradesDescription" class="leading-relaxed text-center" data-edit="teacher" contenteditable="false">
+            This space is used to share practice assignments, skills checks, and progress toward major assessments. These items may not always appear on official report cards in Infinite Campus.
+          </p>
+        </div>
+        
+        <div class="text-center">
+          <a id="gradePortalLink" href="https://www.thinkwave.com/secure/login/" target="_blank" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white hover:opacity-90 transition-opacity" style="background: #10b981;">
+            <span>🔗</span><span>Open Grade Portal</span>
+          </a>
+          <div class="edit-only mt-4" style="display: none;">
+            <label class="block text-sm font-semibold mb-2">Grade Portal URL:</label>
+            <input type="url" id="gradePortalUrlInput" class="w-full max-w-xl mx-auto px-4 py-2 border rounded-lg" placeholder="https://www.thinkwave.com/secure/login/" value="https://www.thinkwave.com/secure/login/">
+            <button id="saveGradePortalBtn" class="mt-3 px-4 py-2 rounded-lg text-white font-semibold" style="background: var(--md-coral);" onclick="saveGradePortalUrl()">💾 Save Portal URL</button>
           </div>
         </div>
       </div>
@@ -2126,15 +2153,25 @@
       const snackMessageEl = document.getElementById('snackMessage');
       if (snackMessageEl) data.snack_message = snackMessageEl.value || '';
       
-      // Scholar info
-      const scholarNameEl = document.querySelector('[data-page-panel="scholar"] h3[data-edit="teacher"]');
-      if (scholarNameEl) data.scholar_name = scholarNameEl.textContent || '';
+      // Scholar info - Mr. Davis
+      const scholarNameDavisEl = document.getElementById('scholarNameDavis');
+      if (scholarNameDavisEl) data.scholar_name_davis = scholarNameDavisEl.textContent || '';
       
-      const scholarBlurbEl = document.querySelector('[data-page-panel="scholar"] p[data-edit="teacher"]:not(.text-lg.font-semibold)');
-      if (scholarBlurbEl) data.scholar_blurb = scholarBlurbEl.textContent || '';
+      const scholarInfoDavisEl = document.getElementById('scholarInfoDavis');
+      if (scholarInfoDavisEl) data.scholar_blurb_davis = scholarInfoDavisEl.textContent || '';
       
-      const scholarSkillEl = document.querySelector('[data-page-panel="scholar"] p.text-lg.font-semibold[data-edit="teacher"]');
-      if (scholarSkillEl) data.scholar_skill = scholarSkillEl.textContent || '';
+      const scholarSkillDavisEl = document.getElementById('scholarSkillDavis');
+      if (scholarSkillDavisEl) data.scholar_skill_davis = scholarSkillDavisEl.textContent || '';
+      
+      // Scholar info - Ms. Williams
+      const scholarNameWilliamsEl = document.getElementById('scholarNameWilliams');
+      if (scholarNameWilliamsEl) data.scholar_name_williams = scholarNameWilliamsEl.textContent || '';
+      
+      const scholarInfoWilliamsEl = document.getElementById('scholarInfoWilliams');
+      if (scholarInfoWilliamsEl) data.scholar_blurb_williams = scholarInfoWilliamsEl.textContent || '';
+      
+      const scholarSkillWilliamsEl = document.getElementById('scholarSkillWilliams');
+      if (scholarSkillWilliamsEl) data.scholar_skill_williams = scholarSkillWilliamsEl.textContent || '';
       
       // Class Skill Meter
       const classSkillMeterSkill = document.getElementById('classSkillMeterSkill');
@@ -2149,6 +2186,21 @@
       // Save history to an array if it exists in memory (history is managed separately)
       if (typeof classSkillMeterHistory !== 'undefined' && classSkillMeterHistory) {
         data.class_skill_meter_history = JSON.stringify(classSkillMeterHistory);
+      }
+      
+      // Grades section
+      const gradesTitleEl = document.getElementById('gradesTitle');
+      if (gradesTitleEl) data.grades_title = gradesTitleEl.textContent || '';
+      
+      const gradesDescEl = document.getElementById('gradesDescription');
+      if (gradesDescEl) data.grades_description = gradesDescEl.textContent || '';
+      
+      const gradePortalUrlInput = document.getElementById('gradePortalUrlInput');
+      const gradePortalLink = document.getElementById('gradePortalLink');
+      if (gradePortalUrlInput && gradePortalUrlInput.value) {
+        data.grade_portal_url = gradePortalUrlInput.value;
+      } else if (gradePortalLink) {
+        data.grade_portal_url = gradePortalLink.href || '';
       }
       
       // Skills section
@@ -2351,9 +2403,14 @@
       data.websites_json = JSON.stringify(websites);
       
       // Profile photos URLs - using more specific selectors
-      const scholarProfileEl = document.querySelector('[onclick*="editProfilePhoto"][onclick*="scholar"]');
-      if (scholarProfileEl) {
-        data.scholar_profile_url = scholarProfileEl.getAttribute('data-profile-url') || '';
+      const scholarDavisProfileEl = document.querySelector('[onclick*="editProfilePhoto"][onclick*="scholarDavis"]');
+      if (scholarDavisProfileEl) {
+        data.scholar_profile_davis_url = scholarDavisProfileEl.getAttribute('data-profile-url') || '';
+      }
+      
+      const scholarWilliamsProfileEl = document.querySelector('[onclick*="editProfilePhoto"][onclick*="scholarWilliams"]');
+      if (scholarWilliamsProfileEl) {
+        data.scholar_profile_williams_url = scholarWilliamsProfileEl.getAttribute('data-profile-url') || '';
       }
       
       const aboutMeProfileEl = document.querySelector('[onclick*="editProfilePhoto"][onclick*="aboutme"]');
@@ -4104,6 +4161,69 @@
         }, 2000);
       }
     }
+    
+    // Save grade portal URL to Firestore
+    async function saveGradePortalUrl() {
+      const saveBtn = document.getElementById('saveGradePortalBtn');
+      const urlInput = document.getElementById('gradePortalUrlInput');
+      
+      if (!saveBtn || !urlInput) return;
+      
+      const originalText = saveBtn.textContent;
+      
+      try {
+        // Check authentication
+        await ensureAuthenticated();
+        
+        // Validate URL
+        const url = urlInput.value.trim();
+        if (!url) {
+          alert('Please enter a valid grade portal URL');
+          return;
+        }
+        
+        // Show saving state
+        saveBtn.textContent = '⏳ Saving...';
+        saveBtn.disabled = true;
+        
+        // Update the link href immediately
+        const link = document.getElementById('gradePortalLink');
+        if (link) {
+          link.href = url;
+        }
+        
+        // Prepare data for saving
+        const data = {
+          grade_portal_url: url
+        };
+        
+        // Save to Firestore
+        await db.collection('classData').doc('current').set(data, { merge: true });
+        
+        console.log('Grade portal URL saved successfully:', url);
+        
+        // Show success state
+        saveBtn.textContent = '✅ Saved!';
+        
+        // Reset button after 1 second
+        setTimeout(() => {
+          saveBtn.textContent = originalText;
+          saveBtn.disabled = false;
+        }, 1000);
+        
+      } catch (error) {
+        console.error('Failed to save grade portal URL:', error);
+        saveBtn.textContent = '❌ Save Failed';
+        
+        // Show error alert
+        alert('Failed to save grade portal URL: ' + (error.message || 'Unknown error'));
+        
+        setTimeout(() => {
+          saveBtn.textContent = originalText;
+          saveBtn.disabled = false;
+        }, 2000);
+      }
+    }
   </script>
 
   <!-- Firebase Firestore Integration Script -->
@@ -4326,13 +4446,24 @@ function updateSnackMessage(snack_message) {
     messageEl.value = snack_message;
   }
 }
-function updateScholarInfo(scholar_name, scholar_blurb, scholar_skill) {
-  const nameEl = document.querySelector('[data-page-panel="scholar"] h3[data-edit="teacher"]');
-  const descEl = document.querySelector('[data-page-panel="scholar"] p[data-edit="teacher"]:not(.text-lg.font-semibold)');
-  const skillEl = document.querySelector('[data-page-panel="scholar"] p.text-lg.font-semibold[data-edit="teacher"]');
-  if (nameEl && scholar_name) nameEl.textContent = scholar_name;
-  if (descEl && scholar_blurb) descEl.textContent = scholar_blurb;
-  if (skillEl && scholar_skill) skillEl.textContent = scholar_skill;
+function updateScholarInfo(data) {
+  // Update Mr. Davis scholar info
+  const nameDavisEl = document.getElementById('scholarNameDavis');
+  const infoDavisEl = document.getElementById('scholarInfoDavis');
+  const skillDavisEl = document.getElementById('scholarSkillDavis');
+  
+  if (nameDavisEl && data.scholar_name_davis) nameDavisEl.textContent = data.scholar_name_davis;
+  if (infoDavisEl && data.scholar_blurb_davis) infoDavisEl.textContent = data.scholar_blurb_davis;
+  if (skillDavisEl && data.scholar_skill_davis) skillDavisEl.textContent = data.scholar_skill_davis;
+  
+  // Update Ms. Williams scholar info
+  const nameWilliamsEl = document.getElementById('scholarNameWilliams');
+  const infoWilliamsEl = document.getElementById('scholarInfoWilliams');
+  const skillWilliamsEl = document.getElementById('scholarSkillWilliams');
+  
+  if (nameWilliamsEl && data.scholar_name_williams) nameWilliamsEl.textContent = data.scholar_name_williams;
+  if (infoWilliamsEl && data.scholar_blurb_williams) infoWilliamsEl.textContent = data.scholar_blurb_williams;
+  if (skillWilliamsEl && data.scholar_skill_williams) skillWilliamsEl.textContent = data.scholar_skill_williams;
 }
 
 // Class Skill Meter Functions
@@ -4640,6 +4771,35 @@ function updateExtrasSection(extras_json) {
     extrasContainer.appendChild(div);
   });
 }
+
+function updateGradesSection(data) {
+  if (!data) return;
+  
+  // Update grades title
+  const gradesTitleEl = document.getElementById('gradesTitle');
+  if (gradesTitleEl && data.grades_title) {
+    gradesTitleEl.textContent = data.grades_title;
+  }
+  
+  // Update grades description
+  const gradesDescEl = document.getElementById('gradesDescription');
+  if (gradesDescEl && data.grades_description) {
+    gradesDescEl.textContent = data.grades_description;
+  }
+  
+  // Update grade portal URL
+  if (data.grade_portal_url) {
+    const gradePortalLink = document.getElementById('gradePortalLink');
+    if (gradePortalLink) {
+      gradePortalLink.href = data.grade_portal_url;
+    }
+    const gradePortalUrlInput = document.getElementById('gradePortalUrlInput');
+    if (gradePortalUrlInput) {
+      gradePortalUrlInput.value = data.grade_portal_url;
+    }
+  }
+}
+
 function updateAboutMeSection(data) {
   if (!data) return;
   
@@ -4678,7 +4838,8 @@ function updateAboutMeSection(data) {
   }
   
   // Update profile photos with proper reset handling
-  updateProfilePhoto('scholar', data.scholar_profile_url);
+  updateProfilePhoto('scholarDavis', data.scholar_profile_davis_url);
+  updateProfilePhoto('scholarWilliams', data.scholar_profile_williams_url);
   updateProfilePhoto('aboutme', data.about_me_profile_url);
 }
 function populateDataFromSheet(data) {
@@ -4695,12 +4856,13 @@ function populateDataFromSheet(data) {
   updateLookingAhead(data.looking_ahead);
   updateSnacksGrid(data.snacks_json);
   updateSnackMessage(data.snack_message);
-  updateScholarInfo(data.scholar_name, data.scholar_blurb, data.scholar_skill);
+  updateScholarInfo(data);
   updateClassSkillMeter(data.class_skill_meter_skill, data.class_skill_meter_progress, data.class_skill_meter_family_note, data.class_skill_meter_history);
   updateSkillsSection(data.skills_text, data.sounds_json);
   updateListeningSection(data.listening_text, data.ask_json);
   updateMathSection(data.math_text, data.math_vocab_json);
   updateExtrasSection(data.extras_json);
+  updateGradesSection(data);
   updateAboutMeSection(data);
   updateAboutMeWilliams(data);
   
