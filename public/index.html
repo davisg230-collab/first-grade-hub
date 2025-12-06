@@ -305,7 +305,7 @@
               style="background: var(--md-mustard);">
         <span>⭐</span><span>Scholar of the Month</span>
       </button>
-      <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white hover:opacity-90"
+      <button id="gradesBtn" class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white hover:opacity-90"
               data-page="grades" style="background: var(--md-coral);">
         <span>📊</span><span>Grades</span>
       </button>
@@ -4218,6 +4218,14 @@
           return;
         }
         
+        // Validate URL format
+        try {
+          new URL(url);
+        } catch (e) {
+          alert('Please enter a valid URL (e.g., https://example.com)');
+          return;
+        }
+        
         // Show saving state
         saveBtn.textContent = '⏳ Saving...';
         saveBtn.disabled = true;
@@ -4251,8 +4259,11 @@
         console.error('Failed to save grade portal URL:', error);
         saveBtn.textContent = '❌ Save Failed';
         
-        // Show error alert
-        alert('Failed to save grade portal URL: ' + (error.message || 'Unknown error'));
+        // Show generic error alert to avoid exposing sensitive details
+        const errorMsg = error.message && error.message.includes('not authenticated') 
+          ? 'Please enter edit mode first.'
+          : 'Failed to save grade portal URL. Please try again.';
+        alert(errorMsg);
         
         setTimeout(() => {
           saveBtn.textContent = originalText;
