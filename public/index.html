@@ -8191,9 +8191,29 @@ function addSkillsBulletPoint(unitIndex, sectionIndex) {
 
 // Remove a bullet point from a section
 function removeSkillsBulletPoint(unitIndex, sectionIndex, bulletIndex) {
-  if (confirm('Remove this item?')) {
-    skillsUnitsData[unitIndex].sections[sectionIndex].bullets.splice(bulletIndex, 1);
-    renderSkillsUnits();
+  // Remove from data
+  skillsUnitsData[unitIndex].sections[sectionIndex].bullets.splice(bulletIndex, 1);
+  
+  // Find and remove the DOM element directly to preserve scroll position
+  const container = document.querySelector(`[data-bullets-container="${unitIndex}-${sectionIndex}"]`);
+  if (container) {
+    const allBullets = Array.from(container.querySelectorAll('[data-bullet-index]'));
+    if (allBullets[bulletIndex]) {
+      allBullets[bulletIndex].remove();
+      
+      // Update remaining bullet indices
+      allBullets.slice(bulletIndex + 1).forEach((bullet, idx) => {
+        bullet.setAttribute('data-bullet-index', bulletIndex + idx);
+      });
+      
+      // Show "No items yet" if this was the last item
+      if (allBullets.length === 1 && !document.body.classList.contains('editing')) {
+        const emptyMsg = document.createElement('div');
+        emptyMsg.className = 'text-gray-400 text-sm italic px-2';
+        emptyMsg.textContent = 'No items yet';
+        container.appendChild(emptyMsg);
+      }
+    }
   }
 }
 
@@ -8458,6 +8478,7 @@ function createMathModuleSection(section, moduleIndex, sectionIndex, isEditMode)
 function createBulletPointElement(bulletText, moduleIndex, sectionIndex, bulletIndex, isEditMode) {
   const bulletDiv = document.createElement('div');
   bulletDiv.className = 'flex items-start gap-2 group';
+  bulletDiv.setAttribute('data-math-bullet-index', bulletIndex);
   
   // Bullet point marker
   const marker = document.createElement('span');
@@ -8473,8 +8494,15 @@ function createBulletPointElement(bulletText, moduleIndex, sectionIndex, bulletI
   textDiv.textContent = bulletText;
   textDiv.style.cursor = isEditMode ? 'text' : 'default';
   textDiv.style.minHeight = '1.5rem';
-  textDiv.addEventListener('blur', () => {
-    mathModulesData[moduleIndex].sections[sectionIndex].bulletPoints[bulletIndex] = textDiv.textContent;
+  textDiv.addEventListener('blur', (e) => {
+    // Find current index at time of blur to handle deletions
+    const currentDiv = e.target.closest('[data-math-bullet-index]');
+    const container = currentDiv.closest('[data-section-bullets]');
+    const allBullets = Array.from(container.querySelectorAll('[data-math-bullet-index]'));
+    const currentIndex = allBullets.indexOf(currentDiv);
+    if (currentIndex >= 0 && currentIndex < mathModulesData[moduleIndex].sections[sectionIndex].bulletPoints.length) {
+      mathModulesData[moduleIndex].sections[sectionIndex].bulletPoints[currentIndex] = textDiv.textContent;
+    }
   });
   bulletDiv.appendChild(textDiv);
   
@@ -8484,7 +8512,16 @@ function createBulletPointElement(bulletText, moduleIndex, sectionIndex, bulletI
     removeBtn.className = 'opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 rounded text-white text-xs';
     removeBtn.style.background = 'var(--md-coral)';
     removeBtn.textContent = '×';
-    removeBtn.onclick = () => removeMathBulletPoint(moduleIndex, sectionIndex, bulletIndex);
+    removeBtn.onclick = (e) => {
+      // Find current index at time of click to handle deletions
+      const currentDiv = e.target.closest('[data-math-bullet-index]');
+      const container = currentDiv.closest('[data-section-bullets]');
+      const allBullets = Array.from(container.querySelectorAll('[data-math-bullet-index]'));
+      const currentIndex = allBullets.indexOf(currentDiv);
+      if (currentIndex >= 0) {
+        removeMathBulletPoint(moduleIndex, sectionIndex, currentIndex);
+      }
+    };
     bulletDiv.appendChild(removeBtn);
   }
   
@@ -8527,9 +8564,29 @@ function addMathBulletPoint(moduleIndex, sectionIndex) {
 
 // Remove a bullet point from a section
 function removeMathBulletPoint(moduleIndex, sectionIndex, bulletIndex) {
-  if (confirm('Remove this item?')) {
-    mathModulesData[moduleIndex].sections[sectionIndex].bulletPoints.splice(bulletIndex, 1);
-    renderMathModules();
+  // Remove from data
+  mathModulesData[moduleIndex].sections[sectionIndex].bulletPoints.splice(bulletIndex, 1);
+  
+  // Find and remove the DOM element directly to preserve scroll position
+  const container = document.querySelector(`[data-section-bullets="${moduleIndex}-${sectionIndex}"]`);
+  if (container) {
+    const allBullets = Array.from(container.querySelectorAll('[data-math-bullet-index]'));
+    if (allBullets[bulletIndex]) {
+      allBullets[bulletIndex].remove();
+      
+      // Update remaining bullet indices
+      allBullets.slice(bulletIndex + 1).forEach((bullet, idx) => {
+        bullet.setAttribute('data-math-bullet-index', bulletIndex + idx);
+      });
+      
+      // Show "No items yet" if this was the last item
+      if (allBullets.length === 1 && !document.body.classList.contains('editing')) {
+        const emptyMsg = document.createElement('div');
+        emptyMsg.className = 'text-gray-400 text-sm italic py-2';
+        emptyMsg.textContent = 'No items yet';
+        container.appendChild(emptyMsg);
+      }
+    }
   }
 }
 
