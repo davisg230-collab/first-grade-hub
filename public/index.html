@@ -262,6 +262,58 @@
       }
     }
     .filter-btn.active { background: var(--md-coral); color: white; }
+    
+    /* Collapsible section styles for Ms. Williams */
+    .collapsible-header {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: opacity 0.2s ease;
+    }
+    .collapsible-header:hover {
+      opacity: 0.8;
+    }
+    .chevron {
+      transition: transform 0.3s ease;
+      display: inline-block;
+    }
+    .chevron.expanded {
+      transform: rotate(180deg);
+    }
+    .collapsible-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease-out, opacity 0.3s ease-out;
+      opacity: 0;
+    }
+    .collapsible-content.expanded {
+      max-height: 2000px;
+      opacity: 1;
+    }
+    
+    /* Mobile navigation tab styles */
+    @media (max-width: 768px) {
+      #topNav {
+        flex-direction: column !important;
+        width: 100%;
+      }
+      #topNav button {
+        width: 100% !important;
+        justify-content: center;
+      }
+      
+      /* Adjust shoutout button positioning on mobile to prevent overlap with header */
+      #shoutoutBtn {
+        position: absolute;
+        top: auto !important;
+        bottom: 0.5rem !important;
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%);
+      }
+    }
   </style>
 </head>
 <body class="bg-[color:var(--md-cream)] text-[color:var(--md-ink)] font-body">
@@ -360,8 +412,12 @@
       </div>
       <!-- What We Did - Ms. Williams -->
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
-        <h2 id="whatWeDidWilliamsTitle" class="text-2xl font-display font-bold mb-5 text-center" data-edit="teacher" contenteditable="false">What We Did This Week - Ms. Williams</h2>
-        <div class="grid md:grid-cols-3 gap-6">
+        <h2 id="whatWeDidWilliamsTitle" class="text-2xl font-display font-bold mb-5 text-center collapsible-header" data-edit="teacher" contenteditable="false" onclick="toggleWilliamsSection()">
+          What We Did This Week - Ms. Williams
+          <span class="chevron">▼</span>
+        </h2>
+        <div id="williamsCollapsibleContent" class="collapsible-content">
+          <div class="grid md:grid-cols-3 gap-6">
           <!-- 2 small + 1 large photo grid -->
           <div class="col-span-1 flex flex-col gap-4">
             <div class="grid grid-cols-2 gap-4 mb-4">
@@ -384,6 +440,7 @@
               </p>
             </div>
           </div>
+        </div>
         </div>
       </div>
       <!-- Important Dates + Looking Ahead -->
@@ -9100,6 +9157,20 @@ function editProfilePhoto(el, section) {
   
   document.body.appendChild(fileInput);
   fileInput.click();
+}
+
+// Toggle Ms. Williams section
+function toggleWilliamsSection() {
+  const content = document.getElementById('williamsCollapsibleContent');
+  const chevron = document.querySelector('#whatWeDidWilliamsTitle .chevron');
+  
+  if (content.classList.contains('expanded')) {
+    content.classList.remove('expanded');
+    chevron.classList.remove('expanded');
+  } else {
+    content.classList.add('expanded');
+    chevron.classList.add('expanded');
+  }
 }
 
 // Confetti animation for celebrate button
