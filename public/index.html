@@ -7947,6 +7947,8 @@ function initializeSkillsUnits() {
     for (let i = 1; i <= 7; i++) {
       skillsUnitsData.push({
         title: `Unit ${i}`,
+        priorityStandard: '',
+        description: '',
         sections: [
           { title: 'Section 1', bullets: [] },
           { title: 'Section 2', bullets: [] },
@@ -7954,6 +7956,16 @@ function initializeSkillsUnits() {
         ]
       });
     }
+  } else {
+    // Ensure existing units have priorityStandard and description fields
+    skillsUnitsData.forEach(unit => {
+      if (!('priorityStandard' in unit)) {
+        unit.priorityStandard = '';
+      }
+      if (!('description' in unit)) {
+        unit.description = '';
+      }
+    });
   }
 }
 
@@ -7978,11 +7990,14 @@ function renderSkillsUnits() {
     headerDiv.onclick = () => toggleSkillsUnit(unitIndex);
     
     const titleContainer = document.createElement('div');
-    titleContainer.className = 'flex items-center gap-3';
+    titleContainer.className = 'flex flex-col gap-1';
+    
+    const titleRow = document.createElement('div');
+    titleRow.className = 'flex items-center gap-3';
     
     const toggleIcon = document.createElement('span');
     toggleIcon.className = 'toggle-icon text-xl';
-    toggleIcon.textContent = unitIndex === 0 ? '▼' : '▶';
+    toggleIcon.textContent = '▶';
     toggleIcon.style.color = 'var(--md-slate)';
     toggleIcon.setAttribute('data-toggle-icon', unitIndex);
     
@@ -8000,17 +8015,84 @@ function renderSkillsUnits() {
       skillsUnitsData[unitIndex].title = titleEl.textContent;
     });
     
-    titleContainer.appendChild(toggleIcon);
-    titleContainer.appendChild(titleEl);
+    titleRow.appendChild(toggleIcon);
+    titleRow.appendChild(titleEl);
+    titleContainer.appendChild(titleRow);
+    
+    // Priority Standard display (when dropdown is closed)
+    if (unit.priorityStandard && unit.priorityStandard.trim()) {
+      const priorityDisplay = document.createElement('div');
+      priorityDisplay.className = 'text-sm text-gray-600 ml-8';
+      priorityDisplay.style.fontStyle = 'italic';
+      priorityDisplay.textContent = unit.priorityStandard;
+      priorityDisplay.setAttribute('data-priority-display', unitIndex);
+      titleContainer.appendChild(priorityDisplay);
+    }
     
     headerDiv.appendChild(titleContainer);
     unitDiv.appendChild(headerDiv);
+    
+    // Priority Standard and Description textboxes (edit mode only, above sections)
+    if (isEditMode) {
+      const editFieldsContainer = document.createElement('div');
+      editFieldsContainer.className = 'mb-4 space-y-3';
+      editFieldsContainer.style.display = 'none';
+      editFieldsContainer.setAttribute('data-edit-fields', unitIndex);
+      
+      // Priority Standard textbox
+      const priorityStandardLabel = document.createElement('label');
+      priorityStandardLabel.className = 'block text-sm font-semibold mb-1';
+      priorityStandardLabel.style.color = 'var(--md-slate)';
+      priorityStandardLabel.textContent = 'Priority Standard:';
+      
+      const priorityStandardInput = document.createElement('input');
+      priorityStandardInput.type = 'text';
+      priorityStandardInput.className = 'w-full p-2 border-2 rounded-lg';
+      priorityStandardInput.style.borderColor = 'color-mix(in oklab, var(--md-slate) 40%, var(--md-white) 60%)';
+      priorityStandardInput.value = unit.priorityStandard || '';
+      priorityStandardInput.placeholder = 'Enter priority standard...';
+      priorityStandardInput.addEventListener('input', (e) => {
+        skillsUnitsData[unitIndex].priorityStandard = e.target.value;
+        // Update the display under the title
+        updatePriorityDisplay(unitIndex, e.target.value);
+      });
+      priorityStandardInput.onclick = (e) => e.stopPropagation();
+      
+      const priorityDiv = document.createElement('div');
+      priorityDiv.appendChild(priorityStandardLabel);
+      priorityDiv.appendChild(priorityStandardInput);
+      editFieldsContainer.appendChild(priorityDiv);
+      
+      // Description textbox
+      const descriptionLabel = document.createElement('label');
+      descriptionLabel.className = 'block text-sm font-semibold mb-1';
+      descriptionLabel.style.color = 'var(--md-slate)';
+      descriptionLabel.textContent = 'Description:';
+      
+      const descriptionInput = document.createElement('textarea');
+      descriptionInput.className = 'w-full p-2 border-2 rounded-lg';
+      descriptionInput.style.borderColor = 'color-mix(in oklab, var(--md-slate) 40%, var(--md-white) 60%)';
+      descriptionInput.style.minHeight = '80px';
+      descriptionInput.value = unit.description || '';
+      descriptionInput.placeholder = 'Enter description...';
+      descriptionInput.addEventListener('input', (e) => {
+        skillsUnitsData[unitIndex].description = e.target.value;
+      });
+      descriptionInput.onclick = (e) => e.stopPropagation();
+      
+      const descriptionDiv = document.createElement('div');
+      descriptionDiv.appendChild(descriptionLabel);
+      descriptionDiv.appendChild(descriptionInput);
+      editFieldsContainer.appendChild(descriptionDiv);
+      
+      unitDiv.appendChild(editFieldsContainer);
+    }
     
     // Sections container (3 columns)
     // Using auto-fit grid for responsive layout that adapts to screen size
     // On mobile: stacks vertically; On tablet: 2 columns; On desktop: 3 columns
     const sectionsContainer = document.createElement('div');
-    sectionsContainer.style.display = unitIndex === 0 ? 'grid' : 'none';
+    sectionsContainer.style.display = 'none';
     sectionsContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(250px, 1fr))';
     sectionsContainer.style.gap = '1rem';
     sectionsContainer.style.transition = 'all 0.3s ease';
@@ -8031,6 +8113,8 @@ function renderSkillsUnits() {
 function toggleSkillsUnit(unitIndex) {
   const allContainers = document.querySelectorAll('[data-sections-container]');
   const allIcons = document.querySelectorAll('[data-toggle-icon]');
+  const allEditFields = document.querySelectorAll('[data-edit-fields]');
+  const allPriorityDisplays = document.querySelectorAll('[data-priority-display]');
   
   // Create a map of icons by their data attribute for efficient lookup
   const iconMap = new Map();
@@ -8039,19 +8123,63 @@ function toggleSkillsUnit(unitIndex) {
     if (index !== null) iconMap.set(index, icon);
   });
   
+  // Create a map for edit fields
+  const editFieldsMap = new Map();
+  allEditFields.forEach(field => {
+    const index = field.getAttribute('data-edit-fields');
+    if (index !== null) editFieldsMap.set(index, field);
+  });
+  
+  // Create a map for priority displays
+  const priorityDisplayMap = new Map();
+  allPriorityDisplays.forEach(display => {
+    const index = display.getAttribute('data-priority-display');
+    if (index !== null) priorityDisplayMap.set(index, display);
+  });
+  
   allContainers.forEach((container) => {
     const containerIndex = container.getAttribute('data-sections-container');
     const icon = iconMap.get(containerIndex);
+    const editFields = editFieldsMap.get(containerIndex);
+    const priorityDisplay = priorityDisplayMap.get(containerIndex);
     
     if (containerIndex === unitIndex.toString()) {
       const isHidden = container.style.display === 'none';
       container.style.display = isHidden ? 'grid' : 'none';
       if (icon) icon.textContent = isHidden ? '▼' : '▶';
+      if (editFields) editFields.style.display = isHidden ? 'block' : 'none';
+      if (priorityDisplay) priorityDisplay.style.display = isHidden ? 'none' : 'block';
     } else {
       container.style.display = 'none';
       if (icon) icon.textContent = '▶';
+      if (editFields) editFields.style.display = 'none';
+      if (priorityDisplay) priorityDisplay.style.display = 'block';
     }
   });
+}
+
+// Helper function to update priority display for a skills unit
+function updatePriorityDisplay(unitIndex, value) {
+  const priorityDisplay = document.querySelector(`[data-priority-display="${unitIndex}"]`);
+  const unitDiv = document.querySelector(`[data-unit-index="${unitIndex}"]`);
+  const titleContainer = unitDiv?.querySelector('.flex.flex-col');
+  
+  if (value && value.trim()) {
+    if (priorityDisplay) {
+      priorityDisplay.textContent = value;
+    } else if (titleContainer) {
+      // Create the priority display if it doesn't exist
+      const newPriorityDisplay = document.createElement('div');
+      newPriorityDisplay.className = 'text-sm text-gray-600 ml-8';
+      newPriorityDisplay.style.fontStyle = 'italic';
+      newPriorityDisplay.textContent = value;
+      newPriorityDisplay.setAttribute('data-priority-display', unitIndex);
+      titleContainer.appendChild(newPriorityDisplay);
+    }
+  } else if (priorityDisplay) {
+    // Remove the priority display if the value is empty
+    priorityDisplay.remove();
+  }
 }
 
 // Create a single section element (column) for skills unit
@@ -8308,12 +8436,24 @@ function initializeMathModules() {
     for (let i = 1; i <= 6; i++) {
       mathModulesData.push({
         title: `Module ${i}`,
+        priorityStandard: '',
+        description: '',
         sections: [
           { title: 'Section 1', bulletPoints: [] },
           { title: 'Section 2', bulletPoints: [] }
         ]
       });
     }
+  } else {
+    // Ensure existing modules have priorityStandard and description fields
+    mathModulesData.forEach(module => {
+      if (!('priorityStandard' in module)) {
+        module.priorityStandard = '';
+      }
+      if (!('description' in module)) {
+        module.description = '';
+      }
+    });
   }
 }
 
@@ -8338,11 +8478,14 @@ function renderMathModules() {
     headerDiv.onclick = () => toggleMathModule(moduleIndex);
     
     const titleContainer = document.createElement('div');
-    titleContainer.className = 'flex items-center gap-3';
+    titleContainer.className = 'flex flex-col gap-1';
+    
+    const titleRow = document.createElement('div');
+    titleRow.className = 'flex items-center gap-3';
     
     const toggleIcon = document.createElement('span');
     toggleIcon.className = 'toggle-icon text-xl';
-    toggleIcon.textContent = moduleIndex === 0 ? '▼' : '▶';
+    toggleIcon.textContent = '▶';
     toggleIcon.style.color = 'var(--md-slate)';
     toggleIcon.setAttribute('data-math-toggle-icon', moduleIndex);
     
@@ -8360,17 +8503,84 @@ function renderMathModules() {
       mathModulesData[moduleIndex].title = titleEl.textContent;
     });
     
-    titleContainer.appendChild(toggleIcon);
-    titleContainer.appendChild(titleEl);
+    titleRow.appendChild(toggleIcon);
+    titleRow.appendChild(titleEl);
+    titleContainer.appendChild(titleRow);
+    
+    // Priority Standard display (when dropdown is closed)
+    if (module.priorityStandard && module.priorityStandard.trim()) {
+      const priorityDisplay = document.createElement('div');
+      priorityDisplay.className = 'text-sm text-gray-600 ml-8';
+      priorityDisplay.style.fontStyle = 'italic';
+      priorityDisplay.textContent = module.priorityStandard;
+      priorityDisplay.setAttribute('data-math-priority-display', moduleIndex);
+      titleContainer.appendChild(priorityDisplay);
+    }
     
     headerDiv.appendChild(titleContainer);
     moduleDiv.appendChild(headerDiv);
+    
+    // Priority Standard and Description textboxes (edit mode only, above sections)
+    if (isEditMode) {
+      const editFieldsContainer = document.createElement('div');
+      editFieldsContainer.className = 'mb-4 space-y-3';
+      editFieldsContainer.style.display = 'none';
+      editFieldsContainer.setAttribute('data-math-edit-fields', moduleIndex);
+      
+      // Priority Standard textbox
+      const priorityStandardLabel = document.createElement('label');
+      priorityStandardLabel.className = 'block text-sm font-semibold mb-1';
+      priorityStandardLabel.style.color = 'var(--md-slate)';
+      priorityStandardLabel.textContent = 'Priority Standard:';
+      
+      const priorityStandardInput = document.createElement('input');
+      priorityStandardInput.type = 'text';
+      priorityStandardInput.className = 'w-full p-2 border-2 rounded-lg';
+      priorityStandardInput.style.borderColor = 'color-mix(in oklab, var(--md-slate) 40%, var(--md-white) 60%)';
+      priorityStandardInput.value = module.priorityStandard || '';
+      priorityStandardInput.placeholder = 'Enter priority standard...';
+      priorityStandardInput.addEventListener('input', (e) => {
+        mathModulesData[moduleIndex].priorityStandard = e.target.value;
+        // Update the display under the title
+        updateMathPriorityDisplay(moduleIndex, e.target.value);
+      });
+      priorityStandardInput.onclick = (e) => e.stopPropagation();
+      
+      const priorityDiv = document.createElement('div');
+      priorityDiv.appendChild(priorityStandardLabel);
+      priorityDiv.appendChild(priorityStandardInput);
+      editFieldsContainer.appendChild(priorityDiv);
+      
+      // Description textbox
+      const descriptionLabel = document.createElement('label');
+      descriptionLabel.className = 'block text-sm font-semibold mb-1';
+      descriptionLabel.style.color = 'var(--md-slate)';
+      descriptionLabel.textContent = 'Description:';
+      
+      const descriptionInput = document.createElement('textarea');
+      descriptionInput.className = 'w-full p-2 border-2 rounded-lg';
+      descriptionInput.style.borderColor = 'color-mix(in oklab, var(--md-slate) 40%, var(--md-white) 60%)';
+      descriptionInput.style.minHeight = '80px';
+      descriptionInput.value = module.description || '';
+      descriptionInput.placeholder = 'Enter description...';
+      descriptionInput.addEventListener('input', (e) => {
+        mathModulesData[moduleIndex].description = e.target.value;
+      });
+      descriptionInput.onclick = (e) => e.stopPropagation();
+      
+      const descriptionDiv = document.createElement('div');
+      descriptionDiv.appendChild(descriptionLabel);
+      descriptionDiv.appendChild(descriptionInput);
+      editFieldsContainer.appendChild(descriptionDiv);
+      
+      moduleDiv.appendChild(editFieldsContainer);
+    }
     
     // Sections container (3 columns)
     // Using auto-fit grid for responsive layout that adapts to screen size
     // On mobile: stacks vertically; On tablet: 2 columns; On desktop: 3 columns
     const sectionsContainer = document.createElement('div');
-    sectionsContainer.style.display = moduleIndex === 0 ? 'grid' : 'none';
+    sectionsContainer.style.display = 'none';
     sectionsContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(250px, 1fr))';
     sectionsContainer.style.gap = '1rem';
     sectionsContainer.style.transition = 'all 0.3s ease';
@@ -8400,6 +8610,8 @@ function renderMathModules() {
 function toggleMathModule(moduleIndex) {
   const allContainers = document.querySelectorAll('[data-math-sections-container]');
   const allIcons = document.querySelectorAll('[data-math-toggle-icon]');
+  const allEditFields = document.querySelectorAll('[data-math-edit-fields]');
+  const allPriorityDisplays = document.querySelectorAll('[data-math-priority-display]');
   
   // Create a map of icons by their data attribute for efficient lookup
   const iconMap = new Map();
@@ -8408,19 +8620,63 @@ function toggleMathModule(moduleIndex) {
     if (index !== null) iconMap.set(index, icon);
   });
   
+  // Create a map for edit fields
+  const editFieldsMap = new Map();
+  allEditFields.forEach(field => {
+    const index = field.getAttribute('data-math-edit-fields');
+    if (index !== null) editFieldsMap.set(index, field);
+  });
+  
+  // Create a map for priority displays
+  const priorityDisplayMap = new Map();
+  allPriorityDisplays.forEach(display => {
+    const index = display.getAttribute('data-math-priority-display');
+    if (index !== null) priorityDisplayMap.set(index, display);
+  });
+  
   allContainers.forEach((container) => {
     const containerIndex = container.getAttribute('data-math-sections-container');
     const icon = iconMap.get(containerIndex);
+    const editFields = editFieldsMap.get(containerIndex);
+    const priorityDisplay = priorityDisplayMap.get(containerIndex);
     
     if (containerIndex === moduleIndex.toString()) {
       const isHidden = container.style.display === 'none';
       container.style.display = isHidden ? 'grid' : 'none';
       if (icon) icon.textContent = isHidden ? '▼' : '▶';
+      if (editFields) editFields.style.display = isHidden ? 'block' : 'none';
+      if (priorityDisplay) priorityDisplay.style.display = isHidden ? 'none' : 'block';
     } else {
       container.style.display = 'none';
       if (icon) icon.textContent = '▶';
+      if (editFields) editFields.style.display = 'none';
+      if (priorityDisplay) priorityDisplay.style.display = 'block';
     }
   });
+}
+
+// Helper function to update priority display for a math module
+function updateMathPriorityDisplay(moduleIndex, value) {
+  const priorityDisplay = document.querySelector(`[data-math-priority-display="${moduleIndex}"]`);
+  const moduleDiv = document.querySelector(`[data-module-index="${moduleIndex}"]`);
+  const titleContainer = moduleDiv?.querySelector('.flex.flex-col');
+  
+  if (value && value.trim()) {
+    if (priorityDisplay) {
+      priorityDisplay.textContent = value;
+    } else if (titleContainer) {
+      // Create the priority display if it doesn't exist
+      const newPriorityDisplay = document.createElement('div');
+      newPriorityDisplay.className = 'text-sm text-gray-600 ml-8';
+      newPriorityDisplay.style.fontStyle = 'italic';
+      newPriorityDisplay.textContent = value;
+      newPriorityDisplay.setAttribute('data-math-priority-display', moduleIndex);
+      titleContainer.appendChild(newPriorityDisplay);
+    }
+  } else if (priorityDisplay) {
+    // Remove the priority display if the value is empty
+    priorityDisplay.remove();
+  }
 }
 
 // Create a single section element for math module
