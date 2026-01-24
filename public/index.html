@@ -7959,10 +7959,10 @@ function initializeSkillsUnits() {
   } else {
     // Ensure existing units have priorityStandard and description fields
     skillsUnitsData.forEach(unit => {
-      if (!unit.hasOwnProperty('priorityStandard')) {
+      if (!('priorityStandard' in unit)) {
         unit.priorityStandard = '';
       }
-      if (!unit.hasOwnProperty('description')) {
+      if (!('description' in unit)) {
         unit.description = '';
       }
     });
@@ -8161,7 +8161,8 @@ function toggleSkillsUnit(unitIndex) {
 // Helper function to update priority display for a skills unit
 function updatePriorityDisplay(unitIndex, value) {
   const priorityDisplay = document.querySelector(`[data-priority-display="${unitIndex}"]`);
-  const titleContainer = priorityDisplay?.parentElement;
+  const unitDiv = document.querySelector(`[data-unit-index="${unitIndex}"]`);
+  const titleContainer = unitDiv?.querySelector('.flex.flex-col');
   
   if (value && value.trim()) {
     if (priorityDisplay) {
@@ -8446,10 +8447,10 @@ function initializeMathModules() {
   } else {
     // Ensure existing modules have priorityStandard and description fields
     mathModulesData.forEach(module => {
-      if (!module.hasOwnProperty('priorityStandard')) {
+      if (!('priorityStandard' in module)) {
         module.priorityStandard = '';
       }
-      if (!module.hasOwnProperty('description')) {
+      if (!('description' in module)) {
         module.description = '';
       }
     });
@@ -8657,7 +8658,8 @@ function toggleMathModule(moduleIndex) {
 // Helper function to update priority display for a math module
 function updateMathPriorityDisplay(moduleIndex, value) {
   const priorityDisplay = document.querySelector(`[data-math-priority-display="${moduleIndex}"]`);
-  const titleContainer = priorityDisplay?.parentElement;
+  const moduleDiv = document.querySelector(`[data-module-index="${moduleIndex}"]`);
+  const titleContainer = moduleDiv?.querySelector('.flex.flex-col');
   
   if (value && value.trim()) {
     if (priorityDisplay) {
