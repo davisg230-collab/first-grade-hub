@@ -8032,7 +8032,7 @@ function renderSkillsUnits() {
     headerDiv.appendChild(titleContainer);
     unitDiv.appendChild(headerDiv);
     
-    // Priority Standard and Description textboxes (edit mode only, above sections)
+    // Priority Standard textbox (edit mode only, above sections)
     if (isEditMode) {
       const editFieldsContainer = document.createElement('div');
       editFieldsContainer.className = 'mb-4 space-y-3';
@@ -8063,30 +8063,43 @@ function renderSkillsUnits() {
       priorityDiv.appendChild(priorityStandardInput);
       editFieldsContainer.appendChild(priorityDiv);
       
-      // Description textbox
-      const descriptionLabel = document.createElement('label');
-      descriptionLabel.className = 'block text-sm font-semibold mb-1';
-      descriptionLabel.style.color = 'var(--md-slate)';
-      descriptionLabel.textContent = 'Description:';
-      
-      const descriptionInput = document.createElement('textarea');
-      descriptionInput.className = 'w-full p-2 border-2 rounded-lg';
-      descriptionInput.style.borderColor = 'color-mix(in oklab, var(--md-slate) 40%, var(--md-white) 60%)';
-      descriptionInput.style.minHeight = '80px';
-      descriptionInput.value = unit.description || '';
-      descriptionInput.placeholder = 'Enter description...';
+      unitDiv.appendChild(editFieldsContainer);
+    }
+    
+    // Description box (visible to all users when dropdown is open)
+    const descriptionContainer = document.createElement('div');
+    descriptionContainer.className = 'mb-4';
+    descriptionContainer.style.display = 'none';
+    descriptionContainer.setAttribute('data-description-container', unitIndex);
+    
+    const descriptionLabel = document.createElement('label');
+    descriptionLabel.className = 'block text-sm font-semibold mb-1';
+    descriptionLabel.style.color = 'var(--md-slate)';
+    descriptionLabel.textContent = 'Description:';
+    
+    const descriptionInput = document.createElement('textarea');
+    descriptionInput.className = 'w-full p-2 border-2 rounded-lg';
+    descriptionInput.style.borderColor = 'color-mix(in oklab, var(--md-slate) 40%, var(--md-white) 60%)';
+    descriptionInput.style.minHeight = '80px';
+    descriptionInput.value = unit.description || '';
+    descriptionInput.placeholder = isEditMode ? 'Enter description...' : '';
+    
+    // Make it editable only in edit mode, read-only otherwise
+    if (isEditMode) {
+      descriptionInput.removeAttribute('readonly');
       descriptionInput.addEventListener('input', (e) => {
         skillsUnitsData[unitIndex].description = e.target.value;
       });
       descriptionInput.onclick = (e) => e.stopPropagation();
-      
-      const descriptionDiv = document.createElement('div');
-      descriptionDiv.appendChild(descriptionLabel);
-      descriptionDiv.appendChild(descriptionInput);
-      editFieldsContainer.appendChild(descriptionDiv);
-      
-      unitDiv.appendChild(editFieldsContainer);
+    } else {
+      descriptionInput.setAttribute('readonly', 'true');
+      descriptionInput.style.backgroundColor = '#f9fafb';
+      descriptionInput.style.cursor = 'default';
     }
+    
+    descriptionContainer.appendChild(descriptionLabel);
+    descriptionContainer.appendChild(descriptionInput);
+    unitDiv.appendChild(descriptionContainer);
     
     // Sections container (3 columns)
     // Using auto-fit grid for responsive layout that adapts to screen size
@@ -8115,6 +8128,7 @@ function toggleSkillsUnit(unitIndex) {
   const allIcons = document.querySelectorAll('[data-toggle-icon]');
   const allEditFields = document.querySelectorAll('[data-edit-fields]');
   const allPriorityDisplays = document.querySelectorAll('[data-priority-display]');
+  const allDescriptionContainers = document.querySelectorAll('[data-description-container]');
   
   // Create a map of icons by their data attribute for efficient lookup
   const iconMap = new Map();
@@ -8137,11 +8151,19 @@ function toggleSkillsUnit(unitIndex) {
     if (index !== null) priorityDisplayMap.set(index, display);
   });
   
+  // Create a map for description containers
+  const descriptionContainerMap = new Map();
+  allDescriptionContainers.forEach(container => {
+    const index = container.getAttribute('data-description-container');
+    if (index !== null) descriptionContainerMap.set(index, container);
+  });
+  
   allContainers.forEach((container) => {
     const containerIndex = container.getAttribute('data-sections-container');
     const icon = iconMap.get(containerIndex);
     const editFields = editFieldsMap.get(containerIndex);
     const priorityDisplay = priorityDisplayMap.get(containerIndex);
+    const descriptionContainer = descriptionContainerMap.get(containerIndex);
     
     if (containerIndex === unitIndex.toString()) {
       const isHidden = container.style.display === 'none';
@@ -8149,11 +8171,13 @@ function toggleSkillsUnit(unitIndex) {
       if (icon) icon.textContent = isHidden ? '▼' : '▶';
       if (editFields) editFields.style.display = isHidden ? 'block' : 'none';
       if (priorityDisplay) priorityDisplay.style.display = isHidden ? 'none' : 'block';
+      if (descriptionContainer) descriptionContainer.style.display = isHidden ? 'block' : 'none';
     } else {
       container.style.display = 'none';
       if (icon) icon.textContent = '▶';
       if (editFields) editFields.style.display = 'none';
       if (priorityDisplay) priorityDisplay.style.display = 'block';
+      if (descriptionContainer) descriptionContainer.style.display = 'none';
     }
   });
 }
@@ -8520,7 +8544,7 @@ function renderMathModules() {
     headerDiv.appendChild(titleContainer);
     moduleDiv.appendChild(headerDiv);
     
-    // Priority Standard and Description textboxes (edit mode only, above sections)
+    // Priority Standard textbox (edit mode only, above sections)
     if (isEditMode) {
       const editFieldsContainer = document.createElement('div');
       editFieldsContainer.className = 'mb-4 space-y-3';
@@ -8551,30 +8575,43 @@ function renderMathModules() {
       priorityDiv.appendChild(priorityStandardInput);
       editFieldsContainer.appendChild(priorityDiv);
       
-      // Description textbox
-      const descriptionLabel = document.createElement('label');
-      descriptionLabel.className = 'block text-sm font-semibold mb-1';
-      descriptionLabel.style.color = 'var(--md-slate)';
-      descriptionLabel.textContent = 'Description:';
-      
-      const descriptionInput = document.createElement('textarea');
-      descriptionInput.className = 'w-full p-2 border-2 rounded-lg';
-      descriptionInput.style.borderColor = 'color-mix(in oklab, var(--md-slate) 40%, var(--md-white) 60%)';
-      descriptionInput.style.minHeight = '80px';
-      descriptionInput.value = module.description || '';
-      descriptionInput.placeholder = 'Enter description...';
+      moduleDiv.appendChild(editFieldsContainer);
+    }
+    
+    // Description box (visible to all users when dropdown is open)
+    const descriptionContainer = document.createElement('div');
+    descriptionContainer.className = 'mb-4';
+    descriptionContainer.style.display = 'none';
+    descriptionContainer.setAttribute('data-math-description-container', moduleIndex);
+    
+    const descriptionLabel = document.createElement('label');
+    descriptionLabel.className = 'block text-sm font-semibold mb-1';
+    descriptionLabel.style.color = 'var(--md-slate)';
+    descriptionLabel.textContent = 'Description:';
+    
+    const descriptionInput = document.createElement('textarea');
+    descriptionInput.className = 'w-full p-2 border-2 rounded-lg';
+    descriptionInput.style.borderColor = 'color-mix(in oklab, var(--md-slate) 40%, var(--md-white) 60%)';
+    descriptionInput.style.minHeight = '80px';
+    descriptionInput.value = module.description || '';
+    descriptionInput.placeholder = isEditMode ? 'Enter description...' : '';
+    
+    // Make it editable only in edit mode, read-only otherwise
+    if (isEditMode) {
+      descriptionInput.removeAttribute('readonly');
       descriptionInput.addEventListener('input', (e) => {
         mathModulesData[moduleIndex].description = e.target.value;
       });
       descriptionInput.onclick = (e) => e.stopPropagation();
-      
-      const descriptionDiv = document.createElement('div');
-      descriptionDiv.appendChild(descriptionLabel);
-      descriptionDiv.appendChild(descriptionInput);
-      editFieldsContainer.appendChild(descriptionDiv);
-      
-      moduleDiv.appendChild(editFieldsContainer);
+    } else {
+      descriptionInput.setAttribute('readonly', 'true');
+      descriptionInput.style.backgroundColor = '#f9fafb';
+      descriptionInput.style.cursor = 'default';
     }
+    
+    descriptionContainer.appendChild(descriptionLabel);
+    descriptionContainer.appendChild(descriptionInput);
+    moduleDiv.appendChild(descriptionContainer);
     
     // Sections container (3 columns)
     // Using auto-fit grid for responsive layout that adapts to screen size
@@ -8612,6 +8649,7 @@ function toggleMathModule(moduleIndex) {
   const allIcons = document.querySelectorAll('[data-math-toggle-icon]');
   const allEditFields = document.querySelectorAll('[data-math-edit-fields]');
   const allPriorityDisplays = document.querySelectorAll('[data-math-priority-display]');
+  const allDescriptionContainers = document.querySelectorAll('[data-math-description-container]');
   
   // Create a map of icons by their data attribute for efficient lookup
   const iconMap = new Map();
@@ -8634,11 +8672,19 @@ function toggleMathModule(moduleIndex) {
     if (index !== null) priorityDisplayMap.set(index, display);
   });
   
+  // Create a map for description containers
+  const descriptionContainerMap = new Map();
+  allDescriptionContainers.forEach(container => {
+    const index = container.getAttribute('data-math-description-container');
+    if (index !== null) descriptionContainerMap.set(index, container);
+  });
+  
   allContainers.forEach((container) => {
     const containerIndex = container.getAttribute('data-math-sections-container');
     const icon = iconMap.get(containerIndex);
     const editFields = editFieldsMap.get(containerIndex);
     const priorityDisplay = priorityDisplayMap.get(containerIndex);
+    const descriptionContainer = descriptionContainerMap.get(containerIndex);
     
     if (containerIndex === moduleIndex.toString()) {
       const isHidden = container.style.display === 'none';
@@ -8646,11 +8692,13 @@ function toggleMathModule(moduleIndex) {
       if (icon) icon.textContent = isHidden ? '▼' : '▶';
       if (editFields) editFields.style.display = isHidden ? 'block' : 'none';
       if (priorityDisplay) priorityDisplay.style.display = isHidden ? 'none' : 'block';
+      if (descriptionContainer) descriptionContainer.style.display = isHidden ? 'block' : 'none';
     } else {
       container.style.display = 'none';
       if (icon) icon.textContent = '▶';
       if (editFields) editFields.style.display = 'none';
       if (priorityDisplay) priorityDisplay.style.display = 'block';
+      if (descriptionContainer) descriptionContainer.style.display = 'none';
     }
   });
 }
