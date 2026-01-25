@@ -9942,6 +9942,11 @@ function editProfilePhoto(el, section) {
   fileInput.click();
 }
 
+// Helper function to capitalize section name for button IDs
+function capitalizeSectionName(section) {
+  return section.charAt(0).toUpperCase() + section.slice(1);
+}
+
 // Learning Hub Info Page Functions
 function editLearningHubScreenshot(el, section) {
   // Only allow editing in edit mode with PIN
@@ -10018,7 +10023,7 @@ function editLearningHubScreenshot(el, section) {
         el.setAttribute('data-screenshot-url', downloadURL);
         
         // Show save button for this section
-        const saveBtn = document.getElementById(`saveLearningHubInfo${section.charAt(0).toUpperCase() + section.slice(1)}Btn`);
+        const saveBtn = document.getElementById(`saveLearningHubInfo${capitalizeSectionName(section)}Btn`);
         if (saveBtn) saveBtn.style.display = 'inline-block';
         
         // Clear uploading flag
@@ -10091,7 +10096,7 @@ function saveLearningHubInfoSection(section) {
   }
   
   // Hide the section-specific save button
-  const sectionBtn = document.getElementById(`saveLearningHubInfo${section.charAt(0).toUpperCase() + section.slice(1)}Btn`);
+  const sectionBtn = document.getElementById(`saveLearningHubInfo${capitalizeSectionName(section)}Btn`);
   if (sectionBtn) {
     sectionBtn.style.display = 'none';
   }
