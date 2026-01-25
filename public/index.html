@@ -2316,16 +2316,15 @@
       
       // Recursively clean nodes
       function cleanNode(node) {
-        // Remove script and style tags
+        // Remove script and style tags completely
         if (node.nodeName === 'SCRIPT' || node.nodeName === 'STYLE') {
-          node.remove();
-          return;
+          return false; // Signal to remove this node
         }
         
-        // Remove event handlers and javascript: links
+        // Process element nodes
         if (node.nodeType === 1) { // Element node
           // Remove all event attributes and dangerous content
-          Array.from(node.attributes || []).forEach(attr => {
+          Array.from(node.attributes).forEach(attr => {
             const attrValueLower = (attr.value || '').toLowerCase();
             // Check for event handlers and various javascript: variants
             if (attr.name.startsWith('on') || 
@@ -2336,28 +2335,40 @@
             }
           });
           
-          // Only keep allowed tags, otherwise unwrap
+          // Check if tag is not allowed
           if (!allowedTags.includes(node.nodeName)) {
+            // Unwrap: replace node with its children
             const parent = node.parentNode;
-            if (parent) {  // Check parent exists
+            if (parent) {
+              // Move all children before this node
               while (node.firstChild) {
                 parent.insertBefore(node.firstChild, node);
               }
-              node.remove();
             }
-            return;
+            return false; // Signal to remove this node
           }
         }
         
-        // Collect child nodes first to avoid live NodeList issues
-        const children = Array.from(node.childNodes);
         // Recursively clean children
-        children.forEach(child => cleanNode(child));
+        const children = Array.from(node.childNodes);
+        children.forEach(child => {
+          const shouldKeep = cleanNode(child);
+          if (shouldKeep === false && child.parentNode) {
+            child.remove();
+          }
+        });
+        
+        return true; // Keep this node
       }
       
       // Clean all top-level nodes
       const topLevelNodes = Array.from(temp.childNodes);
-      topLevelNodes.forEach(node => cleanNode(node));
+      topLevelNodes.forEach(node => {
+        const shouldKeep = cleanNode(node);
+        if (shouldKeep === false && node.parentNode) {
+          node.remove();
+        }
+      });
       
       return temp.innerHTML;
     }
