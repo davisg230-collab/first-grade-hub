@@ -2302,6 +2302,94 @@
       renderSkillsUnits();
       renderMathModules();
     }
+    
+    // Sanitize HTML to allow only safe formatting tags
+    function sanitizeHTML(html) {
+      if (!html) return '';
+      
+      // Create a temporary div to parse HTML
+      const temp = document.createElement('div');
+      temp.innerHTML = html;
+      
+      // Allowed tags for formatting
+      const allowedTags = ['P', 'BR', 'UL', 'OL', 'LI', 'B', 'I', 'U', 'STRONG', 'EM', 'SPAN', 'DIV'];
+      
+      // Recursively clean nodes
+      function cleanNode(node) {
+        // Remove script and style tags completely
+        if (node.nodeName === 'SCRIPT' || node.nodeName === 'STYLE') {
+          return false; // Signal to remove this node
+        }
+        
+        // Process element nodes
+        if (node.nodeType === 1) { // Element node
+          // List of dangerous or unnecessary attributes to remove
+          const dangerousAttrs = ['style', 'href', 'src', 'action', 'formaction', 'data'];
+          
+          // Remove all dangerous attributes and event handlers
+          Array.from(node.attributes).forEach(attr => {
+            const attrName = attr.name.toLowerCase();
+            const attrValueLower = (attr.value || '').toLowerCase();
+            
+            // Remove event handlers (onclick, onerror, etc.)
+            if (attr.name.startsWith('on')) {
+              node.removeAttribute(attr.name);
+              return;
+            }
+            
+            // Remove dangerous protocols in any attribute
+            if (attrValueLower.includes('javascript:') ||
+                attrValueLower.includes('data:text/html') ||
+                attrValueLower.includes('vbscript:')) {
+              node.removeAttribute(attr.name);
+              return;
+            }
+            
+            // Remove potentially dangerous attributes
+            if (dangerousAttrs.some(dangerous => attrName.includes(dangerous))) {
+              node.removeAttribute(attr.name);
+              return;
+            }
+          });
+          
+          // Check if tag is not allowed
+          if (!allowedTags.includes(node.nodeName)) {
+            // Unwrap: replace node with its children
+            const parent = node.parentNode;
+            if (parent) {
+              // Move all children before this node
+              while (node.firstChild) {
+                parent.insertBefore(node.firstChild, node);
+              }
+            }
+            return false; // Signal to remove this node
+          }
+        }
+        
+        // Recursively clean children
+        const children = Array.from(node.childNodes);
+        children.forEach(child => {
+          const shouldKeep = cleanNode(child);
+          if (shouldKeep === false && child.parentNode) {
+            child.remove();
+          }
+        });
+        
+        return true; // Keep this node
+      }
+      
+      // Clean all top-level nodes
+      const topLevelNodes = Array.from(temp.childNodes);
+      topLevelNodes.forEach(node => {
+        const shouldKeep = cleanNode(node);
+        if (shouldKeep === false && node.parentNode) {
+          node.remove();
+        }
+      });
+      
+      return temp.innerHTML;
+    }
+    
     function collectEditableFieldData() {
       const data = {};
       
@@ -2637,19 +2725,19 @@
       const learningHubInfoData = {
         skills: {
           image: document.getElementById('learningHubInfoSkillsImage')?.getAttribute('data-screenshot-url') || '',
-          description: document.getElementById('learningHubInfoSkillsDesc')?.textContent || ''
+          description: sanitizeHTML(document.getElementById('learningHubInfoSkillsDesc')?.innerHTML || '')
         },
         listening: {
           image: document.getElementById('learningHubInfoListeningImage')?.getAttribute('data-screenshot-url') || '',
-          description: document.getElementById('learningHubInfoListeningDesc')?.textContent || ''
+          description: sanitizeHTML(document.getElementById('learningHubInfoListeningDesc')?.innerHTML || '')
         },
         math: {
           image: document.getElementById('learningHubInfoMathImage')?.getAttribute('data-screenshot-url') || '',
-          description: document.getElementById('learningHubInfoMathDesc')?.textContent || ''
+          description: sanitizeHTML(document.getElementById('learningHubInfoMathDesc')?.innerHTML || '')
         },
         practice: {
           image: document.getElementById('learningHubInfoPracticeImage')?.getAttribute('data-screenshot-url') || '',
-          description: document.getElementById('learningHubInfoPracticeDesc')?.textContent || ''
+          description: sanitizeHTML(document.getElementById('learningHubInfoPracticeDesc')?.innerHTML || '')
         }
       };
       data.learning_hub_info_json = JSON.stringify(learningHubInfoData);
@@ -5191,7 +5279,7 @@ function updateLearningHubInfo(learningHubInfoJson) {
     }
     
     if (skillsDesc && learningHubInfo.skills.description) {
-      skillsDesc.textContent = learningHubInfo.skills.description;
+      skillsDesc.innerHTML = sanitizeHTML(learningHubInfo.skills.description);
     }
   }
   
@@ -5206,7 +5294,7 @@ function updateLearningHubInfo(learningHubInfoJson) {
     }
     
     if (listeningDesc && learningHubInfo.listening.description) {
-      listeningDesc.textContent = learningHubInfo.listening.description;
+      listeningDesc.innerHTML = sanitizeHTML(learningHubInfo.listening.description);
     }
   }
   
@@ -5221,7 +5309,7 @@ function updateLearningHubInfo(learningHubInfoJson) {
     }
     
     if (mathDesc && learningHubInfo.math.description) {
-      mathDesc.textContent = learningHubInfo.math.description;
+      mathDesc.innerHTML = sanitizeHTML(learningHubInfo.math.description);
     }
   }
   
@@ -5236,7 +5324,7 @@ function updateLearningHubInfo(learningHubInfoJson) {
     }
     
     if (practiceDesc && learningHubInfo.practice.description) {
-      practiceDesc.textContent = learningHubInfo.practice.description;
+      practiceDesc.innerHTML = sanitizeHTML(learningHubInfo.practice.description);
     }
   }
 }
