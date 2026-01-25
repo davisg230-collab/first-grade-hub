@@ -743,36 +743,38 @@
     </section>
     <!-- SKILLS TAB -->
     <section data-page-panel="skills" class="pagePanel fade-in">
+      <!-- Section 1: Current Module (Top Section) -->
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-2xl font-display font-bold" style="color: var(--md-coral);">📖 Skills Spotlight</h2>
-          <button onclick="showPage('skills-units')" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);">📚 View by Unit</button>
-        </div>
-        <div class="grid md:grid-cols-3 gap-6">
-          <div class="md:col-span-2">
-            <p class="leading-relaxed" data-edit="teacher" contenteditable="false">
-              This week we're focusing on building strong reading foundations through sight word recognition and phonics practice. Students are learning to blend sounds together to read new words and are practicing writing complete sentences with proper capitalization and punctuation.
-            </p>
-          </div>
-          <div class="rounded-xl p-4" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-coral) 30%); border: 1px solid color-mix(in oklab, var(--md-coral) 60%, var(--md-white) 40%);">
-            <h3 class="font-semibold mb-3">Sounds / Sight Words / Vocab</h3>
-            <ul class="text-sm list-disc pl-5" data-edit="teacher" contenteditable="false">
-              <li>Short vowel sounds</li>
-              <li>Words: the, and, is, to</li>
-              <li>Family vocabulary</li>
-              <li>Action words</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-      <!-- Current Module Box for Skills -->
-      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">📚 Current Module</h3>
+          <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">📚 Current Unit</h3>
           <button id="saveSkillsModuleBtn" class="edit-only px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate); display: none;" onclick="saveCurrentModule('skills')">💾 Save</button>
         </div>
         <div id="skillsCurrentModuleContent" class="space-y-3">
           <!-- Content will be populated by JavaScript -->
+        </div>
+      </div>
+      
+      <!-- Section 2: Description Box (Middle Section) -->
+      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
+        <h2 class="text-2xl font-display font-bold mb-4" style="color: var(--md-coral);">📖 Skills Spotlight</h2>
+        <p class="leading-relaxed" data-edit="teacher" contenteditable="false">
+          This week we're focusing on building strong reading foundations through sight word recognition and phonics practice. Students are learning to blend sounds together to read new words and are practicing writing complete sentences with proper capitalization and punctuation.
+        </p>
+      </div>
+      
+      <!-- Section 3: Vocabulary and Strategies + View by Unit Button (Bottom Section) -->
+      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-display font-semibold" style="color: var(--md-coral);">Sounds / Sight Words / Vocab</h3>
+          <button onclick="showPage('skills-units')" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);">📚 View by Unit</button>
+        </div>
+        <div class="rounded-xl p-4" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-coral) 30%); border: 1px solid color-mix(in oklab, var(--md-coral) 60%, var(--md-white) 40%);">
+          <ul class="text-sm list-disc pl-5" data-edit="teacher" contenteditable="false">
+            <li>Short vowel sounds</li>
+            <li>Words: the, and, is, to</li>
+            <li>Family vocabulary</li>
+            <li>Action words</li>
+          </ul>
         </div>
       </div>
     </section>
@@ -812,29 +814,7 @@
     </section>
     <!-- MATH TAB -->
     <section data-page-panel="math" class="pagePanel fade-in">
-      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
-        <div class="flex items-center justify-between mb-5">
-          <h2 class="text-2xl font-display font-bold" style="color: var(--md-slate);">🧮 Math Adventures</h2>
-          <button onclick="showPage('math-modules')" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);">📐 View by Module</button>
-        </div>
-        <div class="grid md:grid-cols-3 gap-6">
-          <div class="md:col-span-2">
-            <p class="leading-relaxed" data-edit="teacher" contenteditable="false">
-              We're exploring number patterns and building addition skills using hands-on manipulatives and fun games. Students are learning to count by 2s, 5s, and 10s while practicing addition facts within 20.
-            </p>
-          </div>
-          <div class="rounded-xl p-4" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-blush) 30%); border: 1px solid color-mix(in oklab, var(--md-blush) 60%, var(--md-white) 40%);">
-            <h3 class="font-semibold mb-3">Vocabulary & Strategies</h3>
-            <ul class="text-sm list-disc pl-5" data-edit="teacher" contenteditable="false">
-              <li>Addition, sum, plus</li>
-              <li>Count on strategy</li>
-              <li>Number line</li>
-              <li>Ten frames</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-      <!-- Current Module Box for Math -->
+      <!-- Section 1: Current Module (Top Section) -->
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">📚 Current Module</h3>
@@ -842,6 +822,30 @@
         </div>
         <div id="mathCurrentModuleContent" class="space-y-3">
           <!-- Content will be populated by JavaScript -->
+        </div>
+      </div>
+      
+      <!-- Section 2: Description Box (Middle Section) -->
+      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
+        <h2 class="text-2xl font-display font-bold mb-4" style="color: var(--md-slate);">🧮 Math Adventures</h2>
+        <p class="leading-relaxed" data-edit="teacher" contenteditable="false">
+          We're exploring number patterns and building addition skills using hands-on manipulatives and fun games. Students are learning to count by 2s, 5s, and 10s while practicing addition facts within 20.
+        </p>
+      </div>
+      
+      <!-- Section 3: Vocabulary and Strategies + View by Module Button (Bottom Section) -->
+      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-display font-semibold" style="color: var(--md-blush);">Vocabulary & Strategies</h3>
+          <button onclick="showPage('math-modules')" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);">📐 View by Module</button>
+        </div>
+        <div class="rounded-xl p-4" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-blush) 30%); border: 1px solid color-mix(in oklab, var(--md-blush) 60%, var(--md-white) 40%);">
+          <ul class="text-sm list-disc pl-5" data-edit="teacher" contenteditable="false">
+            <li>Addition, sum, plus</li>
+            <li>Count on strategy</li>
+            <li>Number line</li>
+            <li>Ten frames</li>
+          </ul>
         </div>
       </div>
     </section>
@@ -8008,16 +8012,16 @@ function renderCurrentModule(type) {
       </div>
     `;
   } else {
-    // Parent view: show only the selected module as a clickable link
+    // Parent view: show only the selected module as a clickable link with larger font
     if (moduleData.moduleId && moduleData.link) {
       const selectedOption = options.find(opt => opt.id === moduleData.moduleId);
       const moduleName = selectedOption ? selectedOption.name : 'Current Module';
       
       content.innerHTML = `
-        <div class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+        <div class="p-5 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
           <a href="${escapeHtml(moduleData.link)}" 
              target="_blank" 
-             class="text-base font-medium hover:underline flex items-center gap-2" 
+             class="text-xl font-display font-semibold hover:underline flex items-center gap-2" 
              style="color: var(--md-slate);">
             <span>📊</span>
             <span>${escapeHtml(moduleName)}</span>
@@ -8121,6 +8125,10 @@ function updateCurrentModuleData(jsonString) {
       math: { moduleId: '', link: '' }
     };
   }
+  
+  // Render Current Module sections after data is loaded
+  renderCurrentModule('skills');
+  renderCurrentModule('math');
 }
 
 // ============================================
@@ -9188,10 +9196,6 @@ function updateWatchMeData(watchMeJson) {
       };
     }
   }
-  
-  // Render Current Module sections
-  renderCurrentModule('skills');
-  renderCurrentModule('math');
   
   // Render Watch Me content (Listening & Learning tab only)
   renderWatchMeContent('listening');
