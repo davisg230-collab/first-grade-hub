@@ -2323,15 +2323,32 @@
         
         // Process element nodes
         if (node.nodeType === 1) { // Element node
-          // Remove all event attributes and dangerous content
+          // List of dangerous or unnecessary attributes to remove
+          const dangerousAttrs = ['style', 'href', 'src', 'action', 'formaction', 'data'];
+          
+          // Remove all dangerous attributes and event handlers
           Array.from(node.attributes).forEach(attr => {
+            const attrName = attr.name.toLowerCase();
             const attrValueLower = (attr.value || '').toLowerCase();
-            // Check for event handlers and various javascript: variants
-            if (attr.name.startsWith('on') || 
-                attrValueLower.includes('javascript:') ||
+            
+            // Remove event handlers (onclick, onerror, etc.)
+            if (attr.name.startsWith('on')) {
+              node.removeAttribute(attr.name);
+              return;
+            }
+            
+            // Remove dangerous protocols in any attribute
+            if (attrValueLower.includes('javascript:') ||
                 attrValueLower.includes('data:text/html') ||
                 attrValueLower.includes('vbscript:')) {
               node.removeAttribute(attr.name);
+              return;
+            }
+            
+            // Remove potentially dangerous attributes
+            if (dangerousAttrs.some(dangerous => attrName.includes(dangerous))) {
+              node.removeAttribute(attr.name);
+              return;
             }
           });
           
