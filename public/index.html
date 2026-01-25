@@ -8025,7 +8025,8 @@ function renderCurrentModule(type) {
         </div>
       `;
     } else {
-      content.innerHTML = '<p class="text-center text-gray-500 py-4 text-sm">No module selected yet.</p>';
+      const itemType = type === 'skills' ? 'unit' : 'module';
+      content.innerHTML = `<p class="text-center text-gray-500 py-4 text-sm">No ${itemType} selected yet.</p>`;
     }
   }
 }
@@ -8057,7 +8058,8 @@ async function saveCurrentModule(type) {
     
     // Validate that both module and link are selected
     if (!currentModuleData[type].moduleId || !currentModuleData[type].link) {
-      alert('Please select a module and provide a Google Sheets link.');
+      const itemType = type === 'skills' ? 'unit' : 'module';
+      alert(`Please select a ${itemType} and provide a Google Sheets link.`);
       return;
     }
     
@@ -8070,12 +8072,13 @@ async function saveCurrentModule(type) {
       current_module_json: JSON.stringify(currentModuleData)
     };
     
-    console.log(`Saving ${type} Current Module to Firestore:`, currentModuleData[type]);
+    const itemType = type === 'skills' ? 'Unit' : 'Module';
+    console.log(`Saving ${type} Current ${itemType} to Firestore:`, currentModuleData[type]);
     
     // Save to Firestore
     await db.collection('classData').doc('current').set(data, { merge: true });
     
-    console.log(`${type} Current Module saved successfully to Firestore`);
+    console.log(`${type} Current ${itemType} saved successfully to Firestore`);
     
     // Show success state
     saveBtn.textContent = '✅ Saved!';
@@ -8087,8 +8090,9 @@ async function saveCurrentModule(type) {
     }, 2000);
     
   } catch (error) {
-    console.error(`Failed to save ${type} Current Module:`, error);
-    alert(`Failed to save module: ${error.message}`);
+    const itemType = type === 'skills' ? 'unit' : 'module';
+    console.error(`Failed to save ${type} Current ${itemType}:`, error);
+    alert(`Failed to save ${itemType}: ${error.message}`);
     
     // Show error state
     saveBtn.textContent = '❌ Save Failed';
