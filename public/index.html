@@ -1587,8 +1587,8 @@
     
     // Current Module data structure for Skills and Math
     let currentModuleData = {
-      skills: { moduleId: '', link: '' },  // moduleId: 'unit-1' to 'unit-7', link: Google Sheets URL
-      math: { moduleId: '', link: '' }      // moduleId: 'module-1' to 'module-6', link: Google Sheets URL
+      skills: { moduleId: '', link: '' },  // moduleId stores unit ID: 'unit-1' to 'unit-7', link: Google Sheets URL
+      math: { moduleId: '', link: '' }      // moduleId stores module ID: 'module-1' to 'module-6', link: Google Sheets URL
     };
     
     // Skills Units for dropdown
@@ -2002,7 +2002,7 @@
       renderCurrentModule('skills');
       renderCurrentModule('math');
       
-      // Re-render Watch Me boxes for edit mode (only for Listening)
+      // Re-render Watch Me boxes for edit mode (Listening & Learning tab only)
       renderWatchMeContent('listening');
       
       // Re-render Skills Units and Math Modules for edit mode
@@ -2201,7 +2201,7 @@
       renderCurrentModule('skills');
       renderCurrentModule('math');
       
-      // Re-render Watch Me boxes for view mode (only for Listening)
+      // Re-render Watch Me boxes for view mode (Listening & Learning tab only)
       renderWatchMeContent('listening');
       
       // Re-render Skills Units and Math Modules for view mode
@@ -8059,7 +8059,7 @@ async function saveCurrentModule(type) {
     // Validate that both module and link are selected
     if (!currentModuleData[type].moduleId || !currentModuleData[type].link) {
       const itemType = type === 'skills' ? 'unit' : 'module';
-      alert(`Please select a ${itemType} and provide a Google Sheets link.`);
+      alert(`Please select a ${itemType} and provide a valid Google Sheets link (https://docs.google.com/spreadsheets/...)`);
       return;
     }
     
@@ -8092,7 +8092,8 @@ async function saveCurrentModule(type) {
   } catch (error) {
     const itemType = type === 'skills' ? 'unit' : 'module';
     console.error(`Failed to save ${type} Current ${itemType}:`, error);
-    alert(`Failed to save ${itemType}: ${error.message}`);
+    // Use generic error message for better user experience
+    alert(`Failed to save ${itemType}. Please try again or contact support if the problem persists.`);
     
     // Show error state
     saveBtn.textContent = '❌ Save Failed';
@@ -9192,7 +9193,7 @@ function updateWatchMeData(watchMeJson) {
   renderCurrentModule('skills');
   renderCurrentModule('math');
   
-  // Render Watch Me content (only for Listening)
+  // Render Watch Me content (Listening & Learning tab only)
   renderWatchMeContent('listening');
 }
 
