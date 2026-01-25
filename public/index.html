@@ -765,16 +765,13 @@
           </div>
         </div>
       </div>
-      <!-- Watch Me Box for Skills -->
+      <!-- Current Module Box for Skills -->
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">🎬 Watch Me</h3>
-          <div class="flex gap-2">
-            <button id="addSkillsWatchMeBtn" class="edit-only px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral); display: none;" onclick="addWatchMeLink('skills')">+ Add Link</button>
-            <button id="saveSkillsWatchMeBtn" class="edit-only px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate); display: none;" onclick="saveWatchMeLinks('skills')">💾 Save Links</button>
-          </div>
+          <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">📚 Current Module</h3>
+          <button id="saveSkillsModuleBtn" class="edit-only px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate); display: none;" onclick="saveCurrentModule('skills')">💾 Save</button>
         </div>
-        <div id="skillsWatchMeContent" class="space-y-2">
+        <div id="skillsCurrentModuleContent" class="space-y-3">
           <!-- Content will be populated by JavaScript -->
         </div>
       </div>
@@ -837,16 +834,13 @@
           </div>
         </div>
       </div>
-      <!-- Watch Me Box for Math -->
+      <!-- Current Module Box for Math -->
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">🎬 Watch Me</h3>
-          <div class="flex gap-2">
-            <button id="addMathWatchMeBtn" class="edit-only px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral); display: none;" onclick="addWatchMeLink('math')">+ Add Link</button>
-            <button id="saveMathWatchMeBtn" class="edit-only px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate); display: none;" onclick="saveWatchMeLinks('math')">💾 Save Links</button>
-          </div>
+          <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">📚 Current Module</h3>
+          <button id="saveMathModuleBtn" class="edit-only px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate); display: none;" onclick="saveCurrentModule('math')">💾 Save</button>
         </div>
-        <div id="mathWatchMeContent" class="space-y-2">
+        <div id="mathCurrentModuleContent" class="space-y-3">
           <!-- Content will be populated by JavaScript -->
         </div>
       </div>
@@ -1591,6 +1585,33 @@
     // Math Modules data structure
     let mathModulesData = []; // Array of 6 modules, each: {title: string, sections: [{title: string, bulletPoints: [string]}]} - 2 sections per module
     
+    // Current Module data structure for Skills and Math
+    let currentModuleData = {
+      skills: { moduleId: '', link: '' },  // moduleId: 'unit-1' to 'unit-7', link: Google Sheets URL
+      math: { moduleId: '', link: '' }      // moduleId: 'module-1' to 'module-6', link: Google Sheets URL
+    };
+    
+    // Skills Units for dropdown
+    const skillsUnitsOptions = [
+      { id: 'unit-1', name: 'Unit 1: Blending and Segmenting, Tricky Words, and Spelling' },
+      { id: 'unit-2', name: 'Unit 2: Five Vowel Sounds' },
+      { id: 'unit-3', name: 'Unit 3: New Vowel Sounds and Spellings' },
+      { id: 'unit-4', name: 'Unit 4: Spelling, Comprehension, and Word Reading' },
+      { id: 'unit-5', name: 'Unit 5: Spelling Alternatives and Advancing the Code' },
+      { id: 'unit-6', name: 'Unit 6: Spelling Alternatives for Consonant Sounds' },
+      { id: 'unit-7', name: 'Unit 7: Advanced Code and Spelling Alternatives for Vowels' }
+    ];
+    
+    // Math Modules for dropdown
+    const mathModulesOptions = [
+      { id: 'module-1', name: 'Module 1: Sums and Differences to 10' },
+      { id: 'module-2', name: 'Module 2: Introduction to Place Value Through Addition and Subtraction Within 20' },
+      { id: 'module-3', name: 'Module 3: Ordering and Comparing Length Measurements as Numbers' },
+      { id: 'module-4', name: 'Module 4: Place Value, Comparison, Addition, and Subtraction to 40' },
+      { id: 'module-5', name: 'Module 5: Identifying, Composing, and Partitioning Shapes' },
+      { id: 'module-6', name: 'Module 6: Place Value, Comparison, Addition, and Subtraction to 100' }
+    ];
+    
     // Tab navigation
     function showPage(pageId) {
       document.querySelectorAll('.pagePanel').forEach(panel => {
@@ -1977,10 +1998,12 @@
       document.getElementById('editModeBtn').textContent = '💾 Exit Edit Mode';
       document.getElementById('editModeBtn').onclick = exitEditMode;
       
-      // Re-render Watch Me boxes for edit mode
-      renderWatchMeContent('skills');
+      // Re-render Current Module sections for edit mode
+      renderCurrentModule('skills');
+      renderCurrentModule('math');
+      
+      // Re-render Watch Me boxes for edit mode (only for Listening)
       renderWatchMeContent('listening');
-      renderWatchMeContent('math');
       
       // Re-render Skills Units and Math Modules for edit mode
       renderSkillsUnits();
@@ -2174,10 +2197,12 @@
         saveBtn.style.display = 'none';
       }
       
-      // Re-render Watch Me boxes for view mode
-      renderWatchMeContent('skills');
+      // Re-render Current Module sections for view mode
+      renderCurrentModule('skills');
+      renderCurrentModule('math');
+      
+      // Re-render Watch Me boxes for view mode (only for Listening)
       renderWatchMeContent('listening');
-      renderWatchMeContent('math');
       
       // Re-render Skills Units and Math Modules for view mode
       renderSkillsUnits();
@@ -5003,6 +5028,9 @@ function populateDataFromSheet(data) {
   
   // Load Watch Me data
   updateWatchMeData(data.watch_me_json);
+  
+  // Load Current Module data
+  updateCurrentModuleData(data.current_module_json);
   
   // Load Skills Units data
   updateSkillsUnitsData(data.skills_units_json);
@@ -7937,6 +7965,160 @@ async function saveWatchMeLinks(tab) {
 }
 
 // ============================================
+// CURRENT MODULE FUNCTIONS
+// ============================================
+
+// Render Current Module section for Skills or Math
+function renderCurrentModule(type) {
+  const content = document.getElementById(`${type}CurrentModuleContent`);
+  const isEditMode = document.body.classList.contains('editing');
+  
+  if (!content) return;
+  
+  const moduleData = currentModuleData[type];
+  const options = type === 'skills' ? skillsUnitsOptions : mathModulesOptions;
+  
+  if (isEditMode) {
+    // Edit mode: show dropdown and input field
+    const selectedOption = options.find(opt => opt.id === moduleData.moduleId);
+    const dropdownHtml = options.map(opt => 
+      `<option value="${opt.id}" ${opt.id === moduleData.moduleId ? 'selected' : ''}>${escapeHtml(opt.name)}</option>`
+    ).join('');
+    
+    content.innerHTML = `
+      <div class="space-y-3">
+        <div>
+          <label class="block text-sm font-semibold mb-2" style="color: var(--md-slate);">Select ${type === 'skills' ? 'Unit' : 'Module'}:</label>
+          <select id="${type}ModuleSelect" 
+                  class="w-full px-4 py-2 border rounded-lg text-sm"
+                  onchange="updateCurrentModuleSelection('${type}')">
+            <option value="">-- Select ${type === 'skills' ? 'Unit' : 'Module'} --</option>
+            ${dropdownHtml}
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold mb-2" style="color: var(--md-slate);">Google Sheets Link:</label>
+          <input type="url" 
+                 id="${type}ModuleLink" 
+                 class="w-full px-4 py-2 border rounded-lg text-sm" 
+                 placeholder="https://docs.google.com/spreadsheets/..."
+                 value="${escapeHtml(moduleData.link || '')}"
+                 onchange="updateCurrentModuleLink('${type}')">
+        </div>
+      </div>
+    `;
+  } else {
+    // Parent view: show only the selected module as a clickable link
+    if (moduleData.moduleId && moduleData.link) {
+      const selectedOption = options.find(opt => opt.id === moduleData.moduleId);
+      const moduleName = selectedOption ? selectedOption.name : 'Current Module';
+      
+      content.innerHTML = `
+        <div class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+          <a href="${escapeHtml(moduleData.link)}" 
+             target="_blank" 
+             class="text-base font-medium hover:underline flex items-center gap-2" 
+             style="color: var(--md-slate);">
+            <span>📊</span>
+            <span>${escapeHtml(moduleName)}</span>
+          </a>
+        </div>
+      `;
+    } else {
+      content.innerHTML = '<p class="text-center text-gray-500 py-4 text-sm">No module selected yet.</p>';
+    }
+  }
+}
+
+// Update module selection
+function updateCurrentModuleSelection(type) {
+  const select = document.getElementById(`${type}ModuleSelect`);
+  if (select) {
+    currentModuleData[type].moduleId = select.value;
+  }
+}
+
+// Update module link
+function updateCurrentModuleLink(type) {
+  const input = document.getElementById(`${type}ModuleLink`);
+  if (input) {
+    currentModuleData[type].link = input.value.trim();
+  }
+}
+
+// Save current module data to Firestore
+async function saveCurrentModule(type) {
+  const saveBtn = document.getElementById(`save${type.charAt(0).toUpperCase() + type.slice(1)}ModuleBtn`);
+  const originalText = saveBtn.textContent;
+  
+  try {
+    // Check authentication before saving
+    await ensureAuthenticated();
+    
+    // Validate that both module and link are selected
+    if (!currentModuleData[type].moduleId || !currentModuleData[type].link) {
+      alert('Please select a module and provide a Google Sheets link.');
+      return;
+    }
+    
+    // Show saving state
+    saveBtn.textContent = '⏳ Saving...';
+    saveBtn.disabled = true;
+    
+    // Prepare data for saving
+    const data = {
+      current_module_json: JSON.stringify(currentModuleData)
+    };
+    
+    console.log(`Saving ${type} Current Module to Firestore:`, currentModuleData[type]);
+    
+    // Save to Firestore
+    await db.collection('classData').doc('current').set(data, { merge: true });
+    
+    console.log(`${type} Current Module saved successfully to Firestore`);
+    
+    // Show success state
+    saveBtn.textContent = '✅ Saved!';
+    
+    // Reset button after 2 seconds
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 2000);
+    
+  } catch (error) {
+    console.error(`Failed to save ${type} Current Module:`, error);
+    alert(`Failed to save module: ${error.message}`);
+    
+    // Show error state
+    saveBtn.textContent = '❌ Save Failed';
+    
+    // Reset button after 3 seconds
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 3000);
+  }
+}
+
+// Update Current Module data from JSON
+function updateCurrentModuleData(jsonString) {
+  if (!jsonString) return;
+  
+  try {
+    const data = JSON.parse(jsonString);
+    currentModuleData.skills = data.skills || { moduleId: '', link: '' };
+    currentModuleData.math = data.math || { moduleId: '', link: '' };
+  } catch (e) {
+    console.error('Failed to parse Current Module JSON:', e);
+    currentModuleData = {
+      skills: { moduleId: '', link: '' },
+      math: { moduleId: '', link: '' }
+    };
+  }
+}
+
+// ============================================
 // SKILLS UNITS FUNCTIONS
 // ============================================
 
@@ -9002,10 +9184,12 @@ function updateWatchMeData(watchMeJson) {
     }
   }
   
-  // Render all three tabs
-  renderWatchMeContent('skills');
+  // Render Current Module sections
+  renderCurrentModule('skills');
+  renderCurrentModule('math');
+  
+  // Render Watch Me content (only for Listening)
   renderWatchMeContent('listening');
-  renderWatchMeContent('math');
 }
 
 
