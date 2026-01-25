@@ -1177,6 +1177,96 @@
         </div>
       </div>
     </section>
+    <!-- WHAT IS THE LEARNING HUB? PAGE -->
+    <section data-page-panel="learning-hub-info" class="pagePanel fade-in">
+      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
+        <h2 class="text-3xl font-display font-bold mb-6 text-center" style="color: var(--md-slate);">❓ What is the Learning Hub?</h2>
+        <p class="text-center mb-8 text-gray-600">Click on any screenshot to enlarge it for a better view.</p>
+        
+        <!-- Skills Section -->
+        <div class="mb-10">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="text-3xl">📖</span>
+            <h3 class="text-2xl font-display font-bold" style="color: var(--md-slate);">Skills</h3>
+          </div>
+          <div class="grid md:grid-cols-2 gap-6 items-start">
+            <div class="rounded-xl overflow-hidden border-2 cursor-pointer hover:opacity-90 transition-opacity" style="border-color: var(--md-slate);" onclick="enlargeScreenshot(this)">
+              <div id="learningHubInfoSkillsImage" class="w-full bg-gray-100 flex items-center justify-center min-h-[200px]" onclick="if(document.body.classList.contains('editing')) { event.stopPropagation(); editLearningHubScreenshot(this, 'skills'); }">
+                <span class="text-gray-400 text-sm">Click to upload screenshot</span>
+              </div>
+            </div>
+            <div>
+              <p class="leading-relaxed" id="learningHubInfoSkillsDesc" data-edit="teacher" contenteditable="false">The Skills Spotlight page shows the current reading and phonics unit we're working on. You'll find information about sight words, sounds, and vocabulary your child is learning. This page also includes a "View by Unit" option to see all units throughout the year.</p>
+              <button id="saveLearningHubInfoSkillsBtn" class="edit-only mt-4 px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate); display: none;" onclick="saveLearningHubInfoSection('skills')">💾 Save</button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Listening & Learning Section -->
+        <div class="mb-10">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="text-3xl">👂</span>
+            <h3 class="text-2xl font-display font-bold" style="color: var(--md-coral);">Listening & Learning</h3>
+          </div>
+          <div class="grid md:grid-cols-2 gap-6 items-start">
+            <div class="rounded-xl overflow-hidden border-2 cursor-pointer hover:opacity-90 transition-opacity" style="border-color: var(--md-coral);" onclick="enlargeScreenshot(this)">
+              <div id="learningHubInfoListeningImage" class="w-full bg-gray-100 flex items-center justify-center min-h-[200px]" onclick="if(document.body.classList.contains('editing')) { event.stopPropagation(); editLearningHubScreenshot(this, 'listening'); }">
+                <span class="text-gray-400 text-sm">Click to upload screenshot</span>
+              </div>
+            </div>
+            <div>
+              <p class="leading-relaxed" id="learningHubInfoListeningDesc" data-edit="teacher" contenteditable="false">The Listening & Learning page features daily read-aloud stories and discussion topics. It includes helpful questions you can ask your child about the stories we read, along with video links to watch story readings together at home.</p>
+              <button id="saveLearningHubInfoListeningBtn" class="edit-only mt-4 px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral); display: none;" onclick="saveLearningHubInfoSection('listening')">💾 Save</button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Math Section -->
+        <div class="mb-10">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="text-3xl">🧮</span>
+            <h3 class="text-2xl font-display font-bold" style="color: var(--md-blush);">Math</h3>
+          </div>
+          <div class="grid md:grid-cols-2 gap-6 items-start">
+            <div class="rounded-xl overflow-hidden border-2 cursor-pointer hover:opacity-90 transition-opacity" style="border-color: var(--md-blush);" onclick="enlargeScreenshot(this)">
+              <div id="learningHubInfoMathImage" class="w-full bg-gray-100 flex items-center justify-center min-h-[200px]" onclick="if(document.body.classList.contains('editing')) { event.stopPropagation(); editLearningHubScreenshot(this, 'math'); }">
+                <span class="text-gray-400 text-sm">Click to upload screenshot</span>
+              </div>
+            </div>
+            <div>
+              <p class="leading-relaxed" id="learningHubInfoMathDesc" data-edit="teacher" contenteditable="false">The Math page displays the current math module and concepts we're exploring. You'll find key vocabulary, practice strategies, and a "View by Module" button to see all math topics throughout the year.</p>
+              <button id="saveLearningHubInfoMathBtn" class="edit-only mt-4 px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-blush); display: none;" onclick="saveLearningHubInfoSection('math')">💾 Save</button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Practice Websites Section -->
+        <div class="mb-10">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="text-3xl">💻</span>
+            <h3 class="text-2xl font-display font-bold" style="color: var(--md-pebble);">Practice Websites</h3>
+          </div>
+          <div class="grid md:grid-cols-2 gap-6 items-start">
+            <div class="rounded-xl overflow-hidden border-2 cursor-pointer hover:opacity-90 transition-opacity" style="border-color: var(--md-pebble);" onclick="enlargeScreenshot(this)">
+              <div id="learningHubInfoPracticeImage" class="w-full bg-gray-100 flex items-center justify-center min-h-[200px]" onclick="if(document.body.classList.contains('editing')) { event.stopPropagation(); editLearningHubScreenshot(this, 'practice'); }">
+                <span class="text-gray-400 text-sm">Click to upload screenshot</span>
+              </div>
+            </div>
+            <div>
+              <p class="leading-relaxed" id="learningHubInfoPracticeDesc" data-edit="teacher" contenteditable="false">The Practice Websites page provides links to educational websites and learning platforms your child can use at home. This includes Clever for accessing learning apps, ClassDojo for class communication, and various practice sites for reading, phonics, and math skills.</p>
+              <button id="saveLearningHubInfoPracticeBtn" class="edit-only mt-4 px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-pebble); display: none;" onclick="saveLearningHubInfoSection('practice')">💾 Save</button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Back to Learning Hub Button -->
+        <div class="text-center mt-8">
+          <button onclick="openLearningHubModal()" class="px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90 inline-flex items-center gap-2" style="background: var(--md-slate);">
+            <span>←</span><span>Back to Learning Hub</span>
+          </button>
+        </div>
+      </div>
+    </section>
     <!-- TRANSPORTATION TAB (always editable) -->
     <section data-page-panel="transportation" class="pagePanel fade-in">
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--md-cream);">
@@ -2542,6 +2632,27 @@
       const volunteerDataCollected = collectVolunteerData();
       data.volunteers_json = JSON.stringify(volunteerDataCollected);
       data.volunteer_background_check_link = document.getElementById('backgroundCheckLink')?.value || '';
+      
+      // Learning Hub Info page data
+      const learningHubInfoData = {
+        skills: {
+          image: document.getElementById('learningHubInfoSkillsImage')?.getAttribute('data-screenshot-url') || '',
+          description: document.getElementById('learningHubInfoSkillsDesc')?.textContent || ''
+        },
+        listening: {
+          image: document.getElementById('learningHubInfoListeningImage')?.getAttribute('data-screenshot-url') || '',
+          description: document.getElementById('learningHubInfoListeningDesc')?.textContent || ''
+        },
+        math: {
+          image: document.getElementById('learningHubInfoMathImage')?.getAttribute('data-screenshot-url') || '',
+          description: document.getElementById('learningHubInfoMathDesc')?.textContent || ''
+        },
+        practice: {
+          image: document.getElementById('learningHubInfoPracticeImage')?.getAttribute('data-screenshot-url') || '',
+          description: document.getElementById('learningHubInfoPracticeDesc')?.textContent || ''
+        }
+      };
+      data.learning_hub_info_json = JSON.stringify(learningHubInfoData);
       
       return data;
     }
@@ -5046,11 +5157,87 @@ function populateDataFromSheet(data) {
   initializeVolunteerMonths();
   loadVolunteerData(data);
   
+  // Load Learning Hub Info data
+  updateLearningHubInfo(data.learning_hub_info_json);
+  
   if (data.calendar_url) {
     const cal = document.getElementById('schoolCalendarLink');
     if (cal) cal.href = data.calendar_url;
     const calInput = document.getElementById('calendarUrlInput');
     if (calInput) calInput.value = data.calendar_url;
+  }
+}
+
+// Function to update Learning Hub Info page
+function updateLearningHubInfo(learningHubInfoJson) {
+  if (!learningHubInfoJson) return;
+  
+  let learningHubInfo;
+  try {
+    learningHubInfo = JSON.parse(learningHubInfoJson);
+  } catch (e) {
+    console.error('Failed to parse Learning Hub Info data:', e);
+    return;
+  }
+  
+  // Update Skills section
+  if (learningHubInfo.skills) {
+    const skillsImage = document.getElementById('learningHubInfoSkillsImage');
+    const skillsDesc = document.getElementById('learningHubInfoSkillsDesc');
+    
+    if (skillsImage && learningHubInfo.skills.image) {
+      skillsImage.innerHTML = `<img src="${learningHubInfo.skills.image}" alt="Skills screenshot" style="width:100%; height:100%; object-fit:cover;">`;
+      skillsImage.setAttribute('data-screenshot-url', learningHubInfo.skills.image);
+    }
+    
+    if (skillsDesc && learningHubInfo.skills.description) {
+      skillsDesc.textContent = learningHubInfo.skills.description;
+    }
+  }
+  
+  // Update Listening & Learning section
+  if (learningHubInfo.listening) {
+    const listeningImage = document.getElementById('learningHubInfoListeningImage');
+    const listeningDesc = document.getElementById('learningHubInfoListeningDesc');
+    
+    if (listeningImage && learningHubInfo.listening.image) {
+      listeningImage.innerHTML = `<img src="${learningHubInfo.listening.image}" alt="Listening & Learning screenshot" style="width:100%; height:100%; object-fit:cover;">`;
+      listeningImage.setAttribute('data-screenshot-url', learningHubInfo.listening.image);
+    }
+    
+    if (listeningDesc && learningHubInfo.listening.description) {
+      listeningDesc.textContent = learningHubInfo.listening.description;
+    }
+  }
+  
+  // Update Math section
+  if (learningHubInfo.math) {
+    const mathImage = document.getElementById('learningHubInfoMathImage');
+    const mathDesc = document.getElementById('learningHubInfoMathDesc');
+    
+    if (mathImage && learningHubInfo.math.image) {
+      mathImage.innerHTML = `<img src="${learningHubInfo.math.image}" alt="Math screenshot" style="width:100%; height:100%; object-fit:cover;">`;
+      mathImage.setAttribute('data-screenshot-url', learningHubInfo.math.image);
+    }
+    
+    if (mathDesc && learningHubInfo.math.description) {
+      mathDesc.textContent = learningHubInfo.math.description;
+    }
+  }
+  
+  // Update Practice Websites section
+  if (learningHubInfo.practice) {
+    const practiceImage = document.getElementById('learningHubInfoPracticeImage');
+    const practiceDesc = document.getElementById('learningHubInfoPracticeDesc');
+    
+    if (practiceImage && learningHubInfo.practice.image) {
+      practiceImage.innerHTML = `<img src="${learningHubInfo.practice.image}" alt="Practice Websites screenshot" style="width:100%; height:100%; object-fit:cover;">`;
+      practiceImage.setAttribute('data-screenshot-url', learningHubInfo.practice.image);
+    }
+    
+    if (practiceDesc && learningHubInfo.practice.description) {
+      practiceDesc.textContent = learningHubInfo.practice.description;
+    }
   }
 }
 
@@ -9755,6 +9942,194 @@ function editProfilePhoto(el, section) {
   fileInput.click();
 }
 
+// Learning Hub Info Page Functions
+function editLearningHubScreenshot(el, section) {
+  // Only allow editing in edit mode with PIN
+  if (!document.body.classList.contains('editing')) {
+    return;
+  }
+  
+  // Create file input
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/*';
+  fileInput.style.display = 'none';
+  
+  fileInput.onchange = async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File size too large. Please select an image smaller than 10MB.');
+      return;
+    }
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select a valid image file.');
+      return;
+    }
+    
+    let attempt = 0;
+    const maxAttempts = 3;
+    
+    while (attempt < maxAttempts) {
+      try {
+        console.log(`Learning Hub screenshot upload attempt ${attempt + 1} for section: ${section}`);
+        
+        // Set uploading flag to prevent periodic refresh interference
+        isUploading = true;
+        
+        // Show uploading state
+        el.innerHTML = '<div style="font-size: 12px; text-align: center; padding: 80px 0;">⏳<br>Uploading...</div>';
+        el.style.pointerEvents = 'none';
+        
+        // Test storage connection first
+        const storageConnected = await window.testStorageConnection();
+        if (!storageConnected) {
+          throw new Error('Firebase Storage connection failed');
+        }
+        
+        // Generate unique filename
+        const timestamp = Date.now();
+        const fileName = `learning_hub_${section}_${timestamp}_${file.name}`;
+        
+        console.log(`Uploading to: learning-hub-screenshots/${fileName}`);
+        
+        // Upload to Firebase Storage
+        const storageRef = storage.ref(`learning-hub-screenshots/${fileName}`);
+        const uploadTask = await storageRef.put(file);
+        const downloadURL = await uploadTask.ref.getDownloadURL();
+        
+        console.log('Learning Hub screenshot upload successful, URL:', downloadURL);
+        
+        // Validate the generated URL
+        const urlValid = await window.validateStorageUrl(downloadURL);
+        if (!urlValid) {
+          console.warn('Generated URL failed validation, but proceeding anyway');
+        }
+        
+        // Update the display
+        el.innerHTML = `<img src="${downloadURL}" alt="${section} screenshot" style="width:100%; height:100%; object-fit:cover;">`;
+        el.style.pointerEvents = 'auto';
+        
+        // Store the screenshot URL for later collection
+        el.setAttribute('data-screenshot-url', downloadURL);
+        
+        // Show save button for this section
+        const saveBtn = document.getElementById(`saveLearningHubInfo${section.charAt(0).toUpperCase() + section.slice(1)}Btn`);
+        if (saveBtn) saveBtn.style.display = 'inline-block';
+        
+        // Clear uploading flag
+        isUploading = false;
+        
+        // Success - break out of retry loop
+        break;
+        
+      } catch (error) {
+        attempt++;
+        console.error(`Learning Hub screenshot upload attempt ${attempt} failed:`, error);
+        
+        if (attempt >= maxAttempts) {
+          // Clear uploading flag on final failure
+          isUploading = false;
+          
+          const errorMessage = window.handleUploadError(error, 'screenshot upload');
+          
+          // Show error in UI
+          const errorDiv = document.createElement('div');
+          errorDiv.className = 'fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg z-50';
+          errorDiv.innerHTML = `
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <span class="text-red-500">⚠️</span>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm font-medium">Upload Failed</p>
+                <p class="text-sm">${errorMessage}</p>
+              </div>
+              <div class="ml-auto pl-3">
+                <button class="text-red-400 hover:text-red-600" onclick="this.parentElement.parentElement.parentElement.remove()">
+                  <span class="sr-only">Dismiss</span>
+                  ✕
+                </button>
+              </div>
+            </div>
+          `;
+          document.body.appendChild(errorDiv);
+          
+          // Auto-remove error after 5 seconds
+          setTimeout(() => {
+            if (errorDiv.parentNode) {
+              errorDiv.parentNode.removeChild(errorDiv);
+            }
+          }, 5000);
+          
+          // Reset on error
+          el.innerHTML = '<span class="text-gray-400 text-sm">Click to upload screenshot</span>';
+          el.style.pointerEvents = 'auto';
+        } else {
+          // Wait before retry
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        }
+      }
+    }
+    
+    document.body.removeChild(fileInput);
+  };
+  
+  document.body.appendChild(fileInput);
+  fileInput.click();
+}
+
+function saveLearningHubInfoSection(section) {
+  // Show the main save button to trigger overall save
+  const saveBtn = document.getElementById('saveChangesBtn');
+  if (saveBtn) {
+    saveBtn.style.display = 'block';
+  }
+  
+  // Hide the section-specific save button
+  const sectionBtn = document.getElementById(`saveLearningHubInfo${section.charAt(0).toUpperCase() + section.slice(1)}Btn`);
+  if (sectionBtn) {
+    sectionBtn.style.display = 'none';
+  }
+  
+  // Trigger the main save
+  saveChangesToFirestore();
+}
+
+function enlargeScreenshot(element) {
+  // Find the image element
+  const imgContainer = element.querySelector('div[id*="learningHubInfo"]');
+  if (!imgContainer) return;
+  
+  const img = imgContainer.querySelector('img');
+  if (!img) {
+    // No image to enlarge
+    return;
+  }
+  
+  // Create modal overlay
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; display: flex; justify-content: center; align-items: center; cursor: pointer;';
+  
+  // Create enlarged image
+  const enlargedImg = document.createElement('img');
+  enlargedImg.src = img.src;
+  enlargedImg.style.cssText = 'max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 8px;';
+  
+  overlay.appendChild(enlargedImg);
+  
+  // Close on click
+  overlay.onclick = function() {
+    document.body.removeChild(overlay);
+  };
+  
+  document.body.appendChild(overlay);
+}
+
 // Toggle Ms. Williams section
 function toggleWilliamsSection() {
   const content = document.getElementById('williamsCollapsibleContent');
@@ -9951,7 +10326,8 @@ document.head.appendChild(style);
 
   <!-- Learning Hub Popup Modal -->
   <div id="learningHubModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9998; justify-content: center; align-items: center;" onclick="closeLearningHubModal()">
-    <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-8 max-w-md mx-4" onclick="event.stopPropagation();" style="border: 3px solid var(--md-slate);">
+    <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-8 max-w-md mx-4" onclick="event.stopPropagation();" style="border: 3px solid var(--md-slate); position: relative;">
+      <button onclick="event.stopPropagation(); closeLearningHubModal(); showPage('learning-hub-info');" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-[color:var(--md-slate)] text-white font-bold hover:opacity-80 transition-opacity" style="font-size: 18px;" title="What is the Learning Hub?">?</button>
       <div class="text-center">
         <div class="text-5xl mb-4">📚</div>
         <h3 class="text-2xl font-display font-bold mb-6" style="color: var(--md-slate);">Learning Hub</h3>
