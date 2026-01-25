@@ -2302,6 +2302,55 @@
       renderSkillsUnits();
       renderMathModules();
     }
+    
+    // Sanitize HTML to allow only safe formatting tags
+    function sanitizeHTML(html) {
+      if (!html) return '';
+      
+      // Create a temporary div to parse HTML
+      const temp = document.createElement('div');
+      temp.innerHTML = html;
+      
+      // Allowed tags for formatting
+      const allowedTags = ['P', 'BR', 'UL', 'OL', 'LI', 'B', 'I', 'U', 'STRONG', 'EM', 'SPAN', 'DIV'];
+      
+      // Recursively clean nodes
+      function cleanNode(node) {
+        // Remove script and style tags
+        if (node.nodeName === 'SCRIPT' || node.nodeName === 'STYLE') {
+          node.remove();
+          return;
+        }
+        
+        // Remove event handlers and javascript: links
+        if (node.nodeType === 1) { // Element node
+          // Remove all event attributes
+          Array.from(node.attributes || []).forEach(attr => {
+            if (attr.name.startsWith('on') || attr.value.includes('javascript:')) {
+              node.removeAttribute(attr.name);
+            }
+          });
+          
+          // Only keep allowed tags, otherwise unwrap
+          if (!allowedTags.includes(node.nodeName)) {
+            const parent = node.parentNode;
+            while (node.firstChild) {
+              parent.insertBefore(node.firstChild, node);
+            }
+            node.remove();
+            return;
+          }
+        }
+        
+        // Recursively clean children
+        Array.from(node.childNodes).forEach(child => cleanNode(child));
+      }
+      
+      Array.from(temp.childNodes).forEach(node => cleanNode(node));
+      
+      return temp.innerHTML;
+    }
+    
     function collectEditableFieldData() {
       const data = {};
       
@@ -2637,19 +2686,19 @@
       const learningHubInfoData = {
         skills: {
           image: document.getElementById('learningHubInfoSkillsImage')?.getAttribute('data-screenshot-url') || '',
-          description: document.getElementById('learningHubInfoSkillsDesc')?.innerHTML || ''
+          description: sanitizeHTML(document.getElementById('learningHubInfoSkillsDesc')?.innerHTML || '')
         },
         listening: {
           image: document.getElementById('learningHubInfoListeningImage')?.getAttribute('data-screenshot-url') || '',
-          description: document.getElementById('learningHubInfoListeningDesc')?.innerHTML || ''
+          description: sanitizeHTML(document.getElementById('learningHubInfoListeningDesc')?.innerHTML || '')
         },
         math: {
           image: document.getElementById('learningHubInfoMathImage')?.getAttribute('data-screenshot-url') || '',
-          description: document.getElementById('learningHubInfoMathDesc')?.innerHTML || ''
+          description: sanitizeHTML(document.getElementById('learningHubInfoMathDesc')?.innerHTML || '')
         },
         practice: {
           image: document.getElementById('learningHubInfoPracticeImage')?.getAttribute('data-screenshot-url') || '',
-          description: document.getElementById('learningHubInfoPracticeDesc')?.innerHTML || ''
+          description: sanitizeHTML(document.getElementById('learningHubInfoPracticeDesc')?.innerHTML || '')
         }
       };
       data.learning_hub_info_json = JSON.stringify(learningHubInfoData);
@@ -5191,7 +5240,7 @@ function updateLearningHubInfo(learningHubInfoJson) {
     }
     
     if (skillsDesc && learningHubInfo.skills.description) {
-      skillsDesc.innerHTML = learningHubInfo.skills.description;
+      skillsDesc.innerHTML = sanitizeHTML(learningHubInfo.skills.description);
     }
   }
   
@@ -5206,7 +5255,7 @@ function updateLearningHubInfo(learningHubInfoJson) {
     }
     
     if (listeningDesc && learningHubInfo.listening.description) {
-      listeningDesc.innerHTML = learningHubInfo.listening.description;
+      listeningDesc.innerHTML = sanitizeHTML(learningHubInfo.listening.description);
     }
   }
   
@@ -5221,7 +5270,7 @@ function updateLearningHubInfo(learningHubInfoJson) {
     }
     
     if (mathDesc && learningHubInfo.math.description) {
-      mathDesc.innerHTML = learningHubInfo.math.description;
+      mathDesc.innerHTML = sanitizeHTML(learningHubInfo.math.description);
     }
   }
   
@@ -5236,7 +5285,7 @@ function updateLearningHubInfo(learningHubInfoJson) {
     }
     
     if (practiceDesc && learningHubInfo.practice.description) {
-      practiceDesc.innerHTML = learningHubInfo.practice.description;
+      practiceDesc.innerHTML = sanitizeHTML(learningHubInfo.practice.description);
     }
   }
 }
