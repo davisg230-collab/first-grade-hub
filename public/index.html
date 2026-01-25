@@ -2637,19 +2637,19 @@
       const learningHubInfoData = {
         skills: {
           image: document.getElementById('learningHubInfoSkillsImage')?.getAttribute('data-screenshot-url') || '',
-          description: document.getElementById('learningHubInfoSkillsDesc')?.textContent || ''
+          description: document.getElementById('learningHubInfoSkillsDesc')?.innerHTML || ''
         },
         listening: {
           image: document.getElementById('learningHubInfoListeningImage')?.getAttribute('data-screenshot-url') || '',
-          description: document.getElementById('learningHubInfoListeningDesc')?.textContent || ''
+          description: document.getElementById('learningHubInfoListeningDesc')?.innerHTML || ''
         },
         math: {
           image: document.getElementById('learningHubInfoMathImage')?.getAttribute('data-screenshot-url') || '',
-          description: document.getElementById('learningHubInfoMathDesc')?.textContent || ''
+          description: document.getElementById('learningHubInfoMathDesc')?.innerHTML || ''
         },
         practice: {
           image: document.getElementById('learningHubInfoPracticeImage')?.getAttribute('data-screenshot-url') || '',
-          description: document.getElementById('learningHubInfoPracticeDesc')?.textContent || ''
+          description: document.getElementById('learningHubInfoPracticeDesc')?.innerHTML || ''
         }
       };
       data.learning_hub_info_json = JSON.stringify(learningHubInfoData);
@@ -5191,7 +5191,7 @@ function updateLearningHubInfo(learningHubInfoJson) {
     }
     
     if (skillsDesc && learningHubInfo.skills.description) {
-      skillsDesc.textContent = learningHubInfo.skills.description;
+      skillsDesc.innerHTML = learningHubInfo.skills.description;
     }
   }
   
@@ -5206,7 +5206,7 @@ function updateLearningHubInfo(learningHubInfoJson) {
     }
     
     if (listeningDesc && learningHubInfo.listening.description) {
-      listeningDesc.textContent = learningHubInfo.listening.description;
+      listeningDesc.innerHTML = learningHubInfo.listening.description;
     }
   }
   
@@ -5221,7 +5221,7 @@ function updateLearningHubInfo(learningHubInfoJson) {
     }
     
     if (mathDesc && learningHubInfo.math.description) {
-      mathDesc.textContent = learningHubInfo.math.description;
+      mathDesc.innerHTML = learningHubInfo.math.description;
     }
   }
   
@@ -5236,7 +5236,7 @@ function updateLearningHubInfo(learningHubInfoJson) {
     }
     
     if (practiceDesc && learningHubInfo.practice.description) {
-      practiceDesc.textContent = learningHubInfo.practice.description;
+      practiceDesc.innerHTML = learningHubInfo.practice.description;
     }
   }
 }
