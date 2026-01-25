@@ -2324,9 +2324,14 @@
         
         // Remove event handlers and javascript: links
         if (node.nodeType === 1) { // Element node
-          // Remove all event attributes
+          // Remove all event attributes and dangerous content
           Array.from(node.attributes || []).forEach(attr => {
-            if (attr.name.startsWith('on') || attr.value.includes('javascript:')) {
+            const attrValueLower = (attr.value || '').toLowerCase();
+            // Check for event handlers and various javascript: variants
+            if (attr.name.startsWith('on') || 
+                attrValueLower.includes('javascript:') ||
+                attrValueLower.includes('data:text/html') ||
+                attrValueLower.includes('vbscript:')) {
               node.removeAttribute(attr.name);
             }
           });
@@ -2334,19 +2339,25 @@
           // Only keep allowed tags, otherwise unwrap
           if (!allowedTags.includes(node.nodeName)) {
             const parent = node.parentNode;
-            while (node.firstChild) {
-              parent.insertBefore(node.firstChild, node);
+            if (parent) {  // Check parent exists
+              while (node.firstChild) {
+                parent.insertBefore(node.firstChild, node);
+              }
+              node.remove();
             }
-            node.remove();
             return;
           }
         }
         
+        // Collect child nodes first to avoid live NodeList issues
+        const children = Array.from(node.childNodes);
         // Recursively clean children
-        Array.from(node.childNodes).forEach(child => cleanNode(child));
+        children.forEach(child => cleanNode(child));
       }
       
-      Array.from(temp.childNodes).forEach(node => cleanNode(node));
+      // Clean all top-level nodes
+      const topLevelNodes = Array.from(temp.childNodes);
+      topLevelNodes.forEach(node => cleanNode(node));
       
       return temp.innerHTML;
     }
