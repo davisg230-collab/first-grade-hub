@@ -793,35 +793,50 @@
     </section>
     <!-- LISTENING & LEARNING TAB -->
     <section data-page-panel="listening" class="pagePanel fade-in">
+      <!-- Section 1: Listening & Learning Description (Top Section) -->
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
         <h2 class="text-2xl font-display font-bold mb-4" style="color: var(--md-coral);">👂 Listening & Learning</h2>
-        <div class="grid md:grid-cols-3 gap-6">
-          <div class="md:col-span-2">
-            <p class="leading-relaxed" data-edit="teacher" contenteditable="false">
-              We're building strong listening skills through daily read-alouds and interactive discussions. Students practice following multi-step directions and learn to ask thoughtful questions about the stories we read together.
-            </p>
+        <p class="leading-relaxed" data-edit="teacher" contenteditable="false">
+          We're building strong listening skills through daily read-alouds and interactive discussions. Students practice following multi-step directions and learn to ask thoughtful questions about the stories we read together.
+        </p>
+      </div>
+      
+      <!-- Section 2: Current Unit (Middle Section) - Merged with Upcoming Lessons -->
+      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xl font-display font-bold" style="color: var(--md-coral);">📚 Current Unit</h3>
+          <button id="saveListeningModuleBtn" class="edit-only px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral); display: none;" onclick="saveCurrentModule('listening')">💾 Save</button>
+        </div>
+        <div id="listeningCurrentModuleContent" class="space-y-3 mb-6">
+          <!-- Content will be populated by JavaScript -->
+        </div>
+        
+        <!-- Upcoming Lessons subsection -->
+        <div class="mt-6 pt-6 border-t" style="border-color: color-mix(in oklab, var(--md-coral) 20%, var(--md-white) 80%);">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-display font-semibold" style="color: var(--md-coral);">Upcoming Lessons</h3>
+            <div class="edit-only flex gap-2" style="display: none;">
+              <button id="saveListeningLessonsBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveLessonCards('listening')">💾 Save</button>
+            </div>
           </div>
-          <div class="rounded-xl p-4" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-coral) 30%); border: 1px solid color-mix(in oklab, var(--md-coral) 60%, var(--md-white) 40%);">
-            <h3 class="font-semibold mb-3">Ask your scholar...</h3>
-            <ul class="text-sm list-disc pl-5" data-edit="teacher" contenteditable="false">
-              <li>What happened in today's story?</li>
-              <li>Who was your favorite character?</li>
-              <li>What do you think happens next?</li>
-            </ul>
+          <div id="listeningLessonsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            <!-- Weekday boxes will be populated by JavaScript -->
           </div>
         </div>
       </div>
-      <!-- Watch Me Box for Listening & Learning -->
+      
+      <!-- Section 3: Ask Your Scholar + View by Unit Button (Bottom Section) -->
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-xl font-display font-bold" style="color: var(--md-coral);">🎬 Watch Me</h3>
-          <div class="flex gap-2">
-            <button id="addListeningWatchMeBtn" class="edit-only px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral); display: none;" onclick="addWatchMeLink('listening')">+ Add Link</button>
-            <button id="saveListeningWatchMeBtn" class="edit-only px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate); display: none;" onclick="saveWatchMeLinks('listening')">💾 Save Links</button>
-          </div>
+          <h3 class="text-lg font-display font-semibold" style="color: var(--md-coral);">Ask your scholar...</h3>
+          <button onclick="showPage('listening-units')" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);">📚 View by Unit</button>
         </div>
-        <div id="listeningWatchMeContent" class="space-y-2">
-          <!-- Content will be populated by JavaScript -->
+        <div class="rounded-xl p-4" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-coral) 30%); border: 1px solid color-mix(in oklab, var(--md-coral) 60%, var(--md-white) 40%);">
+          <ul class="text-sm list-disc pl-5" data-edit="teacher" contenteditable="false">
+            <li>What happened in today's story?</li>
+            <li>Who was your favorite character?</li>
+            <li>What do you think happens next?</li>
+          </ul>
         </div>
       </div>
     </section>
@@ -1506,6 +1521,19 @@
         <button onclick="saveMathModules()" class="px-4 py-2 rounded-lg text-white font-semibold" style="background: var(--md-slate);">💾 Save All Changes</button>
       </div>
     </section>
+    <!-- LISTENING UNITS PAGE -->
+    <section data-page-panel="listening-units" class="pagePanel fade-in">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-display font-bold" style="color: var(--md-coral);">📚 Listening by Unit</h2>
+        <button onclick="showPage('listening')" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);">← Back to Listening</button>
+      </div>
+      <div class="space-y-6" id="listeningUnitsContainer">
+        <!-- Units will be dynamically rendered here -->
+      </div>
+      <div class="mt-6 flex gap-3 edit-only" style="display: none;">
+        <button onclick="saveListeningUnits()" class="px-4 py-2 rounded-lg text-white font-semibold" style="background: var(--md-coral);">💾 Save All Changes</button>
+      </div>
+    </section>
     <!-- BIRTHDAYS TAB -->
     <section data-page-panel="birthdays" class="pagePanel fade-in">
       <h2 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">🎂 Birthdays</h2>
@@ -1705,10 +1733,14 @@
     // Math Modules data structure
     let mathModulesData = []; // Array of 6 modules, each: {title: string, sections: [{title: string, bulletPoints: [string]}]} - 2 sections per module
     
+    // Listening Units data structure
+    let listeningUnitsData = []; // Array of 7 units, each: {title: string, sections: [{title: string, bullets: [string]}]}
+    
     // Current Module data structure for Skills and Math
     let currentModuleData = {
       skills: { moduleId: '', link: '' },  // moduleId stores unit ID: 'unit-1' to 'unit-7', link: Google Sheets URL
-      math: { moduleId: '', link: '' }      // moduleId stores module ID: 'module-1' to 'module-6', link: Google Sheets URL
+      math: { moduleId: '', link: '' },      // moduleId stores module ID: 'module-1' to 'module-6', link: Google Sheets URL
+      listening: { moduleId: '', link: '' }  // moduleId stores unit ID: 'unit-1' to 'unit-7', link: Google Sheets URL
     };
     
     // Skills Units for dropdown
@@ -1732,6 +1764,17 @@
       { id: 'module-6', name: 'Module 6: Place Value, Comparison, Addition, and Subtraction to 100' }
     ];
     
+    // Listening Units for dropdown
+    const listeningUnitsOptions = [
+      { id: 'unit-1', name: 'Unit 1: Blending and Segmenting, Tricky Words, and Spelling' },
+      { id: 'unit-2', name: 'Unit 2: Five Vowel Sounds' },
+      { id: 'unit-3', name: 'Unit 3: New Vowel Sounds and Spellings' },
+      { id: 'unit-4', name: 'Unit 4: Spelling, Comprehension, and Word Reading' },
+      { id: 'unit-5', name: 'Unit 5: Spelling Alternatives and Advancing the Code' },
+      { id: 'unit-6', name: 'Unit 6: Spelling Alternatives for Consonant Sounds' },
+      { id: 'unit-7', name: 'Unit 7: Advanced Code and Spelling Alternatives for Vowels' }
+    ];
+    
     // Tab navigation
     function showPage(pageId) {
       document.querySelectorAll('.pagePanel').forEach(panel => {
@@ -1753,6 +1796,8 @@
         renderSkillsUnits();
       } else if (pageId === 'math-modules') {
         renderMathModules();
+      } else if (pageId === 'listening-units') {
+        renderListeningUnits();
       }
     }
     document.addEventListener('DOMContentLoaded',function(){
@@ -2139,6 +2184,7 @@
       // Re-render Skills Units and Math Modules for edit mode
       renderSkillsUnits();
       renderMathModules();
+      renderListeningUnits();
       
       // Enable volunteer page editing
       const backgroundCheckLink = document.getElementById('backgroundCheckLink');
@@ -2349,6 +2395,7 @@
       // Re-render Skills Units and Math Modules for view mode
       renderSkillsUnits();
       renderMathModules();
+      renderListeningUnits();
     }
     
     // Sanitize HTML to allow only safe formatting tags
@@ -5485,6 +5532,8 @@ function updateLessonCards(subject, lessons_data) {
     weekdayBox.style.background = 'color-mix(in oklab, var(--md-white) 95%, ' + color + ' 5%)';
     weekdayBox.style.border = '2px dashed color-mix(in oklab, ' + color + ' 30%, var(--md-white) 70%)';
     weekdayBox.style.minHeight = '160px';
+    weekdayBox.style.overflowX = 'hidden';
+    weekdayBox.style.overflowY = 'auto';
     weekdayBox.dataset.dayIndex = index;
     weekdayBox.dataset.placeholder = weekday.placeholder || 'No Lesson';
     
@@ -5529,14 +5578,14 @@ function updateLessonCards(subject, lessons_data) {
                 title="Delete Card">🗑️</button>
         <div class="mb-3">
           <input type="text" class="lesson-number w-full px-2 py-1 text-center font-semibold text-sm border-0 rounded" 
-                 style="background: transparent; color: ${color};" 
+                 style="background: transparent; color: ${color}; overflow-wrap: break-word; word-break: break-word; overflow-x: hidden;" 
                  placeholder="Lesson #" 
                  value="${card.number || ''}"
                  ${isEditMode ? '' : 'disabled readonly'}>
         </div>
         <div>
           <textarea class="lesson-title w-full px-2 py-1 text-center text-sm border-0 rounded resize-none" 
-                 style="background: transparent; overflow-wrap: break-word; white-space: pre-wrap; min-height: 2.5em;" 
+                 style="background: transparent; overflow-wrap: break-word; word-break: break-word; white-space: pre-wrap; min-height: 2.5em; overflow-x: hidden;" 
                  placeholder="Lesson Title" 
                  rows="2"
                  ${isEditMode ? '' : 'disabled readonly'}>${card.title || ''}</textarea>
@@ -5797,6 +5846,7 @@ function populateDataFromSheet(data) {
   updateExtrasSection(data.extras_json);
   updateLessonCards('skills', data.skills_lessons_json);
   updateLessonCards('math', data.math_lessons_json);
+  updateLessonCards('listening', data.listening_lessons_json);
   updateGradesSection(data);
   updateAboutMeSection(data);
   updateAboutMeWilliams(data.about_me_williams_text);
@@ -5839,6 +5889,9 @@ function populateDataFromSheet(data) {
   
   // Load Math Modules data
   updateMathModulesData(data.math_modules_json);
+  
+  // Load Listening Units data
+  updateListeningUnitsData(data.listening_units_json);
   
   // Initialize and load volunteer data
   initializeVolunteerMonths();
@@ -7872,7 +7925,7 @@ async function saveExtrasCards() {
 
 // Function to save lesson cards
 async function saveLessonCards(subject) {
-  const saveBtnId = subject === 'skills' ? 'saveSkillsLessonsBtn' : 'saveMathLessonsBtn';
+  const saveBtnId = subject === 'skills' ? 'saveSkillsLessonsBtn' : (subject === 'listening' ? 'saveListeningLessonsBtn' : 'saveMathLessonsBtn');
   const saveBtn = document.getElementById(saveBtnId);
   
   if (!saveBtn) return;
@@ -7928,7 +7981,7 @@ async function saveLessonCards(subject) {
     }
     
     // Prepare data for saving
-    const dataField = subject === 'skills' ? 'skills_lessons_json' : 'math_lessons_json';
+    const dataField = subject === 'skills' ? 'skills_lessons_json' : (subject === 'listening' ? 'listening_lessons_json' : 'math_lessons_json');
     const data = {};
     data[dataField] = JSON.stringify({ weekdays, cards });
     
@@ -8938,7 +8991,7 @@ function renderCurrentModule(type) {
   if (!content) return;
   
   const moduleData = currentModuleData[type];
-  const options = type === 'skills' ? skillsUnitsOptions : mathModulesOptions;
+  const options = type === 'skills' ? skillsUnitsOptions : (type === 'listening' ? listeningUnitsOptions : mathModulesOptions);
   
   if (isEditMode) {
     // Edit mode: show dropdown and input field
@@ -8950,11 +9003,11 @@ function renderCurrentModule(type) {
     content.innerHTML = `
       <div class="space-y-3">
         <div>
-          <label class="block text-sm font-semibold mb-2" style="color: var(--md-slate);">Select ${type === 'skills' ? 'Unit' : 'Module'}:</label>
+          <label class="block text-sm font-semibold mb-2" style="color: var(--md-slate);">Select ${(type === 'skills' || type === 'listening') ? 'Unit' : 'Module'}:</label>
           <select id="${type}ModuleSelect" 
                   class="w-full px-4 py-2 border rounded-lg text-sm"
                   onchange="updateCurrentModuleSelection('${type}')">
-            <option value="">-- Select ${type === 'skills' ? 'Unit' : 'Module'} --</option>
+            <option value="">-- Select ${(type === 'skills' || type === 'listening') ? 'Unit' : 'Module'} --</option>
             ${dropdownHtml}
           </select>
         </div>
@@ -8987,7 +9040,7 @@ function renderCurrentModule(type) {
         </div>
       `;
     } else {
-      const itemType = type === 'skills' ? 'unit' : 'module';
+      const itemType = (type === 'skills' || type === 'listening') ? 'unit' : 'module';
       content.innerHTML = `<p class="text-center text-gray-500 py-4 text-sm">No ${itemType} selected yet.</p>`;
     }
   }
@@ -9020,7 +9073,7 @@ async function saveCurrentModule(type) {
     
     // Validate that both module and link are selected
     if (!currentModuleData[type].moduleId || !currentModuleData[type].link) {
-      const itemType = type === 'skills' ? 'unit' : 'module';
+      const itemType = (type === 'skills' || type === 'listening') ? 'unit' : 'module';
       alert(`Please select a ${itemType} and provide a valid Google Sheets link (https://docs.google.com/spreadsheets/...)`);
       return;
     }
@@ -9034,7 +9087,7 @@ async function saveCurrentModule(type) {
       current_module_json: JSON.stringify(currentModuleData)
     };
     
-    const itemType = type === 'skills' ? 'Unit' : 'Module';
+    const itemType = (type === 'skills' || type === 'listening') ? 'Unit' : 'Module';
     console.log(`Saving ${type} Current ${itemType} to Firestore:`, currentModuleData[type]);
     
     // Save to Firestore
@@ -9052,7 +9105,7 @@ async function saveCurrentModule(type) {
     }, 2000);
     
   } catch (error) {
-    const itemType = type === 'skills' ? 'unit' : 'module';
+    const itemType = (type === 'skills' || type === 'listening') ? 'unit' : 'module';
     console.error(`Failed to save ${type} Current ${itemType}:`, error);
     // Use generic error message for better user experience
     alert(`Failed to save ${itemType}. Please try again or contact support if the problem persists.`);
@@ -9076,17 +9129,20 @@ function updateCurrentModuleData(jsonString) {
     const data = JSON.parse(jsonString);
     currentModuleData.skills = data.skills || { moduleId: '', link: '' };
     currentModuleData.math = data.math || { moduleId: '', link: '' };
+    currentModuleData.listening = data.listening || { moduleId: '', link: '' };
   } catch (e) {
     console.error('Failed to parse Current Module JSON:', e);
     currentModuleData = {
       skills: { moduleId: '', link: '' },
-      math: { moduleId: '', link: '' }
+      math: { moduleId: '', link: '' },
+      listening: { moduleId: '', link: '' }
     };
   }
   
   // Render Current Module sections after data is loaded
   renderCurrentModule('skills');
   renderCurrentModule('math');
+  renderCurrentModule('listening');
 }
 
 // ============================================
@@ -9796,6 +9852,149 @@ function renderMathModules() {
 }
 
 
+// ============================================
+// RENDER LISTENING UNITS
+// ============================================
+function renderListeningUnits() {
+  const container = document.getElementById('listeningUnitsContainer');
+  if (!container) return;
+  
+  const isEditMode = document.body.classList.contains('editing');
+  initializeListeningUnits();
+  
+  container.innerHTML = '';
+  
+  listeningUnitsData.forEach((unit, unitIndex) => {
+    const unitDiv = document.createElement('div');
+    unitDiv.className = 'rounded-2xl shadow-soft p-6 bg-white';
+    unitDiv.setAttribute('data-listening-unit-index', unitIndex);
+    
+    // Unit header
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'flex items-center justify-between mb-4 cursor-pointer';
+    headerDiv.onclick = () => toggleListeningUnit(unitIndex);
+    
+    const titleContainer = document.createElement('div');
+    titleContainer.className = 'flex flex-col gap-1';
+    
+    const titleRow = document.createElement('div');
+    titleRow.className = 'flex items-center gap-3';
+    
+    const toggleIcon = document.createElement('span');
+    toggleIcon.className = 'toggle-icon text-xl';
+    toggleIcon.textContent = '▶';
+    toggleIcon.style.color = 'var(--md-coral)';
+    toggleIcon.setAttribute('data-listening-toggle-icon', unitIndex);
+    
+    const titleEl = document.createElement('h3');
+    titleEl.className = 'text-xl font-display font-bold';
+    titleEl.style.color = 'var(--md-coral)';
+    titleEl.contentEditable = isEditMode;
+    titleEl.textContent = unit.title;
+    titleEl.onclick = (e) => {
+      if (isEditMode) {
+        e.stopPropagation();
+      }
+    };
+    titleEl.addEventListener('blur', () => {
+      listeningUnitsData[unitIndex].title = titleEl.textContent;
+    });
+    
+    titleRow.appendChild(toggleIcon);
+    titleRow.appendChild(titleEl);
+    titleContainer.appendChild(titleRow);
+    headerDiv.appendChild(titleContainer);
+    unitDiv.appendChild(headerDiv);
+    
+    // Sections container
+    const sectionsContainer = document.createElement('div');
+    sectionsContainer.className = 'space-y-4';
+    sectionsContainer.style.display = 'none';
+    sectionsContainer.setAttribute('data-listening-sections-container', unitIndex);
+    
+    unit.sections.forEach((section, sectionIndex) => {
+      const sectionDiv = document.createElement('div');
+      sectionDiv.className = 'p-4 rounded-lg';
+      sectionDiv.style.background = 'color-mix(in oklab, var(--md-white) 70%, var(--md-coral) 30%)';
+      sectionDiv.style.border = '1px solid color-mix(in oklab, var(--md-coral) 40%, var(--md-white) 60%)';
+      
+      const sectionTitle = document.createElement('h4');
+      sectionTitle.className = 'font-semibold mb-2';
+      sectionTitle.style.color = 'var(--md-coral)';
+      sectionTitle.contentEditable = isEditMode;
+      sectionTitle.textContent = section.title;
+      sectionTitle.addEventListener('blur', () => {
+        listeningUnitsData[unitIndex].sections[sectionIndex].title = sectionTitle.textContent;
+      });
+      sectionDiv.appendChild(sectionTitle);
+      
+      const bulletsList = document.createElement('ul');
+      bulletsList.className = 'list-disc pl-5 space-y-1';
+      
+      if (section.bullets.length === 0) {
+        const emptyMessage = document.createElement('li');
+        emptyMessage.className = 'text-gray-400 text-sm';
+        emptyMessage.textContent = 'No content yet';
+        bulletsList.appendChild(emptyMessage);
+      } else {
+        section.bullets.forEach((bullet, bulletIndex) => {
+          const bulletLi = document.createElement('li');
+          bulletLi.className = 'text-sm';
+          bulletLi.contentEditable = isEditMode;
+          bulletLi.textContent = bullet;
+          bulletLi.addEventListener('blur', () => {
+            listeningUnitsData[unitIndex].sections[sectionIndex].bullets[bulletIndex] = bulletLi.textContent;
+          });
+          bulletsList.appendChild(bulletLi);
+        });
+      }
+      
+      sectionDiv.appendChild(bulletsList);
+      
+      if (isEditMode) {
+        const addBulletBtn = document.createElement('button');
+        addBulletBtn.className = 'mt-2 px-3 py-1 text-xs rounded';
+        addBulletBtn.style.background = 'var(--md-coral)';
+        addBulletBtn.style.color = 'white';
+        addBulletBtn.textContent = '+ Add Bullet';
+        addBulletBtn.onclick = (e) => {
+          e.stopPropagation();
+          listeningUnitsData[unitIndex].sections[sectionIndex].bullets.push('New bullet point');
+          renderListeningUnits();
+        };
+        sectionDiv.appendChild(addBulletBtn);
+      }
+      
+      sectionsContainer.appendChild(sectionDiv);
+    });
+    
+    unitDiv.appendChild(sectionsContainer);
+    container.appendChild(unitDiv);
+  });
+}
+
+// Toggle listening unit expansion
+function toggleListeningUnit(unitIndex) {
+  const allContainers = document.querySelectorAll('[data-listening-sections-container]');
+  const allIcons = document.querySelectorAll('[data-listening-toggle-icon]');
+  
+  const container = document.querySelector(`[data-listening-sections-container="${unitIndex}"]`);
+  const icon = document.querySelector(`[data-listening-toggle-icon="${unitIndex}"]`);
+  
+  const isCurrentlyExpanded = container.style.display !== 'none';
+  
+  // Collapse all
+  allContainers.forEach(c => c.style.display = 'none');
+  allIcons.forEach(i => i.textContent = '▶');
+  
+  // Expand clicked if it was collapsed
+  if (!isCurrentlyExpanded) {
+    container.style.display = 'block';
+    icon.textContent = '▼';
+  }
+}
+
+
 // Toggle math module expansion
 function toggleMathModule(moduleIndex) {
   const allContainers = document.querySelectorAll('[data-math-sections-container]');
@@ -10128,6 +10327,105 @@ function updateMathModulesData(modulesJson) {
 }
 
 
+// ============================================
+// LISTENING UNITS FUNCTIONS
+// ============================================
+
+async function saveListeningUnits() {
+  try {
+    await ensureAuthenticated();
+    
+    const data = {
+      listening_units_json: JSON.stringify(listeningUnitsData)
+    };
+    
+    console.log('Saving listening units to Firestore:', listeningUnitsData);
+    await db.collection('classData').doc('current').set(data, { merge: true });
+    
+    alert('✅ Listening units saved successfully!');
+  } catch (error) {
+    console.error('Failed to save listening units:', error);
+    alert(`Failed to save: ${error.message}`);
+  }
+}
+
+// Update listening units from Firestore data
+function updateListeningUnitsData(unitsJson) {
+  if (!unitsJson) {
+    initializeListeningUnits();
+  } else {
+    try {
+      listeningUnitsData = JSON.parse(unitsJson);
+      
+      // Migrate old data structure (cards) to new structure (sections)
+      listeningUnitsData = listeningUnitsData.map(unit => {
+        // If unit has old 'cards' structure, migrate it
+        if (unit.cards && !unit.sections) {
+          // Extract text content from old cards and convert to bullets
+          const bullets = unit.cards.map(card => {
+            // Strip HTML tags and get plain text
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = card.content || '';
+            return tempDiv.textContent.trim() || 'Migrated content';
+          }).filter(text => text && text !== 'Click to edit...');
+          
+          return {
+            title: unit.title,
+            sections: [
+              { title: 'Section 1', bullets: bullets.length > 0 ? bullets : [] },
+              { title: 'Section 2', bullets: [] },
+              { title: 'Section 3', bullets: [] }
+            ]
+          };
+        }
+        // Ensure each unit has 3 sections
+        if (!unit.sections || unit.sections.length < 3) {
+          const sections = unit.sections || [];
+          while (sections.length < 3) {
+            sections.push({
+              title: `Section ${sections.length + 1}`,
+              bullets: []
+            });
+          }
+          return { ...unit, sections };
+        }
+        return unit;
+      });
+      
+      // Ensure we have 7 units
+      while (listeningUnitsData.length < 7) {
+        listeningUnitsData.push({
+          title: `Unit ${listeningUnitsData.length + 1}`,
+          sections: [
+            { title: 'Section 1', bullets: [] },
+            { title: 'Section 2', bullets: [] },
+            { title: 'Section 3', bullets: [] }
+          ]
+        });
+      }
+    } catch (e) {
+      console.error('Failed to parse listening units JSON:', e);
+      initializeListeningUnits();
+    }
+  }
+}
+
+// Initialize listening units with default structure
+function initializeListeningUnits() {
+  listeningUnitsData = [];
+  for (let i = 1; i <= 7; i++) {
+    listeningUnitsData.push({
+      title: `Unit ${i}`,
+      sections: [
+        { title: 'Section 1', bullets: [] },
+        { title: 'Section 2', bullets: [] },
+        { title: 'Section 3', bullets: [] }
+      ]
+    });
+  }
+}
+
+
 function updateWatchMeData(watchMeJson) {
   if (!watchMeJson) {
     // Initialize with empty arrays if no data
@@ -10236,6 +10534,15 @@ function getDefaultFallbackData() {
     extras_json: JSON.stringify([]),
     skills_lessons_json: JSON.stringify([]),
     math_lessons_json: JSON.stringify([]),
+    listening_lessons_json: JSON.stringify([]),
+    skills_units_json: JSON.stringify([]),
+    math_modules_json: JSON.stringify([]),
+    listening_units_json: JSON.stringify([]),
+    current_module_json: JSON.stringify({
+      skills: { moduleId: '', link: '' },
+      math: { moduleId: '', link: '' },
+      listening: { moduleId: '', link: '' }
+    }),
     about_me_html: "Welcome to our classroom!",
     fun_facts_html: ["I love teaching first grade!", "Reading is my favorite subject", "I enjoy outdoor activities"],
     photo_urls_json: JSON.stringify([]),
