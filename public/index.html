@@ -762,6 +762,20 @@
         </p>
       </div>
       
+      <!-- This Week's Lessons Section for Skills -->
+      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-display font-bold" style="color: var(--md-coral);">📚 This Week's Lessons</h2>
+          <div class="edit-only flex gap-2" style="display: none;">
+            <button id="saveSkillsLessonsBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveLessonCards('skills')">💾 Save</button>
+            <button id="addSkillsLessonCardBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="addLessonCard('skills')">+ Add Card</button>
+          </div>
+        </div>
+        <div id="skillsLessonsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          <!-- Lesson cards will be populated by JavaScript -->
+        </div>
+      </div>
+      
       <!-- Section 3: Vocabulary and Strategies + View by Unit Button (Bottom Section) -->
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
         <div class="flex items-center justify-between mb-4">
@@ -831,6 +845,20 @@
         <p class="leading-relaxed" data-edit="teacher" contenteditable="false">
           We're exploring number patterns and building addition skills using hands-on manipulatives and fun games. Students are learning to count by 2s, 5s, and 10s while practicing addition facts within 20.
         </p>
+      </div>
+      
+      <!-- This Week's Lessons Section for Math -->
+      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-display font-bold" style="color: var(--md-slate);">📚 This Week's Lessons</h2>
+          <div class="edit-only flex gap-2" style="display: none;">
+            <button id="saveMathLessonsBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="saveLessonCards('math')">💾 Save</button>
+            <button id="addMathLessonCardBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="addLessonCard('math')">+ Add Card</button>
+          </div>
+        </div>
+        <div id="mathLessonsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          <!-- Lesson cards will be populated by JavaScript -->
+        </div>
       </div>
       
       <!-- Section 3: Vocabulary and Strategies + View by Module Button (Bottom Section) -->
@@ -2066,6 +2094,29 @@
         btn.style.display = 'inline-block';
       });
       
+      // Enable This Week's Lessons section for both Skills and Math
+      ['skills', 'math'].forEach(subject => {
+        const grid = document.getElementById(subject + 'LessonsGrid');
+        if (grid) {
+          // Enable all lesson card inputs
+          grid.querySelectorAll('.lesson-day, .lesson-title').forEach(input => {
+            input.disabled = false;
+            input.readOnly = false;
+          });
+          // Show delete buttons on cards
+          grid.querySelectorAll('.lesson-card button').forEach(btn => {
+            btn.style.display = 'inline-block';
+          });
+        }
+        // Show save and add buttons
+        const saveBtn = document.getElementById((subject === 'skills' ? 'saveSkills' : 'saveMath') + 'LessonsBtn');
+        const addBtn = document.getElementById((subject === 'skills' ? 'addSkills' : 'addMath') + 'LessonCardBtn');
+        if (saveBtn) saveBtn.style.display = 'inline-block';
+        if (addBtn) addBtn.style.display = 'inline-block';
+        // Update add button visibility based on card count
+        updateAddCardButtonVisibility(subject);
+      });
+      
       // Enable Transportation instructions section
       const transportationInstructionsTextarea = document.getElementById('transportationInstructionsTextarea');
       const saveTransportationInstructionsBtn = document.getElementById('saveTransportationInstructionsBtn');
@@ -2227,6 +2278,27 @@
       });
       document.querySelectorAll('#extrasGrid button[onclick*="remove"]').forEach(btn => {
         btn.style.display = 'none';
+      });
+      
+      // Disable This Week's Lessons section for both Skills and Math
+      ['skills', 'math'].forEach(subject => {
+        const grid = document.getElementById(subject + 'LessonsGrid');
+        if (grid) {
+          // Disable all lesson card inputs
+          grid.querySelectorAll('.lesson-day, .lesson-title').forEach(input => {
+            input.disabled = true;
+            input.readOnly = true;
+          });
+          // Hide delete buttons on cards
+          grid.querySelectorAll('.lesson-card button').forEach(btn => {
+            btn.style.display = 'none';
+          });
+        }
+        // Hide save and add buttons
+        const saveBtn = document.getElementById((subject === 'skills' ? 'saveSkills' : 'saveMath') + 'LessonsBtn');
+        const addBtn = document.getElementById((subject === 'skills' ? 'addSkills' : 'addMath') + 'LessonCardBtn');
+        if (saveBtn) saveBtn.style.display = 'none';
+        if (addBtn) addBtn.style.display = 'none';
       });
       
       // Disable Transportation instructions section
@@ -3162,6 +3234,64 @@
         sel.addRange(range);
       }
     }
+    
+    // This Week's Lessons: Add lesson card
+    function addLessonCard(subject) {
+      const grid = document.getElementById(subject + 'LessonsGrid');
+      if (!grid) return;
+      
+      // Check if we already have 5 cards
+      const currentCards = grid.querySelectorAll('.lesson-card');
+      if (currentCards.length >= 5) {
+        alert('Maximum of 5 lesson cards reached.');
+        return;
+      }
+      
+      // Create new lesson card
+      const newCard = document.createElement('div');
+      newCard.className = 'lesson-card p-4 rounded-xl relative';
+      
+      // Set color based on subject
+      const color = subject === 'skills' ? 'var(--md-coral)' : 'var(--md-slate)';
+      newCard.style.background = 'color-mix(in oklab, var(--md-white) 80%, ' + color + ' 20%)';
+      newCard.style.border = '2px solid color-mix(in oklab, ' + color + ' 40%, var(--md-white) 60%)';
+      
+      newCard.innerHTML = `
+        <button class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-lg edit-only" style="display: inline-block;" onclick="this.closest('.lesson-card').remove(); updateAddCardButtonVisibility('${subject}');" title="Delete Card">🗑️</button>
+        <div class="mb-3">
+          <input type="text" class="lesson-day w-full px-2 py-1 text-center font-bold text-lg border-0 rounded" 
+                 style="background: transparent; font-family: 'Comic Sans MS', cursive; color: ${color};" 
+                 placeholder="Day of Week" 
+                 value="Monday">
+        </div>
+        <div>
+          <input type="text" class="lesson-title w-full px-2 py-1 text-center text-sm border-0 rounded" 
+                 style="background: transparent;" 
+                 placeholder="Lesson Title & Number" 
+                 value="Lesson 1: Getting Started">
+        </div>
+      `;
+      
+      grid.appendChild(newCard);
+      
+      // Update button visibility
+      updateAddCardButtonVisibility(subject);
+    }
+    
+    // Update Add Card button visibility based on card count
+    function updateAddCardButtonVisibility(subject) {
+      const grid = document.getElementById(subject + 'LessonsGrid');
+      const addBtn = document.getElementById('add' + (subject === 'skills' ? 'Skills' : 'Math') + 'LessonCardBtn');
+      if (!grid || !addBtn) return;
+      
+      const currentCards = grid.querySelectorAll('.lesson-card');
+      if (currentCards.length >= 5) {
+        addBtn.style.display = 'none';
+      } else {
+        addBtn.style.display = 'inline-block';
+      }
+    }
+    
     // Specials galleries: enhanced functionality
     function prevGalleryImg(btn) {
       const galleryContainer = btn.closest('.gallery-imgs');
@@ -5049,6 +5179,50 @@ function updateExtrasSection(extras_json) {
   });
 }
 
+function updateLessonCards(subject, lessons_json) {
+  const grid = document.getElementById(subject + 'LessonsGrid');
+  if (!grid) return;
+  
+  const arr = parseArray(lessons_json);
+  grid.innerHTML = '';
+  
+  // Get color based on subject
+  const color = subject === 'skills' ? 'var(--md-coral)' : 'var(--md-slate)';
+  
+  arr.forEach(lesson => {
+    const day = lesson.day || '';
+    const title = lesson.title || '';
+    
+    const card = document.createElement('div');
+    card.className = 'lesson-card p-4 rounded-xl relative';
+    card.style.background = 'color-mix(in oklab, var(--md-white) 80%, ' + color + ' 20%)';
+    card.style.border = '2px solid color-mix(in oklab, ' + color + ' 40%, var(--md-white) 60%)';
+    
+    card.innerHTML = `
+      <button class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-lg edit-only" style="display: none;" onclick="this.closest('.lesson-card').remove(); updateAddCardButtonVisibility('${subject}');" title="Delete Card">🗑️</button>
+      <div class="mb-3">
+        <input type="text" class="lesson-day w-full px-2 py-1 text-center font-bold text-lg border-0 rounded" 
+               style="background: transparent; font-family: 'Comic Sans MS', cursive; color: ${color};" 
+               placeholder="Day of Week" 
+               value="${day}"
+               disabled readonly>
+      </div>
+      <div>
+        <input type="text" class="lesson-title w-full px-2 py-1 text-center text-sm border-0 rounded" 
+               style="background: transparent;" 
+               placeholder="Lesson Title & Number" 
+               value="${title}"
+               disabled readonly>
+      </div>
+    `;
+    
+    grid.appendChild(card);
+  });
+  
+  // Update button visibility
+  updateAddCardButtonVisibility(subject);
+}
+
 function updateGradesSection(data) {
   if (!data) return;
   
@@ -5198,6 +5372,8 @@ function populateDataFromSheet(data) {
   updateListeningSection(data.listening_text, data.ask_json);
   updateMathSection(data.math_text, data.math_vocab_json);
   updateExtrasSection(data.extras_json);
+  updateLessonCards('skills', data.skills_lessons_json);
+  updateLessonCards('math', data.math_lessons_json);
   updateGradesSection(data);
   updateAboutMeSection(data);
   updateAboutMeWilliams(data.about_me_williams_text);
@@ -7263,6 +7439,68 @@ async function saveExtrasCards() {
     
   } catch (error) {
     console.error('Failed to save extras cards:', error);
+    saveBtn.textContent = '❌ Save Failed';
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 2000);
+  }
+}
+
+// Function to save lesson cards
+async function saveLessonCards(subject) {
+  const saveBtnId = subject === 'skills' ? 'saveSkillsLessonsBtn' : 'saveMathLessonsBtn';
+  const saveBtn = document.getElementById(saveBtnId);
+  
+  if (!saveBtn) return;
+  
+  const originalText = saveBtn.textContent;
+  
+  try {
+    // Check authentication
+    await ensureAuthenticated();
+    
+    // Show saving state
+    saveBtn.textContent = '⏳ Saving...';
+    saveBtn.disabled = true;
+    
+    // Collect lesson cards data
+    const grid = document.getElementById(subject + 'LessonsGrid');
+    const lessons = [];
+    
+    if (grid) {
+      grid.querySelectorAll('.lesson-card').forEach(card => {
+        const dayInput = card.querySelector('.lesson-day');
+        const titleInput = card.querySelector('.lesson-title');
+        
+        if (dayInput && titleInput) {
+          lessons.push({
+            day: dayInput.value || '',
+            title: titleInput.value || ''
+          });
+        }
+      });
+    }
+    
+    // Prepare data for saving
+    const dataField = subject === 'skills' ? 'skills_lessons_json' : 'math_lessons_json';
+    const data = {};
+    data[dataField] = JSON.stringify(lessons);
+    
+    // Save to Firestore
+    await db.collection('classData').doc('current').set(data, { merge: true });
+    
+    // Show success state
+    saveBtn.textContent = '✅ Saved!';
+    
+    // Reset button after 1 second
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }, 1000);
+    
+  } catch (error) {
+    console.error('Failed to save lesson cards:', error);
     saveBtn.textContent = '❌ Save Failed';
     setTimeout(() => {
       saveBtn.textContent = originalText;
@@ -9551,6 +9789,8 @@ function getDefaultFallbackData() {
     math_text: "We explored numbers and counting patterns.",
     math_vocab_json: JSON.stringify(["add", "subtract", "count", "pattern"]),
     extras_json: JSON.stringify([]),
+    skills_lessons_json: JSON.stringify([]),
+    math_lessons_json: JSON.stringify([]),
     about_me_html: "Welcome to our classroom!",
     fun_facts_html: ["I love teaching first grade!", "Reading is my favorite subject", "I enjoy outdoor activities"],
     photo_urls_json: JSON.stringify([]),
