@@ -3280,12 +3280,49 @@
     function removeLessonCard(btn, subject) {
       const card = btn.closest('.lesson-card');
       if (card) {
+        const weekdayBox = card.closest('.weekday-box');
         const container = card.parentElement;
-        container.innerHTML = '';
+        const dayIndex = parseInt(weekdayBox.dataset.dayIndex);
         
-        // Show placeholder again
-        const weekdayBox = container.closest('.weekday-box');
-        updateWeekdayBoxDisplay(weekdayBox, subject);
+        // Try to get existing placeholder text from data attribute, or default to "No Lesson"
+        let placeholderTextContent = weekdayBox.dataset.placeholder || 'No Lesson';
+        
+        // Remove the card
+        card.remove();
+        
+        // Recreate placeholder
+        const color = subject === 'skills' ? 'var(--md-coral)' : 'var(--md-slate)';
+        const isEditMode = document.body.classList.contains('editing');
+        
+        const placeholder = document.createElement('div');
+        placeholder.className = 'lesson-placeholder text-center py-8 cursor-pointer';
+        placeholder.style.color = 'color-mix(in oklab, ' + color + ' 50%, var(--md-white) 50%)';
+        
+        const placeholderText = document.createElement('div');
+        placeholderText.className = 'placeholder-text text-sm italic';
+        placeholderText.contentEditable = isEditMode;
+        placeholderText.textContent = placeholderTextContent;
+        if (isEditMode) {
+          placeholderText.style.outline = '1px dashed ' + color;
+          placeholderText.style.outlineOffset = '2px';
+          placeholderText.style.display = 'inline-block';
+          placeholderText.style.padding = '4px 8px';
+        }
+        placeholder.appendChild(placeholderText);
+        
+        // Add click hint in edit mode
+        if (isEditMode) {
+          const clickHint = document.createElement('div');
+          clickHint.className = 'click-hint text-xs mt-2';
+          clickHint.style.color = 'color-mix(in oklab, ' + color + ' 40%, var(--md-white) 60%)';
+          clickHint.textContent = '(Click to add)';
+          placeholder.appendChild(clickHint);
+          
+          // Add click handler
+          placeholder.addEventListener('click', () => addOrEditLessonCard(subject, dayIndex));
+        }
+        
+        container.appendChild(placeholder);
       }
     }
     
@@ -3309,21 +3346,21 @@
       }
     }
     
-    // Drag and drop handlers
-    let draggedCard = null;
-    let sourceContainer = null;
+    // Drag and drop handlers for lesson cards
+    let lessonDraggedCard = null;
+    let lessonSourceContainer = null;
     
     function handleDragStart(e) {
-      draggedCard = e.target;
-      sourceContainer = draggedCard.parentElement;
+      lessonDraggedCard = e.target;
+      lessonSourceContainer = lessonDraggedCard.parentElement;
       e.dataTransfer.effectAllowed = 'move';
-      draggedCard.style.opacity = '0.5';
+      lessonDraggedCard.style.opacity = '0.5';
     }
     
     function handleDragEnd(e) {
-      draggedCard.style.opacity = '1';
-      draggedCard = null;
-      sourceContainer = null;
+      lessonDraggedCard.style.opacity = '1';
+      lessonDraggedCard = null;
+      lessonSourceContainer = null;
     }
     
     function handleDragOver(e) {
@@ -3342,18 +3379,18 @@
       const targetContainer = e.currentTarget.querySelector('.lesson-card-container');
       const existingCard = targetContainer.querySelector('.lesson-card');
       
-      if (draggedCard && targetContainer !== sourceContainer) {
+      if (lessonDraggedCard && targetContainer !== lessonSourceContainer) {
         // If target has a card, swap them
         if (existingCard) {
-          sourceContainer.appendChild(existingCard);
+          lessonSourceContainer.appendChild(existingCard);
         }
         
         // Move dragged card to target
         targetContainer.innerHTML = '';
-        targetContainer.appendChild(draggedCard);
+        targetContainer.appendChild(lessonDraggedCard);
         
         // Update displays
-        const sourceBox = sourceContainer.closest('.weekday-box');
+        const sourceBox = lessonSourceContainer.closest('.weekday-box');
         const targetBox = targetContainer.closest('.weekday-box');
         updateWeekdayBoxDisplay(sourceBox, subject);
         updateWeekdayBoxDisplay(targetBox, subject);
@@ -3379,6 +3416,11 @@
         // Get placeholder text
         const placeholderEl = box.querySelector('.placeholder-text');
         const placeholder = placeholderEl ? placeholderEl.textContent.trim() : 'No Lesson';
+        
+        // Update data-placeholder attribute to keep it in sync
+        if (placeholder) {
+          box.dataset.placeholder = placeholder;
+        }
         
         weekdays.push({ title, placeholder });
         
@@ -5342,6 +5384,7 @@ function updateLessonCards(subject, lessons_data) {
     weekdayBox.style.border = '2px dashed color-mix(in oklab, ' + color + ' 30%, var(--md-white) 70%)';
     weekdayBox.style.minHeight = '160px';
     weekdayBox.dataset.dayIndex = index;
+    weekdayBox.dataset.placeholder = weekday.placeholder || 'No Lesson';
     
     // Add drag-and-drop event listeners
     weekdayBox.addEventListener('dragover', handleDragOver);
@@ -7712,6 +7755,11 @@ async function saveLessonCards(subject) {
         // Get placeholder text
         const placeholderEl = box.querySelector('.placeholder-text');
         const placeholder = placeholderEl ? placeholderEl.textContent.trim() : 'No Lesson';
+        
+        // Update data-placeholder attribute to keep it in sync
+        if (placeholder) {
+          box.dataset.placeholder = placeholder;
+        }
         
         weekdays.push({ title, placeholder });
         
