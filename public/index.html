@@ -3253,10 +3253,10 @@
                    value="Lesson 1">
           </div>
           <div>
-            <input type="text" class="lesson-title w-full px-2 py-1 text-center text-sm border-0 rounded" 
-                   style="background: transparent; word-wrap: break-word; white-space: normal;" 
+            <textarea class="lesson-title w-full px-2 py-1 text-center text-sm border-0 rounded resize-none" 
+                   style="background: transparent; overflow-wrap: break-word; white-space: pre-wrap; min-height: 2.5em;" 
                    placeholder="Lesson Title" 
-                   value="Getting Started">
+                   rows="2">Getting Started</textarea>
           </div>
         `;
         
@@ -3272,6 +3272,15 @@
         if (numberInput) {
           numberInput.focus();
           numberInput.select();
+        }
+        
+        // Add auto-resize to textarea
+        const titleTextarea = newCard.querySelector('.lesson-title');
+        if (titleTextarea) {
+          titleTextarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+          });
         }
       }
     }
@@ -3300,9 +3309,9 @@
         
         const placeholderText = document.createElement('div');
         placeholderText.className = 'placeholder-text text-sm italic';
-        placeholderText.contentEditable = isEditMode;
         placeholderText.textContent = placeholderTextContent;
         if (isEditMode) {
+          placeholderText.contentEditable = true;
           placeholderText.style.outline = '1px dashed ' + color;
           placeholderText.style.outlineOffset = '2px';
           placeholderText.style.display = 'inline-block';
@@ -3310,16 +3319,42 @@
         }
         placeholder.appendChild(placeholderText);
         
-        // Add click hint in edit mode
+        // Add buttons in edit mode
         if (isEditMode) {
-          const clickHint = document.createElement('div');
-          clickHint.className = 'click-hint text-xs mt-2';
-          clickHint.style.color = 'color-mix(in oklab, ' + color + ' 40%, var(--md-white) 60%)';
-          clickHint.textContent = '(Click to add)';
-          placeholder.appendChild(clickHint);
+          const buttonsDiv = document.createElement('div');
+          buttonsDiv.className = 'flex gap-2 justify-center mt-3';
           
-          // Add click handler
-          placeholder.addEventListener('click', () => addOrEditLessonCard(subject, dayIndex));
+          const addCardBtn = document.createElement('button');
+          addCardBtn.className = 'px-3 py-1 rounded text-white text-xs font-semibold hover:opacity-80 transition-opacity';
+          addCardBtn.style.background = color;
+          addCardBtn.textContent = '+ Add Card';
+          addCardBtn.onclick = (e) => {
+            e.stopPropagation();
+            addOrEditLessonCard(subject, dayIndex);
+          };
+          
+          const editPlaceholderBtn = document.createElement('button');
+          editPlaceholderBtn.className = 'px-3 py-1 rounded text-xs font-semibold hover:opacity-80 transition-opacity';
+          editPlaceholderBtn.style.background = 'color-mix(in oklab, var(--md-white) 60%, ' + color + ' 40%)';
+          editPlaceholderBtn.style.color = color;
+          editPlaceholderBtn.style.border = '1px solid ' + color;
+          editPlaceholderBtn.textContent = '✏️ Edit Placeholder';
+          editPlaceholderBtn.onclick = (e) => {
+            e.stopPropagation();
+            placeholderText.focus();
+            // Select all text for immediate editing
+            if (window.getSelection && document.createRange) {
+              const range = document.createRange();
+              range.selectNodeContents(placeholderText);
+              const sel = window.getSelection();
+              sel.removeAllRanges();
+              sel.addRange(range);
+            }
+          };
+          
+          buttonsDiv.appendChild(addCardBtn);
+          buttonsDiv.appendChild(editPlaceholderBtn);
+          placeholder.appendChild(buttonsDiv);
         }
         
         container.appendChild(placeholder);
@@ -3385,9 +3420,76 @@
           lessonSourceContainer.appendChild(existingCard);
         }
         
-        // Move dragged card to target
-        targetContainer.innerHTML = '';
+        // Move dragged card to target (clear placeholder if target is empty)
+        if (!existingCard) {
+          targetContainer.innerHTML = '';
+        }
         targetContainer.appendChild(lessonDraggedCard);
+        
+        // If source container is now empty, recreate placeholder
+        if (!existingCard) {
+          const sourceBox = lessonSourceContainer.closest('.weekday-box');
+          const dayIndex = parseInt(sourceBox.dataset.dayIndex);
+          const placeholderTextContent = sourceBox.dataset.placeholder || 'No Lesson';
+          const color = subject === 'skills' ? 'var(--md-coral)' : 'var(--md-slate)';
+          const isEditMode = document.body.classList.contains('editing');
+          
+          const placeholder = document.createElement('div');
+          placeholder.className = 'lesson-placeholder text-center py-8 cursor-pointer';
+          placeholder.style.color = 'color-mix(in oklab, ' + color + ' 50%, var(--md-white) 50%)';
+          
+          const placeholderText = document.createElement('div');
+          placeholderText.className = 'placeholder-text text-sm italic';
+          placeholderText.textContent = placeholderTextContent;
+          if (isEditMode) {
+            placeholderText.contentEditable = true;
+            placeholderText.style.outline = '1px dashed ' + color;
+            placeholderText.style.outlineOffset = '2px';
+            placeholderText.style.display = 'inline-block';
+            placeholderText.style.padding = '4px 8px';
+          }
+          placeholder.appendChild(placeholderText);
+          
+          // Add buttons in edit mode
+          if (isEditMode) {
+            const buttonsDiv = document.createElement('div');
+            buttonsDiv.className = 'flex gap-2 justify-center mt-3';
+            
+            const addCardBtn = document.createElement('button');
+            addCardBtn.className = 'px-3 py-1 rounded text-white text-xs font-semibold hover:opacity-80 transition-opacity';
+            addCardBtn.style.background = color;
+            addCardBtn.textContent = '+ Add Card';
+            addCardBtn.onclick = (e) => {
+              e.stopPropagation();
+              addOrEditLessonCard(subject, dayIndex);
+            };
+            
+            const editPlaceholderBtn = document.createElement('button');
+            editPlaceholderBtn.className = 'px-3 py-1 rounded text-xs font-semibold hover:opacity-80 transition-opacity';
+            editPlaceholderBtn.style.background = 'color-mix(in oklab, var(--md-white) 60%, ' + color + ' 40%)';
+            editPlaceholderBtn.style.color = color;
+            editPlaceholderBtn.style.border = '1px solid ' + color;
+            editPlaceholderBtn.textContent = '✏️ Edit Placeholder';
+            editPlaceholderBtn.onclick = (e) => {
+              e.stopPropagation();
+              placeholderText.focus();
+              // Select all text for immediate editing
+              if (window.getSelection && document.createRange) {
+                const range = document.createRange();
+                range.selectNodeContents(placeholderText);
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+              }
+            };
+            
+            buttonsDiv.appendChild(addCardBtn);
+            buttonsDiv.appendChild(editPlaceholderBtn);
+            placeholder.appendChild(buttonsDiv);
+          }
+          
+          lessonSourceContainer.appendChild(placeholder);
+        }
         
         // Update displays
         const sourceBox = lessonSourceContainer.closest('.weekday-box');
@@ -5433,11 +5535,11 @@ function updateLessonCards(subject, lessons_data) {
                  ${isEditMode ? '' : 'disabled readonly'}>
         </div>
         <div>
-          <input type="text" class="lesson-title w-full px-2 py-1 text-center text-sm border-0 rounded" 
-                 style="background: transparent; word-wrap: break-word; white-space: normal; overflow-wrap: break-word;" 
+          <textarea class="lesson-title w-full px-2 py-1 text-center text-sm border-0 rounded resize-none" 
+                 style="background: transparent; overflow-wrap: break-word; white-space: pre-wrap; min-height: 2.5em;" 
                  placeholder="Lesson Title" 
-                 value="${card.title || ''}"
-                 ${isEditMode ? '' : 'disabled readonly'}>
+                 rows="2"
+                 ${isEditMode ? '' : 'disabled readonly'}>${card.title || ''}</textarea>
         </div>
       `;
       
@@ -5445,6 +5547,25 @@ function updateLessonCards(subject, lessons_data) {
       if (isEditMode) {
         lessonCard.addEventListener('dragstart', handleDragStart);
         lessonCard.addEventListener('dragend', handleDragEnd);
+        
+        // Add auto-resize to textarea
+        const titleTextarea = lessonCard.querySelector('.lesson-title');
+        if (titleTextarea) {
+          titleTextarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+          });
+          // Trigger initial resize
+          titleTextarea.style.height = 'auto';
+          titleTextarea.style.height = titleTextarea.scrollHeight + 'px';
+        }
+      } else {
+        // Even in parent view, adjust height to fit content
+        const titleTextarea = lessonCard.querySelector('.lesson-title');
+        if (titleTextarea) {
+          titleTextarea.style.height = 'auto';
+          titleTextarea.style.height = titleTextarea.scrollHeight + 'px';
+        }
       }
       
       cardContainer.appendChild(lessonCard);
@@ -5456,9 +5577,9 @@ function updateLessonCards(subject, lessons_data) {
       
       const placeholderText = document.createElement('div');
       placeholderText.className = 'placeholder-text text-sm italic';
-      placeholderText.contentEditable = isEditMode;
       placeholderText.textContent = weekday.placeholder;
       if (isEditMode) {
+        placeholderText.contentEditable = true;
         placeholderText.style.outline = '1px dashed ' + color;
         placeholderText.style.outlineOffset = '2px';
         placeholderText.style.display = 'inline-block';
@@ -5466,16 +5587,42 @@ function updateLessonCards(subject, lessons_data) {
       }
       placeholder.appendChild(placeholderText);
       
-      // Add click hint in edit mode
+      // Add buttons in edit mode
       if (isEditMode) {
-        const clickHint = document.createElement('div');
-        clickHint.className = 'click-hint text-xs mt-2';
-        clickHint.style.color = 'color-mix(in oklab, ' + color + ' 40%, var(--md-white) 60%)';
-        clickHint.textContent = '(Click to add)';
-        placeholder.appendChild(clickHint);
+        const buttonsDiv = document.createElement('div');
+        buttonsDiv.className = 'flex gap-2 justify-center mt-3';
         
-        // Add click handler
-        placeholder.addEventListener('click', () => addOrEditLessonCard(subject, index));
+        const addCardBtn = document.createElement('button');
+        addCardBtn.className = 'px-3 py-1 rounded text-white text-xs font-semibold hover:opacity-80 transition-opacity';
+        addCardBtn.style.background = color;
+        addCardBtn.textContent = '+ Add Card';
+        addCardBtn.onclick = (e) => {
+          e.stopPropagation();
+          addOrEditLessonCard(subject, index);
+        };
+        
+        const editPlaceholderBtn = document.createElement('button');
+        editPlaceholderBtn.className = 'px-3 py-1 rounded text-xs font-semibold hover:opacity-80 transition-opacity';
+        editPlaceholderBtn.style.background = 'color-mix(in oklab, var(--md-white) 60%, ' + color + ' 40%)';
+        editPlaceholderBtn.style.color = color;
+        editPlaceholderBtn.style.border = '1px solid ' + color;
+        editPlaceholderBtn.textContent = '✏️ Edit Placeholder';
+        editPlaceholderBtn.onclick = (e) => {
+          e.stopPropagation();
+          placeholderText.focus();
+          // Select all text for immediate editing
+          if (window.getSelection && document.createRange) {
+            const range = document.createRange();
+            range.selectNodeContents(placeholderText);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+        };
+        
+        buttonsDiv.appendChild(addCardBtn);
+        buttonsDiv.appendChild(editPlaceholderBtn);
+        placeholder.appendChild(buttonsDiv);
       }
       
       cardContainer.appendChild(placeholder);
