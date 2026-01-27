@@ -5532,6 +5532,8 @@ function updateLessonCards(subject, lessons_data) {
     weekdayBox.style.background = 'color-mix(in oklab, var(--md-white) 95%, ' + color + ' 5%)';
     weekdayBox.style.border = '2px dashed color-mix(in oklab, ' + color + ' 30%, var(--md-white) 70%)';
     weekdayBox.style.minHeight = '160px';
+    weekdayBox.style.overflowX = 'hidden';
+    weekdayBox.style.overflowY = 'auto';
     weekdayBox.dataset.dayIndex = index;
     weekdayBox.dataset.placeholder = weekday.placeholder || 'No Lesson';
     
@@ -5576,14 +5578,14 @@ function updateLessonCards(subject, lessons_data) {
                 title="Delete Card">🗑️</button>
         <div class="mb-3">
           <input type="text" class="lesson-number w-full px-2 py-1 text-center font-semibold text-sm border-0 rounded" 
-                 style="background: transparent; color: ${color};" 
+                 style="background: transparent; color: ${color}; overflow-wrap: break-word; word-break: break-word; overflow-x: hidden;" 
                  placeholder="Lesson #" 
                  value="${card.number || ''}"
                  ${isEditMode ? '' : 'disabled readonly'}>
         </div>
         <div>
           <textarea class="lesson-title w-full px-2 py-1 text-center text-sm border-0 rounded resize-none" 
-                 style="background: transparent; overflow-wrap: break-word; white-space: pre-wrap; min-height: 2.5em;" 
+                 style="background: transparent; overflow-wrap: break-word; word-break: break-word; white-space: pre-wrap; min-height: 2.5em; overflow-x: hidden;" 
                  placeholder="Lesson Title" 
                  rows="2"
                  ${isEditMode ? '' : 'disabled readonly'}>${card.title || ''}</textarea>
