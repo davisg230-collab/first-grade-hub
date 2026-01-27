@@ -314,6 +314,17 @@
         transform: translateX(-50%);
       }
     }
+    
+    /* Drag and drop visual indicators for listening units */
+    .drag-over-top {
+      border-top: 3px solid var(--md-coral) !important;
+      margin-top: -3px;
+    }
+    
+    .drag-over-bottom {
+      border-bottom: 3px solid var(--md-coral) !important;
+      margin-bottom: -3px;
+    }
   </style>
 </head>
 <body class="bg-[color:var(--md-cream)] text-[color:var(--md-ink)] font-body">
@@ -1734,7 +1745,7 @@
     let mathModulesData = []; // Array of 6 modules, each: {title: string, sections: [{title: string, bulletPoints: [string]}]} - 2 sections per module
     
     // Listening Units data structure
-    let listeningUnitsData = []; // Array of 7 units, each: {title: string, sections: [{title: string, bullets: [string]}]}
+    let listeningUnitsData = []; // Array of 11 units, each: {title: string, sections: [{title: string, bullets: [string]}]}
     
     // Current Module data structure for Skills and Math
     let currentModuleData = {
@@ -1772,7 +1783,11 @@
       { id: 'unit-4', name: 'Unit 4: Spelling, Comprehension, and Word Reading' },
       { id: 'unit-5', name: 'Unit 5: Spelling Alternatives and Advancing the Code' },
       { id: 'unit-6', name: 'Unit 6: Spelling Alternatives for Consonant Sounds' },
-      { id: 'unit-7', name: 'Unit 7: Advanced Code and Spelling Alternatives for Vowels' }
+      { id: 'unit-7', name: 'Unit 7: Advanced Code and Spelling Alternatives for Vowels' },
+      { id: 'unit-8', name: 'Unit 8: Further Spelling Alternatives' },
+      { id: 'unit-9', name: 'Unit 9: Complex Spelling Patterns' },
+      { id: 'unit-10', name: 'Unit 10: Advanced Reading Comprehension' },
+      { id: 'unit-11', name: 'Unit 11: Year-End Review and Assessment' }
     ];
     
     // Tab navigation
@@ -3297,13 +3312,13 @@
             <input type="text" class="lesson-number w-full px-2 py-1 text-center font-semibold text-sm border-0 rounded" 
                    style="background: transparent; color: ${color};" 
                    placeholder="Lesson #" 
-                   value="Lesson 1">
+                   value="">
           </div>
           <div>
             <textarea class="lesson-title w-full px-2 py-1 text-center text-sm border-0 rounded resize-none" 
-                   style="background: transparent; overflow-wrap: break-word; white-space: pre-wrap; min-height: 2.5em;" 
+                   style="background: transparent; overflow-wrap: break-word; white-space: pre-wrap; min-height: 2.5em; overflow-y: hidden;" 
                    placeholder="Lesson Title" 
-                   rows="2">Getting Started</textarea>
+                   rows="1"></textarea>
           </div>
         `;
         
@@ -3327,6 +3342,11 @@
           titleTextarea.addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = this.scrollHeight + 'px';
+          });
+          // Trigger initial resize after render
+          requestAnimationFrame(() => {
+            titleTextarea.style.height = 'auto';
+            titleTextarea.style.height = titleTextarea.scrollHeight + 'px';
           });
         }
       }
@@ -3453,7 +3473,7 @@
       return false;
     }
     
-    function handleDrop(e, subject) {
+    async function handleDrop(e, subject) {
       if (e.stopPropagation) {
         e.stopPropagation();
       }
@@ -3543,6 +3563,18 @@
         const targetBox = targetContainer.closest('.weekday-box');
         updateWeekdayBoxDisplay(sourceBox, subject);
         updateWeekdayBoxDisplay(targetBox, subject);
+        
+        // Auto-save the new card positions to database
+        try {
+          await ensureAuthenticated();
+          const lessonData = getLessonCardsData(subject);
+          const dataField = subject === 'skills' ? 'skills_lessons_json' : (subject === 'listening' ? 'listening_lessons_json' : 'math_lessons_json');
+          const data = {};
+          data[dataField] = lessonData;
+          await db.collection('classData').doc('current').set(data, { merge: true });
+        } catch (error) {
+          console.error('Failed to auto-save lesson card positions:', error);
+        }
       }
       
       return false;
@@ -5585,9 +5617,9 @@ function updateLessonCards(subject, lessons_data) {
         </div>
         <div>
           <textarea class="lesson-title w-full px-2 py-1 text-center text-sm border-0 rounded resize-none" 
-                 style="background: transparent; overflow-wrap: break-word; word-break: break-word; white-space: pre-wrap; min-height: 2.5em; overflow-x: hidden;" 
+                 style="background: transparent; overflow-wrap: break-word; word-break: break-word; white-space: pre-wrap; min-height: 2.5em; overflow-x: hidden; overflow-y: hidden;" 
                  placeholder="Lesson Title" 
-                 rows="2"
+                 rows="1"
                  ${isEditMode ? '' : 'disabled readonly'}>${card.title || ''}</textarea>
         </div>
       `;
@@ -5604,16 +5636,21 @@ function updateLessonCards(subject, lessons_data) {
             this.style.height = 'auto';
             this.style.height = this.scrollHeight + 'px';
           });
-          // Trigger initial resize
-          titleTextarea.style.height = 'auto';
-          titleTextarea.style.height = titleTextarea.scrollHeight + 'px';
+          // Trigger initial resize after render
+          requestAnimationFrame(() => {
+            titleTextarea.style.height = 'auto';
+            titleTextarea.style.height = titleTextarea.scrollHeight + 'px';
+          });
         }
       } else {
         // Even in parent view, adjust height to fit content
         const titleTextarea = lessonCard.querySelector('.lesson-title');
         if (titleTextarea) {
-          titleTextarea.style.height = 'auto';
-          titleTextarea.style.height = titleTextarea.scrollHeight + 'px';
+          // Trigger initial resize after render
+          requestAnimationFrame(() => {
+            titleTextarea.style.height = 'auto';
+            titleTextarea.style.height = titleTextarea.scrollHeight + 'px';
+          });
         }
       }
       
@@ -9866,12 +9903,31 @@ function renderListeningUnits() {
   
   listeningUnitsData.forEach((unit, unitIndex) => {
     const unitDiv = document.createElement('div');
-    unitDiv.className = 'rounded-2xl shadow-soft p-6 bg-white';
+    unitDiv.className = 'rounded-2xl shadow-soft p-6 bg-white relative';
     unitDiv.setAttribute('data-listening-unit-index', unitIndex);
+    
+    // Make units draggable in edit mode
+    if (isEditMode) {
+      unitDiv.draggable = true;
+      unitDiv.style.cursor = 'move';
+      unitDiv.addEventListener('dragstart', handleListeningUnitDragStart);
+      unitDiv.addEventListener('dragend', handleListeningUnitDragEnd);
+      unitDiv.addEventListener('dragover', handleListeningUnitDragOver);
+      unitDiv.addEventListener('drop', handleListeningUnitDrop);
+      
+      // Add drag handle visual indicator
+      const dragHandle = document.createElement('div');
+      dragHandle.className = 'absolute top-4 left-4 text-gray-400 text-xl';
+      dragHandle.innerHTML = '⋮⋮';
+      dragHandle.title = 'Drag to reorder';
+      dragHandle.style.cursor = 'move';
+      unitDiv.appendChild(dragHandle);
+    }
     
     // Unit header
     const headerDiv = document.createElement('div');
     headerDiv.className = 'flex items-center justify-between mb-4 cursor-pointer';
+    headerDiv.style.paddingLeft = isEditMode ? '30px' : '0'; // Add padding when drag handle is present
     headerDiv.onclick = () => toggleListeningUnit(unitIndex);
     
     const titleContainer = document.createElement('div');
@@ -9971,6 +10027,104 @@ function renderListeningUnits() {
     unitDiv.appendChild(sectionsContainer);
     container.appendChild(unitDiv);
   });
+}
+
+// Drag and drop handlers for listening units reordering
+let draggedListeningUnit = null;
+let draggedListeningUnitIndex = null;
+
+function handleListeningUnitDragStart(e) {
+  draggedListeningUnit = e.currentTarget;
+  draggedListeningUnitIndex = parseInt(draggedListeningUnit.getAttribute('data-listening-unit-index'));
+  e.dataTransfer.effectAllowed = 'move';
+  draggedListeningUnit.style.opacity = '0.5';
+}
+
+function handleListeningUnitDragEnd(e) {
+  draggedListeningUnit.style.opacity = '1';
+  // Remove all drag-over classes
+  document.querySelectorAll('[data-listening-unit-index]').forEach(unit => {
+    unit.classList.remove('drag-over-top', 'drag-over-bottom');
+  });
+  draggedListeningUnit = null;
+  draggedListeningUnitIndex = null;
+}
+
+function handleListeningUnitDragOver(e) {
+  if (e.preventDefault) {
+    e.preventDefault();
+  }
+  e.dataTransfer.dropEffect = 'move';
+  
+  if (draggedListeningUnit && e.currentTarget !== draggedListeningUnit) {
+    const targetUnit = e.currentTarget;
+    const rect = targetUnit.getBoundingClientRect();
+    const midpoint = rect.top + rect.height / 2;
+    
+    // Remove previous drag-over classes
+    document.querySelectorAll('[data-listening-unit-index]').forEach(unit => {
+      unit.classList.remove('drag-over-top', 'drag-over-bottom');
+    });
+    
+    // Add visual indicator
+    if (e.clientY < midpoint) {
+      targetUnit.classList.add('drag-over-top');
+    } else {
+      targetUnit.classList.add('drag-over-bottom');
+    }
+  }
+  
+  return false;
+}
+
+async function handleListeningUnitDrop(e) {
+  if (e.stopPropagation) {
+    e.stopPropagation();
+  }
+  
+  if (draggedListeningUnit && e.currentTarget !== draggedListeningUnit) {
+    const targetUnit = e.currentTarget;
+    const targetIndex = parseInt(targetUnit.getAttribute('data-listening-unit-index'));
+    
+    // Determine drop position based on mouse position
+    const rect = targetUnit.getBoundingClientRect();
+    const midpoint = rect.top + rect.height / 2;
+    const dropBefore = e.clientY < midpoint;
+    
+    // Remove dragged unit from array
+    const [movedUnit] = listeningUnitsData.splice(draggedListeningUnitIndex, 1);
+    
+    // Calculate new index after removal
+    let newIndex = targetIndex;
+    if (draggedListeningUnitIndex < targetIndex) {
+      // When dragging down, target index shifts down by 1 after removal
+      newIndex = dropBefore ? targetIndex - 1 : targetIndex;
+    } else if (draggedListeningUnitIndex > targetIndex) {
+      // When dragging up, target index stays the same
+      newIndex = dropBefore ? targetIndex : targetIndex + 1;
+    } else {
+      // Same index, no change needed
+      listeningUnitsData.splice(draggedListeningUnitIndex, 0, movedUnit);
+      return false;
+    }
+    
+    // Insert unit at new position
+    listeningUnitsData.splice(newIndex, 0, movedUnit);
+    
+    // Re-render units
+    renderListeningUnits();
+    
+    // Auto-save the new order
+    try {
+      await ensureAuthenticated();
+      await saveListeningUnits();
+    } catch (error) {
+      console.error('Failed to auto-save listening units order:', error);
+      alert('⚠️ Failed to save unit reordering. Please try clicking "Save All Changes" manually.');
+    }
+  }
+  
+  return false;
 }
 
 // Toggle listening unit expansion
@@ -10392,8 +10546,8 @@ function updateListeningUnitsData(unitsJson) {
         return unit;
       });
       
-      // Ensure we have 7 units
-      while (listeningUnitsData.length < 7) {
+      // Ensure we have 11 units
+      while (listeningUnitsData.length < 11) {
         listeningUnitsData.push({
           title: `Unit ${listeningUnitsData.length + 1}`,
           sections: [
@@ -10413,7 +10567,7 @@ function updateListeningUnitsData(unitsJson) {
 // Initialize listening units with default structure
 function initializeListeningUnits() {
   listeningUnitsData = [];
-  for (let i = 1; i <= 7; i++) {
+  for (let i = 1; i <= 11; i++) {
     listeningUnitsData.push({
       title: `Unit ${i}`,
       sections: [
