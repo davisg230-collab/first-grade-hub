@@ -3312,13 +3312,13 @@
             <input type="text" class="lesson-number w-full px-2 py-1 text-center font-semibold text-sm border-0 rounded" 
                    style="background: transparent; color: ${color};" 
                    placeholder="Lesson #" 
-                   value="Lesson 1">
+                   value="">
           </div>
           <div>
             <textarea class="lesson-title w-full px-2 py-1 text-center text-sm border-0 rounded resize-none" 
                    style="background: transparent; overflow-wrap: break-word; white-space: pre-wrap; min-height: 2.5em; overflow-y: hidden;" 
                    placeholder="Lesson Title" 
-                   rows="1">Getting Started</textarea>
+                   rows="1"></textarea>
           </div>
         `;
         
@@ -10094,12 +10094,18 @@ async function handleListeningUnitDrop(e) {
     // Remove dragged unit from array
     const [movedUnit] = listeningUnitsData.splice(draggedListeningUnitIndex, 1);
     
-    // Calculate new index
+    // Calculate new index after removal
     let newIndex = targetIndex;
     if (draggedListeningUnitIndex < targetIndex) {
+      // When dragging down, target index shifts down by 1 after removal
       newIndex = dropBefore ? targetIndex - 1 : targetIndex;
-    } else {
+    } else if (draggedListeningUnitIndex > targetIndex) {
+      // When dragging up, target index stays the same
       newIndex = dropBefore ? targetIndex : targetIndex + 1;
+    } else {
+      // Same index, no change needed
+      listeningUnitsData.splice(draggedListeningUnitIndex, 0, movedUnit);
+      return false;
     }
     
     // Insert unit at new position
@@ -10114,6 +10120,7 @@ async function handleListeningUnitDrop(e) {
       await saveListeningUnits();
     } catch (error) {
       console.error('Failed to auto-save listening units order:', error);
+      alert('⚠️ Failed to save unit reordering. Please try clicking "Save All Changes" manually.');
     }
   }
   
