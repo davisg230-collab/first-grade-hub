@@ -3620,7 +3620,8 @@
             cards.push({
               dayIndex: index,
               number: numberInput.value || '',
-              title: titleInput.value || ''
+              title: titleInput.value || '',
+              height: titleInput.style.height || 'auto' // Save the calculated height
             });
           }
         }
@@ -5651,13 +5652,19 @@ function updateLessonCards(subject, lessons_data) {
           titleTextarea.addEventListener('input', adjustHeight);
         }
         
-        // Trigger initial resize after DOM insertion - use multiple timing strategies
-        // to ensure it works reliably in both modes
-        setTimeout(() => {
-          adjustHeight();
-          // Double-check after a small delay to ensure rendering is complete
-          setTimeout(adjustHeight, 50);
-        }, 0);
+        // Apply saved height if available, otherwise calculate it
+        if (card.height && card.height !== 'auto') {
+          // Use the saved height
+          titleTextarea.style.height = card.height;
+        } else {
+          // Trigger initial resize after DOM insertion - use multiple timing strategies
+          // to ensure it works reliably in both modes
+          setTimeout(() => {
+            adjustHeight();
+            // Double-check after a small delay to ensure rendering is complete
+            setTimeout(adjustHeight, 50);
+          }, 0);
+        }
       }
     } else {
       // Create placeholder
@@ -8014,7 +8021,8 @@ async function saveLessonCards(subject) {
             cards.push({
               dayIndex: index,
               number: numberInput.value || '',
-              title: titleInput.value || ''
+              title: titleInput.value || '',
+              height: titleInput.style.height || 'auto' // Save the calculated height
             });
           }
         }
