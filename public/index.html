@@ -5653,8 +5653,8 @@ function updateLessonCards(subject, lessons_data) {
         }
         
         // Apply saved height if available, otherwise calculate it
-        if (card.height && card.height !== 'auto') {
-          // Use the saved height
+        if (card.height && card.height !== 'auto' && /^\d+(\.\d+)?(px|em|rem|%)$/.test(card.height)) {
+          // Use the saved height (validated as a proper CSS dimension)
           titleTextarea.style.height = card.height;
         } else {
           // Trigger initial resize after DOM insertion - use multiple timing strategies
