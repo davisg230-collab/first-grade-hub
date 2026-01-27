@@ -3453,7 +3453,7 @@
       return false;
     }
     
-    function handleDrop(e, subject) {
+    async function handleDrop(e, subject) {
       if (e.stopPropagation) {
         e.stopPropagation();
       }
@@ -3543,6 +3543,18 @@
         const targetBox = targetContainer.closest('.weekday-box');
         updateWeekdayBoxDisplay(sourceBox, subject);
         updateWeekdayBoxDisplay(targetBox, subject);
+        
+        // Auto-save the new card positions to database
+        try {
+          await ensureAuthenticated();
+          const lessonData = getLessonCardsData(subject);
+          const dataField = subject === 'skills' ? 'skills_lessons_json' : (subject === 'listening' ? 'listening_lessons_json' : 'math_lessons_json');
+          const data = {};
+          data[dataField] = lessonData;
+          await db.collection('classData').doc('current').set(data, { merge: true });
+        } catch (error) {
+          console.error('Failed to auto-save lesson card positions:', error);
+        }
       }
       
       return false;
