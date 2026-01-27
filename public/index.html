@@ -5597,9 +5597,9 @@ function updateLessonCards(subject, lessons_data) {
         </div>
         <div>
           <textarea class="lesson-title w-full px-2 py-1 text-center text-sm border-0 rounded resize-none" 
-                 style="background: transparent; overflow-wrap: break-word; word-break: break-word; white-space: pre-wrap; min-height: 2.5em; overflow-x: hidden;" 
+                 style="background: transparent; overflow-wrap: break-word; word-break: break-word; white-space: pre-wrap; min-height: 2.5em; overflow-x: hidden; overflow-y: hidden;" 
                  placeholder="Lesson Title" 
-                 rows="2"
+                 rows="1"
                  ${isEditMode ? '' : 'disabled readonly'}>${card.title || ''}</textarea>
         </div>
       `;
@@ -5616,16 +5616,21 @@ function updateLessonCards(subject, lessons_data) {
             this.style.height = 'auto';
             this.style.height = this.scrollHeight + 'px';
           });
-          // Trigger initial resize
-          titleTextarea.style.height = 'auto';
-          titleTextarea.style.height = titleTextarea.scrollHeight + 'px';
+          // Trigger initial resize after render
+          requestAnimationFrame(() => {
+            titleTextarea.style.height = 'auto';
+            titleTextarea.style.height = titleTextarea.scrollHeight + 'px';
+          });
         }
       } else {
         // Even in parent view, adjust height to fit content
         const titleTextarea = lessonCard.querySelector('.lesson-title');
         if (titleTextarea) {
-          titleTextarea.style.height = 'auto';
-          titleTextarea.style.height = titleTextarea.scrollHeight + 'px';
+          // Trigger initial resize after render
+          requestAnimationFrame(() => {
+            titleTextarea.style.height = 'auto';
+            titleTextarea.style.height = titleTextarea.scrollHeight + 'px';
+          });
         }
       }
       
