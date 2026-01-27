@@ -767,11 +767,10 @@
             <h3 class="text-lg font-display font-semibold" style="color: var(--md-coral);">Upcoming Lessons</h3>
             <div class="edit-only flex gap-2" style="display: none;">
               <button id="saveSkillsLessonsBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveLessonCards('skills')">💾 Save</button>
-              <button id="addSkillsLessonCardBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="addLessonCard('skills')">+ Add Card</button>
             </div>
           </div>
           <div id="skillsLessonsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-            <!-- Lesson cards will be populated by JavaScript -->
+            <!-- Weekday boxes will be populated by JavaScript -->
           </div>
         </div>
       </div>
@@ -852,11 +851,10 @@
             <h3 class="text-lg font-display font-semibold" style="color: var(--md-slate);">Upcoming Lessons</h3>
             <div class="edit-only flex gap-2" style="display: none;">
               <button id="saveMathLessonsBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="saveLessonCards('math')">💾 Save</button>
-              <button id="addMathLessonCardBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="addLessonCard('math')">+ Add Card</button>
             </div>
           </div>
           <div id="mathLessonsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-            <!-- Lesson cards will be populated by JavaScript -->
+            <!-- Weekday boxes will be populated by JavaScript -->
           </div>
         </div>
       </div>
@@ -2096,25 +2094,13 @@
       
       // Enable This Week's Lessons section for both Skills and Math
       ['skills', 'math'].forEach(subject => {
+        // Refresh lesson cards to update for edit mode
         const grid = document.getElementById(subject + 'LessonsGrid');
-        if (grid) {
-          // Enable all lesson card inputs
-          grid.querySelectorAll('.lesson-day, .lesson-title').forEach(input => {
-            input.disabled = false;
-            input.readOnly = false;
-          });
-          // Show delete buttons on cards
-          grid.querySelectorAll('.lesson-card button').forEach(btn => {
-            btn.style.display = 'inline-block';
-          });
+        if (grid && grid.children.length > 0) {
+          // Get current data from grid and rebuild
+          const currentData = getLessonCardsData(subject);
+          updateLessonCards(subject, currentData);
         }
-        // Show save and add buttons
-        const saveBtn = document.getElementById((subject === 'skills' ? 'saveSkills' : 'saveMath') + 'LessonsBtn');
-        const addBtn = document.getElementById((subject === 'skills' ? 'addSkills' : 'addMath') + 'LessonCardBtn');
-        if (saveBtn) saveBtn.style.display = 'inline-block';
-        if (addBtn) addBtn.style.display = 'inline-block';
-        // Update add button visibility based on card count
-        updateAddCardButtonVisibility(subject);
       });
       
       // Enable Transportation instructions section
@@ -2282,23 +2268,13 @@
       
       // Disable This Week's Lessons section for both Skills and Math
       ['skills', 'math'].forEach(subject => {
+        // Refresh lesson cards to update for non-edit mode
         const grid = document.getElementById(subject + 'LessonsGrid');
-        if (grid) {
-          // Disable all lesson card inputs
-          grid.querySelectorAll('.lesson-day, .lesson-title').forEach(input => {
-            input.disabled = true;
-            input.readOnly = true;
-          });
-          // Hide delete buttons on cards
-          grid.querySelectorAll('.lesson-card button').forEach(btn => {
-            btn.style.display = 'none';
-          });
+        if (grid && grid.children.length > 0) {
+          // Get current data from grid and rebuild
+          const currentData = getLessonCardsData(subject);
+          updateLessonCards(subject, currentData);
         }
-        // Hide save and add buttons
-        const saveBtn = document.getElementById((subject === 'skills' ? 'saveSkills' : 'saveMath') + 'LessonsBtn');
-        const addBtn = document.getElementById((subject === 'skills' ? 'addSkills' : 'addMath') + 'LessonCardBtn');
-        if (saveBtn) saveBtn.style.display = 'none';
-        if (addBtn) addBtn.style.display = 'none';
       });
       
       // Disable Transportation instructions section
@@ -3236,60 +3212,193 @@
     }
     
     // This Week's Lessons: Add lesson card
-    function addLessonCard(subject) {
+    // Add or edit a lesson card in a specific weekday box
+    function addOrEditLessonCard(subject, dayIndex) {
+      const isEditMode = document.body.classList.contains('editing');
+      if (!isEditMode) return; // Only allow in edit mode
+      
       const grid = document.getElementById(subject + 'LessonsGrid');
       if (!grid) return;
       
-      // Check if we already have 5 cards
-      const currentCards = grid.querySelectorAll('.lesson-card');
-      if (currentCards.length >= 5) {
-        alert('Maximum of 5 lesson cards reached.');
-        return;
+      const weekdayBox = grid.children[dayIndex];
+      if (!weekdayBox) return;
+      
+      const existingCard = weekdayBox.querySelector('.lesson-card');
+      
+      if (existingCard) {
+        // If card exists, focus on the title input to allow editing
+        const titleInput = existingCard.querySelector('.lesson-title');
+        if (titleInput) titleInput.focus();
+      } else {
+        // Create new lesson card
+        const color = subject === 'skills' ? 'var(--md-coral)' : 'var(--md-slate)';
+        const cardContainer = weekdayBox.querySelector('.lesson-card-container');
+        
+        const newCard = document.createElement('div');
+        newCard.className = 'lesson-card p-4 rounded-xl relative';
+        newCard.draggable = true;
+        newCard.style.background = 'color-mix(in oklab, var(--md-white) 80%, ' + color + ' 20%)';
+        newCard.style.border = '2px solid color-mix(in oklab, ' + color + ' 40%, var(--md-white) 60%)';
+        newCard.style.cursor = 'move';
+        
+        newCard.innerHTML = `
+          <button class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-lg edit-only" 
+                  style="display: inline-block;" 
+                  onclick="removeLessonCard(this, '${subject}')" 
+                  title="Delete Card">🗑️</button>
+          <div class="mb-3">
+            <input type="text" class="lesson-number w-full px-2 py-1 text-center font-semibold text-sm border-0 rounded" 
+                   style="background: transparent; color: ${color};" 
+                   placeholder="Lesson #" 
+                   value="Lesson 1">
+          </div>
+          <div>
+            <input type="text" class="lesson-title w-full px-2 py-1 text-center text-sm border-0 rounded" 
+                   style="background: transparent; word-wrap: break-word; white-space: normal;" 
+                   placeholder="Lesson Title" 
+                   value="Getting Started">
+          </div>
+        `;
+        
+        // Add drag event listeners
+        newCard.addEventListener('dragstart', handleDragStart);
+        newCard.addEventListener('dragend', handleDragEnd);
+        
+        cardContainer.innerHTML = '';
+        cardContainer.appendChild(newCard);
+        
+        // Focus on the lesson number input
+        const numberInput = newCard.querySelector('.lesson-number');
+        if (numberInput) {
+          numberInput.focus();
+          numberInput.select();
+        }
       }
-      
-      // Create new lesson card
-      const newCard = document.createElement('div');
-      newCard.className = 'lesson-card p-4 rounded-xl relative';
-      
-      // Set color based on subject
-      const color = subject === 'skills' ? 'var(--md-coral)' : 'var(--md-slate)';
-      newCard.style.background = 'color-mix(in oklab, var(--md-white) 80%, ' + color + ' 20%)';
-      newCard.style.border = '2px solid color-mix(in oklab, ' + color + ' 40%, var(--md-white) 60%)';
-      
-      newCard.innerHTML = `
-        <button class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-lg edit-only" style="display: inline-block;" onclick="this.closest('.lesson-card').remove(); updateAddCardButtonVisibility('${subject}');" title="Delete Card">🗑️</button>
-        <div class="mb-3">
-          <input type="text" class="lesson-day w-full px-2 py-1 text-center font-bold text-lg border-0 rounded" 
-                 style="background: transparent; font-family: 'Comic Sans MS', cursive; color: ${color};" 
-                 placeholder="Day of Week" 
-                 value="Monday">
-        </div>
-        <div>
-          <input type="text" class="lesson-title w-full px-2 py-1 text-center text-sm border-0 rounded" 
-                 style="background: transparent;" 
-                 placeholder="Lesson Title & Number" 
-                 value="Lesson 1: Getting Started">
-        </div>
-      `;
-      
-      grid.appendChild(newCard);
-      
-      // Update button visibility
-      updateAddCardButtonVisibility(subject);
     }
     
-    // Update Add Card button visibility based on card count
-    function updateAddCardButtonVisibility(subject) {
-      const grid = document.getElementById(subject + 'LessonsGrid');
-      const addBtn = document.getElementById('add' + (subject === 'skills' ? 'Skills' : 'Math') + 'LessonCardBtn');
-      if (!grid || !addBtn) return;
-      
-      const currentCards = grid.querySelectorAll('.lesson-card');
-      if (currentCards.length >= 5) {
-        addBtn.style.display = 'none';
-      } else {
-        addBtn.style.display = 'inline-block';
+    // Remove a lesson card
+    function removeLessonCard(btn, subject) {
+      const card = btn.closest('.lesson-card');
+      if (card) {
+        const container = card.parentElement;
+        container.innerHTML = '';
+        
+        // Show placeholder again
+        const weekdayBox = container.closest('.weekday-box');
+        updateWeekdayBoxDisplay(weekdayBox, subject);
       }
+    }
+    
+    // Update weekday box display based on whether it has a card
+    function updateWeekdayBoxDisplay(weekdayBox, subject) {
+      const isEditMode = document.body.classList.contains('editing');
+      const hasCard = weekdayBox.querySelector('.lesson-card');
+      const placeholder = weekdayBox.querySelector('.lesson-placeholder');
+      
+      if (hasCard) {
+        if (placeholder) placeholder.style.display = 'none';
+      } else {
+        if (placeholder) {
+          placeholder.style.display = 'block';
+          // Make placeholder editable/non-editable based on edit mode
+          const placeholderText = placeholder.querySelector('.placeholder-text');
+          if (placeholderText) {
+            placeholderText.contentEditable = isEditMode;
+          }
+        }
+      }
+    }
+    
+    // Drag and drop handlers
+    let draggedCard = null;
+    let sourceContainer = null;
+    
+    function handleDragStart(e) {
+      draggedCard = e.target;
+      sourceContainer = draggedCard.parentElement;
+      e.dataTransfer.effectAllowed = 'move';
+      draggedCard.style.opacity = '0.5';
+    }
+    
+    function handleDragEnd(e) {
+      draggedCard.style.opacity = '1';
+      draggedCard = null;
+      sourceContainer = null;
+    }
+    
+    function handleDragOver(e) {
+      if (e.preventDefault) {
+        e.preventDefault();
+      }
+      e.dataTransfer.dropEffect = 'move';
+      return false;
+    }
+    
+    function handleDrop(e, subject) {
+      if (e.stopPropagation) {
+        e.stopPropagation();
+      }
+      
+      const targetContainer = e.currentTarget.querySelector('.lesson-card-container');
+      const existingCard = targetContainer.querySelector('.lesson-card');
+      
+      if (draggedCard && targetContainer !== sourceContainer) {
+        // If target has a card, swap them
+        if (existingCard) {
+          sourceContainer.appendChild(existingCard);
+        }
+        
+        // Move dragged card to target
+        targetContainer.innerHTML = '';
+        targetContainer.appendChild(draggedCard);
+        
+        // Update displays
+        const sourceBox = sourceContainer.closest('.weekday-box');
+        const targetBox = targetContainer.closest('.weekday-box');
+        updateWeekdayBoxDisplay(sourceBox, subject);
+        updateWeekdayBoxDisplay(targetBox, subject);
+      }
+      
+      return false;
+    }
+    
+    // Helper function to get current lesson cards data from the DOM
+    function getLessonCardsData(subject) {
+      const grid = document.getElementById(subject + 'LessonsGrid');
+      if (!grid) return null;
+      
+      const weekdays = [];
+      const cards = [];
+      
+      const weekdayBoxes = grid.querySelectorAll('.weekday-box');
+      weekdayBoxes.forEach((box, index) => {
+        // Get weekday title
+        const titleEl = box.querySelector('.weekday-title');
+        const title = titleEl ? titleEl.textContent.trim() : '';
+        
+        // Get placeholder text
+        const placeholderEl = box.querySelector('.placeholder-text');
+        const placeholder = placeholderEl ? placeholderEl.textContent.trim() : 'No Lesson';
+        
+        weekdays.push({ title, placeholder });
+        
+        // Get card if exists
+        const card = box.querySelector('.lesson-card');
+        if (card) {
+          const numberInput = card.querySelector('.lesson-number');
+          const titleInput = card.querySelector('.lesson-title');
+          
+          if (numberInput && titleInput) {
+            cards.push({
+              dayIndex: index,
+              number: numberInput.value || '',
+              title: titleInput.value || ''
+            });
+          }
+        }
+      });
+      
+      return JSON.stringify({ weekdays, cards });
     }
     
     // Specials galleries: enhanced functionality
@@ -5179,48 +5288,172 @@ function updateExtrasSection(extras_json) {
   });
 }
 
-function updateLessonCards(subject, lessons_json) {
+function updateLessonCards(subject, lessons_data) {
   const grid = document.getElementById(subject + 'LessonsGrid');
   if (!grid) return;
   
-  const arr = parseArray(lessons_json);
-  grid.innerHTML = '';
+  const isEditMode = document.body.classList.contains('editing');
+  
+  // Parse the data - it now includes weekday configuration and cards
+  let data = {
+    weekdays: [
+      { title: 'Monday', placeholder: 'No Lesson' },
+      { title: 'Tuesday', placeholder: 'No Lesson' },
+      { title: 'Wednesday', placeholder: 'No Lesson' },
+      { title: 'Thursday', placeholder: 'No Lesson' },
+      { title: 'Friday', placeholder: 'No Lesson' }
+    ],
+    cards: []
+  };
+  
+  if (lessons_data) {
+    try {
+      const parsed = typeof lessons_data === 'string' ? JSON.parse(lessons_data) : lessons_data;
+      
+      // Handle old format (array of lessons) or new format (object with weekdays and cards)
+      if (Array.isArray(parsed)) {
+        // Old format: convert to new format
+        data.cards = parsed.map((lesson, index) => ({
+          dayIndex: index < 5 ? index : 0,
+          number: '',
+          title: lesson.title || '',
+          day: lesson.day || '' // Keep for reference but won't be displayed
+        }));
+      } else if (parsed.weekdays && parsed.cards) {
+        // New format
+        data = parsed;
+      }
+    } catch (e) {
+      console.error('Failed to parse lesson data:', e);
+    }
+  }
   
   // Get color based on subject
   const color = subject === 'skills' ? 'var(--md-coral)' : 'var(--md-slate)';
   
-  arr.forEach(lesson => {
-    const day = lesson.day || '';
-    const title = lesson.title || '';
-    
-    const card = document.createElement('div');
-    card.className = 'lesson-card p-4 rounded-xl relative';
-    card.style.background = 'color-mix(in oklab, var(--md-white) 80%, ' + color + ' 20%)';
-    card.style.border = '2px solid color-mix(in oklab, ' + color + ' 40%, var(--md-white) 60%)';
-    
-    card.innerHTML = `
-      <button class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-lg edit-only" style="display: none;" onclick="this.closest('.lesson-card').remove(); updateAddCardButtonVisibility('${subject}');" title="Delete Card">🗑️</button>
-      <div class="mb-3">
-        <input type="text" class="lesson-day w-full px-2 py-1 text-center font-bold text-lg border-0 rounded" 
-               style="background: transparent; font-family: 'Comic Sans MS', cursive; color: ${color};" 
-               placeholder="Day of Week" 
-               value="${day}"
-               disabled readonly>
-      </div>
-      <div>
-        <input type="text" class="lesson-title w-full px-2 py-1 text-center text-sm border-0 rounded" 
-               style="background: transparent;" 
-               placeholder="Lesson Title & Number" 
-               value="${title}"
-               disabled readonly>
-      </div>
-    `;
-    
-    grid.appendChild(card);
-  });
+  // Clear and rebuild grid
+  grid.innerHTML = '';
   
-  // Update button visibility
-  updateAddCardButtonVisibility(subject);
+  // Create 5 weekday boxes
+  data.weekdays.forEach((weekday, index) => {
+    const weekdayBox = document.createElement('div');
+    weekdayBox.className = 'weekday-box relative rounded-xl p-4 transition-all';
+    weekdayBox.style.background = 'color-mix(in oklab, var(--md-white) 95%, ' + color + ' 5%)';
+    weekdayBox.style.border = '2px dashed color-mix(in oklab, ' + color + ' 30%, var(--md-white) 70%)';
+    weekdayBox.style.minHeight = '160px';
+    weekdayBox.dataset.dayIndex = index;
+    
+    // Add drag-and-drop event listeners
+    weekdayBox.addEventListener('dragover', handleDragOver);
+    weekdayBox.addEventListener('drop', (e) => handleDrop(e, subject));
+    
+    // Weekday title (editable in edit mode)
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'weekday-title text-center font-bold text-lg mb-2';
+    titleDiv.style.color = color;
+    titleDiv.style.fontFamily = "'Comic Sans MS', cursive";
+    titleDiv.contentEditable = isEditMode;
+    titleDiv.textContent = weekday.title;
+    if (isEditMode) {
+      titleDiv.style.outline = '1px dashed ' + color;
+      titleDiv.style.outlineOffset = '2px';
+    }
+    weekdayBox.appendChild(titleDiv);
+    
+    // Card container (where lesson cards go)
+    const cardContainer = document.createElement('div');
+    cardContainer.className = 'lesson-card-container min-h-[100px]';
+    weekdayBox.appendChild(cardContainer);
+    
+    // Find card for this day
+    const card = data.cards.find(c => c.dayIndex === index);
+    
+    if (card) {
+      // Create lesson card
+      const lessonCard = document.createElement('div');
+      lessonCard.className = 'lesson-card p-4 rounded-xl relative';
+      lessonCard.draggable = true;
+      lessonCard.style.background = 'color-mix(in oklab, var(--md-white) 80%, ' + color + ' 20%)';
+      lessonCard.style.border = '2px solid color-mix(in oklab, ' + color + ' 40%, var(--md-white) 60%)';
+      lessonCard.style.cursor = isEditMode ? 'move' : 'default';
+      
+      lessonCard.innerHTML = `
+        <button class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-lg edit-only" 
+                style="display: ${isEditMode ? 'inline-block' : 'none'};" 
+                onclick="removeLessonCard(this, '${subject}')" 
+                title="Delete Card">🗑️</button>
+        <div class="mb-3">
+          <input type="text" class="lesson-number w-full px-2 py-1 text-center font-semibold text-sm border-0 rounded" 
+                 style="background: transparent; color: ${color};" 
+                 placeholder="Lesson #" 
+                 value="${card.number || ''}"
+                 ${isEditMode ? '' : 'disabled readonly'}>
+        </div>
+        <div>
+          <input type="text" class="lesson-title w-full px-2 py-1 text-center text-sm border-0 rounded" 
+                 style="background: transparent; word-wrap: break-word; white-space: normal; overflow-wrap: break-word;" 
+                 placeholder="Lesson Title" 
+                 value="${card.title || ''}"
+                 ${isEditMode ? '' : 'disabled readonly'}>
+        </div>
+      `;
+      
+      // Add drag event listeners only in edit mode
+      if (isEditMode) {
+        lessonCard.addEventListener('dragstart', handleDragStart);
+        lessonCard.addEventListener('dragend', handleDragEnd);
+      }
+      
+      cardContainer.appendChild(lessonCard);
+    } else {
+      // Create placeholder
+      const placeholder = document.createElement('div');
+      placeholder.className = 'lesson-placeholder text-center py-8 cursor-pointer';
+      placeholder.style.color = 'color-mix(in oklab, ' + color + ' 50%, var(--md-white) 50%)';
+      
+      const placeholderText = document.createElement('div');
+      placeholderText.className = 'placeholder-text text-sm italic';
+      placeholderText.contentEditable = isEditMode;
+      placeholderText.textContent = weekday.placeholder;
+      if (isEditMode) {
+        placeholderText.style.outline = '1px dashed ' + color;
+        placeholderText.style.outlineOffset = '2px';
+        placeholderText.style.display = 'inline-block';
+        placeholderText.style.padding = '4px 8px';
+      }
+      placeholder.appendChild(placeholderText);
+      
+      // Add click hint in edit mode
+      if (isEditMode) {
+        const clickHint = document.createElement('div');
+        clickHint.className = 'click-hint text-xs mt-2';
+        clickHint.style.color = 'color-mix(in oklab, ' + color + ' 40%, var(--md-white) 60%)';
+        clickHint.textContent = '(Click to add)';
+        placeholder.appendChild(clickHint);
+        
+        // Add click handler
+        placeholder.addEventListener('click', () => addOrEditLessonCard(subject, index));
+      }
+      
+      cardContainer.appendChild(placeholder);
+    }
+    
+    // Add click handler to card container in edit mode
+    if (isEditMode && card) {
+      const lessonCard = cardContainer.querySelector('.lesson-card');
+      if (lessonCard) {
+        lessonCard.addEventListener('click', (e) => {
+          // Only trigger edit if not clicking delete button
+          if (!e.target.closest('button')) {
+            const titleInput = lessonCard.querySelector('.lesson-title');
+            if (titleInput) titleInput.focus();
+          }
+        });
+      }
+    }
+    
+    grid.appendChild(weekdayBox);
+  });
 }
 
 function updateGradesSection(data) {
@@ -7464,20 +7697,37 @@ async function saveLessonCards(subject) {
     saveBtn.textContent = '⏳ Saving...';
     saveBtn.disabled = true;
     
-    // Collect lesson cards data
+    // Collect weekday boxes data
     const grid = document.getElementById(subject + 'LessonsGrid');
-    const lessons = [];
+    const weekdays = [];
+    const cards = [];
     
     if (grid) {
-      grid.querySelectorAll('.lesson-card').forEach(card => {
-        const dayInput = card.querySelector('.lesson-day');
-        const titleInput = card.querySelector('.lesson-title');
+      const weekdayBoxes = grid.querySelectorAll('.weekday-box');
+      weekdayBoxes.forEach((box, index) => {
+        // Get weekday title
+        const titleEl = box.querySelector('.weekday-title');
+        const title = titleEl ? titleEl.textContent.trim() : '';
         
-        if (dayInput && titleInput) {
-          lessons.push({
-            day: dayInput.value || '',
-            title: titleInput.value || ''
-          });
+        // Get placeholder text
+        const placeholderEl = box.querySelector('.placeholder-text');
+        const placeholder = placeholderEl ? placeholderEl.textContent.trim() : 'No Lesson';
+        
+        weekdays.push({ title, placeholder });
+        
+        // Get card if exists
+        const card = box.querySelector('.lesson-card');
+        if (card) {
+          const numberInput = card.querySelector('.lesson-number');
+          const titleInput = card.querySelector('.lesson-title');
+          
+          if (numberInput && titleInput) {
+            cards.push({
+              dayIndex: index,
+              number: numberInput.value || '',
+              title: titleInput.value || ''
+            });
+          }
         }
       });
     }
@@ -7485,7 +7735,7 @@ async function saveLessonCards(subject) {
     // Prepare data for saving
     const dataField = subject === 'skills' ? 'skills_lessons_json' : 'math_lessons_json';
     const data = {};
-    data[dataField] = JSON.stringify(lessons);
+    data[dataField] = JSON.stringify({ weekdays, cards });
     
     // Save to Firestore
     await db.collection('classData').doc('current').set(data, { merge: true });
