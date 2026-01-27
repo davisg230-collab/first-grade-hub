@@ -3293,7 +3293,7 @@
         if (titleInput) titleInput.focus();
       } else {
         // Create new lesson card
-        const color = subject === 'skills' ? 'var(--md-coral)' : 'var(--md-slate)';
+        const color = (subject === 'skills' || subject === 'listening') ? 'var(--md-coral)' : 'var(--md-slate)';
         const cardContainer = weekdayBox.querySelector('.lesson-card-container');
         
         const newCard = document.createElement('div');
@@ -3367,7 +3367,7 @@
         card.remove();
         
         // Recreate placeholder
-        const color = subject === 'skills' ? 'var(--md-coral)' : 'var(--md-slate)';
+        const color = (subject === 'skills' || subject === 'listening') ? 'var(--md-coral)' : 'var(--md-slate)';
         const isEditMode = document.body.classList.contains('editing');
         
         const placeholder = document.createElement('div');
@@ -3498,7 +3498,7 @@
           const sourceBox = lessonSourceContainer.closest('.weekday-box');
           const dayIndex = parseInt(sourceBox.dataset.dayIndex);
           const placeholderTextContent = sourceBox.dataset.placeholder || 'No Lesson';
-          const color = subject === 'skills' ? 'var(--md-coral)' : 'var(--md-slate)';
+          const color = (subject === 'skills' || subject === 'listening') ? 'var(--md-coral)' : 'var(--md-slate)';
           const isEditMode = document.body.classList.contains('editing');
           
           const placeholder = document.createElement('div');
@@ -5552,7 +5552,7 @@ function updateLessonCards(subject, lessons_data) {
   }
   
   // Get color based on subject
-  const color = subject === 'skills' ? 'var(--md-coral)' : 'var(--md-slate)';
+  const color = (subject === 'skills' || subject === 'listening') ? 'var(--md-coral)' : 'var(--md-slate)';
   
   // Clear and rebuild grid
   grid.innerHTML = '';
@@ -9227,12 +9227,31 @@ function renderSkillsUnits() {
   
   skillsUnitsData.forEach((unit, unitIndex) => {
     const unitDiv = document.createElement('div');
-    unitDiv.className = 'rounded-2xl shadow-soft p-6 bg-white';
+    unitDiv.className = 'rounded-2xl shadow-soft p-6 bg-white relative';
     unitDiv.setAttribute('data-unit-index', unitIndex);
+    
+    // Make units draggable in edit mode
+    if (isEditMode) {
+      unitDiv.draggable = true;
+      unitDiv.style.cursor = 'move';
+      unitDiv.addEventListener('dragstart', handleSkillsUnitDragStart);
+      unitDiv.addEventListener('dragend', handleSkillsUnitDragEnd);
+      unitDiv.addEventListener('dragover', handleSkillsUnitDragOver);
+      unitDiv.addEventListener('drop', handleSkillsUnitDrop);
+      
+      // Add drag handle visual indicator
+      const dragHandle = document.createElement('div');
+      dragHandle.className = 'absolute top-4 left-4 text-gray-400 text-xl';
+      dragHandle.innerHTML = '⋮⋮';
+      dragHandle.title = 'Drag to reorder';
+      dragHandle.style.cursor = 'move';
+      unitDiv.appendChild(dragHandle);
+    }
     
     // Unit header
     const headerDiv = document.createElement('div');
     headerDiv.className = 'flex items-center justify-between mb-4 cursor-pointer';
+    headerDiv.style.paddingLeft = isEditMode ? '30px' : '0'; // Add padding when drag handle is present
     headerDiv.onclick = () => toggleSkillsUnit(unitIndex);
     
     const titleContainer = document.createElement('div');
@@ -9634,6 +9653,104 @@ async function saveSkillsUnits() {
   }
 }
 
+// Drag and drop handlers for skills units reordering
+let draggedSkillsUnit = null;
+let draggedSkillsUnitIndex = null;
+
+function handleSkillsUnitDragStart(e) {
+  draggedSkillsUnit = e.currentTarget;
+  draggedSkillsUnitIndex = parseInt(draggedSkillsUnit.getAttribute('data-unit-index'));
+  e.dataTransfer.effectAllowed = 'move';
+  draggedSkillsUnit.style.opacity = '0.5';
+}
+
+function handleSkillsUnitDragEnd(e) {
+  draggedSkillsUnit.style.opacity = '1';
+  // Remove all drag-over classes
+  document.querySelectorAll('[data-unit-index]').forEach(unit => {
+    unit.classList.remove('drag-over-top', 'drag-over-bottom');
+  });
+  draggedSkillsUnit = null;
+  draggedSkillsUnitIndex = null;
+}
+
+function handleSkillsUnitDragOver(e) {
+  if (e.preventDefault) {
+    e.preventDefault();
+  }
+  e.dataTransfer.dropEffect = 'move';
+  
+  if (draggedSkillsUnit && e.currentTarget !== draggedSkillsUnit) {
+    const targetUnit = e.currentTarget;
+    const rect = targetUnit.getBoundingClientRect();
+    const midpoint = rect.top + rect.height / 2;
+    
+    // Remove previous drag-over classes
+    document.querySelectorAll('[data-unit-index]').forEach(unit => {
+      unit.classList.remove('drag-over-top', 'drag-over-bottom');
+    });
+    
+    // Add visual indicator
+    if (e.clientY < midpoint) {
+      targetUnit.classList.add('drag-over-top');
+    } else {
+      targetUnit.classList.add('drag-over-bottom');
+    }
+  }
+  
+  return false;
+}
+
+async function handleSkillsUnitDrop(e) {
+  if (e.stopPropagation) {
+    e.stopPropagation();
+  }
+  
+  if (draggedSkillsUnit && e.currentTarget !== draggedSkillsUnit) {
+    const targetUnit = e.currentTarget;
+    const targetIndex = parseInt(targetUnit.getAttribute('data-unit-index'));
+    
+    // Determine drop position based on mouse position
+    const rect = targetUnit.getBoundingClientRect();
+    const midpoint = rect.top + rect.height / 2;
+    const dropBefore = e.clientY < midpoint;
+    
+    // Remove dragged unit from array
+    const [movedUnit] = skillsUnitsData.splice(draggedSkillsUnitIndex, 1);
+    
+    // Calculate new index after removal
+    let newIndex = targetIndex;
+    if (draggedSkillsUnitIndex < targetIndex) {
+      // When dragging down, target index shifts down by 1 after removal
+      newIndex = dropBefore ? targetIndex - 1 : targetIndex;
+    } else if (draggedSkillsUnitIndex > targetIndex) {
+      // When dragging up, target index stays the same
+      newIndex = dropBefore ? targetIndex : targetIndex + 1;
+    } else {
+      // Same index, no change needed
+      skillsUnitsData.splice(draggedSkillsUnitIndex, 0, movedUnit);
+      return false;
+    }
+    
+    // Insert unit at new position
+    skillsUnitsData.splice(newIndex, 0, movedUnit);
+    
+    // Re-render units
+    renderSkillsUnits();
+    
+    // Auto-save the new order
+    try {
+      await ensureAuthenticated();
+      await saveSkillsUnits();
+    } catch (error) {
+      console.error('Failed to auto-save skills units order:', error);
+      alert('⚠️ Failed to save unit reordering. Please try clicking "Save All Changes" manually.');
+    }
+  }
+  
+  return false;
+}
+
 // Update skills units from Firestore data
 function updateSkillsUnitsData(unitsJson) {
   if (!unitsJson) {
@@ -9739,12 +9856,31 @@ function renderMathModules() {
   
   mathModulesData.forEach((module, moduleIndex) => {
     const moduleDiv = document.createElement('div');
-    moduleDiv.className = 'rounded-2xl shadow-soft p-6 bg-white';
+    moduleDiv.className = 'rounded-2xl shadow-soft p-6 bg-white relative';
     moduleDiv.setAttribute('data-module-index', moduleIndex);
+    
+    // Make modules draggable in edit mode
+    if (isEditMode) {
+      moduleDiv.draggable = true;
+      moduleDiv.style.cursor = 'move';
+      moduleDiv.addEventListener('dragstart', handleMathModuleDragStart);
+      moduleDiv.addEventListener('dragend', handleMathModuleDragEnd);
+      moduleDiv.addEventListener('dragover', handleMathModuleDragOver);
+      moduleDiv.addEventListener('drop', handleMathModuleDrop);
+      
+      // Add drag handle visual indicator
+      const dragHandle = document.createElement('div');
+      dragHandle.className = 'absolute top-4 left-4 text-gray-400 text-xl';
+      dragHandle.innerHTML = '⋮⋮';
+      dragHandle.title = 'Drag to reorder';
+      dragHandle.style.cursor = 'move';
+      moduleDiv.appendChild(dragHandle);
+    }
     
     // Module header
     const headerDiv = document.createElement('div');
     headerDiv.className = 'flex items-center justify-between mb-4 cursor-pointer';
+    headerDiv.style.paddingLeft = isEditMode ? '30px' : '0'; // Add padding when drag handle is present
     headerDiv.onclick = () => toggleMathModule(moduleIndex);
     
     const titleContainer = document.createElement('div');
@@ -10417,6 +10553,104 @@ async function saveMathModules() {
     console.error('Failed to save math modules:', error);
     alert(`Failed to save: ${error.message}`);
   }
+}
+
+// Drag and drop handlers for math modules reordering
+let draggedMathModule = null;
+let draggedMathModuleIndex = null;
+
+function handleMathModuleDragStart(e) {
+  draggedMathModule = e.currentTarget;
+  draggedMathModuleIndex = parseInt(draggedMathModule.getAttribute('data-module-index'));
+  e.dataTransfer.effectAllowed = 'move';
+  draggedMathModule.style.opacity = '0.5';
+}
+
+function handleMathModuleDragEnd(e) {
+  draggedMathModule.style.opacity = '1';
+  // Remove all drag-over classes
+  document.querySelectorAll('[data-module-index]').forEach(module => {
+    module.classList.remove('drag-over-top', 'drag-over-bottom');
+  });
+  draggedMathModule = null;
+  draggedMathModuleIndex = null;
+}
+
+function handleMathModuleDragOver(e) {
+  if (e.preventDefault) {
+    e.preventDefault();
+  }
+  e.dataTransfer.dropEffect = 'move';
+  
+  if (draggedMathModule && e.currentTarget !== draggedMathModule) {
+    const targetModule = e.currentTarget;
+    const rect = targetModule.getBoundingClientRect();
+    const midpoint = rect.top + rect.height / 2;
+    
+    // Remove previous drag-over classes
+    document.querySelectorAll('[data-module-index]').forEach(module => {
+      module.classList.remove('drag-over-top', 'drag-over-bottom');
+    });
+    
+    // Add visual indicator
+    if (e.clientY < midpoint) {
+      targetModule.classList.add('drag-over-top');
+    } else {
+      targetModule.classList.add('drag-over-bottom');
+    }
+  }
+  
+  return false;
+}
+
+async function handleMathModuleDrop(e) {
+  if (e.stopPropagation) {
+    e.stopPropagation();
+  }
+  
+  if (draggedMathModule && e.currentTarget !== draggedMathModule) {
+    const targetModule = e.currentTarget;
+    const targetIndex = parseInt(targetModule.getAttribute('data-module-index'));
+    
+    // Determine drop position based on mouse position
+    const rect = targetModule.getBoundingClientRect();
+    const midpoint = rect.top + rect.height / 2;
+    const dropBefore = e.clientY < midpoint;
+    
+    // Remove dragged module from array
+    const [movedModule] = mathModulesData.splice(draggedMathModuleIndex, 1);
+    
+    // Calculate new index after removal
+    let newIndex = targetIndex;
+    if (draggedMathModuleIndex < targetIndex) {
+      // When dragging down, target index shifts down by 1 after removal
+      newIndex = dropBefore ? targetIndex - 1 : targetIndex;
+    } else if (draggedMathModuleIndex > targetIndex) {
+      // When dragging up, target index stays the same
+      newIndex = dropBefore ? targetIndex : targetIndex + 1;
+    } else {
+      // Same index, no change needed
+      mathModulesData.splice(draggedMathModuleIndex, 0, movedModule);
+      return false;
+    }
+    
+    // Insert module at new position
+    mathModulesData.splice(newIndex, 0, movedModule);
+    
+    // Re-render modules
+    renderMathModules();
+    
+    // Auto-save the new order
+    try {
+      await ensureAuthenticated();
+      await saveMathModules();
+    } catch (error) {
+      console.error('Failed to auto-save math modules order:', error);
+      alert('⚠️ Failed to save module reordering. Please try clicking "Save All Changes" manually.');
+    }
+  }
+  
+  return false;
 }
 
 // Update math modules from Firestore data
