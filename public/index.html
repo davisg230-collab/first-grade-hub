@@ -3254,7 +3254,7 @@
           </div>
           <div>
             <textarea class="lesson-title w-full px-2 py-1 text-center text-sm border-0 rounded resize-none" 
-                   style="background: transparent; overflow-wrap: break-word; word-wrap: break-word; white-space: pre-wrap; min-height: 2.5em;" 
+                   style="background: transparent; overflow-wrap: break-word; white-space: pre-wrap; min-height: 2.5em;" 
                    placeholder="Lesson Title" 
                    rows="2">Getting Started</textarea>
           </div>
@@ -3418,12 +3418,12 @@
         // If target has a card, swap them
         if (existingCard) {
           lessonSourceContainer.appendChild(existingCard);
-        } else {
-          // Target is empty, need to clear placeholder before adding card
-          targetContainer.innerHTML = '';
         }
         
-        // Move dragged card to target
+        // Move dragged card to target (clear placeholder if target is empty)
+        if (!existingCard) {
+          targetContainer.innerHTML = '';
+        }
         targetContainer.appendChild(lessonDraggedCard);
         
         // If source container is now empty, recreate placeholder
@@ -5536,7 +5536,7 @@ function updateLessonCards(subject, lessons_data) {
         </div>
         <div>
           <textarea class="lesson-title w-full px-2 py-1 text-center text-sm border-0 rounded resize-none" 
-                 style="background: transparent; overflow-wrap: break-word; word-wrap: break-word; white-space: pre-wrap; min-height: 2.5em;" 
+                 style="background: transparent; overflow-wrap: break-word; white-space: pre-wrap; min-height: 2.5em;" 
                  placeholder="Lesson Title" 
                  rows="2"
                  ${isEditMode ? '' : 'disabled readonly'}>${card.title || ''}</textarea>
