@@ -825,21 +825,7 @@
         </div>
       </div>
       
-      <!-- Section 3: Watch Me Resources (Middle-Bottom Section) -->
-      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-xl font-display font-bold" style="color: var(--md-coral);">🎬 Watch Me</h3>
-          <div class="flex gap-2">
-            <button id="addListeningWatchMeBtn" class="edit-only px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral); display: none;" onclick="addWatchMeLink('listening')">+ Add Link</button>
-            <button id="saveListeningWatchMeBtn" class="edit-only px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate); display: none;" onclick="saveWatchMeLinks('listening')">💾 Save Links</button>
-          </div>
-        </div>
-        <div id="listeningWatchMeContent" class="space-y-2">
-          <!-- Content will be populated by JavaScript -->
-        </div>
-      </div>
-      
-      <!-- Section 4: Ask Your Scholar + View by Unit Button (Bottom Section) -->
+      <!-- Section 3: Ask Your Scholar + View by Unit Button (Bottom Section) -->
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-display font-semibold" style="color: var(--md-coral);">Ask your scholar...</h3>
@@ -10547,6 +10533,14 @@ function getDefaultFallbackData() {
     skills_lessons_json: JSON.stringify([]),
     math_lessons_json: JSON.stringify([]),
     listening_lessons_json: JSON.stringify([]),
+    skills_units_json: JSON.stringify([]),
+    math_modules_json: JSON.stringify([]),
+    listening_units_json: JSON.stringify([]),
+    current_module_json: JSON.stringify({
+      skills: { moduleId: '', link: '' },
+      math: { moduleId: '', link: '' },
+      listening: { moduleId: '', link: '' }
+    }),
     about_me_html: "Welcome to our classroom!",
     fun_facts_html: ["I love teaching first grade!", "Reading is my favorite subject", "I enjoy outdoor activities"],
     photo_urls_json: JSON.stringify([]),
