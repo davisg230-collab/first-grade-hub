@@ -743,18 +743,7 @@
     </section>
     <!-- SKILLS TAB -->
     <section data-page-panel="skills" class="pagePanel fade-in">
-      <!-- Section 1: Current Module (Top Section) -->
-      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">📚 Current Unit</h3>
-          <button id="saveSkillsModuleBtn" class="edit-only px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate); display: none;" onclick="saveCurrentModule('skills')">💾 Save</button>
-        </div>
-        <div id="skillsCurrentModuleContent" class="space-y-3">
-          <!-- Content will be populated by JavaScript -->
-        </div>
-      </div>
-      
-      <!-- Section 2: Description Box (Middle Section) -->
+      <!-- Section 1: Skills Spotlight Description (Top Section) -->
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
         <h2 class="text-2xl font-display font-bold mb-4" style="color: var(--md-coral);">📖 Skills Spotlight</h2>
         <p class="leading-relaxed" data-edit="teacher" contenteditable="false">
@@ -762,17 +751,28 @@
         </p>
       </div>
       
-      <!-- This Week's Lessons Section for Skills -->
+      <!-- Section 2: Current Unit (Middle Section) - Merged with Upcoming Lessons -->
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-2xl font-display font-bold" style="color: var(--md-coral);">📚 This Week's Lessons</h2>
-          <div class="edit-only flex gap-2" style="display: none;">
-            <button id="saveSkillsLessonsBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveLessonCards('skills')">💾 Save</button>
-            <button id="addSkillsLessonCardBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="addLessonCard('skills')">+ Add Card</button>
-          </div>
+          <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">📚 Current Unit</h3>
+          <button id="saveSkillsModuleBtn" class="edit-only px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate); display: none;" onclick="saveCurrentModule('skills')">💾 Save</button>
         </div>
-        <div id="skillsLessonsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-          <!-- Lesson cards will be populated by JavaScript -->
+        <div id="skillsCurrentModuleContent" class="space-y-3 mb-6">
+          <!-- Content will be populated by JavaScript -->
+        </div>
+        
+        <!-- Upcoming Lessons subsection -->
+        <div class="mt-6 pt-6 border-t" style="border-color: color-mix(in oklab, var(--md-slate) 20%, var(--md-white) 80%);">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-display font-semibold" style="color: var(--md-coral);">Upcoming Lessons</h3>
+            <div class="edit-only flex gap-2" style="display: none;">
+              <button id="saveSkillsLessonsBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveLessonCards('skills')">💾 Save</button>
+              <button id="addSkillsLessonCardBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="addLessonCard('skills')">+ Add Card</button>
+            </div>
+          </div>
+          <div id="skillsLessonsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            <!-- Lesson cards will be populated by JavaScript -->
+          </div>
         </div>
       </div>
       
@@ -828,18 +828,7 @@
     </section>
     <!-- MATH TAB -->
     <section data-page-panel="math" class="pagePanel fade-in">
-      <!-- Section 1: Current Module (Top Section) -->
-      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">📚 Current Module</h3>
-          <button id="saveMathModuleBtn" class="edit-only px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate); display: none;" onclick="saveCurrentModule('math')">💾 Save</button>
-        </div>
-        <div id="mathCurrentModuleContent" class="space-y-3">
-          <!-- Content will be populated by JavaScript -->
-        </div>
-      </div>
-      
-      <!-- Section 2: Description Box (Middle Section) -->
+      <!-- Section 1: Math Adventures Description (Top Section) -->
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
         <h2 class="text-2xl font-display font-bold mb-4" style="color: var(--md-slate);">🧮 Math Adventures</h2>
         <p class="leading-relaxed" data-edit="teacher" contenteditable="false">
@@ -847,17 +836,28 @@
         </p>
       </div>
       
-      <!-- This Week's Lessons Section for Math -->
+      <!-- Section 2: Current Module (Middle Section) - Merged with Upcoming Lessons -->
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-2xl font-display font-bold" style="color: var(--md-slate);">📚 This Week's Lessons</h2>
-          <div class="edit-only flex gap-2" style="display: none;">
-            <button id="saveMathLessonsBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="saveLessonCards('math')">💾 Save</button>
-            <button id="addMathLessonCardBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="addLessonCard('math')">+ Add Card</button>
-          </div>
+          <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">📚 Current Module</h3>
+          <button id="saveMathModuleBtn" class="edit-only px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate); display: none;" onclick="saveCurrentModule('math')">💾 Save</button>
         </div>
-        <div id="mathLessonsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-          <!-- Lesson cards will be populated by JavaScript -->
+        <div id="mathCurrentModuleContent" class="space-y-3 mb-6">
+          <!-- Content will be populated by JavaScript -->
+        </div>
+        
+        <!-- Upcoming Lessons subsection -->
+        <div class="mt-6 pt-6 border-t" style="border-color: color-mix(in oklab, var(--md-slate) 20%, var(--md-white) 80%);">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-display font-semibold" style="color: var(--md-slate);">Upcoming Lessons</h3>
+            <div class="edit-only flex gap-2" style="display: none;">
+              <button id="saveMathLessonsBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="saveLessonCards('math')">💾 Save</button>
+              <button id="addMathLessonCardBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="addLessonCard('math')">+ Add Card</button>
+            </div>
+          </div>
+          <div id="mathLessonsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            <!-- Lesson cards will be populated by JavaScript -->
+          </div>
         </div>
       </div>
       
