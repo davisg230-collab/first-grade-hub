@@ -34,7 +34,7 @@ jobs:
         run: |
           cd "$GITHUB_WORKSPACE"
           firebase deploy \
-            --only hosting,functions \
+            --only hosting,functions,firestore:rules \
             --project first-grade-news-hub \
             --non-interactive \
             --debug
