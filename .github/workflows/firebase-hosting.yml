@@ -30,7 +30,7 @@ jobs:
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
 
-      - name: Deploy to Firebase Hosting and Functions
+      - name: Deploy to Firebase Hosting, Functions, and Firestore Rules
         run: |
           cd "$GITHUB_WORKSPACE"
           firebase deploy \
