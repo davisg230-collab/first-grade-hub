@@ -2644,9 +2644,14 @@
         }
         
         // Validate the user's email
-        if (!auth.currentUser || auth.currentUser.email !== 'davisg230@gmail.com') {
+        const approvedEditorEmails = [
+          'davisg230@gmail.com',
+          'lvest@crossroadsschoolskc.org'
+        ];
+        const currentEditorEmail = (auth.currentUser && auth.currentUser.email || '').toLowerCase();
+        if (!approvedEditorEmails.includes(currentEditorEmail)) {
           console.error('Unauthorized user:', auth.currentUser?.email);
-          alert('Access denied. Only davisg230@gmail.com can edit this page.');
+          alert('Access denied. Please use an approved teacher Google account to edit this page.');
           // Sign out the unauthorized user
           await auth.signOut();
           return;
