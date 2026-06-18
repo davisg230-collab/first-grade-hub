@@ -1,4 +1,178 @@
-<!DOCTYPE html>
+
+
+    /* Parent experience polish - keeps the existing classroom color palette unchanged */
+    html { scroll-behavior: smooth; }
+    body { text-rendering: optimizeLegibility; }
+    button, a, input, textarea, select { transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease, background-color .18s ease, border-color .18s ease; }
+    button:hover, a.inline-flex:hover, .website-link:hover { transform: translateY(-1px); }
+    button:active, a.inline-flex:active, .website-link:active { transform: translateY(0); }
+    button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+      outline: 3px solid color-mix(in oklab, var(--md-mustard) 75%, var(--md-white));
+      outline-offset: 3px;
+    }
+    header .max-w-6xl { position: relative; }
+    header .max-w-6xl::after {
+      content: '';
+      position: absolute;
+      left: 1.5rem;
+      right: 1.5rem;
+      bottom: 1.25rem;
+      height: 1px;
+      background: color-mix(in oklab, var(--md-white) 45%, transparent);
+    }
+    .pagePanel.active { animation: parentPanelIn .32s ease both; }
+    @keyframes parentPanelIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    main > section > .rounded-2xl {
+      border-radius: 1rem;
+      border: 1px solid color-mix(in oklab, var(--md-slate) 18%, transparent);
+    }
+    .rounded-2xl.shadow-soft {
+      box-shadow: 0 12px 28px rgba(43,43,43,.08);
+    }
+    .rounded-2xl.shadow-soft:hover {
+      box-shadow: 0 16px 34px rgba(43,43,43,.11);
+    }
+    #topNav {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      padding: .65rem 0;
+      background: color-mix(in oklab, var(--md-cream) 88%, transparent);
+      backdrop-filter: blur(10px);
+    }
+    #topNav button {
+      border-radius: .85rem !important;
+      box-shadow: 0 6px 16px rgba(43,43,43,.08);
+    }
+    #topNav button:hover { box-shadow: 0 10px 20px rgba(43,43,43,.12); }
+    body:not(.editing) .edit-only { display: none !important; }
+    body:not(.editing) .photo-card[onclick*="handleHomePhotoClick"] {
+      color: transparent;
+      font-size: 0;
+      overflow: hidden;
+    }
+    body:not(.editing) .photo-card[onclick*="handleHomePhotoClick"]::after {
+      content: 'Class photos coming soon';
+      color: color-mix(in oklab, var(--md-ink) 72%, var(--md-white));
+      font-size: .9rem;
+      font-weight: 700;
+      text-align: center;
+      padding: 0 1rem;
+      line-height: 1.25;
+    }
+    body:not(.editing) .photo-card[onclick*="editProfilePhoto"]:not(:has(img)) {
+      color: transparent;
+      font-size: 0;
+      overflow: hidden;
+    }
+    body:not(.editing) .photo-card[onclick*="editProfilePhoto"]:not(:has(img))::after {
+      content: 'Photo coming soon';
+      color: color-mix(in oklab, var(--md-ink) 72%, var(--md-white));
+      font-size: .85rem;
+      font-weight: 700;
+      text-align: center;
+      padding: 0 1rem;
+      line-height: 1.25;
+    }
+    body:not(.editing) .specials-img-slot:not(:has(img[src]:not([src=""]))) span {
+      display: none !important;
+    }
+    body:not(.editing) .specials-img-slot:not(:has(img[src]:not([src=""])))::after {
+      content: 'Photos coming soon';
+      color: color-mix(in oklab, var(--md-ink) 65%, var(--md-white));
+      font-size: .85rem;
+      font-weight: 700;
+      text-align: center;
+      padding: 0 1rem;
+      line-height: 1.25;
+    }
+    body:not(.editing) .event-item .event-text:empty::after,
+    body:not(.editing) .event-item .event-text:is(:only-child)::after {
+      content: 'Dates will be updated soon';
+      color: color-mix(in oklab, var(--md-ink) 65%, var(--md-white));
+    }
+    body:not(.editing) .event-item .event-text {
+      min-height: 1.5rem;
+    }
+    body:not(.editing) .event-item .event-text:not(:empty) {
+      color: var(--md-ink);
+    }
+    body:not(.editing) .event-text {
+      word-break: break-word;
+    }
+    body:not(.editing) .lesson-placeholder,
+    body:not(.editing) .text-gray-500.py-4,
+    body:not(.editing) .text-gray-500.py-8 {
+      border: 1px dashed color-mix(in oklab, var(--md-slate) 35%, var(--md-white));
+      border-radius: .85rem;
+      background: color-mix(in oklab, var(--md-white) 72%, var(--md-cream));
+    }
+    body:not(.editing) .lesson-placeholder .placeholder-text {
+      font-style: normal !important;
+      font-weight: 700;
+      color: color-mix(in oklab, var(--md-ink) 68%, var(--md-white));
+    }
+    body > div[style*="position: fixed"] > div {
+      animation: parentModalIn .2s ease both;
+    }
+    @keyframes parentModalIn {
+      from { opacity: 0; transform: translateY(8px) scale(.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    #shoutoutTVDisplay, #shoutoutDisplay { text-wrap: balance; }
+    #snacksGrid .p-4, .website-card, .transportation-card, .birthday-month, .specials-card {
+      box-shadow: 0 8px 18px rgba(43,43,43,.07);
+    }
+    #snacksGrid .p-4:hover, .website-card:hover, .transportation-card:hover, .birthday-month:hover, .specials-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(43,43,43,.11);
+    }
+    @media (max-width: 768px) {
+      header .max-w-6xl { padding-top: 4.75rem; }
+      #shoutoutBtn {
+        top: .9rem !important;
+        bottom: auto !important;
+        width: calc(100% - 3rem);
+        max-width: 22rem;
+        justify-content: center;
+      }
+      #topNav {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .55rem !important;
+        max-height: 46vh;
+        overflow-y: auto !important;
+        padding: .75rem 0;
+      }
+      #topNav button {
+        width: 100% !important;
+        min-height: 3rem;
+        padding: .65rem .7rem !important;
+        font-size: .92rem;
+        line-height: 1.15;
+      }
+      #topNav button span:first-child { font-size: 1.05rem; }
+      main { padding-left: 1rem !important; padding-right: 1rem !important; }
+      main > section > .rounded-2xl { padding: 1.15rem !important; }
+      .transportation-cards,
+      .birthday-months-mobile,
+      .specials-cards-mobile {
+        gap: .85rem !important;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+      }
+    }
+
+  </style><!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
