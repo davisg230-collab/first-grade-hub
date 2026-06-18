@@ -2223,6 +2223,8 @@
       
       // Render Class Skill Meter history
       renderClassSkillMeterHistory();
+      setupEditDraftProtection();
+      restoreEditDraftIfAvailable();
     }
     function exitEditMode(){
       isOwner = false; // Reset owner status when exiting edit mode
@@ -2877,6 +2879,7 @@
         
         // Save to Firestore
         await db.collection('classData').doc('current').set(data, { merge: true });
+        clearEditDraft();
         
         console.log('Data saved successfully to Firestore');
         
@@ -11255,10 +11258,117 @@ document.addEventListener('DOMContentLoaded', function() {
 let isSaving = false;
 let isUploading = false;
 
+const EDIT_DRAFT_STORAGE_KEY = 'firstGradeHub.unsavedEditDraft.v1';
+let hasUnsavedEditDraft = false;
+let editDraftSaveTimer = null;
+let editDraftListenersAttached = false;
+
+function getEditDraft() {
+  try {
+    const rawDraft = localStorage.getItem(EDIT_DRAFT_STORAGE_KEY);
+    return rawDraft ? JSON.parse(rawDraft) : null;
+  } catch (error) {
+    console.warn('Unable to read saved edit draft:', error);
+    return null;
+  }
+}
+
+function saveEditDraftNow() {
+  if (!document.body.classList.contains('editing') || typeof collectEditableFieldData !== 'function') {
+    return;
+  }
+  try {
+    const draft = {
+      savedAt: new Date().toISOString(),
+      data: collectEditableFieldData()
+    };
+    localStorage.setItem(EDIT_DRAFT_STORAGE_KEY, JSON.stringify(draft));
+    hasUnsavedEditDraft = true;
+    const saveBtn = document.getElementById('saveChangesBtn');
+    if (saveBtn) saveBtn.style.display = 'block';
+  } catch (error) {
+    console.warn('Unable to save local edit draft:', error);
+  }
+}
+
+function scheduleEditDraftSave() {
+  clearTimeout(editDraftSaveTimer);
+  editDraftSaveTimer = setTimeout(saveEditDraftNow, 400);
+}
+
+function clearEditDraft() {
+  clearTimeout(editDraftSaveTimer);
+  try {
+    localStorage.removeItem(EDIT_DRAFT_STORAGE_KEY);
+  } catch (error) {
+    console.warn('Unable to clear local edit draft:', error);
+  }
+  hasUnsavedEditDraft = false;
+}
+
+function shouldTrackEditDraft(target) {
+  if (!target || !document.body.classList.contains('editing')) return false;
+  if (target.closest('#pinOverlay, #shoutoutPinModal')) return false;
+  return Boolean(
+    target.closest('[data-edit="teacher"]') ||
+    target.closest('[contenteditable="true"]') ||
+    target.matches('input, textarea, select') ||
+    target.closest('.teacher-only-edit, .website-url-input, .lesson-card, #extrasGrid')
+  );
+}
+
+function setupEditDraftProtection() {
+  if (editDraftListenersAttached) return;
+  editDraftListenersAttached = true;
+
+  document.addEventListener('input', (event) => {
+    if (shouldTrackEditDraft(event.target)) scheduleEditDraftSave();
+  }, true);
+
+  document.addEventListener('change', (event) => {
+    if (shouldTrackEditDraft(event.target)) scheduleEditDraftSave();
+  }, true);
+
+  window.addEventListener('beforeunload', (event) => {
+    if (document.body.classList.contains('editing') && hasUnsavedEditDraft) {
+      event.preventDefault();
+      event.returnValue = '';
+    }
+  });
+}
+
+function restoreEditDraftIfAvailable() {
+  const draft = getEditDraft();
+  if (!draft || !draft.data || !document.body.classList.contains('editing')) return;
+
+  const savedAt = draft.savedAt ? new Date(draft.savedAt).toLocaleString() : 'recently';
+  const shouldRestore = confirm('Unsaved edits from ' + savedAt + ' were found on this device. Restore them?');
+  if (!shouldRestore) return;
+
+  try {
+    populateDataFromSheet(draft.data);
+    renderCurrentModule('skills');
+    renderCurrentModule('math');
+    renderCurrentModule('listening');
+    renderWatchMeContent('listening');
+    renderSkillsUnits();
+    renderMathModules();
+    renderListeningUnits();
+    renderClassSkillMeterHistory();
+
+    hasUnsavedEditDraft = true;
+    const saveBtn = document.getElementById('saveChangesBtn');
+    if (saveBtn) saveBtn.style.display = 'block';
+  } catch (error) {
+    console.error('Failed to restore local edit draft:', error);
+    alert('I found a saved draft, but it could not be restored automatically.');
+  }
+}
+
 setInterval(async () => {
-  // Skip refresh if we're in the middle of a save or upload operation
-  if (isSaving || isUploading) {
-    console.log('Skipping periodic refresh - save/upload operation in progress');
+  // Skip refresh if we're in the middle of a save/upload or while edit mode is open.
+  if (isSaving || isUploading || document.body.classList.contains('editing')) {
+    console.log('Skipping periodic refresh - editing, save, or upload in progress');
     return;
   }
   
