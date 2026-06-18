@@ -358,6 +358,53 @@
       box-shadow: 0 6px 16px rgba(43,43,43,.08);
     }
     #topNav button:hover { box-shadow: 0 10px 20px rgba(43,43,43,.12); }
+
+    #topNav [data-tooltip] { position: relative; }
+    @media (hover: hover) and (pointer: fine) {
+      #topNav [data-tooltip]::before,
+      #topNav [data-tooltip]::after {
+        opacity: 0;
+        pointer-events: none;
+        position: absolute;
+        transition: opacity .18s ease, transform .18s ease;
+        z-index: 80;
+      }
+      #topNav [data-tooltip]::before {
+        content: '';
+        left: 50%;
+        top: calc(100% + .35rem);
+        transform: translate(-50%, -4px);
+        border: .45rem solid transparent;
+        border-bottom-color: color-mix(in oklab, var(--md-white) 96%, var(--md-cream));
+        filter: drop-shadow(0 -1px 1px rgba(43,43,43,.08));
+      }
+      #topNav [data-tooltip]::after {
+        content: attr(data-tooltip);
+        left: 50%;
+        top: calc(100% + 1.2rem);
+        transform: translate(-50%, -6px);
+        min-width: 12rem;
+        max-width: 17rem;
+        padding: .75rem .85rem;
+        border-radius: .85rem;
+        border: 1px solid color-mix(in oklab, var(--md-slate) 24%, transparent);
+        background: color-mix(in oklab, var(--md-white) 96%, var(--md-cream));
+        box-shadow: 0 14px 28px rgba(43,43,43,.16);
+        color: var(--md-ink);
+        font-size: .78rem;
+        font-weight: 700;
+        line-height: 1.35;
+        text-align: left;
+        white-space: pre-line;
+      }
+      #topNav [data-tooltip]:hover::before,
+      #topNav [data-tooltip]:hover::after,
+      #topNav [data-tooltip]:focus-visible::before,
+      #topNav [data-tooltip]:focus-visible::after {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+    }
     body:not(.editing) .edit-only { display: none !important; }
     body:not(.editing) .photo-card[onclick*="handleHomePhotoClick"] { color: transparent; font-size: 0; overflow: hidden; }
     body:not(.editing) .photo-card[onclick*="handleHomePhotoClick"]::after {
@@ -400,8 +447,8 @@
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
     #shoutoutTVDisplay, #shoutoutDisplay { text-wrap: balance; }
-    #snacksGrid .p-4, .website-card, .transportation-card, .birthday-month, .specials-card { box-shadow: 0 8px 18px rgba(43,43,43,.07); }
-    #snacksGrid .p-4:hover, .website-card:hover, .transportation-card:hover, .birthday-month:hover, .specials-card:hover {
+    .snacks-grid .p-4, .website-card, .transportation-card, .birthday-month, .specials-card { box-shadow: 0 8px 18px rgba(43,43,43,.07); }
+    .snacks-grid .p-4:hover, .website-card:hover, .transportation-card:hover, .birthday-month:hover, .specials-card:hover {
       transform: translateY(-2px);
       box-shadow: 0 12px 24px rgba(43,43,43,.11);
     }
@@ -693,52 +740,57 @@
     <!-- Top Navigation Bar -->
     <nav id="topNav" class="mt-6 mb-4 flex flex-wrap items-center gap-3 mobile-tab-scroll scrollbar-hide">
       <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
-              data-page="home" style="background: var(--md-coral);">
+              data-page="home" data-tooltip="Weekly News&#10;Important Dates&#10;Looking Ahead" style="background: var(--md-coral);">
         <span>🏠</span><span>Home</span>
       </button>
       <button id="aboutMeDavisBtn"
               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
-              data-page="aboutme" style="background: var(--md-coral);">
+              data-page="aboutme" data-tooltip="About Mr. Davis&#10;Contact Info" style="background: var(--md-coral);">
         <span>👨‍🏫</span><span>Mr. Davis</span>
       </button>
       <button id="aboutMeWilliamsBtn"
               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
+              data-tooltip="About Ms. Vest&#10;Contact Info"
               style="background: var(--md-coral);">
         <span>👩‍🏫</span><span>Ms. Vest</span>
       </button>
       <button id="scholarBtn" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white hover:opacity-90"
+              data-tooltip="Mr. Davis Scholar&#10;Ms. Vest Scholar&#10;Class Skill Meter"
               style="background: var(--md-mustard);">
         <span>⭐</span><span>Scholar of the Month</span>
       </button>
       <button id="gradesBtn" class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white hover:opacity-90"
-              data-page="grades" style="background: var(--md-coral);">
+              data-page="grades" data-tooltip="Grade Portal&#10;Class Progress Notes" style="background: var(--md-coral);">
         <span>📊</span><span>Grades</span>
       </button>
       <button id="learningHubBtn"
               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
+              data-tooltip="Skills&#10;Listening &amp; Learning&#10;Math&#10;Practice Websites"
               style="background: var(--md-slate);">
         <span>📚</span><span>Learning Hub</span>
       </button>
       <button id="familyHubBtn"
               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
+              data-tooltip="ClassDojo&#10;Transportation&#10;Birthdays&#10;Snack Helpers&#10;Volunteer Opportunities"
               style="background: var(--md-coral);">
         <span>🎯</span><span>Student Services</span>
       </button>
       <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white"
-              data-page="specials" style="background:#f59e0b;">
+              data-page="specials" data-tooltip="Art&#10;PE&#10;Music&#10;Library" style="background:#f59e0b;">
         <span>🎨</span><span>Specials</span>
       </button>
       <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white"
-              data-page="extras" style="background:#6b7280;">
+              data-page="extras" data-tooltip="Classroom Updates&#10;Announcements&#10;Extra Reminders" style="background:#6b7280;">
         <span>📰</span><span>Extra News</span>
       </button>
     </nav>
     <!-- HOME TAB -->
     <section data-page-panel="home" class="pagePanel fade-in active">
+      <div class="home-news-grid grid gap-6 lg:grid-cols-2 lg:items-stretch mb-8">
       <!-- What We Did - Mr. Davis -->
-      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
+      <div class="rounded-2xl shadow-soft p-6 sm:p-8 h-full" style="background: var(--card-bg);">
         <h2 id="whatWeDidDavisTitle" class="text-2xl font-display font-bold mb-5 text-center" data-edit="teacher" contenteditable="false">What We Did This Week - Mr. Davis</h2>
-        <div class="grid md:grid-cols-3 gap-6">
+        <div class="grid xl:grid-cols-3 gap-5">
           <!-- 2 small + 1 large photo grid -->
           <div class="col-span-1 flex flex-col gap-4">
             <div class="grid grid-cols-2 gap-4 mb-4">
@@ -754,7 +806,7 @@
             </div>
           </div>
           <!-- Editable recap -->
-          <div class="md:col-span-2">
+          <div class="xl:col-span-2">
             <div class="rounded-xl p-4 sm:p-5 h-full flex items-center" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-blush) 30%); border: 1px solid color-mix(in oklab, var(--md-blush) 60%, var(--md-white) 40%);">
               <p id="recapTextDavis" class="leading-relaxed w-full" data-edit="teacher" contenteditable="false">
                 This week we explored magical stories and practiced our sight words. The students loved reading about brave characters and sharing their favorite parts! We also worked on counting by 5s and 10s using fun games and manipulatives. Our art projects focused on fall colors and textures - the students created beautiful leaf collages and practiced writing descriptive words.
@@ -764,13 +816,10 @@
         </div>
       </div>
       <!-- What We Did - Ms. Vest -->
-      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
-        <h2 id="whatWeDidWilliamsTitle" class="text-2xl font-display font-bold mb-5 text-center collapsible-header" data-edit="teacher" contenteditable="false" onclick="toggleWilliamsSection()">
-          What We Did This Week - Ms. Vest
-          <span class="chevron">▼</span>
-        </h2>
-        <div id="williamsCollapsibleContent" class="collapsible-content">
-          <div class="grid md:grid-cols-3 gap-6">
+      <div class="rounded-2xl shadow-soft p-6 sm:p-8 h-full" style="background: var(--card-bg);">
+        <h2 id="whatWeDidWilliamsTitle" class="text-2xl font-display font-bold mb-5 text-center" data-edit="teacher" contenteditable="false">What We Did This Week - Ms. Vest</h2>
+        <div id="williamsCollapsibleContent">
+          <div class="grid xl:grid-cols-3 gap-5">
           <!-- 2 small + 1 large photo grid -->
           <div class="col-span-1 flex flex-col gap-4">
             <div class="grid grid-cols-2 gap-4 mb-4">
@@ -786,7 +835,7 @@
             </div>
           </div>
           <!-- Editable recap -->
-          <div class="md:col-span-2">
+          <div class="xl:col-span-2">
             <div class="rounded-xl p-4 sm:p-5 h-full flex items-center" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-blush) 30%); border: 1px solid color-mix(in oklab, var(--md-blush) 60%, var(--md-white) 40%);">
               <p id="recapTextWilliams" class="leading-relaxed w-full" data-edit="teacher" contenteditable="false">
                 This week we explored magical stories and practiced our sight words. The students loved reading about brave characters and sharing their favorite parts! We also worked on counting by 5s and 10s using fun games and manipulatives. Our art projects focused on fall colors and textures - the students created beautiful leaf collages and practiced writing descriptive words.
@@ -796,10 +845,11 @@
         </div>
         </div>
       </div>
+      </div>
       <!-- Important Dates + Looking Ahead -->
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
-        <div class="grid md:grid-cols-3 gap-6">
-          <div class="md:col-span-2">
+        <div class="grid xl:grid-cols-3 gap-5">
+          <div class="xl:col-span-2">
             <div class="flex items-center justify-between mb-4">
               <h2 class="text-2xl font-display font-bold">Important Dates</h2>
               <button class="edit-only px-4 py-2 rounded-xl text-white font-semibold" style="background: var(--md-coral);" onclick="addEvent()">+ Add Event</button>
@@ -955,7 +1005,7 @@
         </div>
       </div>
     </section>
-    <!-- MS. WILLIAMS SCHOLAR TAB -->
+    <!-- MS. VEST SCHOLAR TAB -->
     <section data-page-panel="scholarwilliams" class="pagePanel fade-in">
       <div class="rounded-2xl shadow-soft p-6 sm:p-10 mb-8" style="background: var(--md-white); border: 1px solid color-mix(in oklab, var(--md-mustard) 50%, var(--md-white) 50%);">
         <h2 class="text-2xl font-display font-bold mb-6 text-center" style="color: var(--md-coral);">Ms. Vest's Scholar of the Month</h2>
@@ -1246,15 +1296,12 @@
     <!-- SNACKS TAB -->
     <section data-page-panel="snacks" class="pagePanel fade-in">
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
-        <div class="flex items-center justify-between mb-5">
-          <div>
-            <h2 class="text-2xl font-display font-bold">🥨 Snack Helpers</h2>
-            <p class="text-sm text-[color:var(--md-ink)]/80 mt-1">Check an item and add your name.</p>
-          </div>
-          <button id="snackAdd" class="px-3 py-2 rounded-lg text-white" style="background: var(--md-coral);" onclick="addSnackItem()">+ Add other snack</button>
+        <div class="mb-5">
+          <h2 class="text-2xl font-display font-bold">🥨 Snack Helpers</h2>
+          <p class="text-sm text-[color:var(--md-ink)]/80 mt-1">Choose the class, check an item, and add your name.</p>
         </div>
         <!-- Snack importance message -->
-        <div class="mb-4 p-3 rounded-lg" style="background: color-mix(in oklab, var(--md-mustard) 20%, var(--md-white) 80%); border: 1px solid color-mix(in oklab, var(--md-mustard) 40%, var(--md-white) 60%);">
+        <div class="mb-6 p-3 rounded-lg" style="background: color-mix(in oklab, var(--md-mustard) 20%, var(--md-white) 80%); border: 1px solid color-mix(in oklab, var(--md-mustard) 40%, var(--md-white) 60%);">
           <div class="flex justify-between items-start mb-2 edit-only" style="display: none;">
             <h4 class="font-semibold text-sm">Snack Message</h4>
             <button id="saveSnackMessageBtn" class="px-3 py-1 rounded-lg text-white text-xs font-semibold" style="background: var(--md-coral);" onclick="saveSnackMessage()">💾 Save</button>
@@ -1268,57 +1315,125 @@
             readonly
             rows="4">Snacks help keep our energy up during learning time and teach us about sharing and community!</textarea>
         </div>
-        <div id="snacksGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <!-- Default snack cards - always visible, names only editable by teacher/admin -->
-          <div class="p-4 rounded-xl bg-white default-snack-card" data-default-snack="true" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
-            <div class="flex items-center gap-3 mb-3">
-              <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="1">
-              <span class="text-xl">🥯</span>
-              <span class="font-medium snack-title" data-edit="teacher" contenteditable="false">Breakfast Bars</span>
+        <div class="grid lg:grid-cols-2 gap-6">
+
+          <section class="rounded-2xl p-4 sm:p-5" style="background: color-mix(in oklab, var(--md-white) 76%, var(--md-cream)); border: 1px solid color-mix(in oklab, var(--md-slate) 26%, var(--md-white) 74%);">
+            <div class="flex items-center justify-between gap-3 mb-4">
+              <div>
+                <h3 class="text-xl font-display font-bold">Mr. Davis Class</h3>
+                <p class="text-xs text-[color:var(--md-ink)]/70">Choose a snack for this class.</p>
+              </div>
+              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="addSnackItem('davis')">+ Add other snack</button>
             </div>
-            <div class="flex items-center gap-2">
-              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="2">
-              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="3">Save</button>
+            <div id="snacksGridDavis" class="snacks-grid grid gap-4">
+
+              <div class="p-4 rounded-xl bg-white default-snack-card" data-default-snack="true" data-snack-class="davis" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
+                <div class="flex items-center gap-3 mb-3">
+                  <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="1">
+                  <span class="text-xl">🥯</span>
+                  <span class="font-medium snack-title" data-edit="teacher" contenteditable="false">Breakfast Bars</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="2">
+                  <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="3">Save</button>
+                </div>
+              </div>
+              <div class="p-4 rounded-xl bg-white default-snack-card" data-default-snack="true" data-snack-class="davis" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
+                <div class="flex items-center gap-3 mb-3">
+                  <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="4">
+                  <span class="text-xl">🍬</span>
+                  <span class="font-medium snack-title" data-edit="teacher" contenteditable="false">Gummies</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="5">
+                  <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="6">Save</button>
+                </div>
+              </div>
+              <div class="p-4 rounded-xl bg-white default-snack-card" data-default-snack="true" data-snack-class="davis" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
+                <div class="flex items-center gap-3 mb-3">
+                  <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="7">
+                  <span class="text-xl">🍚</span>
+                  <span class="font-medium snack-title" data-edit="teacher" contenteditable="false">Rice Krispy Treats</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="8">
+                  <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="9">Save</button>
+                </div>
+              </div>
+              <div class="p-4 rounded-xl bg-white default-snack-card" data-default-snack="true" data-snack-class="davis" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
+                <div class="flex items-center gap-3 mb-3">
+                  <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="10">
+                  <span class="text-xl">🧃</span>
+                  <span class="font-medium snack-title" data-edit="teacher" contenteditable="false">Juice</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="11">
+                  <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="12">Save</button>
+                </div>
+              </div>
             </div>
-          </div>
-          <div class="p-4 rounded-xl bg-white default-snack-card" data-default-snack="true" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
-            <div class="flex items-center gap-3 mb-3">
-              <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="4">
-              <span class="text-xl">🍬</span>
-              <span class="font-medium snack-title" data-edit="teacher" contenteditable="false">Gummies</span>
+          </section>
+
+          <section class="rounded-2xl p-4 sm:p-5" style="background: color-mix(in oklab, var(--md-white) 76%, var(--md-cream)); border: 1px solid color-mix(in oklab, var(--md-slate) 26%, var(--md-white) 74%);">
+            <div class="flex items-center justify-between gap-3 mb-4">
+              <div>
+                <h3 class="text-xl font-display font-bold">Ms. Vest Class</h3>
+                <p class="text-xs text-[color:var(--md-ink)]/70">Choose a snack for this class.</p>
+              </div>
+              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="addSnackItem('williams')">+ Add other snack</button>
             </div>
-            <div class="flex items-center gap-2">
-              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="5">
-              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="6">Save</button>
+            <div id="snacksGridWilliams" class="snacks-grid grid gap-4">
+
+              <div class="p-4 rounded-xl bg-white default-snack-card" data-default-snack="true" data-snack-class="williams" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
+                <div class="flex items-center gap-3 mb-3">
+                  <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="101">
+                  <span class="text-xl">🥯</span>
+                  <span class="font-medium snack-title" data-edit="teacher" contenteditable="false">Breakfast Bars</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="102">
+                  <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="103">Save</button>
+                </div>
+              </div>
+              <div class="p-4 rounded-xl bg-white default-snack-card" data-default-snack="true" data-snack-class="williams" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
+                <div class="flex items-center gap-3 mb-3">
+                  <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="104">
+                  <span class="text-xl">🍬</span>
+                  <span class="font-medium snack-title" data-edit="teacher" contenteditable="false">Gummies</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="105">
+                  <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="106">Save</button>
+                </div>
+              </div>
+              <div class="p-4 rounded-xl bg-white default-snack-card" data-default-snack="true" data-snack-class="williams" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
+                <div class="flex items-center gap-3 mb-3">
+                  <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="107">
+                  <span class="text-xl">🍚</span>
+                  <span class="font-medium snack-title" data-edit="teacher" contenteditable="false">Rice Krispy Treats</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="108">
+                  <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="109">Save</button>
+                </div>
+              </div>
+              <div class="p-4 rounded-xl bg-white default-snack-card" data-default-snack="true" data-snack-class="williams" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
+                <div class="flex items-center gap-3 mb-3">
+                  <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="110">
+                  <span class="text-xl">🧃</span>
+                  <span class="font-medium snack-title" data-edit="teacher" contenteditable="false">Juice</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="111">
+                  <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="112">Save</button>
+                </div>
+              </div>
             </div>
-          </div>
-          <div class="p-4 rounded-xl bg-white default-snack-card" data-default-snack="true" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
-            <div class="flex items-center gap-3 mb-3">
-              <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="7">
-              <span class="text-xl">🍚</span>
-              <span class="font-medium snack-title" data-edit="teacher" contenteditable="false">Rice Krispy Treats</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="8">
-              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="9">Save</button>
-            </div>
-          </div>
-          <div class="p-4 rounded-xl bg-white default-snack-card" data-default-snack="true" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
-            <div class="flex items-center gap-3 mb-3">
-              <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="10">
-              <span class="text-xl">🧃</span>
-              <span class="font-medium snack-title" data-edit="teacher" contenteditable="false">Juice</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <input type="text" placeholder="Your name" class="flex-1 px-3 py-2 rounded-lg text-sm snack-name" style="background: var(--md-cream);" disabled tabindex="11">
-              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="claimSnack(this)" disabled tabindex="12">Save</button>
-            </div>
-          </div>
+          </section>
         </div>
       </div>
     </section>
-    <!-- VOLUNTEER OPPORTUNITIES TAB -->
-    <section data-page-panel="volunteers" class="pagePanel fade-in">
+    <!-- VOLUNTEER OPPORTUNITIES TAB --><section data-page-panel="volunteers" class="pagePanel fade-in">
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
         <div class="flex items-center justify-between mb-5">
           <div>
@@ -3047,28 +3162,12 @@
         }
       }
       
-      // Snacks grid - collect snack items with checkbox states
-      const snacksGrid = document.getElementById('snacksGrid');
-      if (snacksGrid) {
-        const snacks = [];
-        snacksGrid.querySelectorAll('.p-4').forEach(card => {
-          const emoji = card.querySelector('.text-xl')?.textContent || '';
-          const item = card.querySelector('.snack-title')?.textContent || '';
-          const claimedBy = card.querySelector('.snack-name')?.value || '';
-          const checked = card.querySelector('.snack-checkbox')?.checked || false;
-          const isDefault = card.getAttribute('data-default-snack') === 'true';
-          if (item) {
-            snacks.push({ 
-              emoji: emoji, 
-              item: item, 
-              claimed_by: claimedBy, 
-              checked: checked,
-              is_default: isDefault
-            });
-          }
-        });
-        data.snacks_json = JSON.stringify(snacks);
-      }
+      // Snacks grids - collect separate class snack items
+      const davisSnacks = collectSnackGridData('snacksGridDavis');
+      const williamsSnacks = collectSnackGridData('snacksGridWilliams');
+      data.snacks_json = JSON.stringify(davisSnacks); // Legacy field kept for older saved data
+      data.snacks_davis_json = JSON.stringify(davisSnacks);
+      data.snacks_williams_json = JSON.stringify(williamsSnacks);
       
       // Snack message
       const snackMessageEl = document.getElementById('snackMessage');
@@ -3163,7 +3262,7 @@
         data.calendar_url = calendarLink.href || '';
       }
       
-      // Photo cards URLs - separate for Davis and Williams
+      // Photo cards URLs - separate for Davis and Vest
       const davisPhotoCards = document.querySelectorAll('.photo-card[data-teacher="davis"], .photo-card[onclick*="davis"]');
       const davisPhotoUrls = [];
       davisPhotoCards.forEach(card => {
@@ -3461,18 +3560,58 @@
       textSpan.focus();
       textSpan.select();
     }
-    // Home tab: Add snack
-    function addSnackItem() {
-      // Create new snack card that parents can edit (user-added, not default)
+    // Snack helpers
+    function getSnackGridForClass(classKey = 'davis') {
+      const normalized = classKey === 'williams' ? 'Williams' : 'Davis';
+      return document.getElementById('snacksGrid' + normalized);
+    }
+
+    function getSnackClassForCard(card) {
+      const grid = card?.closest('.snacks-grid');
+      return grid?.id === 'snacksGridWilliams' ? 'williams' : 'davis';
+    }
+
+    function getSnackClassLabel(classKey) {
+      return classKey === 'williams' ? 'Ms. Vest Class' : 'Mr. Davis Class';
+    }
+
+    function collectSnackGridData(gridId) {
+      const snacksGrid = document.getElementById(gridId);
+      if (!snacksGrid) return [];
+
+      const snacks = [];
+      snacksGrid.querySelectorAll('.p-4').forEach(card => {
+        const emoji = card.querySelector('.text-xl')?.textContent || '';
+        const item = card.querySelector('.snack-title')?.textContent || '';
+        const claimedBy = card.querySelector('.snack-name')?.value || '';
+        const checked = card.querySelector('.snack-checkbox')?.checked || false;
+        const isDefault = card.getAttribute('data-default-snack') === 'true';
+        if (item) {
+          snacks.push({
+            emoji: emoji,
+            item: item,
+            claimed_by: claimedBy,
+            checked: checked,
+            is_default: isDefault
+          });
+        }
+      });
+      return snacks;
+    }
+
+    function addSnackItem(classKey = 'davis') {
+      const targetGrid = getSnackGridForClass(classKey);
+      if (!targetGrid) return;
+
       const newSnack = document.createElement('div');
       newSnack.className = 'p-4 rounded-xl bg-white user-added-snack-card';
       newSnack.setAttribute('data-default-snack', 'false');
+      newSnack.setAttribute('data-snack-class', classKey);
       newSnack.style.border = '1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%)';
-      
-      // Get the highest current tabindex to continue sequence
-      const existingCheckboxes = document.querySelectorAll('.snack-checkbox');
-      let nextTabIndex = (existingCheckboxes.length * 3) + 1;
-      
+
+      const existingCheckboxes = targetGrid.querySelectorAll('.snack-checkbox');
+      const nextTabIndex = classKey === 'williams' ? 101 + (existingCheckboxes.length * 3) : 1 + (existingCheckboxes.length * 3);
+
       newSnack.innerHTML = `
         <div class="flex items-center gap-3 mb-3">
           <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="${nextTabIndex}">
@@ -3485,12 +3624,10 @@
           <button class="text-gray-400 hover:text-red-500" onclick="this.closest('.p-4').remove()">✖</button>
         </div>
       `;
-      document.getElementById('snacksGrid').appendChild(newSnack);
-      
-      // Focus on the snack name for editing
+      targetGrid.appendChild(newSnack);
+
       const snackNameSpan = newSnack.querySelector('.snack-title');
       snackNameSpan.focus();
-      // Select all text for contenteditable elements
       if (window.getSelection && document.createRange) {
         const range = document.createRange();
         range.selectNodeContents(snackNameSpan);
@@ -3548,7 +3685,9 @@
         saveSnackDataToFirestore().then(() => {
           btn.textContent = 'Saved!';
           const snackTitle = card.querySelector('.snack-title')?.textContent?.trim() || 'a snack';
-          logParentActivity('snack', 'Snack claimed', `${name} claimed ${snackTitle}.`, { name, snack: snackTitle });
+          const snackClass = getSnackClassForCard(card);
+          const snackClassLabel = getSnackClassLabel(snackClass);
+          logParentActivity('snack', 'Snack claimed', `${name} claimed ${snackTitle} for ${snackClassLabel}.`, { name, snack: snackTitle, class: snackClass });
           setTimeout(() => {
             btn.textContent = 'Save';
             btn.disabled = false;
@@ -3629,108 +3768,65 @@
       try {
         // Ensure valid authentication for parent snack claims
         if (auth) {
-          // Check if user is already authenticated
           if (auth.currentUser) {
-            // Check if it's a Google user (from edit mode) or anonymous
             const isGoogleUser = auth.currentUser.providerData.some(
               provider => provider.providerId === 'google.com'
             );
-            
+
             if (isGoogleUser) {
-              // Google user exists, verify token is still valid by refreshing it
               try {
                 await auth.currentUser.getIdToken(true);
                 console.log('Using existing Google authentication for snack claim');
               } catch (error) {
-                // Token refresh failed, sign out and use anonymous auth
                 console.log('Google auth token expired, switching to anonymous auth');
                 await auth.signOut();
                 await auth.signInAnonymously();
                 console.log('Authentication successful');
               }
             } else {
-              // Already have anonymous auth, verify it's still valid
               try {
                 await auth.currentUser.getIdToken(true);
                 console.log('Using existing anonymous authentication for snack claim');
               } catch (error) {
-                // Token refresh failed, re-authenticate
                 console.log('Anonymous auth token expired, re-authenticating');
                 await auth.signInAnonymously();
                 console.log('Authentication successful');
               }
             }
           } else {
-            // No user signed in, use anonymous auth
             console.log('Authenticating for snack claim...');
             await auth.signInAnonymously();
             console.log('Authentication successful');
           }
         }
-        
-        // Collect current snack data
-        const snacksGrid = document.getElementById('snacksGrid');
-        if (!snacksGrid) return;
-        
-        const snacks = [];
-        snacksGrid.querySelectorAll('.p-4').forEach(card => {
-          const emoji = card.querySelector('.text-xl')?.textContent || '';
-          const item = card.querySelector('.snack-title')?.textContent || '';
-          const claimedBy = card.querySelector('.snack-name')?.value || '';
-          const checked = card.querySelector('.snack-checkbox')?.checked || false;
-          const isDefault = card.getAttribute('data-default-snack') === 'true';
-          if (item) {
-            snacks.push({ 
-              emoji: emoji, 
-              item: item, 
-              claimed_by: claimedBy, 
-              checked: checked,
-              is_default: isDefault
-            });
-          }
-        });
-        
-        const snacksData = JSON.stringify(snacks);
-        
-        // Try to save to Firestore first
+
+        const davisSnacks = collectSnackGridData('snacksGridDavis');
+        const williamsSnacks = collectSnackGridData('snacksGridWilliams');
+        const snackPayload = {
+          snacks_json: JSON.stringify(davisSnacks),
+          snacks_davis_json: JSON.stringify(davisSnacks),
+          snacks_williams_json: JSON.stringify(williamsSnacks)
+        };
+
         if (typeof db !== 'undefined') {
-          await db.collection('classData').doc('current').set(
-            { snacks_json: snacksData }, 
-            { merge: true }
-          );
+          await db.collection('classData').doc('current').set(snackPayload, { merge: true });
           console.log('Snack data saved to Firestore successfully');
         } else {
-          // Fallback to localStorage for testing when Firebase is not available
-          localStorage.setItem('classData_snacks_json', snacksData);
+          localStorage.setItem('classData_snacks_json', snackPayload.snacks_json);
+          localStorage.setItem('classData_snacks_davis_json', snackPayload.snacks_davis_json);
+          localStorage.setItem('classData_snacks_williams_json', snackPayload.snacks_williams_json);
           console.log('Snack data saved to localStorage (Firebase not available)');
         }
-        
+
       } catch (error) {
         console.error('Failed to save snack data:', error);
-        // Fallback to localStorage on Firestore error
         try {
-          const snacksGrid = document.getElementById('snacksGrid');
-          if (snacksGrid) {
-            const snacks = [];
-            snacksGrid.querySelectorAll('.p-4').forEach(card => {
-              const emoji = card.querySelector('.text-xl')?.textContent || '';
-              const item = card.querySelector('.snack-title')?.textContent || '';
-              const claimedBy = card.querySelector('.snack-name')?.value || '';
-              const checked = card.querySelector('.snack-checkbox')?.checked || false;
-              const isDefault = card.getAttribute('data-default-snack') === 'true';
-              if (item) {
-                snacks.push({ 
-                  emoji: emoji, 
-                  item: item, 
-                  claimed_by: claimedBy, 
-                  checked: checked,
-                  is_default: isDefault
-                });
-              }
-            });
-            localStorage.setItem('classData_snacks_json', JSON.stringify(snacks));
-            console.log('Snack data saved to localStorage as fallback');
-          }
+          const davisSnacks = collectSnackGridData('snacksGridDavis');
+          const williamsSnacks = collectSnackGridData('snacksGridWilliams');
+          localStorage.setItem('classData_snacks_json', JSON.stringify(davisSnacks));
+          localStorage.setItem('classData_snacks_davis_json', JSON.stringify(davisSnacks));
+          localStorage.setItem('classData_snacks_williams_json', JSON.stringify(williamsSnacks));
+          console.log('Snack data saved to localStorage as fallback');
         } catch (localError) {
           console.error('Failed to save to localStorage as well:', localError);
           throw error;
@@ -5595,33 +5691,30 @@ function updateLookingAhead(lookingAhead) {
     ul.appendChild(li);
   });
 }
-function updateSnacksGrid(snacks_json) {
-  const snacksContainer = document.getElementById('snacksGrid');
+function updateSnacksGrid(snacks_json, gridId = 'snacksGridDavis') {
+  const snacksContainer = document.getElementById(gridId);
   if (!snacksContainer) return;
   
-  // Don't clear the container, as we want to preserve the default cards
-  // Instead, only remove user-added cards and update existing ones
   const userAddedCards = snacksContainer.querySelectorAll('.user-added-snack-card');
   userAddedCards.forEach(card => card.remove());
   
   const arr = parseArray(snacks_json);
   
-  // First, update default cards with their claimed status
   const defaultCards = snacksContainer.querySelectorAll('.default-snack-card');
-  arr.forEach((snack, index) => {
-    if (snack.is_default && defaultCards[index]) {
-      const card = defaultCards[index];
+  let defaultIndex = 0;
+  arr.forEach((snack) => {
+    if (snack.is_default && defaultCards[defaultIndex]) {
+      const card = defaultCards[defaultIndex];
+      defaultIndex += 1;
       const checkbox = card.querySelector('.snack-checkbox');
       const nameInput = card.querySelector('.snack-name');
       const saveButton = card.querySelector('button[onclick*="claimSnack"]');
       const title = card.querySelector('.snack-title');
       
-      // Update title (only for teachers in edit mode)
       if (title && snack.item) {
         title.textContent = snack.item;
       }
       
-      // Update claimed status
       if (checkbox) {
         checkbox.checked = snack.checked || false;
       }
@@ -5633,7 +5726,6 @@ function updateSnacksGrid(snacks_json) {
         saveButton.disabled = !snack.checked;
       }
       
-      // Update visual styling
       if (snack.claimed_by && snack.checked) {
         card.classList.add('snack-claimed');
         card.style.backgroundColor = 'rgba(224, 177, 74, 0.1)';
@@ -5644,7 +5736,6 @@ function updateSnacksGrid(snacks_json) {
     }
   });
   
-  // Then, add user-added cards
   arr.forEach((snack, index) => {
     if (!snack.is_default) {
       const emoji = snack.emoji || '🍎';
@@ -5652,10 +5743,13 @@ function updateSnacksGrid(snacks_json) {
       const claimed = snack.claimed_by || '';
       const checked = snack.checked || false;
       const div = document.createElement('div');
+      const classKey = gridId === 'snacksGridWilliams' ? 'williams' : 'davis';
       div.className = 'p-4 rounded-xl bg-white user-added-snack-card';
       div.setAttribute('data-default-snack', 'false');
+      div.setAttribute('data-snack-class', classKey);
       div.style.border = '1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%)';
-      const tabIndexBase = (index * 3) + 13; // Start after default cards
+      const tabOffset = gridId === 'snacksGridWilliams' ? 101 : 1;
+      const tabIndexBase = tabOffset + ((defaultCards.length + index) * 3);
       div.innerHTML = `
         <div class="flex items-center gap-3 mb-3">
           <input type="checkbox" class="snack-checkbox" onchange="toggleSnackInput(this)" tabindex="${tabIndexBase}" ${checked ? 'checked' : ''}>
@@ -5670,7 +5764,6 @@ function updateSnacksGrid(snacks_json) {
       `;
       snacksContainer.appendChild(div);
       
-      // Add claimed styling if needed
       if (claimed && checked) {
         div.classList.add('snack-claimed');
         div.style.backgroundColor = 'rgba(224, 177, 74, 0.1)';
@@ -6377,7 +6470,8 @@ function populateDataFromSheet(data) {
   updateRecapText(data.recap_davis || data.recap, data.recap_williams || data.recap);
   updateEventsList(data.dates_json);
   updateLookingAhead(data.looking_ahead);
-  updateSnacksGrid(data.snacks_json);
+  updateSnacksGrid(data.snacks_davis_json || data.snacks_json, 'snacksGridDavis');
+  updateSnacksGrid(data.snacks_williams_json || data.snacks_json, 'snacksGridWilliams');
   updateSnackMessage(data.snack_message);
   updateScholarInfo(data);
   updateClassSkillMeter(data.class_skill_meter_skill, data.class_skill_meter_progress, data.class_skill_meter_family_note, data.class_skill_meter_history);
@@ -6392,7 +6486,7 @@ function populateDataFromSheet(data) {
   updateAboutMeSection(data);
   updateAboutMeWilliams(data.about_me_williams_text);
   
-  // Load photo cards - separate for Davis and Williams
+  // Load photo cards - separate for Davis and Vest
   updatePhotoCards(data.photo_urls_davis_json, 'davis');
   updatePhotoCards(data.photo_urls_williams_json, 'williams');
   // For backward compatibility, also load old format if new format not available
@@ -11465,9 +11559,13 @@ async function fetchFirestoreData() {
       console.error('Firebase not available - checking localStorage fallback');
       // Check if we have saved snack data in localStorage
       const savedSnacksData = localStorage.getItem('classData_snacks_json');
-      if (savedSnacksData) {
+      const savedDavisSnacksData = localStorage.getItem('classData_snacks_davis_json');
+      const savedWilliamsSnacksData = localStorage.getItem('classData_snacks_williams_json');
+      if (savedSnacksData || savedDavisSnacksData || savedWilliamsSnacksData) {
         const fallbackData = getDefaultFallbackData();
-        fallbackData.snacks_json = savedSnacksData;
+        fallbackData.snacks_json = savedSnacksData || savedDavisSnacksData || fallbackData.snacks_json;
+        fallbackData.snacks_davis_json = savedDavisSnacksData || savedSnacksData || fallbackData.snacks_json;
+        fallbackData.snacks_williams_json = savedWilliamsSnacksData || savedSnacksData || fallbackData.snacks_json;
         console.log('Using localStorage fallback data for snacks');
         showDataLoadError('Firebase connection not available - using saved local data');
         return fallbackData;
