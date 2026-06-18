@@ -263,7 +263,7 @@
     }
     .filter-btn.active { background: var(--md-coral); color: white; }
     
-    /* Collapsible section styles for Ms. Williams */
+    /* Collapsible section styles for Ms. Vest */
     .collapsible-header {
       cursor: pointer;
       display: flex;
@@ -642,6 +642,21 @@
       }
     }
 
+    /* Teacher-only activity dashboard */
+    .teacher-activity-panel { display: none; }
+    body.editing .teacher-activity-panel {
+      display: block !important;
+      margin: 0 auto 1.5rem;
+    }
+    .activity-stat-card {
+      border: 1px solid color-mix(in oklab, var(--md-slate) 22%, transparent);
+      background: color-mix(in oklab, var(--md-white) 82%, var(--md-cream));
+      box-shadow: 0 12px 26px rgba(43,43,43,.08);
+    }
+    .activity-feed-item {
+      border-left: .35rem solid var(--md-coral);
+      background: color-mix(in oklab, var(--md-white) 88%, var(--md-cream));
+    }
     /* Drag and drop visual indicators for listening units */
     .drag-over-top {
       border-top: 3px solid var(--md-coral) !important;
@@ -689,7 +704,7 @@
       <button id="aboutMeWilliamsBtn"
               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
               style="background: var(--md-coral);">
-        <span>👩‍🏫</span><span>Ms. Williams</span>
+        <span>👩‍🏫</span><span>Ms. Vest</span>
       </button>
       <button id="scholarBtn" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white hover:opacity-90"
               style="background: var(--md-mustard);">
@@ -748,10 +763,10 @@
           </div>
         </div>
       </div>
-      <!-- What We Did - Ms. Williams -->
+      <!-- What We Did - Ms. Vest -->
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
         <h2 id="whatWeDidWilliamsTitle" class="text-2xl font-display font-bold mb-5 text-center collapsible-header" data-edit="teacher" contenteditable="false" onclick="toggleWilliamsSection()">
-          What We Did This Week - Ms. Williams
+          What We Did This Week - Ms. Vest
           <span class="chevron">▼</span>
         </h2>
         <div id="williamsCollapsibleContent" class="collapsible-content">
@@ -943,7 +958,7 @@
     <!-- MS. WILLIAMS SCHOLAR TAB -->
     <section data-page-panel="scholarwilliams" class="pagePanel fade-in">
       <div class="rounded-2xl shadow-soft p-6 sm:p-10 mb-8" style="background: var(--md-white); border: 1px solid color-mix(in oklab, var(--md-mustard) 50%, var(--md-white) 50%);">
-        <h2 class="text-2xl font-display font-bold mb-6 text-center" style="color: var(--md-coral);">Ms. Williams's Scholar of the Month</h2>
+        <h2 class="text-2xl font-display font-bold mb-6 text-center" style="color: var(--md-coral);">Ms. Vest's Scholar of the Month</h2>
         <div class="grid lg:grid-cols-[auto,1fr] gap-8 items-center">
           <div class="w-40 h-40 sm:w-48 sm:h-48 rounded-full border-4 img-frame photo-card overflow-hidden mx-auto lg:mx-0" 
                style="border-color: var(--md-mustard);" onclick="editProfilePhoto(this, 'scholarWilliams')"></div>
@@ -965,7 +980,7 @@
         </div>
       </div>
 
-      <!-- Class Skill Meter Section for Ms. Williams -->
+      <!-- Class Skill Meter Section for Ms. Vest -->
       <div class="rounded-2xl shadow-soft p-6 sm:p-10 mb-8 relative overflow-hidden" 
            style="background: var(--md-white); border: 1px solid color-mix(in oklab, var(--md-mustard) 50%, var(--md-white) 50%);">
         
@@ -1777,14 +1792,14 @@
           <div class="w-40 h-40 sm:w-48 sm:h-48 rounded-full border-4 img-frame photo-card overflow-hidden mx-auto md:mx-0" 
                style="border-color: var(--md-mustard);" onclick="editProfilePhoto(this, 'aboutmewilliams')"></div>
           <div>
-            <h2 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">👋 About Ms. Williams</h2>
+            <h2 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">👋 About Ms. Vest</h2>
             <div class="mb-6">
               <div class="flex justify-between items-center mb-3">
                 <h3 class="font-semibold">About Me</h3>
                 <button id="saveAboutMeWilliamsDescBtn" class="edit-only px-3 py-1 rounded-lg text-white text-xs font-semibold" style="background: var(--md-coral);" onclick="saveAboutMeField('aboutMeWilliamsDesc')">💾 Save</button>
               </div>
               <p id="aboutMeWilliamsDescText" class="leading-relaxed" contenteditable="false" style="min-height: 60px; padding: 8px; border: 1px solid #e5e7eb; border-radius: 6px;">
-                Ms. Williams is passionate about helping young learners discover their potential and develop a love for learning.
+                Ms. Vest is passionate about helping young learners discover their potential and develop a love for learning.
               </p>
             </div>
             <div class="mb-6">
@@ -1956,11 +1971,39 @@
       </div>
     </section>
   </main>
+  <section id="teacherActivityPanel" class="teacher-activity-panel max-w-6xl mx-auto px-6" aria-live="polite">
+    <div class="rounded-2xl shadow-soft p-5 sm:p-6 activity-stat-card">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
+        <div>
+          <h2 class="text-xl font-display font-bold">Teacher Activity</h2>
+          <p class="text-sm text-gray-600">Only visible after edit mode is unlocked.</p>
+        </div>
+        <button id="refreshActivityBtn" class="px-4 py-2 rounded-xl text-white font-semibold" style="background: var(--md-slate);" onclick="loadTeacherActivityPanel()">Refresh</button>
+      </div>
+      <div class="grid sm:grid-cols-3 gap-3 mb-5">
+        <div class="rounded-xl p-4 bg-white">
+          <div class="text-sm font-semibold text-gray-600">Visitors Today</div>
+          <div id="visitsTodayCount" class="text-3xl font-display font-bold" style="color: var(--md-coral);">--</div>
+        </div>
+        <div class="rounded-xl p-4 bg-white">
+          <div class="text-sm font-semibold text-gray-600">Total Daily Visits</div>
+          <div id="totalVisitsCount" class="text-3xl font-display font-bold" style="color: var(--md-slate);">--</div>
+        </div>
+        <div class="rounded-xl p-4 bg-white">
+          <div class="text-sm font-semibold text-gray-600">Recent Actions</div>
+          <div id="recentActionsCount" class="text-3xl font-display font-bold" style="color: var(--md-mustard);">--</div>
+        </div>
+      </div>
+      <div id="activityFeedList" class="space-y-3 text-sm">
+        <div class="rounded-xl p-4 bg-white text-gray-600">Unlock edit mode to load recent activity.</div>
+      </div>
+    </div>
+  </section>
   <footer class="bg-white border-t border-gray-200 mt-16">
     <div class="max-w-6xl mx-auto px-6 py-8">
       <div class="flex items-center justify-between">
         <div>
-          <p class="text-sm text-gray-600">© 2025 Mr. Davis's First Grade Class</p>
+          <p class="text-sm text-gray-600">© 2026 Mr. Davis's First Grade Class</p>
         </div>
         <div class="flex gap-3">
           <button id="saveChangesBtn" class="px-4 py-2 rounded-xl font-semibold text-white shadow-soft" style="background: var(--md-coral); display: none;">
@@ -2142,6 +2185,115 @@
         renderListeningUnits();
       }
     }
+        function getTodayKey() {
+      return new Date().toLocaleDateString('en-CA');
+    }
+
+    async function ensureParentActionAuth() {
+      if (!auth) throw new Error('Firebase authentication not available');
+      if (auth.currentUser) {
+        try {
+          await auth.currentUser.getIdToken(true);
+          return true;
+        } catch (error) {
+          console.warn('Existing auth expired, signing in anonymously for parent action');
+        }
+      }
+      await auth.signInAnonymously();
+      return true;
+    }
+
+    async function recordDailyVisit() {
+      if (!db || !auth) return;
+      const today = getTodayKey();
+      const storageKey = 'firstGradeHub.visitRecorded.' + today;
+      if (localStorage.getItem(storageKey) === 'true') return;
+      try {
+        await ensureParentActionAuth();
+        const increment = firebase.firestore.FieldValue.increment;
+        const serverTimestamp = firebase.firestore.FieldValue.serverTimestamp;
+        await db.collection('siteStats').doc(today).set({
+          date: today,
+          visits: increment(1),
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        await db.collection('siteStats').doc('summary').set({
+          totalDailyVisits: increment(1),
+          lastVisitAt: serverTimestamp()
+        }, { merge: true });
+        localStorage.setItem(storageKey, 'true');
+      } catch (error) {
+        console.warn('Daily visit tracking skipped:', error);
+      }
+    }
+
+    async function logParentActivity(type, title, details, metadata = {}) {
+      if (!db || !auth) return;
+      try {
+        await ensureParentActionAuth();
+        await db.collection('teacherActivity').add({
+          type,
+          title,
+          details,
+          metadata,
+          read: false,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          createdAtLocal: new Date().toISOString()
+        });
+      } catch (error) {
+        console.warn('Activity notification was not recorded:', error);
+      }
+    }
+
+    function formatActivityTime(activity) {
+      const rawDate = activity.createdAt && activity.createdAt.toDate ? activity.createdAt.toDate() : new Date(activity.createdAtLocal || Date.now());
+      return rawDate.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    }
+
+    function escapeActivityText(value) {
+      return String(value || '').replace(/[&<>'"]/g, function(char) {
+        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char];
+      });
+    }
+
+    function renderActivityFeed(items) {
+      const list = document.getElementById('activityFeedList');
+      const countEl = document.getElementById('recentActionsCount');
+      if (countEl) countEl.textContent = String(items.length);
+      if (!list) return;
+      if (!items.length) {
+        list.innerHTML = '<div class="rounded-xl p-4 bg-white text-gray-600">No parent actions have been recorded yet.</div>';
+        return;
+      }
+      list.innerHTML = items.map(function(item) {
+        return '<div class="activity-feed-item rounded-xl p-4">' +
+          '<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">' +
+            '<strong>' + escapeActivityText(item.title || 'Activity') + '</strong>' +
+            '<span class="text-xs text-gray-500">' + escapeActivityText(formatActivityTime(item)) + '</span>' +
+          '</div>' +
+          '<div class="text-gray-700 mt-1">' + escapeActivityText(item.details || '') + '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    async function loadTeacherActivityPanel() {
+      if (!db) return;
+      const todayEl = document.getElementById('visitsTodayCount');
+      const totalEl = document.getElementById('totalVisitsCount');
+      try {
+        const today = getTodayKey();
+        const todayDoc = await db.collection('siteStats').doc(today).get();
+        const summaryDoc = await db.collection('siteStats').doc('summary').get();
+        const activitySnap = await db.collection('teacherActivity').orderBy('createdAt', 'desc').limit(12).get();
+        if (todayEl) todayEl.textContent = String(todayDoc.exists ? (todayDoc.data().visits || 0) : 0);
+        if (totalEl) totalEl.textContent = String(summaryDoc.exists ? (summaryDoc.data().totalDailyVisits || 0) : 0);
+        renderActivityFeed(activitySnap.docs.map(function(doc) { return Object.assign({ id: doc.id }, doc.data()); }));
+      } catch (error) {
+        console.error('Failed to load teacher activity:', error);
+        const list = document.getElementById('activityFeedList');
+        if (list) list.innerHTML = '<div class="rounded-xl p-4 bg-white text-gray-600">Activity could not load yet. Try Refresh in a moment.</div>';
+      }
+    }
     document.addEventListener('DOMContentLoaded',function(){
       showPage('home');
       document.querySelectorAll('.pageTab').forEach(btn=>{
@@ -2156,6 +2308,7 @@
       
       // Initialize read-only state on page load
       initializeReadOnlyState();
+      recordDailyVisit();
       
       document.getElementById('editModeBtn').onclick = function() {
         document.getElementById('pinOverlay').classList.add('show');
@@ -2165,7 +2318,7 @@
         document.getElementById('pinOverlay').classList.remove('show');
         document.getElementById('pinInput').value = '';
       };
-      document.getElementById('pinSubmit').onclick = async function() {
+      async function submitTeacherPin() {
         var pin = document.getElementById('pinInput').value;
         if(pin === TEACHER_PIN){
           isOwner = false;
@@ -2179,7 +2332,14 @@
           document.getElementById('pinInput').style.borderColor='#ef4444';
           setTimeout(()=>{document.getElementById('pinInput').style.borderColor='';},900);
         }
-      };
+      }
+      document.getElementById('pinSubmit').onclick = submitTeacherPin;
+      document.getElementById('pinInput').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          submitTeacherPin();
+        }
+      });
       // Light/Dark toggle
       document.getElementById('toggleHighContrast').onclick=function(){
         document.body.classList.toggle('dark');
@@ -2247,7 +2407,7 @@
         if (btn) btn.style.display = 'none';
       });
       
-      // Disable About Ms. Williams section
+      // Disable About Ms. Vest section
       const aboutMeWilliamsDescText = document.getElementById('aboutMeWilliamsDescText');
       if (aboutMeWilliamsDescText) aboutMeWilliamsDescText.contentEditable = false;
       const funFactsWilliamsList = document.getElementById('funFactsWilliamsList');
@@ -2400,7 +2560,7 @@
         if (btn) btn.style.display = 'inline-block';
       });
       
-      // Enable About Ms. Williams section
+      // Enable About Ms. Vest section
       const aboutMeWilliamsDescText = document.getElementById('aboutMeWilliamsDescText');
       if (aboutMeWilliamsDescText) aboutMeWilliamsDescText.contentEditable = true;
       const funFactsWilliamsList = document.getElementById('funFactsWilliamsList');
@@ -2552,6 +2712,7 @@
       renderClassSkillMeterHistory();
       setupEditDraftProtection();
       restoreEditDraftIfAvailable();
+      loadTeacherActivityPanel();
     }
     function exitEditMode(){
       isOwner = false; // Reset owner status when exiting edit mode
@@ -2588,7 +2749,7 @@
         if (btn) btn.style.display = 'none';
       });
       
-      // Disable About Ms. Williams section
+      // Disable About Ms. Vest section
       const aboutMeWilliamsDescText = document.getElementById('aboutMeWilliamsDescText');
       if (aboutMeWilliamsDescText) aboutMeWilliamsDescText.contentEditable = false;
       const funFactsWilliamsList = document.getElementById('funFactsWilliamsList');
@@ -2841,13 +3002,13 @@
       if (whatWeDidDavisTitleEl) data.what_we_did_davis_title = whatWeDidDavisTitleEl.textContent || 'What We Did This Week - Mr. Davis';
       
       const whatWeDidWilliamsTitleEl = document.getElementById('whatWeDidWilliamsTitle');
-      if (whatWeDidWilliamsTitleEl) data.what_we_did_williams_title = whatWeDidWilliamsTitleEl.textContent || 'What We Did This Week - Ms. Williams';
+      if (whatWeDidWilliamsTitleEl) data.what_we_did_williams_title = whatWeDidWilliamsTitleEl.textContent || 'What We Did This Week - Ms. Vest';
       
       // Recap text for Mr. Davis
       const recapDavisEl = document.getElementById('recapTextDavis');
       if (recapDavisEl) data.recap_davis = recapDavisEl.textContent || '';
       
-      // Recap text for Ms. Williams
+      // Recap text for Ms. Vest
       const recapWilliamsEl = document.getElementById('recapTextWilliams');
       if (recapWilliamsEl) data.recap_williams = recapWilliamsEl.textContent || '';
       
@@ -2923,7 +3084,7 @@
       const scholarSkillDavisEl = document.getElementById('scholarSkillDavis');
       if (scholarSkillDavisEl) data.scholar_skill_davis = scholarSkillDavisEl.textContent || '';
       
-      // Scholar info - Ms. Williams
+      // Scholar info - Ms. Vest
       const scholarNameWilliamsEl = document.getElementById('scholarNameWilliams');
       if (scholarNameWilliamsEl) data.scholar_name_williams = scholarNameWilliamsEl.textContent || '';
       
@@ -3386,6 +3547,8 @@
         // Save to Firestore immediately
         saveSnackDataToFirestore().then(() => {
           btn.textContent = 'Saved!';
+          const snackTitle = card.querySelector('.snack-title')?.textContent?.trim() || 'a snack';
+          logParentActivity('snack', 'Snack claimed', `${name} claimed ${snackTitle}.`, { name, snack: snackTitle });
           setTimeout(() => {
             btn.textContent = 'Save';
             btn.disabled = false;
@@ -5531,7 +5694,7 @@ function updateScholarInfo(data) {
   if (infoDavisEl && data.scholar_blurb_davis) infoDavisEl.textContent = data.scholar_blurb_davis;
   if (skillDavisEl && data.scholar_skill_davis) skillDavisEl.textContent = data.scholar_skill_davis;
   
-  // Update Ms. Williams scholar info
+  // Update Ms. Vest scholar info
   const nameWilliamsEl = document.getElementById('scholarNameWilliams');
   const infoWilliamsEl = document.getElementById('scholarInfoWilliams');
   const skillWilliamsEl = document.getElementById('scholarSkillWilliams');
@@ -6546,8 +6709,12 @@ async function saveTransportationField(fieldType) {
   const originalText = saveBtn ? saveBtn.textContent : '';
   
   try {
-    // Check authentication
-    await ensureAuthenticated();
+    // Teacher edits require teacher auth; parent transportation updates use anonymous auth.
+    if (document.body.classList.contains('editing')) {
+      await ensureAuthenticated();
+    } else {
+      await ensureParentActionAuth();
+    }
     
     // Check if Firebase is available
     if (typeof db === 'undefined') {
@@ -6574,6 +6741,11 @@ async function saveTransportationField(fieldType) {
     
     // Save to Firestore
     await db.collection('classData').doc('current').set(data, { merge: true });
+    
+    if (!document.body.classList.contains('editing') && fieldType !== 'instructions') {
+      const labelMap = { busRiders: 'Bus Riders', carRiders: 'Car Riders', porchPickup: 'Porch Pickup' };
+      await logParentActivity('transportation', 'Transportation updated', `${labelMap[fieldType] || 'Transportation'} was updated by a family.`, { fieldType });
+    }
     
     // Show success state (only if button exists)
     if (saveBtn) {
@@ -6733,7 +6905,7 @@ function closeContactModal() {
   }
 }
 
-// Contact Ms. Williams Modal Functions
+// Contact Ms. Vest Modal Functions
 function openContactWilliamsModal() {
   const modal = document.getElementById('contactWilliamsModal');
   if (modal) {
@@ -6923,6 +7095,8 @@ function claimVolunteerSlot(btn) {
     // Save to Firestore immediately
     saveVolunteerDataToFirestore().then(() => {
       btn.textContent = 'Saved!';
+      const eventTitle = card.querySelector('.event-title')?.textContent?.trim() || 'a volunteer spot';
+      logParentActivity('volunteer', 'Volunteer spot claimed', `${name} signed up for ${eventTitle}.`, { name, event: eventTitle });
       setTimeout(() => {
         btn.textContent = 'Save';
         btn.disabled = false;
@@ -7428,6 +7602,9 @@ async function submitShoutout() {
   // Save to Firebase using arrayUnion to append safely without overwriting
   // Use requireAuth=false for parent submissions (they use anonymous auth)
   const saveSuccess = await saveShoutoutsToFirebase(false, false, shoutout);
+  if (saveSuccess) {
+    logParentActivity('shoutout', 'New shoutout submitted', `${from} submitted a shoutout for ${scholarName}.`, { scholarName, from });
+  }
   
   closeCreateShoutoutModal();
   
@@ -8152,7 +8329,7 @@ async function saveAboutMeField(fieldType) {
       dataField: 'favorite_show',
       getContent: (el) => el.textContent || ''
     },
-    // Ms. Williams fields
+    // Ms. Vest fields
     'aboutMeWilliamsDesc': {
       button: 'saveAboutMeWilliamsDescBtn',
       element: 'aboutMeWilliamsDescText',
@@ -12052,7 +12229,7 @@ function enlargeScreenshot(element) {
   document.body.appendChild(overlay);
 }
 
-// Toggle Ms. Williams section
+// Toggle Ms. Vest section
 function toggleWilliamsSection() {
   const content = document.getElementById('williamsCollapsibleContent');
   const chevron = document.querySelector('#whatWeDidWilliamsTitle .chevron');
@@ -12216,12 +12393,12 @@ document.head.appendChild(style);
     </div>
   </div>
 
-  <!-- Contact Ms. Williams Modal -->
+  <!-- Contact Ms. Vest Modal -->
   <div id="contactWilliamsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9998; justify-content: center; align-items: center;" onclick="closeContactWilliamsModal()">
     <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-8 max-w-md mx-4" onclick="event.stopPropagation();" style="border: 2px solid var(--md-coral);">
       <div class="text-center">
         <div class="text-4xl mb-4">👩‍🏫</div>
-        <h3 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">Contact Ms. Williams</h3>
+        <h3 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">Contact Ms. Vest</h3>
         <div class="space-y-4">
           <div class="bg-white rounded-xl p-4" style="border: 1px solid var(--md-coral);">
             <div class="text-sm font-semibold text-gray-600 mb-2">📧 Email</div>
@@ -12325,7 +12502,7 @@ document.head.appendChild(style);
             <span>👨‍🏫</span><span>Mr. Davis Class</span>
           </button>
           <button onclick="closeScholarModal(); showPage('scholarwilliams');" class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
-            <span>👩‍🏫</span><span>Ms. Williams Class</span>
+            <span>👩‍🏫</span><span>Ms. Vest Class</span>
           </button>
         </div>
         <button onclick="closeScholarModal()" class="mt-6 px-6 py-2 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-mustard);">
@@ -12356,15 +12533,15 @@ document.head.appendChild(style);
     </div>
   </div>
 
-  <!-- About Ms. Williams Popup Modal -->
+  <!-- About Ms. Vest Popup Modal -->
   <div id="aboutMeWilliamsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9998; justify-content: center; align-items: center;" onclick="closeAboutMeWilliamsModal()">
     <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-8 max-w-md mx-4" onclick="event.stopPropagation();" style="border: 3px solid var(--md-coral);">
       <div class="text-center">
         <div class="text-5xl mb-4">👩‍🏫</div>
-        <h3 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">About Ms. Williams</h3>
+        <h3 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">About Ms. Vest</h3>
         <div class="space-y-3">
           <button onclick="closeAboutMeWilliamsModal(); showPage('aboutmewilliams');" class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
-            <span>👩‍🏫</span><span>About Ms. Williams</span>
+            <span>👩‍🏫</span><span>About Ms. Vest</span>
           </button>
           <button onclick="closeAboutMeWilliamsModal(); openContactWilliamsModal();" class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
             <span>📧</span><span>Contact Me</span>
