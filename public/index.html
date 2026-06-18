@@ -1507,7 +1507,13 @@
       <div class="text-center mb-8">
         <!-- Large TV Display (functional TV without decorative emoji) -->
         <div class="mx-auto max-w-5xl">
-          <h2 class="text-4xl font-display font-bold mb-8" style="color: var(--md-coral); font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif;">Shoutout TV!</h2>
+          <h2 class="text-4xl font-display font-bold mb-4" style="color: var(--md-coral); font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif;">Shoutout TV!</h2>
+          <div class="inline-flex flex-wrap items-center justify-center gap-2 mb-6 rounded-2xl p-2" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-pebble) 30%); border: 2px solid color-mix(in oklab, var(--md-slate) 45%, var(--md-white) 55%);">
+            <span class="text-sm font-semibold px-2" style="color: var(--md-slate);">Change the channel:</span>
+            <button id="channelDavisBtn" class="shoutout-channel-btn px-4 py-2 rounded-xl font-semibold text-white" style="background: var(--md-coral);" onclick="switchShoutoutChannel('davis')">Mr. Davis</button>
+            <button id="channelVestBtn" class="shoutout-channel-btn px-4 py-2 rounded-xl font-semibold" style="background: var(--md-white); color: var(--md-slate); border: 1px solid color-mix(in oklab, var(--md-slate) 45%, var(--md-white) 55%);" onclick="switchShoutoutChannel('vest')">Ms. Vest</button>
+          </div>
+          <div id="activeChannelLabel" class="text-sm font-semibold mb-4" style="color: var(--md-slate);">Now watching: Mr. Davis Channel</div>
           
           <!-- Enhanced TV Screen with TV-like appearance -->
           <div class="tv-container mx-auto" style="max-width: 800px; background: linear-gradient(145deg, #2a2a2a, #1a1a1a); border-radius: 40px; padding: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);">
@@ -2205,6 +2211,7 @@
     let allShoutouts = []; // All submitted shoutouts
     let approvedShoutouts = []; // Only approved shoutouts for shuffle
     let currentShoutoutIndex = 0; // For shuffling through approved shoutouts
+    let activeShoutoutChannel = 'davis'; // Which class channel is showing on Shoutout TV
     let mainTVMessage = 'Welcome to our amazing first grade classroom! Keep being awesome, scholars!'; // Main TV message
     
     // Clever QR Codes data
@@ -7657,7 +7664,7 @@ function generateShoutout() {
   // Fill the form fields
   document.getElementById('scholarNameInput').value = randomScholar;
   document.getElementById('messageInput').value = randomMessage;
-  document.getElementById('fromInput').value = 'Mr. Davis';
+  document.getElementById('fromInput').value = getShoutoutChannelLabel(activeShoutoutChannel);
   
   // Update word count display
   updateWordCount();
@@ -7686,6 +7693,8 @@ async function submitShoutout() {
     scholarName,
     from,
     message,
+    class: activeShoutoutChannel,
+    classLabel: getShoutoutChannelLabel(activeShoutoutChannel),
     approved: false,
     timestamp: new Date().toISOString()
   };
@@ -7697,7 +7706,7 @@ async function submitShoutout() {
   // Use requireAuth=false for parent submissions (they use anonymous auth)
   const saveSuccess = await saveShoutoutsToFirebase(false, false, shoutout);
   if (saveSuccess) {
-    logParentActivity('shoutout', 'New shoutout submitted', `${from} submitted a shoutout for ${scholarName}.`, { scholarName, from });
+    logParentActivity('shoutout', 'New shoutout submitted', `${from} submitted a shoutout for ${scholarName} in ${getShoutoutChannelLabel(activeShoutoutChannel)}'s class.`, { scholarName, from, class: activeShoutoutChannel });
   }
   
   closeCreateShoutoutModal();
@@ -7725,27 +7734,78 @@ async function submitShoutout() {
   }
 }
 
+function getShoutoutChannelLabel(channel) {
+  return channel === 'vest' ? 'Ms. Vest' : 'Mr. Davis';
+}
+
+function getShoutoutChannelName(channel) {
+  return getShoutoutChannelLabel(channel) + ' Channel';
+}
+
+function getShoutoutClass(shoutout) {
+  return shoutout && (shoutout.class || shoutout.classroom || shoutout.teacher) === 'vest' ? 'vest' : 'davis';
+}
+
+function getVisibleApprovedShoutouts() {
+  return approvedShoutouts.filter(shoutout => getShoutoutClass(shoutout) === activeShoutoutChannel);
+}
+
+function escapeShoutoutText(value) {
+  return String(value || '').replace(/[&<>'"]/g, function(char) {
+    return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char];
+  });
+}
+
+function updateShoutoutChannelUI() {
+  const davisBtn = document.getElementById('channelDavisBtn');
+  const vestBtn = document.getElementById('channelVestBtn');
+  const activeLabel = document.getElementById('activeChannelLabel');
+  const createLabel = document.getElementById('createShoutoutChannelLabel');
+  const buttons = [davisBtn, vestBtn].filter(Boolean);
+  buttons.forEach(btn => {
+    btn.style.background = 'var(--md-white)';
+    btn.style.color = 'var(--md-slate)';
+    btn.style.border = '1px solid color-mix(in oklab, var(--md-slate) 45%, var(--md-white) 55%)';
+  });
+  const selectedBtn = activeShoutoutChannel === 'vest' ? vestBtn : davisBtn;
+  if (selectedBtn) {
+    selectedBtn.style.background = 'var(--md-coral)';
+    selectedBtn.style.color = 'white';
+    selectedBtn.style.border = '1px solid var(--md-coral)';
+  }
+  const channelName = getShoutoutChannelName(activeShoutoutChannel);
+  if (activeLabel) activeLabel.textContent = 'Now watching: ' + channelName;
+  if (createLabel) createLabel.textContent = channelName;
+}
+
+function switchShoutoutChannel(channel) {
+  activeShoutoutChannel = channel === 'vest' ? 'vest' : 'davis';
+  currentShoutoutIndex = -1;
+  updateShoutoutChannelUI();
+  updateTVDisplay();
+}
+
 // Shuffle through approved shoutouts on TV
 function shuffleShoutoutTV() {
-  if (approvedShoutouts.length === 0) {
-    const display = document.getElementById('shoutoutTVDisplay');
+  const channelShoutouts = getVisibleApprovedShoutouts();
+  const display = document.getElementById('shoutoutTVDisplay');
+  if (channelShoutouts.length === 0) {
     if (display) {
-      // Show main message when no approved shoutouts
-      display.innerHTML = `<div style="color: var(--md-white);">${mainTVMessage}</div>`;
+      display.innerHTML = `<div style="color: var(--md-white);"><div style="color: var(--md-mustard); font-size: 1.1rem; margin-bottom: 0.5rem;">${getShoutoutChannelName(activeShoutoutChannel)}</div>${escapeShoutoutText(mainTVMessage)}<div style="font-size: 1rem; opacity: 0.8; margin-top: 1rem;">No approved shoutouts on this channel yet.</div></div>`;
     }
     return;
   }
-  
-  currentShoutoutIndex = (currentShoutoutIndex + 1) % approvedShoutouts.length;
-  const shoutout = approvedShoutouts[currentShoutoutIndex];
-  
-  const display = document.getElementById('shoutoutTVDisplay');
+
+  currentShoutoutIndex = (currentShoutoutIndex + 1) % channelShoutouts.length;
+  const shoutout = channelShoutouts[currentShoutoutIndex];
+
   if (display && shoutout) {
     display.innerHTML = `
       <div>
-        <div style="color: var(--md-mustard); font-size: 1.2rem; margin-bottom: 0.5rem;">${shoutout.scholarName}</div>
-        <div style="margin-bottom: 1rem;">${shoutout.message}</div>
-        <div style="color: var(--md-coral); font-size: 1rem;">— ${shoutout.from}</div>
+        <div style="color: var(--md-mustard); font-size: 1rem; margin-bottom: 0.5rem;">${getShoutoutChannelName(activeShoutoutChannel)}</div>
+        <div style="color: var(--md-mustard); font-size: 1.2rem; margin-bottom: 0.5rem;">${escapeShoutoutText(shoutout.scholarName)}</div>
+        <div style="margin-bottom: 1rem;">${escapeShoutoutText(shoutout.message)}</div>
+        <div style="color: var(--md-coral); font-size: 1rem;">- ${escapeShoutoutText(shoutout.from)}</div>
       </div>
     `;
   }
@@ -7814,8 +7874,9 @@ function refreshAdminShoutouts(filter = 'all') {
     <div class="bg-white rounded-lg p-4 border ${shoutout.archived ? 'border-gray-300 bg-gray-50' : shoutout.approved ? 'border-green-200 bg-green-50' : 'border-yellow-200 bg-yellow-50'}">
       <div class="flex justify-between items-start mb-2">
         <div>
-          <strong style="color: var(--md-slate);">${shoutout.scholarName}</strong>
-          <span class="text-sm text-gray-500"> from ${shoutout.from}</span>
+          <strong style="color: var(--md-slate);">${escapeShoutoutText(shoutout.scholarName)}</strong>
+          <span class="text-sm text-gray-500"> from ${escapeShoutoutText(shoutout.from)}</span>
+          <span class="ml-2 px-2 py-1 rounded-full text-xs font-semibold" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-pebble) 30%); color: var(--md-slate);">${getShoutoutChannelLabel(getShoutoutClass(shoutout))}</span>
         </div>
         <div class="flex gap-1">
           ${!shoutout.approved && !shoutout.archived ? `<button onclick="approveShoutout('${shoutout.id}')" class="px-2 py-1 bg-green-500 text-white rounded text-xs">Approve</button>` : ''}
@@ -7825,7 +7886,7 @@ function refreshAdminShoutouts(filter = 'all') {
           <button onclick="deleteShoutout('${shoutout.id}')" class="px-2 py-1 bg-red-500 text-white rounded text-xs">Delete</button>
         </div>
       </div>
-      <div class="text-sm mb-2" style="font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif;">${shoutout.message}</div>
+      <div class="text-sm mb-2" style="font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif;">${escapeShoutoutText(shoutout.message)}</div>
       <div class="text-xs text-gray-400">${new Date(shoutout.timestamp).toLocaleDateString()}</div>
     </div>
   `).join('');
@@ -8153,8 +8214,9 @@ function updateTVDisplay() {
   const display = document.getElementById('shoutoutTVDisplay');
   if (!display) return;
   
-  // Show main message by default
-  display.innerHTML = `<div style="color: var(--md-white);">${mainTVMessage}</div>`;
+  updateShoutoutChannelUI();
+  // Show main message by default for the active channel
+  display.innerHTML = `<div style="color: var(--md-white);"><div style="color: var(--md-mustard); font-size: 1.1rem; margin-bottom: 0.5rem;">${getShoutoutChannelName(activeShoutoutChannel)}</div>${escapeShoutoutText(mainTVMessage)}</div>`;
 }
 
 // Function to update website cards with saved URLs and order
@@ -11796,6 +11858,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Load main TV message on page load
   loadMainMessage().then(() => {
+    updateShoutoutChannelUI();
     updateTVDisplay();
   });
   
@@ -12700,6 +12763,10 @@ document.head.appendChild(style);
         <div class="text-6xl mb-4">✨</div>
         <h3 class="text-3xl font-display font-bold mb-6" style="color: var(--md-coral); font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif;">Create a Shoutout!</h3>
         
+        <div class="mb-4 rounded-xl p-3 text-center" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-pebble) 30%); border: 1px solid color-mix(in oklab, var(--md-slate) 45%, var(--md-white) 55%);">
+          <div class="text-sm font-semibold" style="color: var(--md-slate);">Sending to</div>
+          <div id="createShoutoutChannelLabel" class="text-lg font-bold" style="color: var(--md-coral);">Mr. Davis Channel</div>
+        </div>
         <form id="shoutoutForm" class="space-y-4 text-left">
           <div>
             <label class="block text-sm font-semibold mb-2" style="color: var(--md-slate);">Scholar's Name</label>
