@@ -440,6 +440,208 @@
       }
     }
     
+
+    /* Family portal redesign pass - same color palette, calmer editing */
+    body {
+      background:
+        linear-gradient(180deg, color-mix(in oklab, var(--md-cream) 92%, var(--md-white)) 0%, var(--md-cream) 42%, color-mix(in oklab, var(--md-cream) 86%, var(--md-pebble)) 100%);
+    }
+    header.relative {
+      overflow: hidden;
+      border-bottom: 1px solid color-mix(in oklab, var(--md-white) 42%, transparent);
+      box-shadow: 0 16px 38px rgba(43,43,43,.10);
+    }
+    header.relative::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, color-mix(in oklab, var(--md-white) 16%, transparent), transparent 38%),
+        repeating-linear-gradient(135deg, color-mix(in oklab, var(--md-white) 13%, transparent) 0 1px, transparent 1px 18px);
+      pointer-events: none;
+    }
+    header .max-w-6xl {
+      min-height: 13rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: .55rem;
+      isolation: isolate;
+    }
+    #mainHeading {
+      max-width: 12ch;
+      line-height: .96;
+      text-wrap: balance;
+      filter: drop-shadow(0 5px 12px rgba(43,43,43,.14));
+    }
+    #weekText {
+      width: fit-content;
+      padding: .55rem .85rem;
+      border-radius: 999px;
+      background: color-mix(in oklab, var(--md-white) 22%, transparent);
+      box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--md-white) 32%, transparent);
+    }
+    #shoutoutBtn {
+      box-shadow: 0 14px 26px rgba(43,43,43,.18) !important;
+      border: 1px solid color-mix(in oklab, var(--md-white) 38%, transparent);
+    }
+    main.max-w-6xl {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.1rem;
+    }
+    #topNav {
+      margin-top: 1rem !important;
+      margin-bottom: 1.25rem !important;
+      border: 1px solid color-mix(in oklab, var(--md-slate) 18%, transparent);
+      border-radius: 1rem;
+      box-shadow: 0 14px 34px rgba(43,43,43,.09);
+    }
+    #topNav button {
+      min-height: 3.25rem;
+      justify-content: center;
+      border: 1px solid color-mix(in oklab, var(--md-white) 34%, transparent);
+    }
+    #topNav button span:first-child {
+      display: inline-grid;
+      place-items: center;
+      width: 1.65rem;
+      height: 1.65rem;
+      border-radius: 999px;
+      background: color-mix(in oklab, var(--md-white) 18%, transparent);
+    }
+    .pagePanel.active > .rounded-2xl:first-child {
+      position: relative;
+      overflow: hidden;
+      padding-top: 2rem !important;
+    }
+    .pagePanel.active > .rounded-2xl:first-child::before {
+      content: '';
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: .45rem;
+      background: linear-gradient(90deg, var(--md-coral), var(--md-mustard), var(--md-slate));
+      opacity: .95;
+    }
+    main > section > .rounded-2xl {
+      backdrop-filter: blur(8px);
+      box-shadow: 0 18px 42px rgba(43,43,43,.09);
+    }
+    main > section > .rounded-2xl + .rounded-2xl {
+      margin-top: .35rem;
+    }
+    main h2, main h3 {
+      text-wrap: balance;
+    }
+    .photo-card,
+    .specials-img-slot,
+    .gallery-imgs {
+      box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--md-white) 38%, transparent), 0 12px 24px rgba(43,43,43,.08);
+    }
+    .event-item {
+      border-left: .35rem solid var(--md-mustard) !important;
+      box-shadow: 0 8px 18px rgba(43,43,43,.06);
+    }
+    .event-emoji {
+      display: inline-grid;
+      place-items: center;
+      width: 2.15rem;
+      height: 2.15rem;
+      border-radius: 999px;
+      background: color-mix(in oklab, var(--md-white) 65%, var(--md-mustard));
+    }
+    body.editing #saveCalendarBtn,
+    body.editing #saveClassSkillMeterBtn,
+    body.editing #saveClassSkillMeterWilliamsBtn,
+    body.editing #saveGradePortalBtn,
+    body.editing #saveSkillsModuleBtn,
+    body.editing #saveSkillsLessonsBtn,
+    body.editing #saveListeningModuleBtn,
+    body.editing #saveListeningLessonsBtn,
+    body.editing #saveMathModuleBtn,
+    body.editing #saveMathLessonsBtn,
+    body.editing #saveSnackMessageBtn,
+    body.editing #saveBackgroundCheckBtn,
+    body.editing #saveExtrasBtn,
+    body.editing #saveWebsitesBtn,
+    body.editing #saveLearningHubInfoSkillsBtn,
+    body.editing #saveLearningHubInfoListeningBtn,
+    body.editing #saveLearningHubInfoMathBtn,
+    body.editing #saveLearningHubInfoPracticeBtn,
+    body.editing #saveTransportationInstructionsBtn,
+    body.editing #saveAboutMeDescBtn,
+    body.editing #saveFunFactsBtn,
+    body.editing #saveFavoriteColorBtn,
+    body.editing #saveFavoriteSnackBtn,
+    body.editing #saveFavoriteDrinkBtn,
+    body.editing #saveFavoriteShowBtn,
+    body.editing #saveAboutMeWilliamsDescBtn,
+    body.editing #saveFunFactsWilliamsBtn,
+    body.editing #saveFavoriteColorWilliamsBtn,
+    body.editing #saveFavoriteSnackWilliamsBtn,
+    body.editing #saveFavoriteDrinkWilliamsBtn,
+    body.editing #saveFavoriteShowWilliamsBtn,
+    body.editing #saveClassRosterBtn,
+    body.editing #saveAllBirthdaysBtn,
+    body.editing #saveContactDavisBtn,
+    body.editing #saveContactWilliamsBtn {
+      display: none !important;
+    }
+    body.editing #saveChangesBtn {
+      position: fixed;
+      right: 1rem;
+      bottom: 1rem;
+      z-index: 9996;
+      min-width: 12rem;
+      justify-content: center;
+      box-shadow: 0 18px 40px rgba(43,43,43,.22) !important;
+      border: 1px solid color-mix(in oklab, var(--md-white) 42%, transparent);
+    }
+    body.editing [data-edit="teacher"][contenteditable="true"],
+    body.editing textarea:not(:disabled),
+    body.editing input:not(:disabled) {
+      outline-style: solid !important;
+      outline-width: 2px !important;
+      background-color: color-mix(in oklab, var(--md-white) 84%, transparent) !important;
+    }
+    body.editing main > section > .rounded-2xl {
+      box-shadow: 0 0 0 1px color-mix(in oklab, var(--md-mustard) 20%, transparent), 0 18px 42px rgba(43,43,43,.10);
+    }
+    @media (min-width: 1024px) {
+      #topNav {
+        display: grid !important;
+        grid-template-columns: repeat(9, minmax(0, 1fr));
+        align-items: stretch;
+      }
+      #topNav button {
+        width: 100%;
+        padding-inline: .7rem !important;
+        line-height: 1.1;
+      }
+    }
+    @media (max-width: 768px) {
+      body.editing #saveChangesBtn {
+        left: 1rem;
+        right: 1rem;
+        bottom: .85rem;
+        width: auto;
+      }
+      #mainHeading {
+        max-width: 9ch;
+      }
+      header .max-w-6xl {
+        min-height: 11.5rem;
+      }
+      #topNav {
+        border-radius: .95rem;
+        max-height: none;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      }
+      #topNav button {
+        min-height: 3.35rem;
+      }
+    }
+
     /* Drag and drop visual indicators for listening units */
     .drag-over-top {
       border-top: 3px solid var(--md-coral) !important;
