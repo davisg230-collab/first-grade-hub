@@ -1517,9 +1517,9 @@
           
           <!-- Enhanced TV Screen with TV-like appearance -->
           <div class="tv-container mx-auto" style="max-width: 800px; background: linear-gradient(145deg, #2a2a2a, #1a1a1a); border-radius: 40px; padding: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);">
-            <div class="bg-black rounded-2xl p-8 mb-4" style="min-height: 350px; display: flex; align-items: center; justify-content: center; border: 12px solid #333; box-shadow: inset 0 0 30px rgba(0,0,0,0.8);">
-              <div id="shoutoutTVDisplay" class="text-white text-center" style="font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif; font-size: 2rem; line-height: 1.4; max-width: 90%;">
-                Welcome to our amazing first grade classroom! Keep being awesome, scholars!
+            <div class="bg-black rounded-2xl p-5 sm:p-8 mb-4" style="min-height: clamp(220px, 52vw, 350px); display: flex; align-items: center; justify-content: center; border: 12px solid #333; box-shadow: inset 0 0 30px rgba(0,0,0,0.8);">
+              <div id="shoutoutTVDisplay" class="text-white text-center" style="font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif; font-size: clamp(1.15rem, 5vw, 2rem); line-height: 1.35; max-width: 90%;">
+                Choose a channel to see scholar shoutouts!
               </div>
             </div>
             <!-- TV Brand/Controls Area -->
@@ -1529,13 +1529,16 @@
           </div>
           
           <!-- Control Buttons -->
-          <div class="flex gap-4 justify-center mb-8">
+          <div class="flex flex-wrap gap-4 justify-center mb-4">
             <button id="shuffleTVBtn" class="px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90 text-lg" style="background: var(--md-mustard);">
               🎲 Shuffle
             </button>
             <button id="createShoutoutBtn" class="px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90 text-lg" style="background: var(--md-coral);">
               ✨ Create Shoutout
             </button>
+          </div>
+          <div class="max-w-2xl mx-auto mb-8 rounded-2xl p-4 text-sm leading-relaxed" style="background: color-mix(in oklab, var(--md-white) 72%, var(--md-pebble) 28%); color: var(--md-slate); border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
+            Choose a class channel, shuffle approved shoutouts, or send a new shoutout to the channel shown above.
           </div>
           
           <!-- Admin Button (appears in Edit Mode) -->
@@ -7719,7 +7722,7 @@ async function submitShoutout() {
         <div style="color: var(--md-coral);">
           ✨ Shoutout submitted! ✨<br>
           <span style="font-size: 1.2rem;">Thank you for spreading kindness!</span><br>
-          <span style="font-size: 1rem; opacity: 0.8;">Your message will appear after approval.</span>
+          <span style="font-size: 1rem; opacity: 0.8;">Sent to ${getShoutoutChannelName(activeShoutoutChannel)}. It will appear after approval.</span>
         </div>
       `;
     } else {
@@ -7740,6 +7743,11 @@ function getShoutoutChannelLabel(channel) {
 
 function getShoutoutChannelName(channel) {
   return getShoutoutChannelLabel(channel) + ' Channel';
+}
+
+function getShoutoutChannelSlate(showEmptyNote = false) {
+  const emptyNote = showEmptyNote ? '<div style="font-size: 1rem; opacity: 0.8; margin-top: 1rem;">No approved shoutouts on this channel yet.</div>' : '';
+  return `<div style="color: var(--md-white);"><div style="color: var(--md-mustard); font-size: 1.1rem; margin-bottom: 0.5rem;">${getShoutoutChannelName(activeShoutoutChannel)}</div><div>Ready for scholar shoutouts!</div>${emptyNote}</div>`;
 }
 
 function getShoutoutClass(shoutout) {
@@ -7791,7 +7799,7 @@ function shuffleShoutoutTV() {
   const display = document.getElementById('shoutoutTVDisplay');
   if (channelShoutouts.length === 0) {
     if (display) {
-      display.innerHTML = `<div style="color: var(--md-white);"><div style="color: var(--md-mustard); font-size: 1.1rem; margin-bottom: 0.5rem;">${getShoutoutChannelName(activeShoutoutChannel)}</div>${escapeShoutoutText(mainTVMessage)}<div style="font-size: 1rem; opacity: 0.8; margin-top: 1rem;">No approved shoutouts on this channel yet.</div></div>`;
+      display.innerHTML = getShoutoutChannelSlate(true);
     }
     return;
   }
@@ -8215,8 +8223,8 @@ function updateTVDisplay() {
   if (!display) return;
   
   updateShoutoutChannelUI();
-  // Show main message by default for the active channel
-  display.innerHTML = `<div style="color: var(--md-white);"><div style="color: var(--md-mustard); font-size: 1.1rem; margin-bottom: 0.5rem;">${getShoutoutChannelName(activeShoutoutChannel)}</div>${escapeShoutoutText(mainTVMessage)}</div>`;
+  // Show a short channel slate by default so the TV does not feel crowded on mobile.
+  display.innerHTML = getShoutoutChannelSlate(false);
 }
 
 // Function to update website cards with saved URLs and order
