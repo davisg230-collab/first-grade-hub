@@ -1537,8 +1537,8 @@
               ✨ Create Shoutout
             </button>
           </div>
-          <div class="max-w-2xl mx-auto mb-8 rounded-2xl p-4 text-sm leading-relaxed" style="background: color-mix(in oklab, var(--md-white) 72%, var(--md-pebble) 28%); color: var(--md-slate); border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
-            Choose a class channel, shuffle approved shoutouts, or send a new shoutout to the channel shown above.
+          <div id="shoutoutTvHelpText" class="max-w-2xl mx-auto mb-8 rounded-2xl p-4 text-sm leading-relaxed" style="background: color-mix(in oklab, var(--md-white) 72%, var(--md-pebble) 28%); color: var(--md-slate); border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
+            You are watching Mr. Davis Channel. Shuffle approved shoutouts or send a new shoutout to Mr. Davis's class.
           </div>
           
           <!-- Admin Button (appears in Edit Mode) -->
@@ -1546,6 +1546,13 @@
             <button id="createdShoutsBtn" class="edit-only px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-slate);">
               📋 Created Shoutouts
             </button>
+            <button id="setShoutoutTvImageBtn" class="edit-only px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90 ml-2" style="background: var(--md-coral);" onclick="document.getElementById('shoutoutTvImageInput').click();">
+              🖼️ Set TV Image
+            </button>
+            <button id="removeShoutoutTvImageBtn" class="edit-only px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90 ml-2" style="background: var(--md-mustard);" onclick="removeShoutoutTvImage();">
+              Remove TV Image
+            </button>
+            <input id="shoutoutTvImageInput" type="file" accept="image/*" class="hidden" onchange="handleShoutoutTvImageUpload(event)">
           </div>
           
 
@@ -2216,6 +2223,7 @@
     let currentShoutoutIndex = 0; // For shuffling through approved shoutouts
     let activeShoutoutChannel = 'davis'; // Which class channel is showing on Shoutout TV
     let mainTVMessage = 'Welcome to our amazing first grade classroom! Keep being awesome, scholars!'; // Main TV message
+    let shoutoutTvImageUrl = ''; // Optional image shown on the TV before families shuffle shoutouts
     
     // Clever QR Codes data
     let cleverQRData = []; // Array of {name: string, qrUrl: string}
@@ -7747,7 +7755,11 @@ function getShoutoutChannelName(channel) {
 
 function getShoutoutChannelSlate(showEmptyNote = false) {
   const emptyNote = showEmptyNote ? '<div style="font-size: 1rem; opacity: 0.8; margin-top: 1rem;">No approved shoutouts on this channel yet.</div>' : '';
-  return `<div style="color: var(--md-white);"><div style="color: var(--md-mustard); font-size: 1.1rem; margin-bottom: 0.5rem;">${getShoutoutChannelName(activeShoutoutChannel)}</div><div>Ready for scholar shoutouts!</div>${emptyNote}</div>`;
+  const channelName = getShoutoutChannelName(activeShoutoutChannel);
+  if (shoutoutTvImageUrl) {
+    return `<div style="width: 100%; color: var(--md-white);"><img src="${escapeShoutoutText(shoutoutTvImageUrl)}" alt="${channelName} welcome image" style="max-width: 100%; max-height: clamp(170px, 42vw, 290px); object-fit: contain; border-radius: 1rem; box-shadow: 0 10px 24px rgba(0,0,0,0.35);"><div style="color: var(--md-mustard); font-size: 1rem; margin-top: 0.85rem;">${channelName}</div>${emptyNote}</div>`;
+  }
+  return `<div style="color: var(--md-white);"><div style="color: var(--md-mustard); font-size: 1.1rem; margin-bottom: 0.5rem;">${channelName}</div><div>Ready for scholar shoutouts!</div>${emptyNote}</div>`;
 }
 
 function getShoutoutClass(shoutout) {
@@ -7784,6 +7796,14 @@ function updateShoutoutChannelUI() {
   const channelName = getShoutoutChannelName(activeShoutoutChannel);
   if (activeLabel) activeLabel.textContent = 'Now watching: ' + channelName;
   if (createLabel) createLabel.textContent = channelName;
+  updateShoutoutHelpText();
+}
+
+function updateShoutoutHelpText() {
+  const helpText = document.getElementById('shoutoutTvHelpText');
+  if (!helpText) return;
+  const teacherName = getShoutoutChannelLabel(activeShoutoutChannel);
+  helpText.textContent = `You are watching ${getShoutoutChannelName(activeShoutoutChannel)}. Shuffle approved shoutouts or send a new shoutout to ${teacherName}'s class.`;
 }
 
 function switchShoutoutChannel(channel) {
@@ -8197,12 +8217,17 @@ async function loadMainMessage() {
         if (data.mainTVMessage) {
           mainTVMessage = data.mainTVMessage;
         }
+        shoutoutTvImageUrl = data.shoutoutTvImageUrl || '';
       }
     } else {
       // Fallback to localStorage for testing
       const saved = localStorage.getItem('mainTVMessage');
+      const savedImage = localStorage.getItem('shoutoutTvImageUrl');
       if (saved) {
         mainTVMessage = saved;
+      }
+      if (savedImage) {
+        shoutoutTvImageUrl = savedImage;
       }
     }
     
@@ -8215,6 +8240,59 @@ async function loadMainMessage() {
     console.log('Main TV message loaded:', mainTVMessage);
   } catch (error) {
     console.error('Failed to load main TV message:', error);
+  }
+}
+
+
+async function saveShoutoutTvImageUrl(url) {
+  shoutoutTvImageUrl = url || '';
+  if (db) {
+    await db.collection('classData').doc('current').set({
+      shoutoutTvImageUrl
+    }, { merge: true });
+  } else {
+    localStorage.setItem('shoutoutTvImageUrl', shoutoutTvImageUrl);
+  }
+  updateTVDisplay();
+}
+
+async function handleShoutoutTvImageUpload(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  try {
+    await ensureAuthenticated();
+    if (!storage) {
+      throw new Error('Photo storage is not available right now.');
+    }
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const imageRef = storage.ref().child(`shoutout-tv/${Date.now()}_${safeName}`);
+    const snapshot = await imageRef.put(file);
+    const imageUrl = await snapshot.ref.getDownloadURL();
+    await saveShoutoutTvImageUrl(imageUrl);
+    alert('Shoutout TV image saved!');
+  } catch (error) {
+    console.error('Failed to save Shoutout TV image:', error);
+    alert('I could not save that TV image. Please make sure you are in Edit Mode and try again.');
+  } finally {
+    event.target.value = '';
+  }
+}
+
+async function removeShoutoutTvImage() {
+  if (!shoutoutTvImageUrl) {
+    alert('There is not a Shoutout TV image saved yet.');
+    return;
+  }
+  if (!confirm('Remove the Shoutout TV image?')) return;
+
+  try {
+    await ensureAuthenticated();
+    await saveShoutoutTvImageUrl('');
+    alert('Shoutout TV image removed.');
+  } catch (error) {
+    console.error('Failed to remove Shoutout TV image:', error);
+    alert('I could not remove that TV image. Please make sure you are in Edit Mode and try again.');
   }
 }
 
