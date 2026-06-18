@@ -790,9 +790,9 @@
       <!-- What We Did - Mr. Davis -->
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 h-full" style="background: var(--card-bg);">
         <h2 id="whatWeDidDavisTitle" class="text-2xl font-display font-bold mb-5 text-center" data-edit="teacher" contenteditable="false">What We Did This Week - Mr. Davis</h2>
-        <div class="grid xl:grid-cols-3 gap-5">
+        <div class="space-y-5">
           <!-- 2 small + 1 large photo grid -->
-          <div class="col-span-1 flex flex-col gap-4">
+          <div class="flex flex-col gap-4">
             <div class="grid grid-cols-2 gap-4 mb-4">
               <div class="photo-card rounded-xl aspect-[4/3] bg-[color:var(--md-blush)] flex items-center justify-center text-3xl font-bold relative" onclick="handleHomePhotoClick(this, 'davis')">+
                 <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteHomePhoto(this, 'davis')" title="Delete Photo">✖</button>
@@ -806,7 +806,7 @@
             </div>
           </div>
           <!-- Editable recap -->
-          <div class="xl:col-span-2">
+          <div>
             <div class="rounded-xl p-4 sm:p-5 h-full flex items-center" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-blush) 30%); border: 1px solid color-mix(in oklab, var(--md-blush) 60%, var(--md-white) 40%);">
               <p id="recapTextDavis" class="leading-relaxed w-full" data-edit="teacher" contenteditable="false">
                 This week we explored magical stories and practiced our sight words. The students loved reading about brave characters and sharing their favorite parts! We also worked on counting by 5s and 10s using fun games and manipulatives. Our art projects focused on fall colors and textures - the students created beautiful leaf collages and practiced writing descriptive words.
@@ -819,9 +819,9 @@
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 h-full" style="background: var(--card-bg);">
         <h2 id="whatWeDidWilliamsTitle" class="text-2xl font-display font-bold mb-5 text-center" data-edit="teacher" contenteditable="false">What We Did This Week - Ms. Vest</h2>
         <div id="williamsCollapsibleContent">
-          <div class="grid xl:grid-cols-3 gap-5">
+          <div class="space-y-5">
           <!-- 2 small + 1 large photo grid -->
-          <div class="col-span-1 flex flex-col gap-4">
+          <div class="flex flex-col gap-4">
             <div class="grid grid-cols-2 gap-4 mb-4">
               <div class="photo-card rounded-xl aspect-[4/3] bg-[color:var(--md-blush)] flex items-center justify-center text-3xl font-bold relative" onclick="handleHomePhotoClick(this, 'williams')">+
                 <button class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs edit-only" style="display: none;" onclick="event.stopPropagation(); deleteHomePhoto(this, 'williams')" title="Delete Photo">✖</button>
@@ -835,7 +835,7 @@
             </div>
           </div>
           <!-- Editable recap -->
-          <div class="xl:col-span-2">
+          <div>
             <div class="rounded-xl p-4 sm:p-5 h-full flex items-center" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-blush) 30%); border: 1px solid color-mix(in oklab, var(--md-blush) 60%, var(--md-white) 40%);">
               <p id="recapTextWilliams" class="leading-relaxed w-full" data-edit="teacher" contenteditable="false">
                 This week we explored magical stories and practiced our sight words. The students loved reading about brave characters and sharing their favorite parts! We also worked on counting by 5s and 10s using fun games and manipulatives. Our art projects focused on fall colors and textures - the students created beautiful leaf collages and practiced writing descriptive words.
