@@ -2223,7 +2223,7 @@
     let currentShoutoutIndex = 0; // For shuffling through approved shoutouts
     let activeShoutoutChannel = 'davis'; // Which class channel is showing on Shoutout TV
     let mainTVMessage = 'Welcome to our amazing first grade classroom! Keep being awesome, scholars!'; // Main TV message
-    let shoutoutTvImageUrl = ''; // Optional image shown on the TV before families shuffle shoutouts
+    let shoutoutTvImageUrls = { davis: '', vest: '' }; // Optional TV images by Shoutout TV channel
     
     // Clever QR Codes data
     let cleverQRData = []; // Array of {name: string, qrUrl: string}
@@ -2777,8 +2777,8 @@
         btn.style.display = 'inline-block';
       });
       
-      // Enable This Week's Lessons section for both Skills and Math
-      ['skills', 'math'].forEach(subject => {
+      // Enable This Week's Lessons section for Skills, Listening & Learning, and Math
+      ['skills', 'listening', 'math'].forEach(subject => {
         // Refresh lesson cards to update for edit mode
         const grid = document.getElementById(subject + 'LessonsGrid');
         if (grid && grid.children.length > 0) {
@@ -2955,8 +2955,8 @@
         btn.style.display = 'none';
       });
       
-      // Disable This Week's Lessons section for both Skills and Math
-      ['skills', 'math'].forEach(subject => {
+      // Disable This Week's Lessons section for Skills, Listening & Learning, and Math
+      ['skills', 'listening', 'math'].forEach(subject => {
         // Refresh lesson cards to update for non-edit mode
         const grid = document.getElementById(subject + 'LessonsGrid');
         if (grid && grid.children.length > 0) {
@@ -3935,8 +3935,8 @@
         `;
         
         // Add drag event listeners
-        newCard.addEventListener('dragstart', handleDragStart);
-        newCard.addEventListener('dragend', handleDragEnd);
+        newCard.addEventListener('dragstart', handleLessonDragStart);
+        newCard.addEventListener('dragend', handleLessonDragEnd);
         
         cardContainer.innerHTML = '';
         cardContainer.appendChild(newCard);
@@ -4069,20 +4069,20 @@
     let lessonDraggedCard = null;
     let lessonSourceContainer = null;
     
-    function handleDragStart(e) {
+    function handleLessonDragStart(e) {
       lessonDraggedCard = e.target;
       lessonSourceContainer = lessonDraggedCard.parentElement;
       e.dataTransfer.effectAllowed = 'move';
       lessonDraggedCard.style.opacity = '0.5';
     }
     
-    function handleDragEnd(e) {
+    function handleLessonDragEnd(e) {
       lessonDraggedCard.style.opacity = '1';
       lessonDraggedCard = null;
       lessonSourceContainer = null;
     }
     
-    function handleDragOver(e) {
+    function handleLessonDragOver(e) {
       if (e.preventDefault) {
         e.preventDefault();
       }
@@ -4090,7 +4090,7 @@
       return false;
     }
     
-    async function handleDrop(e, subject) {
+    async function handleLessonDrop(e, subject) {
       if (e.stopPropagation) {
         e.stopPropagation();
       }
@@ -6185,8 +6185,8 @@ function updateLessonCards(subject, lessons_data) {
     weekdayBox.dataset.placeholder = weekday.placeholder || 'No Lesson';
     
     // Add drag-and-drop event listeners
-    weekdayBox.addEventListener('dragover', handleDragOver);
-    weekdayBox.addEventListener('drop', (e) => handleDrop(e, subject));
+    weekdayBox.addEventListener('dragover', handleLessonDragOver);
+    weekdayBox.addEventListener('drop', (e) => handleLessonDrop(e, subject));
     
     // Weekday title (editable in edit mode)
     const titleDiv = document.createElement('div');
@@ -6241,8 +6241,8 @@ function updateLessonCards(subject, lessons_data) {
       
       // Add drag event listeners only in edit mode
       if (isEditMode) {
-        lessonCard.addEventListener('dragstart', handleDragStart);
-        lessonCard.addEventListener('dragend', handleDragEnd);
+        lessonCard.addEventListener('dragstart', handleLessonDragStart);
+        lessonCard.addEventListener('dragend', handleLessonDragEnd);
       }
       
       cardContainer.appendChild(lessonCard);
@@ -7758,11 +7758,16 @@ function getShoutoutChannelName(channel) {
   return getShoutoutChannelLabel(channel) + ' Channel';
 }
 
+function getActiveShoutoutTvImageUrl() {
+  return shoutoutTvImageUrls[activeShoutoutChannel] || '';
+}
+
 function getShoutoutChannelSlate(showEmptyNote = false) {
   const emptyNote = showEmptyNote ? '<div style="font-size: 1rem; opacity: 0.8; margin-top: 1rem;">No approved shoutouts on this channel yet.</div>' : '';
   const channelName = getShoutoutChannelName(activeShoutoutChannel);
-  if (shoutoutTvImageUrl) {
-    return `<div style="width: 100%; color: var(--md-white);"><img src="${escapeShoutoutText(shoutoutTvImageUrl)}" alt="${channelName} welcome image" style="max-width: 100%; max-height: clamp(170px, 42vw, 290px); object-fit: contain; border-radius: 1rem; box-shadow: 0 10px 24px rgba(0,0,0,0.35);"><div style="color: var(--md-mustard); font-size: 1rem; margin-top: 0.85rem;">${channelName}</div>${emptyNote}</div>`;
+  const channelImageUrl = getActiveShoutoutTvImageUrl();
+  if (channelImageUrl) {
+    return `<div style="width: 100%; color: var(--md-white);"><img src="${escapeShoutoutText(channelImageUrl)}" alt="${channelName} welcome image" style="max-width: 100%; max-height: clamp(170px, 42vw, 290px); object-fit: contain; border-radius: 1rem; box-shadow: 0 10px 24px rgba(0,0,0,0.35);"><div style="color: var(--md-mustard); font-size: 1rem; margin-top: 0.85rem;">${channelName}</div>${emptyNote}</div>`;
   }
   return `<div style="color: var(--md-white);"><div style="color: var(--md-mustard); font-size: 1.1rem; margin-bottom: 0.5rem;">${channelName}</div><div>Ready for scholar shoutouts!</div>${emptyNote}</div>`;
 }
@@ -8222,18 +8227,20 @@ async function loadMainMessage() {
         if (data.mainTVMessage) {
           mainTVMessage = data.mainTVMessage;
         }
-        shoutoutTvImageUrl = data.shoutoutTvImageUrl || '';
+        shoutoutTvImageUrls = {
+          davis: data.shoutoutTvImageUrlDavis || data.shoutoutTvImageUrl || '',
+          vest: data.shoutoutTvImageUrlVest || ''
+        };
       }
     } else {
       // Fallback to localStorage for testing
       const saved = localStorage.getItem('mainTVMessage');
-      const savedImage = localStorage.getItem('shoutoutTvImageUrl');
+      const savedImageDavis = localStorage.getItem('shoutoutTvImageUrlDavis') || localStorage.getItem('shoutoutTvImageUrl');
+      const savedImageVest = localStorage.getItem('shoutoutTvImageUrlVest');
       if (saved) {
         mainTVMessage = saved;
       }
-      if (savedImage) {
-        shoutoutTvImageUrl = savedImage;
-      }
+      shoutoutTvImageUrls = { davis: savedImageDavis || '', vest: savedImageVest || '' };
     }
     
     // Update textarea in admin modal if it exists
@@ -8250,13 +8257,14 @@ async function loadMainMessage() {
 
 
 async function saveShoutoutTvImageUrl(url) {
-  shoutoutTvImageUrl = url || '';
+  const channel = activeShoutoutChannel === 'vest' ? 'vest' : 'davis';
+  shoutoutTvImageUrls[channel] = url || '';
   if (db) {
-    await db.collection('classData').doc('current').set({
-      shoutoutTvImageUrl
-    }, { merge: true });
+    const fieldName = channel === 'vest' ? 'shoutoutTvImageUrlVest' : 'shoutoutTvImageUrlDavis';
+    await db.collection('classData').doc('current').set({ [fieldName]: shoutoutTvImageUrls[channel] }, { merge: true });
   } else {
-    localStorage.setItem('shoutoutTvImageUrl', shoutoutTvImageUrl);
+    const storageKey = channel === 'vest' ? 'shoutoutTvImageUrlVest' : 'shoutoutTvImageUrlDavis';
+    localStorage.setItem(storageKey, shoutoutTvImageUrls[channel]);
   }
   updateTVDisplay();
 }
@@ -8271,11 +8279,12 @@ async function handleShoutoutTvImageUpload(event) {
       throw new Error('Photo storage is not available right now.');
     }
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-    const imageRef = storage.ref().child(`shoutout-tv/${Date.now()}_${safeName}`);
+    const channel = activeShoutoutChannel === 'vest' ? 'vest' : 'davis';
+    const imageRef = storage.ref().child(`shoutout-tv/${channel}/${Date.now()}_${safeName}`);
     const snapshot = await imageRef.put(file);
     const imageUrl = await snapshot.ref.getDownloadURL();
     await saveShoutoutTvImageUrl(imageUrl);
-    alert('Shoutout TV image saved!');
+    alert(`${getShoutoutChannelName(activeShoutoutChannel)} image saved!`);
   } catch (error) {
     console.error('Failed to save Shoutout TV image:', error);
     alert('I could not save that TV image. Please make sure you are in Edit Mode and try again.');
@@ -8285,16 +8294,16 @@ async function handleShoutoutTvImageUpload(event) {
 }
 
 async function removeShoutoutTvImage() {
-  if (!shoutoutTvImageUrl) {
-    alert('There is not a Shoutout TV image saved yet.');
+  if (!getActiveShoutoutTvImageUrl()) {
+    alert(`There is not a TV image saved for ${getShoutoutChannelName(activeShoutoutChannel)} yet.`);
     return;
   }
-  if (!confirm('Remove the Shoutout TV image?')) return;
+  if (!confirm(`Remove the TV image for ${getShoutoutChannelName(activeShoutoutChannel)}?`)) return;
 
   try {
     await ensureAuthenticated();
     await saveShoutoutTvImageUrl('');
-    alert('Shoutout TV image removed.');
+    alert(`${getShoutoutChannelName(activeShoutoutChannel)} image removed.`);
   } catch (error) {
     console.error('Failed to remove Shoutout TV image:', error);
     alert('I could not remove that TV image. Please make sure you are in Edit Mode and try again.');
@@ -12545,6 +12554,8 @@ function triggerConfetti() {
     }
   }, 7000);
 }
+
+window.triggerConfetti = triggerConfetti;
 
 // Website URL update functionality  
 function updateWebsiteUrl(input) {
