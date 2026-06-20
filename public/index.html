@@ -388,6 +388,45 @@
       opacity: .45;
       cursor: not-allowed;
     }
+    .transportation-hero {
+      background:
+        radial-gradient(circle at 18% 18%, rgba(242,201,190,.58), transparent 30%),
+        radial-gradient(circle at 82% 18%, rgba(224,177,74,.38), transparent 30%),
+        color-mix(in oklab, var(--md-white) 78%, var(--md-cream) 22%);
+      border: 1px solid color-mix(in oklab, var(--md-slate) 34%, var(--md-white) 66%);
+    }
+    .transportation-privacy-card {
+      border-radius: .9rem;
+      background: var(--md-white);
+      border: 1px solid color-mix(in oklab, var(--md-slate) 24%, var(--md-white) 76%);
+      padding: 1rem;
+    }
+    .transportation-teacher-panel { display: none; }
+    body.editing .transportation-teacher-panel { display: block; }
+    .transportation-match-button,
+    .transportation-choice-button {
+      width: 100%;
+      text-align: left;
+      border-radius: .85rem;
+      padding: .85rem 1rem;
+      border: 1px solid color-mix(in oklab, var(--md-slate) 24%, var(--md-white) 76%);
+      background: var(--md-white);
+      color: var(--md-ink);
+      font-weight: 700;
+    }
+    .transportation-choice-button.active {
+      color: white;
+      background: var(--md-coral);
+      border-color: var(--md-coral);
+    }
+    .transportation-modal-field {
+      width: 100%;
+      border-radius: .75rem;
+      border: 1px solid color-mix(in oklab, var(--md-slate) 32%, var(--md-white) 68%);
+      padding: .75rem .9rem;
+      background: var(--md-white);
+      color: var(--md-ink);
+    }
     @media print {
       body.printing-share-post {
         background: white !important;
@@ -2088,53 +2127,55 @@
     </section>
     <!-- TRANSPORTATION TAB (always editable) -->
     <section data-page-panel="transportation" class="pagePanel fade-in">
-      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--md-cream);">
-        <h2 class="text-2xl font-display font-bold mb-6" style="color: #f59e0b;">🚌 Transportation</h2>
-        
-        <!-- Admin Instructions Box -->
-        <div class="bg-white rounded-xl p-4 mb-6" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
-          <div class="flex justify-end items-center mb-3">
-            <button id="saveTransportationInstructionsBtn" class="px-3 py-1 rounded-lg text-white text-xs font-semibold" style="background: var(--md-coral);" onclick="saveTransportationField('instructions')">💾 Save</button>
+      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8 transportation-hero">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 mb-7">
+          <div>
+            <p class="text-sm font-bold uppercase tracking-wide" style="color: var(--md-slate);">Dismissal Desk</p>
+            <h2 class="text-3xl font-display font-bold" style="color: var(--md-coral);">Transportation Updates</h2>
+            <p class="mt-2 text-sm text-[color:var(--md-ink)]/80 max-w-2xl">Need to change how your scholar gets home? Submit changes here. Please send updates at least 3 hours before dismissal whenever possible.</p>
           </div>
-          <textarea id="transportationInstructionsTextarea" class="w-full h-16 p-3 text-sm border rounded-lg resize-none" placeholder="Add instructions for parents about transportation procedures...">Please review your child's transportation method and contact the office if changes are needed.</textarea>
+          <button class="px-5 py-3 rounded-xl text-white font-semibold shadow-soft" style="background: var(--md-coral);" onclick="openTransportationModal()">Update Transportation</button>
         </div>
 
-        <!-- Mobile Arrow Indicator -->
-        <div class="md:hidden text-center text-sm text-gray-500 mb-4">
-          ← Swipe to view all transportation options →
+        <div class="grid md:grid-cols-3 gap-4 mb-6">
+          <div class="transportation-privacy-card">
+            <div class="text-sm font-bold uppercase tracking-wide" style="color:#f59e0b;">Bus</div>
+            <h3 class="text-xl font-display font-bold mt-1">Bus Riders</h3>
+            <p class="text-sm text-gray-600 mt-2">Current bus numbers stay private. Families can request a bus change from the update form.</p>
+          </div>
+          <div class="transportation-privacy-card">
+            <div class="text-sm font-bold uppercase tracking-wide" style="color:#10b981;">Car</div>
+            <h3 class="text-xl font-display font-bold mt-1">Car Pickup</h3>
+            <p class="text-sm text-gray-600 mt-2">Families can add who will pick up the scholar and whether the change is temporary or permanent.</p>
+          </div>
+          <div class="transportation-privacy-card">
+            <div class="text-sm font-bold uppercase tracking-wide" style="color:#8b5cf6;">Porch</div>
+            <h3 class="text-xl font-display font-bold mt-1">Porch Pickup</h3>
+            <p class="text-sm text-gray-600 mt-2">Porch changes can include a quick note and the adult submitting the update.</p>
+          </div>
         </div>
 
-        <!-- Transportation Cards Container -->
-        <div class="transportation-cards-container">
-          <div class="transportation-cards mobile-tab-scroll scrollbar-hide grid md:grid-cols-3 gap-4">
-            <!-- Bus Card -->
-            <div class="transportation-card bg-white rounded-xl p-6 cursor-pointer hover:shadow-lg transition-shadow" 
-                 style="border: 2px solid #fbbf24;" onclick="openTransportationModal('bus')">
-              <div class="text-center">
-                <div class="text-4xl mb-3">🚌</div>
-                <h3 class="text-lg font-semibold mb-2" style="color: #fbbf24;">Bus Riders</h3>
-                <p class="text-sm text-gray-600">Click to manage bus transportation</p>
-              </div>
-            </div>
+        <div class="rounded-xl p-4 mb-6" style="background: color-mix(in oklab, var(--md-white) 74%, var(--md-mustard) 26%); border: 1px solid color-mix(in oklab, var(--md-mustard) 46%, var(--md-white) 54%);">
+          <p class="text-sm font-semibold">Reminder: same-day changes are easiest to process when sent at least 3 hours before dismissal.</p>
+        </div>
 
-            <!-- Car Card -->
-            <div class="transportation-card bg-white rounded-xl p-6 cursor-pointer hover:shadow-lg transition-shadow" 
-                 style="border: 2px solid #10b981;" onclick="openTransportationModal('car')">
-              <div class="text-center">
-                <div class="text-4xl mb-3">🚗</div>
-                <h3 class="text-lg font-semibold mb-2" style="color: #10b981;">Car Riders</h3>
-                <p class="text-sm text-gray-600">Click to manage car pickup</p>
-              </div>
+        <div class="transportation-teacher-panel rounded-2xl bg-white p-5 sm:p-6" style="border: 1px dashed color-mix(in oklab, var(--md-slate) 48%, var(--md-white) 52%);">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <div>
+              <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">Teacher Transportation Manager</h3>
+              <p class="text-sm text-gray-600">One scholar per line: Scholar Name | Last Name | Bus/Car/Porch | Current details | Optional family code</p>
             </div>
+            <button id="saveTransportationRosterBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="saveTransportationRoster()">Save Transportation</button>
+          </div>
+          <textarea id="transportationRosterTextarea" class="w-full h-44 p-4 text-sm border rounded-lg resize-none teacher-only-edit" placeholder="Emma Smith | Smith | Bus | 309 | 1234&#10;Jordan Lee | Lee | Car | Mom pickup | 2468&#10;Avery Brown | Brown | Porch | Front porch | 1357"></textarea>
 
-            <!-- Porch Card -->
-            <div class="transportation-card bg-white rounded-xl p-6 cursor-pointer hover:shadow-lg transition-shadow" 
-                 style="border: 2px solid #8b5cf6;" onclick="openTransportationModal('porch')">
-              <div class="text-center">
-                <div class="text-4xl mb-3">🏠</div>
-                <h3 class="text-lg font-semibold mb-2" style="color: #8b5cf6;">Porch Pickup</h3>
-                <p class="text-sm text-gray-600">Click to manage porch pickup</p>
-              </div>
+          <div class="mt-6">
+            <div class="flex items-center justify-between gap-3 mb-3">
+              <h4 class="font-semibold">Submitted Transportation Updates</h4>
+              <button class="px-3 py-1.5 rounded-lg text-white text-xs font-semibold" style="background: var(--md-coral);" onclick="clearTransportationUpdates()">Clear Reviewed</button>
+            </div>
+            <div id="transportationUpdatesList" class="space-y-3 text-sm">
+              <div class="rounded-xl p-4 bg-white text-gray-600">No submitted updates yet.</div>
             </div>
           </div>
         </div>
@@ -2144,6 +2185,9 @@
           <textarea id="busRidersTextarea"></textarea>
           <textarea id="carRidersTextarea"></textarea>
           <textarea id="porchPickupTextarea"></textarea>
+          <textarea id="transportationUpdatesTextarea"></textarea>
+          <textarea id="transportationInstructionsTextarea">Please submit transportation changes at least 3 hours before dismissal whenever possible.</textarea>
+          <button id="saveTransportationInstructionsBtn" onclick="saveTransportationField('instructions')">Save</button>
         </div>
       </div>
     </section>
@@ -3647,6 +3691,12 @@
       
       const porchPickupEl = document.getElementById('porchPickupTextarea');
       if (porchPickupEl) data.porch_pickup = porchPickupEl.value || '';
+
+      const transportationRosterEl = document.getElementById('transportationRosterTextarea');
+      if (transportationRosterEl) data.transportation_roster_text = transportationRosterEl.value || '';
+
+      const transportationUpdatesEl = document.getElementById('transportationUpdatesTextarea');
+      if (transportationUpdatesEl) data.transportation_updates_json = transportationUpdatesEl.value || '[]';
       
       // Birthday fields
       const classRosterEl = document.getElementById('classRosterTextarea');
@@ -7109,6 +7159,116 @@ function updateTransportationFields(data) {
   if (instructionsEl && data.transportation_instructions) {
     instructionsEl.value = data.transportation_instructions;
   }
+
+  const rosterEl = document.getElementById('transportationRosterTextarea');
+  if (rosterEl) {
+    rosterEl.value = data.transportation_roster_text || buildTransportationRosterFromLegacy(data);
+  }
+
+  const updatesEl = document.getElementById('transportationUpdatesTextarea');
+  if (updatesEl) {
+    updatesEl.value = data.transportation_updates_json || '[]';
+  }
+
+  renderTransportationUpdates();
+}
+
+function buildTransportationRosterFromLegacy(data = {}) {
+  const rows = [];
+  [
+    { text: data.bus_riders, type: 'Bus' },
+    { text: data.car_riders, type: 'Car' },
+    { text: data.porch_pickup, type: 'Porch' }
+  ].forEach(group => {
+    String(group.text || '').split(/\r?\n/).map(line => line.trim()).filter(Boolean).forEach(line => {
+      const cleanLine = line.replace(/^[\s\-\*\u2022]+/, '').trim();
+      const parts = cleanLine.split(/\s[-\u2013\u2014:]\s/);
+      const name = (parts[0] || cleanLine).trim();
+      const details = (parts.slice(1).join(' - ') || '').trim();
+      const lastName = name.split(/\s+/).slice(-1)[0] || name;
+      rows.push(`${name} | ${lastName} | ${group.type} | ${details} |`);
+    });
+  });
+  return rows.join('\n');
+}
+
+function parseTransportationRosterText(text) {
+  return String(text || '').split(/\r?\n/)
+    .map((line, index) => {
+      const parts = line.split('|').map(part => part.trim());
+      if (!parts[0]) return null;
+      const name = parts[0];
+      const lastName = parts[1] || name.split(/\s+/).slice(-1)[0] || name;
+      const type = normalizeTransportationType(parts[2] || 'Bus');
+      return {
+        index,
+        name,
+        lastName,
+        type,
+        details: parts[3] || '',
+        code: parts[4] || ''
+      };
+    })
+    .filter(Boolean);
+}
+
+function getTransportationRoster() {
+  return parseTransportationRosterText(document.getElementById('transportationRosterTextarea')?.value || '');
+}
+
+function normalizeTransportationType(type) {
+  const clean = String(type || '').toLowerCase();
+  if (clean.startsWith('car')) return 'car';
+  if (clean.startsWith('porch')) return 'porch';
+  return 'bus';
+}
+
+function getTransportationTypeLabel(type) {
+  return ({ bus: 'Bus', car: 'Car Pickup', porch: 'Porch Pickup' })[normalizeTransportationType(type)] || 'Bus';
+}
+
+function getTransportationStatus(scholar) {
+  if (!scholar) return '';
+  if (scholar.type === 'bus') return scholar.details ? `Bus ${scholar.details.replace(/^bus\s*/i, '')}` : 'Bus';
+  if (scholar.type === 'car') return scholar.details ? `Car Pickup: ${scholar.details}` : 'Car Pickup';
+  return scholar.details ? `Porch Pickup: ${scholar.details}` : 'Porch Pickup';
+}
+
+function getTransportationUpdates() {
+  try {
+    const value = document.getElementById('transportationUpdatesTextarea')?.value || '[]';
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.error('Failed to parse transportation updates:', error);
+    return [];
+  }
+}
+
+function setTransportationUpdates(updates) {
+  const updatesEl = document.getElementById('transportationUpdatesTextarea');
+  if (updatesEl) updatesEl.value = JSON.stringify(updates);
+  renderTransportationUpdates();
+}
+
+function renderTransportationUpdates() {
+  const list = document.getElementById('transportationUpdatesList');
+  if (!list) return;
+  const updates = getTransportationUpdates();
+  if (!updates.length) {
+    list.innerHTML = '<div class="rounded-xl p-4 bg-white text-gray-600">No submitted updates yet.</div>';
+    return;
+  }
+  list.innerHTML = updates.slice().reverse().map(update => `
+    <div class="rounded-xl p-4 bg-white" style="border:1px solid color-mix(in oklab,var(--md-slate) 24%,var(--md-white) 76%);">
+      <div class="font-semibold">${escapeBirthdayText(update.studentName)} -> ${escapeBirthdayText(getTransportationTypeLabel(update.requestedType))}</div>
+      <div class="text-gray-600">${escapeBirthdayText(update.duration)} change requested by ${escapeBirthdayText(update.guardianName)}</div>
+      <div class="text-gray-600">Current: ${escapeBirthdayText(update.currentStatus || 'Not listed')}</div>
+      ${update.details ? `<div class="text-gray-600">Details: ${escapeBirthdayText(update.details)}</div>` : ''}
+      ${update.note ? `<div class="text-gray-600">Note: ${escapeBirthdayText(update.note)}</div>` : ''}
+      <div class="text-xs text-gray-500 mt-2">${escapeBirthdayText(update.createdAt || '')}</div>
+    </div>
+  `).join('');
 }
 
 // Function to save individual transportation fields
@@ -7202,6 +7362,46 @@ async function saveTransportationField(fieldType) {
       }, 2000);
     }
   }
+}
+
+async function saveTransportationRoster() {
+  const saveBtn = document.getElementById('saveTransportationRosterBtn');
+  const originalText = saveBtn ? saveBtn.textContent : '';
+  try {
+    await ensureAuthenticated();
+    if (typeof db === 'undefined') throw new Error('Firebase not available');
+    if (saveBtn) {
+      saveBtn.textContent = 'Saving...';
+      saveBtn.disabled = true;
+    }
+    const rosterEl = document.getElementById('transportationRosterTextarea');
+    const updatesEl = document.getElementById('transportationUpdatesTextarea');
+    await db.collection('classData').doc('current').set({
+      transportation_roster_text: rosterEl ? rosterEl.value || '' : '',
+      transportation_updates_json: updatesEl ? updatesEl.value || '[]' : '[]'
+    }, { merge: true });
+    if (saveBtn) {
+      saveBtn.textContent = 'Saved!';
+      setTimeout(() => {
+        saveBtn.textContent = originalText;
+        saveBtn.disabled = false;
+      }, 1200);
+    }
+  } catch (error) {
+    console.error('Failed to save transportation roster:', error);
+    alert('Transportation could not be saved. Please try again.');
+    if (saveBtn) {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }
+  }
+}
+
+async function clearTransportationUpdates() {
+  if (!document.body.classList.contains('editing')) return;
+  if (!confirm('Clear submitted transportation updates after you have reviewed them?')) return;
+  setTransportationUpdates([]);
+  await saveTransportationRoster();
 }
 
 // Function to save shoutout instructions
@@ -8132,6 +8332,184 @@ function saveTransportationFromModal() {
     
     // Close modal
     closeTransportationModal();
+  }
+}
+
+let selectedTransportationScholar = null;
+let selectedTransportationMethod = '';
+
+function openTransportationModal() {
+  const modal = document.getElementById('transportationModal');
+  if (modal) {
+    resetTransportationModal();
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => document.getElementById('transportationSearchInput')?.focus(), 50);
+  }
+}
+
+function closeTransportationModal() {
+  const modal = document.getElementById('transportationModal');
+  if (modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+    selectedTransportationScholar = null;
+    selectedTransportationMethod = '';
+  }
+}
+
+function resetTransportationModal() {
+  selectedTransportationScholar = null;
+  selectedTransportationMethod = '';
+  ['transportationSearchInput', 'transportationFamilyCodeInput', 'transportationDetailInput', 'transportationGuardianInput', 'transportationNoteInput'].forEach(id => {
+    const field = document.getElementById(id);
+    if (field) field.value = '';
+  });
+  const duration = document.getElementById('transportationDurationSelect');
+  if (duration) duration.value = 'temporary';
+  const selectedBox = document.getElementById('transportationSelectedScholar');
+  if (selectedBox) selectedBox.style.display = 'none';
+  const changeBox = document.getElementById('transportationChangeFields');
+  if (changeBox) changeBox.style.display = 'none';
+  const detailWrap = document.getElementById('transportationDetailWrap');
+  if (detailWrap) detailWrap.style.display = 'none';
+  const success = document.getElementById('transportationSuccessMessage');
+  if (success) success.style.display = 'none';
+  document.querySelectorAll('.transportation-choice-button').forEach(button => button.classList.remove('active'));
+  renderTransportationMatches();
+}
+
+function renderTransportationMatches() {
+  const input = document.getElementById('transportationSearchInput');
+  const list = document.getElementById('transportationMatchesList');
+  if (!input || !list) return;
+  const query = input.value.trim().toLowerCase();
+  if (query.length < 2) {
+    list.innerHTML = '<div class="text-sm text-gray-500">Start typing a last name to find your scholar.</div>';
+    return;
+  }
+  const matches = getTransportationRoster().filter(scholar =>
+    scholar.lastName.toLowerCase().includes(query) ||
+    scholar.name.toLowerCase().includes(query)
+  ).slice(0, 8);
+  if (!matches.length) {
+    list.innerHTML = '<div class="text-sm text-gray-500">No matching scholar found. Please check the spelling or contact the teacher.</div>';
+    return;
+  }
+  list.innerHTML = matches.map(scholar => `
+    <button class="transportation-match-button" onclick="selectTransportationScholar(${scholar.index})">
+      ${escapeBirthdayText(scholar.name)}
+      <span class="block text-xs text-gray-500">Select to view current transportation</span>
+    </button>
+  `).join('');
+}
+
+function selectTransportationScholar(index) {
+  const scholar = getTransportationRoster().find(item => item.index === index);
+  if (!scholar) return;
+  selectedTransportationScholar = scholar;
+  const box = document.getElementById('transportationSelectedScholar');
+  const name = document.getElementById('transportationSelectedName');
+  const status = document.getElementById('transportationCurrentStatus');
+  const codeWrap = document.getElementById('transportationFamilyCodeWrap');
+  const changeBox = document.getElementById('transportationChangeFields');
+  if (name) name.textContent = scholar.name;
+  if (status) status.textContent = getTransportationStatus(scholar);
+  if (codeWrap) codeWrap.style.display = scholar.code ? 'block' : 'none';
+  if (box) box.style.display = 'block';
+  if (changeBox) changeBox.style.display = 'none';
+  selectedTransportationMethod = '';
+  document.querySelectorAll('.transportation-choice-button').forEach(button => button.classList.remove('active'));
+}
+
+function showTransportationChangeFields() {
+  if (!selectedTransportationScholar) return;
+  const fields = document.getElementById('transportationChangeFields');
+  if (fields) fields.style.display = 'block';
+}
+
+function chooseTransportationMethod(method) {
+  selectedTransportationMethod = normalizeTransportationType(method);
+  document.querySelectorAll('.transportation-choice-button').forEach(button => {
+    button.classList.toggle('active', button.dataset.transportationMethod === selectedTransportationMethod);
+  });
+  const detailWrap = document.getElementById('transportationDetailWrap');
+  const label = document.getElementById('transportationDetailLabel');
+  const input = document.getElementById('transportationDetailInput');
+  if (!detailWrap || !label || !input) return;
+  detailWrap.style.display = 'block';
+  input.value = '';
+  if (selectedTransportationMethod === 'bus') {
+    label.textContent = 'Bus number';
+    input.placeholder = 'Example: 309';
+  } else if (selectedTransportationMethod === 'car') {
+    label.textContent = 'Name of person picking up';
+    input.placeholder = 'Example: Grandma Maria';
+  } else {
+    label.textContent = 'Porch pickup note';
+    input.placeholder = 'Optional note';
+  }
+}
+
+async function submitTransportationUpdate() {
+  if (!selectedTransportationScholar) {
+    alert('Please select your scholar first.');
+    return;
+  }
+  if (!selectedTransportationMethod) {
+    alert('Please choose Bus, Car, or Porch.');
+    return;
+  }
+  const codeInput = document.getElementById('transportationFamilyCodeInput');
+  if (selectedTransportationScholar.code && codeInput?.value.trim() !== selectedTransportationScholar.code) {
+    alert('The family code does not match. Please try again or contact the teacher.');
+    return;
+  }
+  const detail = document.getElementById('transportationDetailInput')?.value.trim() || '';
+  if ((selectedTransportationMethod === 'bus' || selectedTransportationMethod === 'car') && !detail) {
+    alert(selectedTransportationMethod === 'bus' ? 'Please enter the bus number.' : 'Please enter who is picking up.');
+    return;
+  }
+  const guardianName = document.getElementById('transportationGuardianInput')?.value.trim() || '';
+  if (!guardianName) {
+    alert('Please enter your name so the teacher knows who submitted this change.');
+    return;
+  }
+  const submitBtn = document.getElementById('transportationSubmitBtn');
+  const originalText = submitBtn ? submitBtn.textContent : '';
+  try {
+    await ensureParentActionAuth();
+    if (typeof db === 'undefined') throw new Error('Firebase not available');
+    if (submitBtn) {
+      submitBtn.textContent = 'Submitting...';
+      submitBtn.disabled = true;
+    }
+    const update = {
+      studentName: selectedTransportationScholar.name,
+      lastName: selectedTransportationScholar.lastName,
+      currentStatus: getTransportationStatus(selectedTransportationScholar),
+      requestedType: selectedTransportationMethod,
+      details: detail,
+      duration: document.getElementById('transportationDurationSelect')?.value || 'temporary',
+      guardianName,
+      note: document.getElementById('transportationNoteInput')?.value.trim() || '',
+      createdAt: new Date().toLocaleString()
+    };
+    const updates = [...getTransportationUpdates(), update].slice(-60);
+    setTransportationUpdates(updates);
+    await db.collection('classData').doc('current').set({ transportation_updates_json: JSON.stringify(updates) }, { merge: true });
+    await logParentActivity('transportation', 'Transportation update submitted', `${guardianName} submitted a ${update.duration} transportation change for ${update.studentName}.`, update);
+    const success = document.getElementById('transportationSuccessMessage');
+    if (success) success.style.display = 'block';
+    setTimeout(closeTransportationModal, 1200);
+  } catch (error) {
+    console.error('Failed to submit transportation update:', error);
+    alert('Transportation update could not be sent. Please try again or contact the teacher.');
+  } finally {
+    if (submitBtn) {
+      submitBtn.textContent = originalText;
+      submitBtn.disabled = false;
+    }
   }
 }
 
@@ -13736,21 +14114,77 @@ document.head.appendChild(style);
   
   <!-- Transportation Modal -->
   <div id="transportationModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9998; justify-content: center; align-items: center;" onclick="closeTransportationModal()">
-    <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-8 max-w-lg mx-4" onclick="event.stopPropagation();" style="border: 3px solid var(--modal-border-color);">
+    <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-6 sm:p-8 max-w-2xl mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation();" style="border: 3px solid var(--md-coral);">
       <div class="text-center mb-6">
-        <div id="transportationModalIcon" class="text-6xl mb-4">🚌</div>
-        <h3 id="transportationModalTitle" class="text-2xl font-display font-bold mb-2" style="color: var(--modal-title-color);">Bus Riders</h3>
-        <p class="text-sm text-gray-600">Manage transportation details</p>
+        <p class="text-sm font-bold uppercase tracking-wide" style="color: var(--md-slate);">Dismissal Desk</p>
+        <h3 class="text-2xl font-display font-bold mb-2" style="color: var(--md-coral);">Update Transportation</h3>
+        <p class="text-sm text-gray-600">Reminder: same-day changes are easiest to process when sent at least 3 hours before dismissal.</p>
       </div>
       
-      <div class="space-y-4">
-        <textarea id="transportationModalTextarea" class="w-full h-40 p-4 text-sm border rounded-lg resize-none" placeholder="Student name and transportation details"></textarea>
+      <div class="space-y-5">
+        <div>
+          <label class="block text-sm font-semibold mb-2">Search scholar by last name</label>
+          <input id="transportationSearchInput" class="transportation-modal-field" type="text" placeholder="Start typing last name..." oninput="renderTransportationMatches()">
+          <div id="transportationMatchesList" class="mt-3 space-y-2">
+            <div class="text-sm text-gray-500">Start typing a last name to find your scholar.</div>
+          </div>
+        </div>
+
+        <div id="transportationSelectedScholar" class="rounded-xl p-4 bg-white" style="display:none; border:1px solid color-mix(in oklab,var(--md-slate) 26%,var(--md-white) 74%);">
+          <div class="text-sm text-gray-500">Selected scholar</div>
+          <div id="transportationSelectedName" class="font-display font-bold text-xl"></div>
+          <div class="mt-2 text-sm">Current transportation: <span id="transportationCurrentStatus" class="font-semibold"></span></div>
+          <div id="transportationFamilyCodeWrap" class="mt-3" style="display:none;">
+            <label class="block text-sm font-semibold mb-1">Family code</label>
+            <input id="transportationFamilyCodeInput" class="transportation-modal-field" type="text" placeholder="Enter family code">
+          </div>
+          <button class="mt-4 px-4 py-2 rounded-xl text-white font-semibold" style="background: var(--md-coral);" onclick="showTransportationChangeFields()">Change</button>
+        </div>
+
+        <div id="transportationChangeFields" class="space-y-4" style="display:none;">
+          <div>
+            <label class="block text-sm font-semibold mb-2">New transportation</label>
+            <div class="grid sm:grid-cols-3 gap-2">
+              <button class="transportation-choice-button" data-transportation-method="bus" onclick="chooseTransportationMethod('bus')">Bus</button>
+              <button class="transportation-choice-button" data-transportation-method="car" onclick="chooseTransportationMethod('car')">Car</button>
+              <button class="transportation-choice-button" data-transportation-method="porch" onclick="chooseTransportationMethod('porch')">Porch</button>
+            </div>
+          </div>
+
+          <div id="transportationDetailWrap" style="display:none;">
+            <label id="transportationDetailLabel" class="block text-sm font-semibold mb-2">Details</label>
+            <input id="transportationDetailInput" class="transportation-modal-field" type="text">
+          </div>
+
+          <div class="grid sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-sm font-semibold mb-2">This change is</label>
+              <select id="transportationDurationSelect" class="transportation-modal-field">
+                <option value="temporary">Temporary</option>
+                <option value="permanent">Permanent</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Your name</label>
+              <input id="transportationGuardianInput" class="transportation-modal-field" type="text" placeholder="Parent/guardian name">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold mb-2">Optional note</label>
+            <textarea id="transportationNoteInput" class="transportation-modal-field min-h-[80px] resize-none" placeholder="Anything else the teacher should know?"></textarea>
+          </div>
+        </div>
+
+        <div id="transportationSuccessMessage" class="rounded-xl p-4 text-sm font-semibold" style="display:none; background: color-mix(in oklab, var(--md-white) 68%, #22c55e 32%);">
+          Transportation update sent.
+        </div>
       </div>
       
       <div class="flex gap-3 justify-center mt-6">
         <button onclick="closeTransportationModal()" class="px-6 py-3 rounded-xl border font-semibold">Cancel</button>
-        <button id="transportationModalSaveBtn" onclick="saveTransportationFromModal()" class="px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
-          💾 Save
+        <button id="transportationSubmitBtn" onclick="submitTransportationUpdate()" class="px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
+          Submit Update
         </button>
       </div>
     </div>
