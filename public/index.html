@@ -73,78 +73,111 @@
   </script>
   <script>
     (function() {
-      function ensureConfettiRainStyles() {
-        if (document.getElementById('confettiRainStyles')) return;
-        const style = document.createElement('style');
-        style.id = 'confettiRainStyles';
-        style.textContent = `
-          @keyframes scholarConfettiRain {
-            0% {
-              transform: translate3d(0, -12vh, 0) rotate(0deg);
-              opacity: 0;
-            }
-            10% {
-              opacity: 1;
-            }
-            100% {
-              transform: translate3d(var(--confetti-drift), 112vh, 0) rotate(var(--confetti-spin));
-              opacity: 0;
-            }
-          }
-        `;
-        document.head.appendChild(style);
-      }
-
       window.triggerConfetti = function triggerConfetti() {
         if (!document.body) return;
-        ensureConfettiRainStyles();
 
-        const container = document.createElement('div');
-        container.className = 'scholar-confetti-rain';
-        container.style.position = 'fixed';
-        container.style.inset = '0';
-        container.style.pointerEvents = 'none';
-        container.style.overflow = 'hidden';
-        container.style.zIndex = '9999';
+        const existingCanvas = document.getElementById('scholarConfettiCanvas');
+        if (existingCanvas) existingCanvas.remove();
 
-        const colors = ['#E0B14A', '#E9867D', '#F2C9BE', '#7B8E9E', '#F7EFE2', '#FFFFFF'];
-        for (let i = 0; i < 120; i++) {
-          const piece = document.createElement('span');
-          const size = Math.random() * 8 + 7;
-          const drift = (Math.random() - 0.5) * 260;
-          const duration = Math.random() * 2.2 + 3.2;
-          const delay = Math.random() * 0.9;
-          const spin = (Math.random() * 900 + 360) * (Math.random() > 0.5 ? 1 : -1);
-          piece.style.position = 'absolute';
-          piece.style.left = Math.random() * 100 + 'vw';
-          piece.style.top = (-8 - Math.random() * 18) + 'vh';
-          piece.style.width = size + 'px';
-          piece.style.height = (Math.random() > 0.45 ? size * 1.6 : size) + 'px';
-          piece.style.background = colors[Math.floor(Math.random() * colors.length)];
-          piece.style.borderRadius = Math.random() > 0.55 ? '999px' : '3px';
-          piece.style.boxShadow = '0 2px 6px rgba(43,43,43,0.16)';
-          piece.style.setProperty('--confetti-drift', drift + 'px');
-          piece.style.setProperty('--confetti-spin', spin + 'deg');
-          piece.style.animation = `scholarConfettiRain ${duration}s linear ${delay}s forwards`;
-          container.appendChild(piece);
+        const canvas = document.createElement('canvas');
+        canvas.id = 'scholarConfettiCanvas';
+        canvas.setAttribute('aria-hidden', 'true');
+        canvas.style.position = 'fixed';
+        canvas.style.inset = '0';
+        canvas.style.width = '100vw';
+        canvas.style.height = '100vh';
+        canvas.style.pointerEvents = 'none';
+        canvas.style.zIndex = '2147483647';
+        document.body.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          canvas.remove();
+          return;
         }
 
-        document.body.appendChild(container);
-        setTimeout(() => {
-          if (container.parentNode) container.remove();
-        }, 6800);
+        const colors = ['#E0B14A', '#E9867D', '#F2C9BE', '#7B8E9E', '#F7EFE2', '#FFFFFF'];
+        const pieces = [];
+        const startTime = performance.now();
+        const duration = 3600;
+
+        function resizeCanvas() {
+          const ratio = Math.min(window.devicePixelRatio || 1, 2);
+          canvas.width = Math.floor(window.innerWidth * ratio);
+          canvas.height = Math.floor(window.innerHeight * ratio);
+          ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        }
+
+        resizeCanvas();
+
+        for (let i = 0; i < 165; i++) {
+          pieces.push({
+            x: Math.random() * window.innerWidth,
+            y: -30 - Math.random() * window.innerHeight * 0.45,
+            width: 7 + Math.random() * 8,
+            height: 9 + Math.random() * 14,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            speed: 2.6 + Math.random() * 4.4,
+            sway: (Math.random() - 0.5) * 2.8,
+            rotation: Math.random() * Math.PI * 2,
+            spin: (Math.random() - 0.5) * 0.28,
+            round: Math.random() > 0.72
+          });
+        }
+
+        function drawFrame(now) {
+          const elapsed = now - startTime;
+          ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+          pieces.forEach(piece => {
+            piece.x += piece.sway + Math.sin((elapsed / 260) + piece.y) * 0.35;
+            piece.y += piece.speed;
+            piece.rotation += piece.spin;
+
+            ctx.save();
+            ctx.translate(piece.x, piece.y);
+            ctx.rotate(piece.rotation);
+            ctx.fillStyle = piece.color;
+            if (piece.round) {
+              ctx.beginPath();
+              ctx.ellipse(0, 0, piece.width * 0.65, piece.height * 0.45, 0, 0, Math.PI * 2);
+              ctx.fill();
+            } else {
+              ctx.fillRect(-piece.width / 2, -piece.height / 2, piece.width, piece.height);
+            }
+            ctx.restore();
+          });
+
+          if (elapsed < duration) {
+            requestAnimationFrame(drawFrame);
+          } else {
+            canvas.remove();
+            window.removeEventListener('resize', resizeCanvas);
+          }
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        requestAnimationFrame(drawFrame);
       };
 
       function wireCelebrateButtons() {
         ['celebrateDavisBtn', 'celebrateWilliamsBtn'].forEach(id => {
           const button = document.getElementById(id);
           if (!button) return;
+          button.dataset.confettiWired = 'true';
           button.onclick = event => {
             event.preventDefault();
             window.triggerConfetti();
           };
         });
       }
+
+      document.addEventListener('click', event => {
+        const button = event.target.closest('#celebrateDavisBtn, #celebrateWilliamsBtn');
+        if (!button || button.dataset.confettiWired === 'true') return;
+        event.preventDefault();
+        window.triggerConfetti();
+      }, true);
 
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', wireCelebrateButtons);
@@ -229,43 +262,166 @@
       background-color: white; color: var(--md-ink); cursor: text;
       outline: 2px dashed color-mix(in oklab,var(--md-slate) 55%,transparent); outline-offset: 2px;
     }
-    .birthday-calendar-scroll { overflow-x: auto; padding-bottom: .35rem; }
-    .birthday-calendar-inner { min-width: 680px; }
-    .birthday-calendar-weekdays,
-    .birthday-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .6rem; }
-    .birthday-calendar-weekdays div {
-      text-align: center; font-size: .78rem; font-weight: 800; letter-spacing: .04em;
-      color: var(--md-slate); text-transform: uppercase;
+    .share-print-tools { display: none; }
+    body.editing .share-print-tools { display: flex; }
+    .birthday-book-wrap {
+      border-radius: 1rem;
+      background: color-mix(in oklab, var(--md-white) 82%, var(--md-pebble) 18%);
+      border: 1px solid color-mix(in oklab, var(--md-coral) 36%, var(--md-white) 64%);
+      padding: 1rem;
     }
-    .birthday-calendar-day {
-      min-height: 118px; border-radius: .75rem; padding: .65rem; background: rgba(255,255,255,.86);
-      border: 1px solid color-mix(in oklab, var(--md-coral) 28%, var(--md-white) 72%);
-      display: flex; flex-direction: column; gap: .45rem; overflow: hidden;
+    .birthday-book {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+      align-items: stretch;
     }
-    .birthday-calendar-day.empty {
-      background: color-mix(in oklab, var(--md-white) 54%, var(--md-pebble) 46%);
-      border-style: dashed; opacity: .55;
+    .birthday-book-page {
+      min-height: 410px;
+      border-radius: .85rem;
+      border: 1px solid color-mix(in oklab, var(--md-pebble) 70%, var(--md-white) 30%);
+      background:
+        repeating-linear-gradient(to bottom, transparent 0 35px, rgba(123,142,158,.22) 36px, transparent 37px),
+        linear-gradient(90deg, rgba(233,134,125,.22) 0 3px, transparent 3px 100%),
+        color-mix(in oklab, var(--md-white) 94%, var(--md-cream) 6%);
+      box-shadow: 0 14px 28px rgba(43,43,43,.08);
+      padding: 1.25rem 1.2rem 1.2rem 1.45rem;
+      position: relative;
+      overflow: hidden;
     }
-    .birthday-date-number {
-      align-self: flex-start; min-width: 1.8rem; height: 1.8rem; border-radius: 999px;
-      display: inline-flex; align-items: center; justify-content: center; font-weight: 800;
-      color: white; background: var(--md-coral);
+    .birthday-book-page.cover,
+    .birthday-book-page.special {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(242,201,190,.68), transparent 30%),
+        radial-gradient(circle at 80% 25%, rgba(224,177,74,.42), transparent 28%),
+        color-mix(in oklab, var(--md-white) 72%, var(--md-cream) 28%);
     }
-    .birthday-name-list { display: flex; flex-direction: column; gap: .28rem; }
-    .birthday-name-chip {
-      border-radius: 999px; padding: .24rem .5rem; background: color-mix(in oklab, var(--md-white) 65%, var(--md-blush) 35%);
-      color: var(--md-ink); font-size: .82rem; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere;
+    .birthday-page-kicker {
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--md-slate);
     }
-    .birthday-empty-note { color: color-mix(in oklab, var(--md-slate) 78%, var(--md-white) 22%); font-size: .78rem; font-style: italic; }
-    .birthday-day-editor {
-      display: none; width: 100%; min-height: 68px; resize: vertical; border-radius: .6rem;
-      border: 1px solid color-mix(in oklab, var(--md-slate) 38%, var(--md-white) 62%);
-      padding: .45rem; background: white; color: var(--md-ink); font-size: .82rem;
+    .birthday-page-title {
+      font-family: 'Comic Neue', cursive;
+      font-size: clamp(1.7rem, 2.3vw, 2.5rem);
+      font-weight: 800;
+      color: var(--md-coral);
+      line-height: 1.1;
+      margin: .25rem 0 .85rem;
     }
-    body.editing .birthday-calendar-day:not(.empty) { cursor: text; outline: 2px dashed color-mix(in oklab,var(--md-coral) 48%,transparent); outline-offset: 2px; }
-    body.editing .birthday-calendar-day:not(.empty) .birthday-day-editor { display: block; }
-    body.editing .birthday-calendar-day:not(.empty) .birthday-name-list,
-    body.editing .birthday-calendar-day:not(.empty) .birthday-empty-note { display: none; }
+    .birthday-entry-list {
+      display: flex;
+      flex-direction: column;
+      gap: .42rem;
+      margin-top: .8rem;
+    }
+    .birthday-entry-card {
+      display: grid;
+      grid-template-columns: 3.25rem 1fr auto;
+      gap: .6rem;
+      align-items: center;
+      min-height: 2.35rem;
+      border-radius: .65rem;
+      background: color-mix(in oklab, var(--md-white) 78%, var(--md-blush) 22%);
+      border: 1px solid color-mix(in oklab, var(--md-blush) 58%, var(--md-white) 42%);
+      padding: .38rem .5rem;
+    }
+    .birthday-entry-day {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 2.45rem;
+      min-height: 1.75rem;
+      border-radius: 999px;
+      background: var(--md-coral);
+      color: white;
+      font-weight: 800;
+      font-size: .9rem;
+    }
+    .birthday-entry-name {
+      font-weight: 700;
+      color: var(--md-ink);
+      overflow-wrap: anywhere;
+    }
+    .birthday-empty-note {
+      margin-top: 1rem;
+      color: color-mix(in oklab, var(--md-slate) 78%, var(--md-white) 22%);
+      font-size: .88rem;
+      font-style: italic;
+    }
+    .birthday-edit-panel {
+      display: none;
+      margin-top: 1rem;
+      grid-template-columns: 5.25rem minmax(0, 1fr) auto;
+      gap: .5rem;
+      align-items: center;
+      padding: .7rem;
+      border-radius: .75rem;
+      background: color-mix(in oklab, var(--md-white) 78%, var(--md-mustard) 22%);
+      border: 1px dashed color-mix(in oklab, var(--md-mustard) 62%, var(--md-white) 38%);
+    }
+    body.editing .birthday-edit-panel { display: grid; }
+    .birthday-edit-panel select {
+      width: 100%;
+      min-height: 2.35rem;
+      border-radius: .65rem;
+      border: 1px solid color-mix(in oklab, var(--md-slate) 32%, var(--md-white) 68%);
+      background: var(--md-white);
+      color: var(--md-ink);
+      padding: .35rem .5rem;
+      font-size: .9rem;
+    }
+    .birthday-remove-entry {
+      display: none;
+      color: #b91c1c;
+      font-weight: 800;
+    }
+    body.editing .birthday-remove-entry { display: inline-flex; }
+    .birthday-book-nav button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+    @media print {
+      body.printing-share-post {
+        background: white !important;
+      }
+      body.printing-share-post * {
+        visibility: hidden !important;
+      }
+      body.printing-share-post .print-share-target,
+      body.printing-share-post .print-share-target * {
+        visibility: visible !important;
+      }
+      body.printing-share-post .print-share-target {
+        position: absolute !important;
+        inset: 0 auto auto 0 !important;
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+      }
+      body.printing-share-post .no-print,
+      body.printing-share-post .edit-only,
+      body.printing-share-post button,
+      body.printing-share-post input,
+      body.printing-share-post textarea,
+      body.printing-share-post select {
+        display: none !important;
+      }
+      body.printing-share-post [contenteditable="true"] {
+        outline: 0 !important;
+      }
+      @page {
+        margin: .45in;
+      }
+    }
     /* Photo card and gallery cursor only in edit mode */
     .photo-card{cursor: default;}
     body.editing .photo-card{cursor: pointer;}
@@ -349,12 +505,14 @@
       .birthday-month {
         min-width: 200px;
       }
-      .birthday-calendar-inner {
-        min-width: 720px;
+      .birthday-book {
+        grid-template-columns: 1fr;
       }
-      .birthday-calendar-day {
-        min-height: 104px;
-        padding: .5rem;
+      .birthday-book-page {
+        min-height: 330px;
+      }
+      .birthday-edit-panel {
+        grid-template-columns: 1fr;
       }
       
       /* Specials cards mobile layout */
@@ -912,6 +1070,9 @@
     </nav>
     <!-- HOME TAB -->
     <section data-page-panel="home" class="pagePanel fade-in active">
+      <div class="share-print-tools no-print justify-end mb-4">
+        <button class="px-4 py-2 rounded-xl text-white font-semibold shadow-soft" style="background: var(--md-slate);" onclick="printSharePost('[data-page-panel=&quot;home&quot;]', 'First Grade Weekly News')">Print / Save Home News</button>
+      </div>
       <div class="home-news-grid grid gap-6 lg:grid-cols-2 lg:items-stretch mb-8">
       <!-- What We Did - Mr. Davis -->
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 h-full" style="background: var(--card-bg);">
@@ -1017,7 +1178,10 @@
     </section>
     <!-- MR. DAVIS SCHOLAR TAB -->
     <section data-page-panel="scholardavis" class="pagePanel fade-in">
-      <div class="rounded-2xl shadow-soft p-6 sm:p-10 mb-8" style="background: var(--md-white); border: 1px solid color-mix(in oklab, var(--md-mustard) 50%, var(--md-white) 50%);">
+      <div id="scholarDavisPrintable" class="rounded-2xl shadow-soft p-6 sm:p-10 mb-8" style="background: var(--md-white); border: 1px solid color-mix(in oklab, var(--md-mustard) 50%, var(--md-white) 50%);">
+        <div class="share-print-tools no-print justify-end mb-4">
+          <button class="px-4 py-2 rounded-xl text-white font-semibold shadow-soft" style="background: var(--md-slate);" onclick="printSharePost('#scholarDavisPrintable', 'Mr. Davis Scholar of the Month')">Print / Save Scholar</button>
+        </div>
         <h2 class="text-2xl font-display font-bold mb-6 text-center" style="color: var(--md-coral);">Mr. Davis's Scholar of the Month</h2>
         <div class="grid lg:grid-cols-[auto,1fr] gap-8 items-center">
           <div class="w-40 h-40 sm:w-48 sm:h-48 rounded-full border-4 img-frame photo-card overflow-hidden mx-auto lg:mx-0" 
@@ -1133,7 +1297,10 @@
     </section>
     <!-- MS. VEST SCHOLAR TAB -->
     <section data-page-panel="scholarwilliams" class="pagePanel fade-in">
-      <div class="rounded-2xl shadow-soft p-6 sm:p-10 mb-8" style="background: var(--md-white); border: 1px solid color-mix(in oklab, var(--md-mustard) 50%, var(--md-white) 50%);">
+      <div id="scholarWilliamsPrintable" class="rounded-2xl shadow-soft p-6 sm:p-10 mb-8" style="background: var(--md-white); border: 1px solid color-mix(in oklab, var(--md-mustard) 50%, var(--md-white) 50%);">
+        <div class="share-print-tools no-print justify-end mb-4">
+          <button class="px-4 py-2 rounded-xl text-white font-semibold shadow-soft" style="background: var(--md-slate);" onclick="printSharePost('#scholarWilliamsPrintable', 'Ms. Vest Scholar of the Month')">Print / Save Scholar</button>
+        </div>
         <h2 class="text-2xl font-display font-bold mb-6 text-center" style="color: var(--md-coral);">Ms. Vest's Scholar of the Month</h2>
         <div class="grid lg:grid-cols-[auto,1fr] gap-8 items-center">
           <div class="w-40 h-40 sm:w-48 sm:h-48 rounded-full border-4 img-frame photo-card overflow-hidden mx-auto lg:mx-0" 
@@ -2166,34 +2333,21 @@
           <h3 class="text-xl font-semibold">🎂 Birthday Calendar</h3>
           <button id="saveAllBirthdaysBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveAllBirthdays()">💾 Save All Birthdays</button>
         </div>
-        <div class="rounded-2xl bg-white p-4 sm:p-5" style="border: 1px solid color-mix(in oklab, var(--md-coral) 36%, var(--md-white) 64%);">
+        <div class="birthday-book-wrap">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <div>
-              <h4 id="birthdayCalendarMonthTitle" class="text-2xl font-display font-bold" style="color: var(--md-coral);">Birthdays</h4>
-              <p class="text-sm text-[color:var(--md-ink)]/75">All students together. In Edit Mode, click a date and type names on separate lines.</p>
+              <h4 id="birthdayBookSpreadTitle" class="text-2xl font-display font-bold" style="color: var(--md-coral);">Scholar Birthdays</h4>
+              <p id="birthdayBookSpreadNote" class="text-sm text-[color:var(--md-ink)]/75">2026-2027 School Year</p>
             </div>
-            <div class="flex gap-2">
-              <button class="px-3 py-2 rounded-lg text-sm font-semibold" style="background: color-mix(in oklab, var(--md-white) 58%, var(--md-pebble) 42%); color: var(--md-ink);" onclick="changeBirthdayMonth(-1)">Previous</button>
-              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="changeBirthdayMonth(1)">Next</button>
-            </div>
-          </div>
-          <div class="birthday-calendar-scroll">
-            <div class="birthday-calendar-inner">
-              <div class="birthday-calendar-weekdays mb-2">
-                <div>Sun</div>
-                <div>Mon</div>
-                <div>Tue</div>
-                <div>Wed</div>
-                <div>Thu</div>
-                <div>Fri</div>
-                <div>Sat</div>
-              </div>
-              <div id="birthdayCalendarGrid" class="birthday-calendar-grid"></div>
+            <div class="birthday-book-nav flex gap-2 no-print">
+              <button id="birthdayBookPrevTop" class="px-3 py-2 rounded-lg text-sm font-semibold" style="background: color-mix(in oklab, var(--md-white) 58%, var(--md-pebble) 42%); color: var(--md-ink);" onclick="changeBirthdayMonth(-1)">Previous Page</button>
+              <button id="birthdayBookNextTop" class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="changeBirthdayMonth(1)">Next Page</button>
             </div>
           </div>
-          <div class="flex justify-between items-center gap-3 mt-4">
-            <button class="px-4 py-2 rounded-xl text-sm font-semibold" style="background: color-mix(in oklab, var(--md-white) 58%, var(--md-pebble) 42%); color: var(--md-ink);" onclick="changeBirthdayMonth(-1)">Previous Month</button>
-            <button class="px-4 py-2 rounded-xl text-white text-sm font-semibold shadow-soft" style="background: var(--md-coral);" onclick="changeBirthdayMonth(1)">Next Month</button>
+          <div id="birthdayBookSpread" class="birthday-book"></div>
+          <div class="birthday-book-nav no-print flex justify-between items-center gap-3 mt-4">
+            <button id="birthdayBookPrevBottom" class="px-4 py-2 rounded-xl text-sm font-semibold" style="background: color-mix(in oklab, var(--md-white) 58%, var(--md-pebble) 42%); color: var(--md-ink);" onclick="changeBirthdayMonth(-1)">Previous Page</button>
+            <button id="birthdayBookNextBottom" class="px-4 py-2 rounded-xl text-white text-sm font-semibold shadow-soft" style="background: var(--md-coral);" onclick="changeBirthdayMonth(1)">Next Page</button>
           </div>
         </div>
         
@@ -7232,6 +7386,342 @@ function updateBirthdayFields(data) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+  renderBirthdayCalendar();
+});
+
+function printSharePost(targetSelector, title) {
+  const target = document.querySelector(targetSelector);
+  if (!target) return;
+
+  const previousTitle = document.title;
+  let cleanedUp = false;
+  document.querySelectorAll('.print-share-target').forEach(element => element.classList.remove('print-share-target'));
+  target.classList.add('print-share-target');
+  document.body.classList.add('printing-share-post');
+  document.title = title || previousTitle;
+
+  function cleanupPrintSharePost() {
+    if (cleanedUp) return;
+    cleanedUp = true;
+    target.classList.remove('print-share-target');
+    document.body.classList.remove('printing-share-post');
+    document.title = previousTitle;
+    window.removeEventListener('afterprint', cleanupPrintSharePost);
+  }
+
+  window.addEventListener('afterprint', cleanupPrintSharePost);
+  setTimeout(() => window.print(), 80);
+  setTimeout(cleanupPrintSharePost, 2500);
+}
+
+const birthdayBookMonths = [
+  { key: 'august', name: 'August', monthIndex: 7, year: 2026 },
+  { key: 'september', name: 'September', monthIndex: 8, year: 2026 },
+  { key: 'october', name: 'October', monthIndex: 9, year: 2026 },
+  { key: 'november', name: 'November', monthIndex: 10, year: 2026 },
+  { key: 'december', name: 'December', monthIndex: 11, year: 2026 },
+  { key: 'january', name: 'January', monthIndex: 0, year: 2027 },
+  { key: 'february', name: 'February', monthIndex: 1, year: 2027 },
+  { key: 'march', name: 'March', monthIndex: 2, year: 2027 },
+  { key: 'april', name: 'April', monthIndex: 3, year: 2027 },
+  { key: 'may', name: 'May', monthIndex: 4, year: 2027 }
+];
+const birthdayBookSpreads = [
+  { title: 'Scholar Birthdays', note: '2026-2027 School Year', left: { type: 'cover' }, right: { type: 'month', key: 'august' } },
+  { title: 'Fall Birthdays', note: 'September and October', left: { type: 'month', key: 'september' }, right: { type: 'month', key: 'october' } },
+  { title: 'Winter Birthdays', note: 'November and December', left: { type: 'month', key: 'november' }, right: { type: 'month', key: 'december' } },
+  { title: 'Happy New Year', note: 'Back together in January', left: { type: 'newyear' }, right: { type: 'month', key: 'january' } },
+  { title: 'Spring Is Coming', note: 'February and March', left: { type: 'month', key: 'february' }, right: { type: 'month', key: 'march' } },
+  { title: 'End Of Year Birthdays', note: 'April and May', left: { type: 'month', key: 'april' }, right: { type: 'month', key: 'may' } },
+  { title: '2nd Grade!', note: 'Ready for the next adventure', left: { type: 'closing' }, right: { type: 'blank' } }
+];
+let visibleBirthdaySpread = 0;
+
+function createEmptyBirthdayCalendar() {
+  const calendar = {};
+  birthdayMonthKeys.forEach(month => {
+    calendar[month] = [];
+  });
+  return calendar;
+}
+
+function getBirthdayMonthInfo(monthKey) {
+  return birthdayBookMonths.find(month => month.key === monthKey);
+}
+
+function getBirthdayDaySuffix(day) {
+  const teens = day % 100;
+  if (teens >= 11 && teens <= 13) return 'th';
+  if (day % 10 === 1) return 'st';
+  if (day % 10 === 2) return 'nd';
+  if (day % 10 === 3) return 'rd';
+  return 'th';
+}
+
+function getDaysInBirthdayMonth(monthInfo) {
+  return new Date(monthInfo.year, monthInfo.monthIndex + 1, 0).getDate();
+}
+
+function normalizeBirthdayEntry(day, name, monthInfo) {
+  const dayNumber = parseInt(day, 10);
+  const cleanName = String(name || '').trim();
+  if (!monthInfo || !Number.isInteger(dayNumber) || dayNumber < 1 || dayNumber > getDaysInBirthdayMonth(monthInfo) || !cleanName) return null;
+  return { day: dayNumber, name: cleanName };
+}
+
+function sortBirthdayEntries(entries) {
+  return entries.slice().sort((a, b) => a.day - b.day || a.name.localeCompare(b.name));
+}
+
+function parseLegacyBirthdayText(text, monthInfo) {
+  const entries = [];
+  String(text || '').split(/\r?\n/).map(line => line.trim()).filter(Boolean).forEach(line => {
+    const match = line.match(/^(\d{1,2})(?:st|nd|rd|th)?\s*(?:[-\u2013\u2014:])?\s*(.*)$/i);
+    const day = match ? parseInt(match[1], 10) : 1;
+    const name = match ? (match[2] || '').trim() : line;
+    const entry = normalizeBirthdayEntry(day, name || line, monthInfo);
+    if (entry) entries.push(entry);
+  });
+  return sortBirthdayEntries(entries);
+}
+
+function addLegacyBirthdayValue(entries, day, value, monthInfo) {
+  String(value || '').split(/\r?\n/).map(name => name.trim()).filter(Boolean).forEach(name => {
+    const entry = normalizeBirthdayEntry(day, name, monthInfo);
+    if (entry) entries.push(entry);
+  });
+}
+
+function normalizeBirthdayCalendar(rawCalendar) {
+  const normalized = createEmptyBirthdayCalendar();
+  if (!rawCalendar) return normalized;
+
+  if (rawCalendar.months) {
+    return normalizeBirthdayCalendar(rawCalendar.months);
+  }
+
+  if (Array.isArray(rawCalendar)) {
+    birthdayBookMonths.forEach(monthInfo => {
+      const monthData = rawCalendar[monthInfo.monthIndex];
+      const entries = [];
+      if (monthData && typeof monthData === 'object') {
+        Object.entries(monthData).forEach(([day, value]) => addLegacyBirthdayValue(entries, day, value, monthInfo));
+      }
+      normalized[monthInfo.key] = sortBirthdayEntries(entries);
+    });
+    return normalized;
+  }
+
+  if (typeof rawCalendar === 'object') {
+    birthdayBookMonths.forEach(monthInfo => {
+      const monthData = rawCalendar[monthInfo.key] || rawCalendar[monthInfo.monthIndex] || rawCalendar[String(monthInfo.monthIndex)];
+      let entries = [];
+      if (Array.isArray(monthData)) {
+        entries = monthData.map(entry => normalizeBirthdayEntry(entry.day, entry.name, monthInfo)).filter(Boolean);
+      } else if (monthData && typeof monthData === 'object') {
+        Object.entries(monthData).forEach(([day, value]) => addLegacyBirthdayValue(entries, day, value, monthInfo));
+      } else if (typeof monthData === 'string') {
+        entries = parseLegacyBirthdayText(monthData, monthInfo);
+      }
+      normalized[monthInfo.key] = sortBirthdayEntries(entries);
+    });
+  }
+
+  return normalized;
+}
+
+function getBirthdayCalendarFromLegacyFields(data = {}) {
+  const calendar = createEmptyBirthdayCalendar();
+  birthdayBookMonths.forEach(monthInfo => {
+    const fieldValue = data[`${monthInfo.key}_birthdays`] || document.getElementById(`${monthInfo.key}BirthdaysTextarea`)?.value || '';
+    calendar[monthInfo.key] = parseLegacyBirthdayText(fieldValue, monthInfo);
+  });
+  return calendar;
+}
+
+function collectBirthdayCalendarFromDom() {
+  syncBirthdayLegacyFields();
+  return birthdayCalendarData;
+}
+
+function getBirthdayCalendarJson() {
+  collectBirthdayCalendarFromDom();
+  return JSON.stringify({ version: 2, schoolYear: '2026-2027', months: birthdayCalendarData });
+}
+
+function formatBirthdayDayLine(day, name) {
+  return `${day}${getBirthdayDaySuffix(day)} - ${name}`;
+}
+
+function syncBirthdayLegacyFields() {
+  birthdayMonthKeys.forEach(month => {
+    const textarea = document.getElementById(`${month}BirthdaysTextarea`);
+    if (!textarea) return;
+    const entries = birthdayCalendarData[month] || [];
+    textarea.value = sortBirthdayEntries(entries)
+      .map(entry => formatBirthdayDayLine(entry.day, entry.name))
+      .join('\n');
+  });
+}
+
+function getBirthdayRosterNames() {
+  const roster = document.getElementById('classRosterTextarea')?.value || '';
+  const names = roster.split(/\r?\n/)
+    .map(line => line.replace(/^[\s\-\*\u2022]+/, '').replace(/^\d+\.\s*/, '').trim())
+    .filter(Boolean);
+  return Array.from(new Set(names));
+}
+
+function renderBirthdayDayOptions(monthInfo) {
+  const days = getDaysInBirthdayMonth(monthInfo);
+  return Array.from({ length: days }, (_, index) => {
+    const day = index + 1;
+    return `<option value="${day}">${day}</option>`;
+  }).join('');
+}
+
+function renderBirthdayStudentOptions() {
+  const names = getBirthdayRosterNames();
+  if (!names.length) return '<option value="">Add roster first</option>';
+  return '<option value="">Choose scholar</option>' + names
+    .map(name => `<option value="${escapeBirthdayText(name)}">${escapeBirthdayText(name)}</option>`)
+    .join('');
+}
+
+function renderBirthdayPage(page) {
+  if (!page || page.type === 'blank') {
+    return '<div class="birthday-book-page special" aria-hidden="true"></div>';
+  }
+
+  if (page.type === 'cover') {
+    return `
+      <div class="birthday-book-page cover">
+        <div class="birthday-page-kicker">First Grade</div>
+        <div class="birthday-page-title">Scholar Birthdays</div>
+        <p class="font-semibold">2026-2027 School Year</p>
+        <p class="text-sm mt-3 text-[color:var(--md-ink)]/75">A little birthday book for our whole first grade crew.</p>
+      </div>
+    `;
+  }
+
+  if (page.type === 'newyear') {
+    return `
+      <div class="birthday-book-page special">
+        <div class="birthday-page-kicker">After Winter Break</div>
+        <div class="birthday-page-title">Happy New Year!</div>
+        <p class="font-semibold">Fresh pencils, fresh pages, same bright scholars.</p>
+      </div>
+    `;
+  }
+
+  if (page.type === 'closing') {
+    return `
+      <div class="birthday-book-page special">
+        <div class="birthday-page-kicker">Next Stop</div>
+        <div class="birthday-page-title">2nd Grade!</div>
+        <p class="font-semibold">We celebrated, learned, and grew all year.</p>
+      </div>
+    `;
+  }
+
+  const monthInfo = getBirthdayMonthInfo(page.key);
+  if (!monthInfo) return '<div class="birthday-book-page special"></div>';
+
+  const entries = sortBirthdayEntries(birthdayCalendarData[monthInfo.key] || []);
+  birthdayCalendarData[monthInfo.key] = entries;
+  const entryHtml = entries.length
+    ? entries.map((entry, index) => `
+        <div class="birthday-entry-card" data-month-key="${monthInfo.key}" data-entry-index="${index}">
+          <span class="birthday-entry-day">${entry.day}${getBirthdayDaySuffix(entry.day)}</span>
+          <span class="birthday-entry-name">${escapeBirthdayText(entry.name)}</span>
+          <button class="birthday-remove-entry no-print" onclick="removeBirthdayEntry('${monthInfo.key}', ${index})" aria-label="Remove ${escapeBirthdayText(entry.name)}">Remove</button>
+        </div>
+      `).join('')
+    : '<div class="birthday-empty-note">No birthdays added yet.</div>';
+  const studentSelectDisabled = getBirthdayRosterNames().length ? '' : 'disabled';
+
+  return `
+    <div class="birthday-book-page" data-birthday-month="${monthInfo.key}">
+      <div class="birthday-page-kicker">${monthInfo.year}</div>
+      <div class="birthday-page-title">${monthInfo.name}</div>
+      <div class="birthday-entry-list">${entryHtml}</div>
+      <div class="birthday-edit-panel no-print">
+        <select id="birthdayDay-${monthInfo.key}" aria-label="${monthInfo.name} birthday day">
+          ${renderBirthdayDayOptions(monthInfo)}
+        </select>
+        <select id="birthdayStudent-${monthInfo.key}" aria-label="${monthInfo.name} birthday student" ${studentSelectDisabled}>
+          ${renderBirthdayStudentOptions()}
+        </select>
+        <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="addBirthdayEntry('${monthInfo.key}')">Add Birthday</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderBirthdayCalendar() {
+  const spread = document.getElementById('birthdayBookSpread');
+  if (!spread) return;
+
+  const spreadConfig = birthdayBookSpreads[visibleBirthdaySpread] || birthdayBookSpreads[0];
+  const title = document.getElementById('birthdayBookSpreadTitle');
+  const note = document.getElementById('birthdayBookSpreadNote');
+  if (title) title.textContent = spreadConfig.title;
+  if (note) note.textContent = spreadConfig.note;
+
+  spread.innerHTML = [renderBirthdayPage(spreadConfig.left), renderBirthdayPage(spreadConfig.right)].join('');
+  ['birthdayBookPrevTop', 'birthdayBookPrevBottom'].forEach(id => {
+    const button = document.getElementById(id);
+    if (button) button.disabled = visibleBirthdaySpread === 0;
+  });
+  ['birthdayBookNextTop', 'birthdayBookNextBottom'].forEach(id => {
+    const button = document.getElementById(id);
+    if (button) button.disabled = visibleBirthdaySpread === birthdayBookSpreads.length - 1;
+  });
+}
+
+function focusBirthdayDay() {
+  return;
+}
+
+function changeBirthdayMonth(direction) {
+  visibleBirthdaySpread = Math.max(0, Math.min(birthdayBookSpreads.length - 1, visibleBirthdaySpread + direction));
+  renderBirthdayCalendar();
+}
+
+function addBirthdayEntry(monthKey) {
+  if (!document.body.classList.contains('editing')) return;
+  const monthInfo = getBirthdayMonthInfo(monthKey);
+  const daySelect = document.getElementById(`birthdayDay-${monthKey}`);
+  const studentSelect = document.getElementById(`birthdayStudent-${monthKey}`);
+  const entry = normalizeBirthdayEntry(daySelect?.value, studentSelect?.value, monthInfo);
+  if (!entry) {
+    alert('Choose a birthday number and a scholar name first.');
+    return;
+  }
+
+  const existingEntries = birthdayCalendarData[monthKey] || [];
+  const alreadyAdded = existingEntries.some(item => item.day === entry.day && item.name.toLowerCase() === entry.name.toLowerCase());
+  if (!alreadyAdded) {
+    birthdayCalendarData[monthKey] = sortBirthdayEntries([...existingEntries, entry]);
+  }
+  syncBirthdayLegacyFields();
+  renderBirthdayCalendar();
+}
+
+function removeBirthdayEntry(monthKey, entryIndex) {
+  if (!document.body.classList.contains('editing')) return;
+  const entries = sortBirthdayEntries(birthdayCalendarData[monthKey] || []);
+  entries.splice(entryIndex, 1);
+  birthdayCalendarData[monthKey] = entries;
+  syncBirthdayLegacyFields();
+  renderBirthdayCalendar();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const rosterTextarea = document.getElementById('classRosterTextarea');
+  if (rosterTextarea) {
+    rosterTextarea.addEventListener('input', renderBirthdayCalendar);
+  }
   renderBirthdayCalendar();
 });
 
