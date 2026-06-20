@@ -71,6 +71,88 @@
       return true;
     }
   </script>
+  <script>
+    (function() {
+      function ensureConfettiRainStyles() {
+        if (document.getElementById('confettiRainStyles')) return;
+        const style = document.createElement('style');
+        style.id = 'confettiRainStyles';
+        style.textContent = `
+          @keyframes scholarConfettiRain {
+            0% {
+              transform: translate3d(0, -12vh, 0) rotate(0deg);
+              opacity: 0;
+            }
+            10% {
+              opacity: 1;
+            }
+            100% {
+              transform: translate3d(var(--confetti-drift), 112vh, 0) rotate(var(--confetti-spin));
+              opacity: 0;
+            }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+
+      window.triggerConfetti = function triggerConfetti() {
+        if (!document.body) return;
+        ensureConfettiRainStyles();
+
+        const container = document.createElement('div');
+        container.className = 'scholar-confetti-rain';
+        container.style.position = 'fixed';
+        container.style.inset = '0';
+        container.style.pointerEvents = 'none';
+        container.style.overflow = 'hidden';
+        container.style.zIndex = '9999';
+
+        const colors = ['#E0B14A', '#E9867D', '#F2C9BE', '#7B8E9E', '#F7EFE2', '#FFFFFF'];
+        for (let i = 0; i < 120; i++) {
+          const piece = document.createElement('span');
+          const size = Math.random() * 8 + 7;
+          const drift = (Math.random() - 0.5) * 260;
+          const duration = Math.random() * 2.2 + 3.2;
+          const delay = Math.random() * 0.9;
+          const spin = (Math.random() * 900 + 360) * (Math.random() > 0.5 ? 1 : -1);
+          piece.style.position = 'absolute';
+          piece.style.left = Math.random() * 100 + 'vw';
+          piece.style.top = (-8 - Math.random() * 18) + 'vh';
+          piece.style.width = size + 'px';
+          piece.style.height = (Math.random() > 0.45 ? size * 1.6 : size) + 'px';
+          piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+          piece.style.borderRadius = Math.random() > 0.55 ? '999px' : '3px';
+          piece.style.boxShadow = '0 2px 6px rgba(43,43,43,0.16)';
+          piece.style.setProperty('--confetti-drift', drift + 'px');
+          piece.style.setProperty('--confetti-spin', spin + 'deg');
+          piece.style.animation = `scholarConfettiRain ${duration}s linear ${delay}s forwards`;
+          container.appendChild(piece);
+        }
+
+        document.body.appendChild(container);
+        setTimeout(() => {
+          if (container.parentNode) container.remove();
+        }, 6800);
+      };
+
+      function wireCelebrateButtons() {
+        ['celebrateDavisBtn', 'celebrateWilliamsBtn'].forEach(id => {
+          const button = document.getElementById(id);
+          if (!button) return;
+          button.onclick = event => {
+            event.preventDefault();
+            window.triggerConfetti();
+          };
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', wireCelebrateButtons);
+      } else {
+        wireCelebrateButtons();
+      }
+    })();
+  </script>
   
   <style>
     :root{
@@ -12504,8 +12586,8 @@ function toggleWilliamsSection() {
   }
 }
 
-// Confetti animation for celebrate button
-function triggerConfetti() {
+// Legacy confetti animation kept unused; the active Celebrate button animation is wired early in the head.
+function triggerConfettiLegacyUnused() {
   // Create confetti container
   const confettiContainer = document.createElement('div');
   confettiContainer.style.position = 'fixed';
@@ -12554,8 +12636,6 @@ function triggerConfetti() {
     }
   }, 7000);
 }
-
-window.triggerConfetti = triggerConfetti;
 
 // Website URL update functionality  
 function updateWebsiteUrl(input) {
