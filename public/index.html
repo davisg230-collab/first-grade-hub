@@ -1070,8 +1070,9 @@
     </nav>
     <!-- HOME TAB -->
     <section data-page-panel="home" class="pagePanel fade-in active">
-      <div class="share-print-tools no-print justify-end mb-4">
-        <button class="px-4 py-2 rounded-xl text-white font-semibold shadow-soft" style="background: var(--md-slate);" onclick="printSharePost('[data-page-panel=&quot;home&quot;]', 'First Grade Weekly News')">Print / Save Home News</button>
+      <div class="share-print-tools no-print justify-end gap-2 flex-wrap mb-4">
+        <button class="px-4 py-2 rounded-xl text-white font-semibold shadow-soft" style="background: var(--md-slate);" onclick="saveHomeNewsImage('davis')">Save Davis News Image</button>
+        <button class="px-4 py-2 rounded-xl text-white font-semibold shadow-soft" style="background: var(--md-coral);" onclick="saveHomeNewsImage('williams')">Save Vest News Image</button>
       </div>
       <div class="home-news-grid grid gap-6 lg:grid-cols-2 lg:items-stretch mb-8">
       <!-- What We Did - Mr. Davis -->
@@ -1178,10 +1179,10 @@
     </section>
     <!-- MR. DAVIS SCHOLAR TAB -->
     <section data-page-panel="scholardavis" class="pagePanel fade-in">
+      <div class="share-print-tools no-print justify-end mb-4">
+        <button class="px-4 py-2 rounded-xl text-white font-semibold shadow-soft" style="background: var(--md-slate);" onclick="saveScholarImage('davis')">Save Scholar Image</button>
+      </div>
       <div id="scholarDavisPrintable" class="rounded-2xl shadow-soft p-6 sm:p-10 mb-8" style="background: var(--md-white); border: 1px solid color-mix(in oklab, var(--md-mustard) 50%, var(--md-white) 50%);">
-        <div class="share-print-tools no-print justify-end mb-4">
-          <button class="px-4 py-2 rounded-xl text-white font-semibold shadow-soft" style="background: var(--md-slate);" onclick="printSharePost('#scholarDavisPrintable', 'Mr. Davis Scholar of the Month')">Print / Save Scholar</button>
-        </div>
         <h2 class="text-2xl font-display font-bold mb-6 text-center" style="color: var(--md-coral);">Mr. Davis's Scholar of the Month</h2>
         <div class="grid lg:grid-cols-[auto,1fr] gap-8 items-center">
           <div class="w-40 h-40 sm:w-48 sm:h-48 rounded-full border-4 img-frame photo-card overflow-hidden mx-auto lg:mx-0" 
@@ -1297,10 +1298,10 @@
     </section>
     <!-- MS. VEST SCHOLAR TAB -->
     <section data-page-panel="scholarwilliams" class="pagePanel fade-in">
+      <div class="share-print-tools no-print justify-end mb-4">
+        <button class="px-4 py-2 rounded-xl text-white font-semibold shadow-soft" style="background: var(--md-slate);" onclick="saveScholarImage('williams')">Save Scholar Image</button>
+      </div>
       <div id="scholarWilliamsPrintable" class="rounded-2xl shadow-soft p-6 sm:p-10 mb-8" style="background: var(--md-white); border: 1px solid color-mix(in oklab, var(--md-mustard) 50%, var(--md-white) 50%);">
-        <div class="share-print-tools no-print justify-end mb-4">
-          <button class="px-4 py-2 rounded-xl text-white font-semibold shadow-soft" style="background: var(--md-slate);" onclick="printSharePost('#scholarWilliamsPrintable', 'Ms. Vest Scholar of the Month')">Print / Save Scholar</button>
-        </div>
         <h2 class="text-2xl font-display font-bold mb-6 text-center" style="color: var(--md-coral);">Ms. Vest's Scholar of the Month</h2>
         <div class="grid lg:grid-cols-[auto,1fr] gap-8 items-center">
           <div class="w-40 h-40 sm:w-48 sm:h-48 rounded-full border-4 img-frame photo-card overflow-hidden mx-auto lg:mx-0" 
@@ -7389,29 +7390,261 @@ document.addEventListener('DOMContentLoaded', function() {
   renderBirthdayCalendar();
 });
 
-function printSharePost(targetSelector, title) {
-  const target = document.querySelector(targetSelector);
-  if (!target) return;
+function getShareText(id, fallback = '') {
+  const element = document.getElementById(id);
+  return (element?.textContent || fallback).replace(/\s+/g, ' ').trim();
+}
 
-  const previousTitle = document.title;
-  let cleanedUp = false;
-  document.querySelectorAll('.print-share-target').forEach(element => element.classList.remove('print-share-target'));
-  target.classList.add('print-share-target');
-  document.body.classList.add('printing-share-post');
-  document.title = title || previousTitle;
+function getShareColor(variableName, fallback) {
+  return getComputedStyle(document.documentElement).getPropertyValue(variableName).trim() || fallback;
+}
 
-  function cleanupPrintSharePost() {
-    if (cleanedUp) return;
-    cleanedUp = true;
-    target.classList.remove('print-share-target');
-    document.body.classList.remove('printing-share-post');
-    document.title = previousTitle;
-    window.removeEventListener('afterprint', cleanupPrintSharePost);
+function drawShareRoundRect(ctx, x, y, width, height, radius) {
+  if (ctx.roundRect) {
+    ctx.beginPath();
+    ctx.roundRect(x, y, width, height, radius);
+    ctx.closePath();
+    return;
+  }
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+}
+
+function getWrappedShareLines(ctx, text, maxWidth, maxLines = Infinity) {
+  const words = String(text || '').split(/\s+/).filter(Boolean);
+  const lines = [];
+  let line = '';
+
+  words.forEach(word => {
+    const testLine = line ? `${line} ${word}` : word;
+    if (ctx.measureText(testLine).width <= maxWidth) {
+      line = testLine;
+    } else {
+      if (line) lines.push(line);
+      line = word;
+    }
+  });
+  if (line) lines.push(line);
+
+  if (lines.length > maxLines) {
+    const keptLines = lines.slice(0, maxLines);
+    let lastLine = keptLines[keptLines.length - 1] || '';
+    while (lastLine.length && ctx.measureText(`${lastLine}...`).width > maxWidth) {
+      lastLine = lastLine.slice(0, -1).trim();
+    }
+    keptLines[keptLines.length - 1] = `${lastLine}...`;
+    return keptLines;
   }
 
-  window.addEventListener('afterprint', cleanupPrintSharePost);
-  setTimeout(() => window.print(), 80);
-  setTimeout(cleanupPrintSharePost, 2500);
+  return lines;
+}
+
+function drawWrappedShareText(ctx, text, x, y, maxWidth, lineHeight, maxLines) {
+  const lines = getWrappedShareLines(ctx, text, maxWidth, maxLines);
+  lines.forEach((line, index) => ctx.fillText(line, x, y + index * lineHeight));
+  return y + lines.length * lineHeight;
+}
+
+function createShareCanvas(width = 1080, height = 1080) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  ctx.textBaseline = 'top';
+  return { canvas, ctx, width, height };
+}
+
+function downloadShareCanvas(canvas, filename) {
+  try {
+    canvas.toBlob(blob => {
+      if (!blob) {
+        alert('The image could not be saved. Please try again.');
+        return;
+      }
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+    }, 'image/png');
+  } catch (error) {
+    console.error('Failed to save share image:', error);
+    alert('The image could not be saved. Please try again.');
+  }
+}
+
+function getShareFileName(label) {
+  return `${String(label || 'class-post').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'class-post'}.png`;
+}
+
+function drawShareHeader(ctx, title, subtitle, colors) {
+  ctx.fillStyle = colors.coral;
+  drawShareRoundRect(ctx, 80, 70, 920, 140, 34);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '700 54px "Comic Neue", "Comic Sans MS", Arial, sans-serif';
+  ctx.fillText(title, 130, 100);
+  ctx.font = '700 28px Arial, sans-serif';
+  ctx.fillText(subtitle, 132, 162);
+}
+
+async function saveHomeNewsImage(classKey) {
+  const isDavis = classKey === 'davis';
+  const teacher = isDavis ? 'Mr. Davis' : 'Ms. Vest';
+  const title = getShareText(isDavis ? 'whatWeDidDavisTitle' : 'whatWeDidWilliamsTitle', `What We Did This Week - ${teacher}`);
+  const recap = getShareText(isDavis ? 'recapTextDavis' : 'recapTextWilliams', '');
+  const week = getShareText('weekText', 'First Grade News');
+  const colors = {
+    coral: getShareColor('--md-coral', '#E9867D'),
+    slate: getShareColor('--md-slate', '#7B8E9E'),
+    cream: getShareColor('--md-cream', '#F7EFE2'),
+    blush: getShareColor('--md-blush', '#F2C9BE'),
+    ink: getShareColor('--md-ink', '#2B2B2B'),
+    white: '#ffffff'
+  };
+  const { canvas, ctx } = createShareCanvas(1080, 1080);
+
+  ctx.fillStyle = colors.cream;
+  ctx.fillRect(0, 0, 1080, 1080);
+  drawShareHeader(ctx, 'First Grade News', `${teacher} | ${week}`, colors);
+
+  ctx.fillStyle = colors.white;
+  drawShareRoundRect(ctx, 90, 270, 900, 690, 36);
+  ctx.fill();
+  ctx.strokeStyle = colors.blush;
+  ctx.lineWidth = 6;
+  ctx.stroke();
+
+  ctx.fillStyle = colors.slate;
+  ctx.font = '700 30px Arial, sans-serif';
+  ctx.fillText(teacher, 140, 325);
+  ctx.fillStyle = colors.coral;
+  ctx.font = '800 48px "Comic Neue", "Comic Sans MS", Arial, sans-serif';
+  drawWrappedShareText(ctx, title, 140, 375, 800, 58, 2);
+
+  ctx.fillStyle = colors.ink;
+  ctx.font = '400 34px Arial, sans-serif';
+  drawWrappedShareText(ctx, recap || "Add this week's classroom news in edit mode.", 140, 520, 800, 48, 8);
+
+  ctx.fillStyle = colors.slate;
+  ctx.font = '700 24px Arial, sans-serif';
+  ctx.fillText('Shared from our first grade classroom hub', 140, 910);
+  downloadShareCanvas(canvas, getShareFileName(`${teacher} home news`));
+}
+
+function getScholarProfileSource(profileKey) {
+  const profileElement = document.querySelector(`[onclick*="${profileKey}"]`);
+  return profileElement?.getAttribute('data-profile-url') || profileElement?.querySelector('img')?.src || '';
+}
+
+function loadShareImage(src) {
+  return new Promise(resolve => {
+    if (!src) {
+      resolve(null);
+      return;
+    }
+    const image = new Image();
+    image.crossOrigin = 'anonymous';
+    image.onload = () => resolve(image);
+    image.onerror = () => resolve(null);
+    image.src = src;
+  });
+}
+
+function drawScholarPhoto(ctx, image, name, x, y, radius, colors) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.fillStyle = colors.blush;
+  ctx.fill();
+  ctx.clip();
+
+  if (image) {
+    const scale = Math.max((radius * 2) / image.width, (radius * 2) / image.height);
+    const drawWidth = image.width * scale;
+    const drawHeight = image.height * scale;
+    ctx.drawImage(image, x - drawWidth / 2, y - drawHeight / 2, drawWidth, drawHeight);
+  } else {
+    const initials = String(name || 'Scholar').split(/\s+/).map(part => part[0]).join('').slice(0, 2).toUpperCase();
+    ctx.fillStyle = colors.coral;
+    ctx.font = '800 86px Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(initials || 'S', x, y + 4);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+  }
+  ctx.restore();
+
+  ctx.strokeStyle = colors.mustard;
+  ctx.lineWidth = 12;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+async function saveScholarImage(classKey) {
+  const isDavis = classKey === 'davis';
+  const teacher = isDavis ? 'Mr. Davis' : 'Ms. Vest';
+  const profileKey = isDavis ? 'scholarDavis' : 'scholarWilliams';
+  const name = getShareText(isDavis ? 'scholarNameDavis' : 'scholarNameWilliams', 'Scholar of the Month');
+  const skill = getShareText(isDavis ? 'scholarSkillDavis' : 'scholarSkillWilliams', 'Kindness');
+  const image = await loadShareImage(getScholarProfileSource(profileKey));
+  const colors = {
+    coral: getShareColor('--md-coral', '#E9867D'),
+    mustard: getShareColor('--md-mustard', '#E0B14A'),
+    slate: getShareColor('--md-slate', '#7B8E9E'),
+    cream: getShareColor('--md-cream', '#F7EFE2'),
+    blush: getShareColor('--md-blush', '#F2C9BE'),
+    ink: getShareColor('--md-ink', '#2B2B2B'),
+    white: '#ffffff'
+  };
+  const { canvas, ctx } = createShareCanvas(1080, 1080);
+
+  ctx.fillStyle = colors.cream;
+  ctx.fillRect(0, 0, 1080, 1080);
+  drawShareHeader(ctx, 'Scholar of the Month', teacher, colors);
+
+  ctx.fillStyle = colors.white;
+  drawShareRoundRect(ctx, 110, 255, 860, 710, 42);
+  ctx.fill();
+  ctx.strokeStyle = colors.mustard;
+  ctx.lineWidth = 7;
+  ctx.stroke();
+
+  drawScholarPhoto(ctx, image, name, 540, 435, 150, colors);
+
+  ctx.fillStyle = colors.coral;
+  ctx.font = '800 60px "Comic Neue", "Comic Sans MS", Arial, sans-serif';
+  ctx.textAlign = 'center';
+  drawWrappedShareText(ctx, name, 180, 625, 720, 68, 2);
+
+  ctx.fillStyle = colors.slate;
+  ctx.font = '700 28px Arial, sans-serif';
+  ctx.fillText('Scholar Skill', 540, 760);
+
+  ctx.fillStyle = colors.mustard;
+  drawShareRoundRect(ctx, 210, 810, 660, 92, 28);
+  ctx.fill();
+  ctx.fillStyle = colors.ink;
+  ctx.font = '800 34px Arial, sans-serif';
+  drawWrappedShareText(ctx, skill, 250, 838, 580, 38, 2);
+  ctx.textAlign = 'left';
+
+  downloadShareCanvas(canvas, getShareFileName(`${teacher} scholar of the month`));
 }
 
 const birthdayBookMonths = [
