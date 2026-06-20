@@ -7392,7 +7392,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function getShareText(id, fallback = '') {
   const element = document.getElementById(id);
-  return (element?.textContent || fallback).replace(/\s+/g, ' ').trim();
+  return (element?.innerText || element?.textContent || fallback)
+    .replace(/\r/g, '')
+    .replace(/\*\*/g, '')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/[ \t]{2,}/g, ' ')
+    .trim();
 }
 
 function getShareColor(variableName, fallback) {
@@ -7451,6 +7457,44 @@ function getWrappedShareLines(ctx, text, maxWidth, maxLines = Infinity) {
 function drawWrappedShareText(ctx, text, x, y, maxWidth, lineHeight, maxLines) {
   const lines = getWrappedShareLines(ctx, text, maxWidth, maxLines);
   lines.forEach((line, index) => ctx.fillText(line, x, y + index * lineHeight));
+  return y + lines.length * lineHeight;
+}
+
+function getWrappedShareParagraphLines(ctx, text, maxWidth, maxLines = Infinity) {
+  const paragraphs = String(text || '').split(/\n+/).map(paragraph => paragraph.trim()).filter(Boolean);
+  const lines = [];
+  paragraphs.forEach((paragraph, index) => {
+    if (index > 0) lines.push('');
+    lines.push(...getWrappedShareLines(ctx, paragraph, maxWidth));
+  });
+  return lines.slice(0, maxLines);
+}
+
+function measureWrappedShareParagraphs(ctx, text, maxWidth, lineHeight, paragraphGap) {
+  return getWrappedShareParagraphLines(ctx, text, maxWidth).reduce((height, line) => {
+    return height + (line ? lineHeight : paragraphGap);
+  }, 0);
+}
+
+function drawWrappedShareParagraphs(ctx, text, x, y, maxWidth, lineHeight, paragraphGap) {
+  let currentY = y;
+  getWrappedShareParagraphLines(ctx, text, maxWidth).forEach(line => {
+    if (!line) {
+      currentY += paragraphGap;
+      return;
+    }
+    ctx.fillText(line, x, currentY);
+    currentY += lineHeight;
+  });
+  return currentY;
+}
+
+function drawCenteredWrappedShareText(ctx, text, centerX, y, maxWidth, lineHeight, maxLines) {
+  const previousAlign = ctx.textAlign;
+  ctx.textAlign = 'center';
+  const lines = getWrappedShareLines(ctx, text, maxWidth, maxLines);
+  lines.forEach((line, index) => ctx.fillText(line, centerX, y + index * lineHeight));
+  ctx.textAlign = previousAlign;
   return y + lines.length * lineHeight;
 }
 
@@ -7514,14 +7558,15 @@ async function saveHomeNewsImage(classKey) {
     ink: getShareColor('--md-ink', '#2B2B2B'),
     white: '#ffffff'
   };
-  const { canvas, ctx } = createShareCanvas(1080, 1080);
+  const { canvas, ctx } = createShareCanvas(1080, 1700);
+  const bodyText = recap || "Add this week's classroom news in edit mode.";
 
   ctx.fillStyle = colors.cream;
-  ctx.fillRect(0, 0, 1080, 1080);
+  ctx.fillRect(0, 0, 1080, 1700);
   drawShareHeader(ctx, 'First Grade News', `${teacher} | ${week}`, colors);
 
   ctx.fillStyle = colors.white;
-  drawShareRoundRect(ctx, 90, 270, 900, 690, 36);
+  drawShareRoundRect(ctx, 90, 270, 900, 1220, 36);
   ctx.fill();
   ctx.strokeStyle = colors.blush;
   ctx.lineWidth = 6;
@@ -7532,15 +7577,24 @@ async function saveHomeNewsImage(classKey) {
   ctx.fillText(teacher, 140, 325);
   ctx.fillStyle = colors.coral;
   ctx.font = '800 48px "Comic Neue", "Comic Sans MS", Arial, sans-serif';
-  drawWrappedShareText(ctx, title, 140, 375, 800, 58, 2);
+  const titleBottom = drawWrappedShareText(ctx, title, 140, 375, 800, 58, 2);
 
   ctx.fillStyle = colors.ink;
-  ctx.font = '400 34px Arial, sans-serif';
-  drawWrappedShareText(ctx, recap || "Add this week's classroom news in edit mode.", 140, 520, 800, 48, 8);
+  let bodyFontSize = 31;
+  let bodyLineHeight = 42;
+  const bodyStart = Math.max(510, titleBottom + 35);
+  const bodyMaxHeight = 900;
+  ctx.font = `${bodyFontSize}px Arial, sans-serif`;
+  while (bodyFontSize > 23 && measureWrappedShareParagraphs(ctx, bodyText, 800, bodyLineHeight, 20) > bodyMaxHeight) {
+    bodyFontSize -= 1;
+    bodyLineHeight = bodyFontSize + 10;
+    ctx.font = `${bodyFontSize}px Arial, sans-serif`;
+  }
+  drawWrappedShareParagraphs(ctx, bodyText, 140, bodyStart, 800, bodyLineHeight, 20);
 
   ctx.fillStyle = colors.slate;
   ctx.font = '700 24px Arial, sans-serif';
-  ctx.fillText('Shared from our first grade classroom hub', 140, 910);
+  ctx.fillText('Shared from our first grade classroom hub', 140, 1535);
   downloadShareCanvas(canvas, getShareFileName(`${teacher} home news`));
 }
 
@@ -7629,20 +7683,20 @@ async function saveScholarImage(classKey) {
 
   ctx.fillStyle = colors.coral;
   ctx.font = '800 60px "Comic Neue", "Comic Sans MS", Arial, sans-serif';
-  ctx.textAlign = 'center';
-  drawWrappedShareText(ctx, name, 180, 625, 720, 68, 2);
+  drawCenteredWrappedShareText(ctx, name, 540, 625, 720, 68, 2);
 
   ctx.fillStyle = colors.slate;
   ctx.font = '700 28px Arial, sans-serif';
+  ctx.textAlign = 'center';
   ctx.fillText('Scholar Skill', 540, 760);
+  ctx.textAlign = 'left';
 
   ctx.fillStyle = colors.mustard;
   drawShareRoundRect(ctx, 210, 810, 660, 92, 28);
   ctx.fill();
   ctx.fillStyle = colors.ink;
   ctx.font = '800 34px Arial, sans-serif';
-  drawWrappedShareText(ctx, skill, 250, 838, 580, 38, 2);
-  ctx.textAlign = 'left';
+  drawCenteredWrappedShareText(ctx, skill, 540, 838, 580, 38, 2);
 
   downloadShareCanvas(canvas, getShareFileName(`${teacher} scholar of the month`));
 }
