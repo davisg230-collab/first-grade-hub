@@ -229,6 +229,43 @@
       background-color: white; color: var(--md-ink); cursor: text;
       outline: 2px dashed color-mix(in oklab,var(--md-slate) 55%,transparent); outline-offset: 2px;
     }
+    .birthday-calendar-scroll { overflow-x: auto; padding-bottom: .35rem; }
+    .birthday-calendar-inner { min-width: 680px; }
+    .birthday-calendar-weekdays,
+    .birthday-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .6rem; }
+    .birthday-calendar-weekdays div {
+      text-align: center; font-size: .78rem; font-weight: 800; letter-spacing: .04em;
+      color: var(--md-slate); text-transform: uppercase;
+    }
+    .birthday-calendar-day {
+      min-height: 118px; border-radius: .75rem; padding: .65rem; background: rgba(255,255,255,.86);
+      border: 1px solid color-mix(in oklab, var(--md-coral) 28%, var(--md-white) 72%);
+      display: flex; flex-direction: column; gap: .45rem; overflow: hidden;
+    }
+    .birthday-calendar-day.empty {
+      background: color-mix(in oklab, var(--md-white) 54%, var(--md-pebble) 46%);
+      border-style: dashed; opacity: .55;
+    }
+    .birthday-date-number {
+      align-self: flex-start; min-width: 1.8rem; height: 1.8rem; border-radius: 999px;
+      display: inline-flex; align-items: center; justify-content: center; font-weight: 800;
+      color: white; background: var(--md-coral);
+    }
+    .birthday-name-list { display: flex; flex-direction: column; gap: .28rem; }
+    .birthday-name-chip {
+      border-radius: 999px; padding: .24rem .5rem; background: color-mix(in oklab, var(--md-white) 65%, var(--md-blush) 35%);
+      color: var(--md-ink); font-size: .82rem; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere;
+    }
+    .birthday-empty-note { color: color-mix(in oklab, var(--md-slate) 78%, var(--md-white) 22%); font-size: .78rem; font-style: italic; }
+    .birthday-day-editor {
+      display: none; width: 100%; min-height: 68px; resize: vertical; border-radius: .6rem;
+      border: 1px solid color-mix(in oklab, var(--md-slate) 38%, var(--md-white) 62%);
+      padding: .45rem; background: white; color: var(--md-ink); font-size: .82rem;
+    }
+    body.editing .birthday-calendar-day:not(.empty) { cursor: text; outline: 2px dashed color-mix(in oklab,var(--md-coral) 48%,transparent); outline-offset: 2px; }
+    body.editing .birthday-calendar-day:not(.empty) .birthday-day-editor { display: block; }
+    body.editing .birthday-calendar-day:not(.empty) .birthday-name-list,
+    body.editing .birthday-calendar-day:not(.empty) .birthday-empty-note { display: none; }
     /* Photo card and gallery cursor only in edit mode */
     .photo-card{cursor: default;}
     body.editing .photo-card{cursor: pointer;}
@@ -311,6 +348,13 @@
       
       .birthday-month {
         min-width: 200px;
+      }
+      .birthday-calendar-inner {
+        min-width: 720px;
+      }
+      .birthday-calendar-day {
+        min-height: 104px;
+        padding: .5rem;
       }
       
       /* Specials cards mobile layout */
@@ -2122,13 +2166,43 @@
           <h3 class="text-xl font-semibold">🎂 Birthday Calendar</h3>
           <button id="saveAllBirthdaysBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveAllBirthdays()">💾 Save All Birthdays</button>
         </div>
+        <div class="rounded-2xl bg-white p-4 sm:p-5" style="border: 1px solid color-mix(in oklab, var(--md-coral) 36%, var(--md-white) 64%);">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <div>
+              <h4 id="birthdayCalendarMonthTitle" class="text-2xl font-display font-bold" style="color: var(--md-coral);">Birthdays</h4>
+              <p class="text-sm text-[color:var(--md-ink)]/75">All students together. In Edit Mode, click a date and type names on separate lines.</p>
+            </div>
+            <div class="flex gap-2">
+              <button class="px-3 py-2 rounded-lg text-sm font-semibold" style="background: color-mix(in oklab, var(--md-white) 58%, var(--md-pebble) 42%); color: var(--md-ink);" onclick="changeBirthdayMonth(-1)">Previous</button>
+              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="changeBirthdayMonth(1)">Next</button>
+            </div>
+          </div>
+          <div class="birthday-calendar-scroll">
+            <div class="birthday-calendar-inner">
+              <div class="birthday-calendar-weekdays mb-2">
+                <div>Sun</div>
+                <div>Mon</div>
+                <div>Tue</div>
+                <div>Wed</div>
+                <div>Thu</div>
+                <div>Fri</div>
+                <div>Sat</div>
+              </div>
+              <div id="birthdayCalendarGrid" class="birthday-calendar-grid"></div>
+            </div>
+          </div>
+          <div class="flex justify-between items-center gap-3 mt-4">
+            <button class="px-4 py-2 rounded-xl text-sm font-semibold" style="background: color-mix(in oklab, var(--md-white) 58%, var(--md-pebble) 42%); color: var(--md-ink);" onclick="changeBirthdayMonth(-1)">Previous Month</button>
+            <button class="px-4 py-2 rounded-xl text-white text-sm font-semibold shadow-soft" style="background: var(--md-coral);" onclick="changeBirthdayMonth(1)">Next Month</button>
+          </div>
+        </div>
         
         <!-- Mobile Arrow Indicator -->
-        <div class="md:hidden text-center text-sm text-gray-500 mb-4">
+        <div class="md:hidden text-center text-sm text-gray-500 mb-4" style="display: none;">
           ← Swipe to view all months →
         </div>
         
-        <div class="birthday-months-mobile mobile-tab-scroll scrollbar-hide grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div id="legacyBirthdayMonthFields" class="birthday-months-mobile mobile-tab-scroll scrollbar-hide grid md:grid-cols-2 lg:grid-cols-3 gap-4" style="display: none;">
           <div class="birthday-month bg-white rounded-xl p-4" style="border: 1px solid color-mix(in oklab, var(--md-blush) 60%, var(--md-white) 40%);">
             <h4 class="font-semibold mb-3">❄️ January</h4>
             <textarea id="januaryBirthdaysTextarea" class="w-full h-20 p-2 text-sm border rounded resize-none" placeholder="Enter birthdays..."></textarea>
@@ -2658,6 +2732,7 @@
       });
       const saveAllBirthdaysBtn = document.getElementById('saveAllBirthdaysBtn');
       if (saveAllBirthdaysBtn) saveAllBirthdaysBtn.style.display = 'none';
+      renderBirthdayCalendar();
       
       // Disable Practice Websites section  
       document.querySelectorAll('.website-url-input').forEach(input => {
@@ -2822,6 +2897,7 @@
       });
       const saveAllBirthdaysBtn = document.getElementById('saveAllBirthdaysBtn');
       if (saveAllBirthdaysBtn) saveAllBirthdaysBtn.style.display = 'inline-block';
+      renderBirthdayCalendar();
       
       // Enable Practice Websites section  
       document.querySelectorAll('.website-url-input').forEach(input => {
@@ -3005,6 +3081,7 @@
       });
       const saveAllBirthdaysBtn = document.getElementById('saveAllBirthdaysBtn');
       if (saveAllBirthdaysBtn) saveAllBirthdaysBtn.style.display = 'none';
+      renderBirthdayCalendar();
       
       // Disable Practice Websites section  
       document.querySelectorAll('.website-url-input').forEach(input => {
@@ -3420,6 +3497,9 @@
       const classRosterEl = document.getElementById('classRosterTextarea');
       if (classRosterEl) data.class_roster = classRosterEl.value || '';
       
+      data.birthday_calendar_json = getBirthdayCalendarJson();
+      syncBirthdayLegacyFields();
+
       // Monthly birthday fields
       const months = ['january', 'february', 'march', 'april', 'may', 'june', 
                       'july', 'august', 'september', 'october', 'november', 'december'];
@@ -6971,6 +7051,153 @@ async function saveTransportationField(fieldType) {
 
 // Function to save shoutout instructions
 
+const birthdayMonthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const birthdayMonthKeys = birthdayMonthNames.map(month => month.toLowerCase());
+let visibleBirthdayMonth = new Date().getMonth();
+let visibleBirthdayYear = new Date().getFullYear();
+let birthdayCalendarData = createEmptyBirthdayCalendar();
+
+function createEmptyBirthdayCalendar() {
+  return Array.from({ length: 12 }, () => ({}));
+}
+
+function escapeBirthdayText(value) {
+  return String(value || '').replace(/[&<>'"]/g, function(char) {
+    return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char];
+  });
+}
+
+function normalizeBirthdayCalendar(rawCalendar) {
+  const normalized = createEmptyBirthdayCalendar();
+  const source = Array.isArray(rawCalendar) ? rawCalendar : [];
+
+  source.forEach((monthData, monthIndex) => {
+    if (monthIndex < 0 || monthIndex > 11 || !monthData || typeof monthData !== 'object') return;
+    Object.entries(monthData).forEach(([day, value]) => {
+      const dayNumber = parseInt(day, 10);
+      if (!Number.isInteger(dayNumber) || dayNumber < 1 || dayNumber > 31) return;
+      const names = String(value || '').trim();
+      if (names) normalized[monthIndex][dayNumber] = names;
+    });
+  });
+
+  return normalized;
+}
+
+function parseLegacyBirthdayText(text) {
+  const days = {};
+  String(text || '').split(/\r?\n/).map(line => line.trim()).filter(Boolean).forEach(line => {
+    const match = line.match(/^(\d{1,2})(?:st|nd|rd|th)?\s*(?:[-–—:])?\s*(.*)$/i);
+    const day = match ? parseInt(match[1], 10) : 1;
+    const name = match ? (match[2] || '').trim() : line;
+    if (!Number.isInteger(day) || day < 1 || day > 31) return;
+    const cleanName = name || line;
+    days[day] = days[day] ? `${days[day]}\n${cleanName}` : cleanName;
+  });
+  return days;
+}
+
+function getBirthdayCalendarFromLegacyFields(data = {}) {
+  const calendar = createEmptyBirthdayCalendar();
+  birthdayMonthKeys.forEach((month, index) => {
+    const fieldValue = data[`${month}_birthdays`] || document.getElementById(`${month}BirthdaysTextarea`)?.value || '';
+    calendar[index] = parseLegacyBirthdayText(fieldValue);
+  });
+  return calendar;
+}
+
+function collectBirthdayCalendarFromDom() {
+  const monthData = {};
+  document.querySelectorAll('#birthdayCalendarGrid .birthday-day-editor').forEach(textarea => {
+    const day = parseInt(textarea.dataset.day || '', 10);
+    if (!Number.isInteger(day)) return;
+    const names = textarea.value.trim();
+    if (names) monthData[day] = names;
+  });
+  birthdayCalendarData[visibleBirthdayMonth] = monthData;
+}
+
+function getBirthdayCalendarJson() {
+  collectBirthdayCalendarFromDom();
+  return JSON.stringify({ version: 1, months: birthdayCalendarData });
+}
+
+function formatBirthdayDayLine(day, names) {
+  const suffix = day % 10 === 1 && day !== 11 ? 'st' : day % 10 === 2 && day !== 12 ? 'nd' : day % 10 === 3 && day !== 13 ? 'rd' : 'th';
+  return String(names || '').split(/\r?\n/).map(name => name.trim()).filter(Boolean).map(name => `${day}${suffix} - ${name}`).join('\n');
+}
+
+function syncBirthdayLegacyFields() {
+  birthdayMonthKeys.forEach((month, index) => {
+    const textarea = document.getElementById(`${month}BirthdaysTextarea`);
+    if (!textarea) return;
+    const monthData = birthdayCalendarData[index] || {};
+    textarea.value = Object.keys(monthData)
+      .map(day => parseInt(day, 10))
+      .filter(day => Number.isInteger(day))
+      .sort((a, b) => a - b)
+      .map(day => formatBirthdayDayLine(day, monthData[day]))
+      .filter(Boolean)
+      .join('\n');
+  });
+}
+
+function renderBirthdayCalendar() {
+  const grid = document.getElementById('birthdayCalendarGrid');
+  const title = document.getElementById('birthdayCalendarMonthTitle');
+  if (!grid) return;
+
+  const monthName = birthdayMonthNames[visibleBirthdayMonth];
+  if (title) title.textContent = `${monthName} ${visibleBirthdayYear}`;
+
+  const daysInMonth = new Date(visibleBirthdayYear, visibleBirthdayMonth + 1, 0).getDate();
+  const firstWeekday = new Date(visibleBirthdayYear, visibleBirthdayMonth, 1).getDay();
+  const isEditMode = document.body.classList.contains('editing');
+  const monthData = birthdayCalendarData[visibleBirthdayMonth] || {};
+  const cells = [];
+
+  for (let i = 0; i < firstWeekday; i++) {
+    cells.push('<div class="birthday-calendar-day empty" aria-hidden="true"></div>');
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const names = monthData[day] || '';
+    const nameLines = names.split(/\r?\n/).map(name => name.trim()).filter(Boolean);
+    const listHtml = nameLines.length
+      ? `<div class="birthday-name-list">${nameLines.map(name => `<div class="birthday-name-chip">${escapeBirthdayText(name)}</div>`).join('')}</div>`
+      : '<div class="birthday-empty-note">No birthdays</div>';
+
+    cells.push(`
+      <div class="birthday-calendar-day" data-day="${day}" onclick="focusBirthdayDay(${day})">
+        <div class="birthday-date-number">${day}</div>
+        ${listHtml}
+        <textarea class="birthday-day-editor" data-day="${day}" ${isEditMode ? '' : 'disabled readonly'} placeholder="Add names...">${escapeBirthdayText(names)}</textarea>
+      </div>
+    `);
+  }
+
+  grid.innerHTML = cells.join('');
+}
+
+function focusBirthdayDay(day) {
+  if (!document.body.classList.contains('editing')) return;
+  const textarea = document.querySelector(`#birthdayCalendarGrid .birthday-day-editor[data-day="${day}"]`);
+  if (textarea) textarea.focus();
+}
+
+function changeBirthdayMonth(direction) {
+  collectBirthdayCalendarFromDom();
+  visibleBirthdayMonth += direction;
+  if (visibleBirthdayMonth < 0) {
+    visibleBirthdayMonth = 11;
+    visibleBirthdayYear -= 1;
+  } else if (visibleBirthdayMonth > 11) {
+    visibleBirthdayMonth = 0;
+    visibleBirthdayYear += 1;
+  }
+  renderBirthdayCalendar();
+}
+
 // Function to update birthday fields with saved data
 function updateBirthdayFields(data) {
   if (!data) return;
@@ -6981,16 +7208,32 @@ function updateBirthdayFields(data) {
     classRosterEl.value = data.class_roster;
   }
   
-  // Update monthly birthdays
-  const months = ['january', 'february', 'march', 'april', 'may', 'june', 
-                  'july', 'august', 'september', 'october', 'november', 'december'];
-  months.forEach(month => {
+  // Update monthly birthday fields for backward compatibility
+  birthdayMonthKeys.forEach(month => {
     const monthEl = document.getElementById(`${month}BirthdaysTextarea`);
     if (monthEl && data[`${month}_birthdays`]) {
       monthEl.value = data[`${month}_birthdays`];
     }
   });
+
+  let parsedCalendar = null;
+  if (data.birthday_calendar_json) {
+    try {
+      const parsed = typeof data.birthday_calendar_json === 'string' ? JSON.parse(data.birthday_calendar_json) : data.birthday_calendar_json;
+      parsedCalendar = normalizeBirthdayCalendar(parsed.months || parsed);
+    } catch (error) {
+      console.error('Failed to parse birthday calendar data:', error);
+    }
+  }
+
+  birthdayCalendarData = parsedCalendar || getBirthdayCalendarFromLegacyFields(data);
+  syncBirthdayLegacyFields();
+  renderBirthdayCalendar();
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+  renderBirthdayCalendar();
+});
 
 // Transportation Modal Functions
 let currentTransportationType = null;
@@ -8535,6 +8778,8 @@ async function saveAllBirthdays() {
     
     // Prepare data for saving
     const data = {};
+    data.birthday_calendar_json = getBirthdayCalendarJson();
+    syncBirthdayLegacyFields();
     
     // Collect all monthly birthday data
     const months = ['january', 'february', 'march', 'april', 'may', 'june', 
