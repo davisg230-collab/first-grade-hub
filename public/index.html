@@ -7558,15 +7558,32 @@ async function saveHomeNewsImage(classKey) {
     ink: getShareColor('--md-ink', '#2B2B2B'),
     white: '#ffffff'
   };
-  const { canvas, ctx } = createShareCanvas(1080, 1700);
+  const { canvas, ctx } = createShareCanvas(1080, 1200);
   const bodyText = recap || "Add this week's classroom news in edit mode.";
+  const titleLines = getWrappedShareLines(ctx, title, 800, 2);
+  const titleBottom = 375 + titleLines.length * 58;
+  const bodyStart = Math.max(510, titleBottom + 35);
+  let bodyFontSize = 31;
+  let bodyLineHeight = 42;
+  const maxCanvasHeight = 1900;
+  const maxBodyHeight = maxCanvasHeight - bodyStart - 240;
+  ctx.font = `${bodyFontSize}px Arial, sans-serif`;
+  while (bodyFontSize > 23 && measureWrappedShareParagraphs(ctx, bodyText, 800, bodyLineHeight, 20) > maxBodyHeight) {
+    bodyFontSize -= 1;
+    bodyLineHeight = bodyFontSize + 10;
+    ctx.font = `${bodyFontSize}px Arial, sans-serif`;
+  }
+  const bodyHeight = measureWrappedShareParagraphs(ctx, bodyText, 800, bodyLineHeight, 20);
+  const canvasHeight = Math.max(980, Math.min(maxCanvasHeight, bodyStart + bodyHeight + 225));
+  canvas.height = canvasHeight;
+  ctx.textBaseline = 'top';
 
   ctx.fillStyle = colors.cream;
-  ctx.fillRect(0, 0, 1080, 1700);
+  ctx.fillRect(0, 0, 1080, canvasHeight);
   drawShareHeader(ctx, 'First Grade News', `${teacher} | ${week}`, colors);
 
   ctx.fillStyle = colors.white;
-  drawShareRoundRect(ctx, 90, 270, 900, 1220, 36);
+  drawShareRoundRect(ctx, 90, 270, 900, canvasHeight - 390, 36);
   ctx.fill();
   ctx.strokeStyle = colors.blush;
   ctx.lineWidth = 6;
@@ -7577,24 +7594,15 @@ async function saveHomeNewsImage(classKey) {
   ctx.fillText(teacher, 140, 325);
   ctx.fillStyle = colors.coral;
   ctx.font = '800 48px "Comic Neue", "Comic Sans MS", Arial, sans-serif';
-  const titleBottom = drawWrappedShareText(ctx, title, 140, 375, 800, 58, 2);
+  drawWrappedShareText(ctx, title, 140, 375, 800, 58, 2);
 
   ctx.fillStyle = colors.ink;
-  let bodyFontSize = 31;
-  let bodyLineHeight = 42;
-  const bodyStart = Math.max(510, titleBottom + 35);
-  const bodyMaxHeight = 900;
   ctx.font = `${bodyFontSize}px Arial, sans-serif`;
-  while (bodyFontSize > 23 && measureWrappedShareParagraphs(ctx, bodyText, 800, bodyLineHeight, 20) > bodyMaxHeight) {
-    bodyFontSize -= 1;
-    bodyLineHeight = bodyFontSize + 10;
-    ctx.font = `${bodyFontSize}px Arial, sans-serif`;
-  }
   drawWrappedShareParagraphs(ctx, bodyText, 140, bodyStart, 800, bodyLineHeight, 20);
 
   ctx.fillStyle = colors.slate;
   ctx.font = '700 24px Arial, sans-serif';
-  ctx.fillText('Shared from our first grade classroom hub', 140, 1535);
+  ctx.fillText('Shared from our first grade classroom hub', 140, canvasHeight - 155);
   downloadShareCanvas(canvas, getShareFileName(`${teacher} home news`));
 }
 
@@ -7656,6 +7664,7 @@ async function saveScholarImage(classKey) {
   const profileKey = isDavis ? 'scholarDavis' : 'scholarWilliams';
   const name = getShareText(isDavis ? 'scholarNameDavis' : 'scholarNameWilliams', 'Scholar of the Month');
   const skill = getShareText(isDavis ? 'scholarSkillDavis' : 'scholarSkillWilliams', 'Kindness');
+  const blurb = getShareText(isDavis ? 'scholarInfoDavis' : 'scholarInfoWilliams', '');
   const image = await loadShareImage(getScholarProfileSource(profileKey));
   const colors = {
     coral: getShareColor('--md-coral', '#E9867D'),
@@ -7666,37 +7675,56 @@ async function saveScholarImage(classKey) {
     ink: getShareColor('--md-ink', '#2B2B2B'),
     white: '#ffffff'
   };
-  const { canvas, ctx } = createShareCanvas(1080, 1080);
+  const { canvas, ctx } = createShareCanvas(1080, 1350);
 
   ctx.fillStyle = colors.cream;
-  ctx.fillRect(0, 0, 1080, 1080);
+  ctx.fillRect(0, 0, 1080, 1350);
   drawShareHeader(ctx, 'Scholar of the Month', teacher, colors);
 
   ctx.fillStyle = colors.white;
-  drawShareRoundRect(ctx, 110, 255, 860, 710, 42);
+  drawShareRoundRect(ctx, 110, 255, 860, 960, 42);
   ctx.fill();
   ctx.strokeStyle = colors.mustard;
   ctx.lineWidth = 7;
   ctx.stroke();
 
-  drawScholarPhoto(ctx, image, name, 540, 435, 150, colors);
+  drawScholarPhoto(ctx, image, name, 540, 405, 125, colors);
 
   ctx.fillStyle = colors.coral;
-  ctx.font = '800 60px "Comic Neue", "Comic Sans MS", Arial, sans-serif';
-  drawCenteredWrappedShareText(ctx, name, 540, 625, 720, 68, 2);
+  ctx.font = '800 58px "Comic Neue", "Comic Sans MS", Arial, sans-serif';
+  const nameBottom = drawCenteredWrappedShareText(ctx, name, 540, 555, 720, 64, 2);
 
   ctx.fillStyle = colors.slate;
   ctx.font = '700 28px Arial, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('Scholar Skill', 540, 760);
+  const skillLabelY = Math.max(690, nameBottom + 25);
+  ctx.fillText('Scholar Skill', 540, skillLabelY);
   ctx.textAlign = 'left';
 
+  const skillPillY = skillLabelY + 50;
   ctx.fillStyle = colors.mustard;
-  drawShareRoundRect(ctx, 210, 810, 660, 92, 28);
+  drawShareRoundRect(ctx, 210, skillPillY, 660, 92, 28);
   ctx.fill();
   ctx.fillStyle = colors.ink;
   ctx.font = '800 34px Arial, sans-serif';
-  drawCenteredWrappedShareText(ctx, skill, 540, 838, 580, 38, 2);
+  drawCenteredWrappedShareText(ctx, skill, 540, skillPillY + 28, 580, 38, 2);
+
+  const blurbText = blurb || 'Add the scholar celebration note in edit mode.';
+  const blurbY = skillPillY + 140;
+  ctx.fillStyle = colors.slate;
+  ctx.font = '700 28px Arial, sans-serif';
+  ctx.fillText('Why we are celebrating', 190, blurbY);
+
+  ctx.fillStyle = colors.ink;
+  let blurbFontSize = 28;
+  let blurbLineHeight = 38;
+  ctx.font = `${blurbFontSize}px Arial, sans-serif`;
+  while (blurbFontSize > 22 && measureWrappedShareParagraphs(ctx, blurbText, 700, blurbLineHeight, 16) > 220) {
+    blurbFontSize -= 1;
+    blurbLineHeight = blurbFontSize + 10;
+    ctx.font = `${blurbFontSize}px Arial, sans-serif`;
+  }
+  drawWrappedShareParagraphs(ctx, blurbText, 190, blurbY + 48, 700, blurbLineHeight, 16);
 
   downloadShareCanvas(canvas, getShareFileName(`${teacher} scholar of the month`));
 }
