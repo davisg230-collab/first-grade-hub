@@ -2214,19 +2214,16 @@
         <div class="grid md:grid-cols-3 gap-4 mb-6">
           <div class="transportation-privacy-card">
             <div class="transportation-card-icon">&#128652;</div>
-            <div class="text-sm font-bold uppercase tracking-wide" style="color:#f59e0b;">Bus</div>
             <h3 class="text-xl font-display font-bold mt-1">Bus Riders</h3>
             <p class="text-sm text-gray-600 mt-2">Current bus numbers stay private. Families can request a bus change from the update form.</p>
           </div>
           <div class="transportation-privacy-card">
             <div class="transportation-card-icon">&#128663;</div>
-            <div class="text-sm font-bold uppercase tracking-wide" style="color:#10b981;">Car</div>
             <h3 class="text-xl font-display font-bold mt-1">Car Pickup</h3>
             <p class="text-sm text-gray-600 mt-2">Families can add who will pick up the scholar and whether the change is temporary or permanent.</p>
           </div>
           <div class="transportation-privacy-card">
             <div class="transportation-card-icon">&#127968;</div>
-            <div class="text-sm font-bold uppercase tracking-wide" style="color:#8b5cf6;">Porch</div>
             <h3 class="text-xl font-display font-bold mt-1">Porch Pickup</h3>
             <p class="text-sm text-gray-600 mt-2">Porch changes can include a quick note and the adult submitting the update.</p>
           </div>
@@ -2736,6 +2733,9 @@
     
     // Tab navigation
     function showPage(pageId) {
+      if (pageId === 'roster' && !document.body.classList.contains('editing')) {
+        pageId = 'home';
+      }
       document.querySelectorAll('.pagePanel').forEach(panel => {
         panel.classList.remove('active','visible');
         if(panel.dataset.pagePanel === pageId){
@@ -3186,17 +3186,11 @@
       const saveClassRosterBtn = document.getElementById('saveClassRosterBtn');
       const masterRosterTextarea = document.getElementById('masterRosterTextarea');
       
-      if (isOwner) {
-        // The visible roster lives on the teacher-only Roster tab.
-        if (classRosterSection) classRosterSection.style.display = 'none';
-        if (classRosterTextarea) { classRosterTextarea.disabled = false; classRosterTextarea.readOnly = false; }
-        if (masterRosterTextarea) { masterRosterTextarea.disabled = false; masterRosterTextarea.readOnly = false; }
-        if (saveClassRosterBtn) saveClassRosterBtn.style.display = 'inline-block';
-      } else {
-        // Hide roster section for non-owners
-        if (classRosterSection) classRosterSection.style.display = 'none';
-        if (masterRosterTextarea) { masterRosterTextarea.disabled = true; masterRosterTextarea.readOnly = true; }
-      }
+      // The visible roster lives on the teacher-only Roster tab.
+      if (classRosterSection) classRosterSection.style.display = 'none';
+      if (classRosterTextarea) { classRosterTextarea.disabled = false; classRosterTextarea.readOnly = false; }
+      if (masterRosterTextarea) { masterRosterTextarea.disabled = false; masterRosterTextarea.readOnly = false; }
+      if (saveClassRosterBtn) saveClassRosterBtn.style.display = 'inline-block';
       renderRosterPreview();
       
       // Enable Birthday sections
@@ -3323,6 +3317,9 @@
     function exitEditMode(){
       isOwner = false; // Reset owner status when exiting edit mode
       document.body.classList.remove('editing');
+      if (document.querySelector('[data-page-panel="roster"].active')) {
+        showPage('home');
+      }
       document.querySelectorAll('[data-edit="teacher"]').forEach(el=>el.contentEditable=false);
       document.querySelectorAll('.teacher-only-edit').forEach(el=>{el.disabled=true;el.readOnly=true;});
       // Disable snack message textarea and hide edit controls
@@ -8580,6 +8577,15 @@ function changeBirthdayMonth(direction) {
   renderBirthdayCalendar();
 }
 
+let birthdayAutoSaveTimer = null;
+function queueBirthdayAutoSave() {
+  if (!document.body.classList.contains('editing')) return;
+  clearTimeout(birthdayAutoSaveTimer);
+  birthdayAutoSaveTimer = setTimeout(() => {
+    saveAllBirthdays().catch(error => console.error('Birthday auto-save failed:', error));
+  }, 350);
+}
+
 function addBirthdayEntry(monthKey) {
   if (!document.body.classList.contains('editing')) return;
   const monthInfo = getBirthdayMonthInfo(monthKey);
@@ -8598,6 +8604,7 @@ function addBirthdayEntry(monthKey) {
   }
   syncBirthdayLegacyFields();
   renderBirthdayCalendar();
+  queueBirthdayAutoSave();
 }
 
 function removeBirthdayEntry(monthKey, entryIndex) {
@@ -8607,6 +8614,7 @@ function removeBirthdayEntry(monthKey, entryIndex) {
   birthdayCalendarData[monthKey] = entries;
   syncBirthdayLegacyFields();
   renderBirthdayCalendar();
+  queueBirthdayAutoSave();
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -8887,7 +8895,7 @@ async function submitTransportationUpdate() {
     await logParentActivity('transportation', 'Transportation update submitted', `${guardianName} submitted a ${update.duration} transportation change for ${update.studentName}. ${getTransportationChangeSentence(update)}`, update);
     const success = document.getElementById('transportationSuccessMessage');
     if (success) success.style.display = 'block';
-    setTimeout(closeTransportationModal, 1200);
+    setTimeout(closeTransportationModal, 5500);
   } catch (error) {
     console.error('Failed to submit transportation update:', error);
     alert('Transportation update could not be sent. Please try again or contact the teacher.');
