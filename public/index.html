@@ -447,10 +447,39 @@
       border: 1px solid color-mix(in oklab, var(--md-slate) 18%, var(--md-white) 82%);
       font-weight: 700;
     }
+    .master-roster-row {
+      display: grid;
+      grid-template-columns: minmax(180px, 1.2fr) minmax(130px, .75fr) minmax(170px, 1fr) auto;
+      gap: .65rem;
+      align-items: center;
+      padding: .75rem;
+      border-radius: .9rem;
+      background: color-mix(in oklab, var(--md-white) 82%, var(--md-cream) 18%);
+      border: 1px solid color-mix(in oklab, var(--md-slate) 20%, var(--md-white) 80%);
+    }
+    .master-roster-row input,
+    .master-roster-row select {
+      width: 100%;
+      border-radius: .75rem;
+      border: 1px solid color-mix(in oklab, var(--md-slate) 28%, var(--md-white) 72%);
+      padding: .7rem .8rem;
+      background: var(--md-white);
+      color: var(--md-ink);
+    }
+    .master-roster-heading {
+      font-size: .75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: color-mix(in oklab, var(--md-ink) 66%, var(--md-white) 34%);
+      background: color-mix(in oklab, var(--md-slate) 10%, var(--md-white) 90%);
+    }
     @media (max-width: 720px) {
-      .transportation-roster-row {
+      .transportation-roster-row,
+      .master-roster-row {
         grid-template-columns: 1fr;
       }
+      .master-roster-heading { display: none; }
     }
     .transportation-match-button,
     .transportation-choice-button {
@@ -1894,19 +1923,22 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
           <div>
             <h2 class="text-2xl font-display font-bold" style="color: var(--md-slate);">&#128203; Teacher Roster</h2>
-            <p class="text-sm text-gray-600 mt-1">Teacher-only list used for birthday dropdowns and transportation setup. Birthday dropdowns show first names only.</p>
+            <p class="text-sm text-gray-600 mt-1">Teacher-only list for scholar names and current dismissal. Parents never see this page.</p>
           </div>
           <div class="flex flex-wrap gap-2">
+            <button class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="addMasterRosterRow()">Add Scholar</button>
             <button id="saveMasterRosterBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveRosterField()">Save Roster</button>
             <button class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="saveRosterImage()">Save Roster Image</button>
           </div>
         </div>
-        <textarea id="masterRosterTextarea" class="roster-input h-56 resize-none teacher-only-edit" placeholder="One scholar per line. Full names are okay here because this page is teacher-only."></textarea>
-        <div class="rounded-xl p-4 mt-4" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-cream) 30%);">
-          <div class="font-semibold mb-2">Birthday dropdown preview</div>
-          <p class="text-sm text-gray-600">If two scholars have the same first name, the dropdown adds a last initial so you can tell them apart.</p>
-          <div id="rosterPreviewList" class="roster-image-list"></div>
+        <div class="master-roster-row master-roster-heading">
+          <div>Scholar name</div>
+          <div>Dismissal</div>
+          <div>Details</div>
+          <div></div>
         </div>
+        <div id="masterRosterRows" class="space-y-3 mt-3"></div>
+        <textarea id="masterRosterTextarea" class="teacher-only-edit" style="display:none;"></textarea>
       </div>
     </section>
     <!-- SHOUTOUT YOUR SCHOLAR TAB -->
@@ -2237,19 +2269,11 @@
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <div>
               <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">Teacher Transportation Manager</h3>
-              <p class="text-sm text-gray-600">Paste your roster once, then choose each scholar's current transportation. Family codes are not used.</p>
+              <p class="text-sm text-gray-600">Current dismissal comes from the teacher Roster tab. Families only use the private update form.</p>
             </div>
-            <button id="saveTransportationRosterBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="saveTransportationRoster()">Save Transportation</button>
+            <button class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="showPage('roster')">Open Roster</button>
           </div>
-          <div class="rounded-xl p-4 mb-4" style="background: color-mix(in oklab, var(--md-white) 76%, var(--md-cream) 24%); border: 1px solid color-mix(in oklab, var(--md-slate) 18%, var(--md-white) 82%);">
-            <label class="block text-sm font-semibold mb-2">Paste roster to build transportation rows</label>
-            <textarea id="transportationImportTextarea" class="roster-input h-28 resize-none teacher-only-edit" placeholder="One scholar per line. You can also use the teacher Roster tab."></textarea>
-            <div class="flex flex-wrap gap-2 mt-3">
-              <button class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="buildTransportationRowsFromRoster()">Build Rows</button>
-              <button class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="addTransportationRosterRow()">Add Scholar Row</button>
-            </div>
-          </div>
-          <div id="transportationRosterRows" class="space-y-3"></div>
+          <div id="transportationRosterRows" class="space-y-3" style="display:none;"></div>
           <textarea id="transportationRosterTextarea" class="teacher-only-edit" style="display:none;"></textarea>
 
           <div class="mt-6">
@@ -2758,9 +2782,12 @@
       } else if (pageId === 'listening-units') {
         renderListeningUnits();
       } else if (pageId === 'roster') {
-        renderRosterPreview();
+        renderMasterRosterManager();
       } else if (pageId === 'transportation') {
-        renderTransportationRosterManager();
+        syncMasterRosterTextareas();
+      } else if (pageId === 'birthdays') {
+        syncMasterRosterTextareas();
+        renderBirthdayCalendar();
       }
     }
         function getTodayKey() {
@@ -3191,7 +3218,7 @@
       if (classRosterTextarea) { classRosterTextarea.disabled = false; classRosterTextarea.readOnly = false; }
       if (masterRosterTextarea) { masterRosterTextarea.disabled = false; masterRosterTextarea.readOnly = false; }
       if (saveClassRosterBtn) saveClassRosterBtn.style.display = 'inline-block';
-      renderRosterPreview();
+      renderMasterRosterManager();
       
       // Enable Birthday sections
       const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
@@ -3792,8 +3819,7 @@
       });
       data.gallery_urls_json = JSON.stringify(specialsImages);
       
-      if (typeof syncTransportationRosterText === 'function') syncTransportationRosterText();
-      if (typeof syncRosterTextareas === 'function') syncRosterTextareas('master');
+      if (typeof syncMasterRosterTextareas === 'function') syncMasterRosterTextareas();
 
       // Transportation fields
       const busRidersEl = document.getElementById('busRidersTextarea');
@@ -7277,7 +7303,6 @@ function updateTransportationFields(data) {
   if (rosterEl) {
     rosterEl.value = data.transportation_roster_text || buildTransportationRosterFromLegacy(data);
   }
-  renderTransportationRosterManager();
 
   const updatesEl = document.getElementById('transportationUpdatesTextarea');
   if (updatesEl) {
@@ -7326,7 +7351,9 @@ function parseTransportationRosterText(text) {
 }
 
 function getTransportationRoster() {
-  syncTransportationRosterText();
+  if (document.querySelectorAll('#masterRosterRows .master-roster-row:not(.master-roster-heading)').length) {
+    syncMasterRosterTextareas();
+  }
   return parseTransportationRosterText(document.getElementById('transportationRosterTextarea')?.value || '');
 }
 
@@ -7382,6 +7409,10 @@ function formatTransportationRosterRow(row) {
 function syncTransportationRosterText() {
   const rosterEl = document.getElementById('transportationRosterTextarea');
   if (!rosterEl) return;
+  if (document.querySelectorAll('#masterRosterRows .master-roster-row:not(.master-roster-heading)').length) {
+    syncMasterRosterTextareas();
+    return;
+  }
   const rowEls = document.querySelectorAll('#transportationRosterRows .transportation-roster-row');
   if (!rowEls.length) return;
   rosterEl.value = getTransportationRowData().map(formatTransportationRosterRow).join('\n');
@@ -7812,7 +7843,7 @@ function updateBirthdayFields(data) {
   if (masterRosterEl && data.class_roster) {
     masterRosterEl.value = data.class_roster;
   }
-  syncRosterTextareas('legacy');
+  syncMasterRosterTextareas();
   
   // Update monthly birthday fields for backward compatibility
   birthdayMonthKeys.forEach(month => {
@@ -8342,14 +8373,74 @@ function getMasterRosterText() {
     '';
 }
 
+function getTransportationByName() {
+  const rosterText = document.getElementById('transportationRosterTextarea')?.value || '';
+  const map = new Map();
+  parseTransportationRosterText(rosterText).forEach(row => {
+    map.set(row.name.toLowerCase(), row);
+  });
+  return map;
+}
+
+function getMasterRosterRowData() {
+  const rowEls = Array.from(document.querySelectorAll('#masterRosterRows .master-roster-row:not(.master-roster-heading)'));
+  if (rowEls.length) {
+    return rowEls.map(row => {
+      const name = row.querySelector('.master-row-name')?.value.trim() || '';
+      const type = normalizeTransportationType(row.querySelector('.master-row-type')?.value || 'bus');
+      const details = row.querySelector('.master-row-details')?.value.trim() || '';
+      return {
+        name,
+        lastName: getLastNameFromRosterName(name),
+        type,
+        details
+      };
+    }).filter(row => row.name);
+  }
+
+  const transportationByName = getTransportationByName();
+  const names = parseRosterLines(getMasterRosterText());
+  const sourceNames = names.length ? names : Array.from(transportationByName.values()).map(row => row.name);
+  return Array.from(new Set(sourceNames)).map(name => {
+    const savedTransportation = transportationByName.get(name.toLowerCase());
+    return {
+      name,
+      lastName: getLastNameFromRosterName(name),
+      type: savedTransportation?.type || 'bus',
+      details: savedTransportation?.details || ''
+    };
+  });
+}
+
+function setMasterRosterData(rows) {
+  const cleanRows = rows.map(row => ({
+    name: String(row.name || '').trim(),
+    lastName: getLastNameFromRosterName(row.name),
+    type: normalizeTransportationType(row.type || 'bus'),
+    details: String(row.details || '').trim()
+  })).filter(row => row.name);
+
+  const namesText = cleanRows.map(row => row.name).join('\n');
+  const master = document.getElementById('masterRosterTextarea');
+  const legacy = document.getElementById('classRosterTextarea');
+  const transportation = document.getElementById('transportationRosterTextarea');
+  if (master) master.value = namesText;
+  if (legacy) legacy.value = namesText;
+  if (transportation) transportation.value = cleanRows.map(formatTransportationRosterRow).join('\n');
+}
+
+function syncMasterRosterTextareas(options = {}) {
+  setMasterRosterData(getMasterRosterRowData());
+  if (options.renderBirthdays) renderBirthdayCalendar();
+}
+
 function syncRosterTextareas(source = 'master') {
   const master = document.getElementById('masterRosterTextarea');
   const legacy = document.getElementById('classRosterTextarea');
   const text = source === 'legacy' ? (legacy?.value || '') : ((master?.value || '').trim() ? master.value : (legacy?.value || ''));
   if (master && master.value !== text) master.value = text;
   if (legacy && legacy.value !== text) legacy.value = text;
-  renderRosterPreview();
-  renderBirthdayCalendar();
+  syncMasterRosterTextareas();
 }
 
 function getRosterDisplayOptions() {
@@ -8374,28 +8465,86 @@ function getRosterDisplayOptions() {
 }
 
 function renderRosterPreview() {
-  const list = document.getElementById('rosterPreviewList');
-  if (!list) return;
-  const options = getRosterDisplayOptions();
-  if (!options.length) {
-    list.innerHTML = '<div>Add your roster to preview birthday names.</div>';
+  renderMasterRosterManager();
+}
+
+function renderMasterRosterManager() {
+  const container = document.getElementById('masterRosterRows');
+  if (!container) return;
+  const rows = getMasterRosterRowData();
+  if (!rows.length) {
+    container.innerHTML = '<div class="rounded-xl p-4 bg-white text-gray-600">Click Add Scholar to start your roster.</div>';
     return;
   }
-  list.innerHTML = options.map(option => `<div>${escapeBirthdayText(option.label)}</div>`).join('');
+  container.innerHTML = rows.map((row, index) => {
+    const cleanType = normalizeTransportationType(row.type);
+    return `
+      <div class="master-roster-row" data-roster-index="${index}">
+        <input class="master-row-name teacher-only-edit" value="${escapeBirthdayText(row.name)}" placeholder="Scholar full name" oninput="handleMasterRosterInput()">
+        <select class="master-row-type teacher-only-edit" onchange="handleMasterRosterTypeChange(this)">
+          <option value="bus" ${cleanType === 'bus' ? 'selected' : ''}>Bus</option>
+          <option value="car" ${cleanType === 'car' ? 'selected' : ''}>Car</option>
+          <option value="porch" ${cleanType === 'porch' ? 'selected' : ''}>Porch</option>
+        </select>
+        <input class="master-row-details teacher-only-edit" value="${escapeBirthdayText(row.details || '')}" placeholder="${getTransportationDetailPlaceholder(cleanType)}" oninput="handleMasterRosterInput()">
+        <button type="button" class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="removeMasterRosterRow(this)">Remove</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function addMasterRosterRow() {
+  const rows = getMasterRosterRowData();
+  rows.push({ name: '', type: 'bus', details: '' });
+  const container = document.getElementById('masterRosterRows');
+  if (!container) return;
+  container.innerHTML = rows.map((row, index) => {
+    const cleanType = normalizeTransportationType(row.type);
+    return `
+      <div class="master-roster-row" data-roster-index="${index}">
+        <input class="master-row-name teacher-only-edit" value="${escapeBirthdayText(row.name)}" placeholder="Scholar full name" oninput="handleMasterRosterInput()">
+        <select class="master-row-type teacher-only-edit" onchange="handleMasterRosterTypeChange(this)">
+          <option value="bus" ${cleanType === 'bus' ? 'selected' : ''}>Bus</option>
+          <option value="car" ${cleanType === 'car' ? 'selected' : ''}>Car</option>
+          <option value="porch" ${cleanType === 'porch' ? 'selected' : ''}>Porch</option>
+        </select>
+        <input class="master-row-details teacher-only-edit" value="${escapeBirthdayText(row.details || '')}" placeholder="${getTransportationDetailPlaceholder(cleanType)}" oninput="handleMasterRosterInput()">
+        <button type="button" class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="removeMasterRosterRow(this)">Remove</button>
+      </div>
+    `;
+  }).join('');
+  container.querySelector('.master-roster-row:last-child .master-row-name')?.focus();
+}
+
+function removeMasterRosterRow(button) {
+  button?.closest('.master-roster-row')?.remove();
+  syncMasterRosterTextareas({ renderBirthdays: true });
+}
+
+function handleMasterRosterTypeChange(select) {
+  const row = select?.closest('.master-roster-row');
+  const detail = row?.querySelector('.master-row-details');
+  if (detail) detail.placeholder = getTransportationDetailPlaceholder(select.value);
+  handleMasterRosterInput();
+}
+
+function handleMasterRosterInput() {
+  syncMasterRosterTextareas();
 }
 
 async function saveRosterField() {
   const saveBtn = document.getElementById('saveMasterRosterBtn') || document.getElementById('saveClassRosterBtn');
   const originalText = saveBtn ? saveBtn.textContent : '';
   try {
-    syncRosterTextareas('master');
+    syncMasterRosterTextareas({ renderBirthdays: true });
     await ensureAuthenticated();
     if (saveBtn) {
       saveBtn.textContent = 'Saving...';
       saveBtn.disabled = true;
     }
     await db.collection('classData').doc('current').set({
-      class_roster: getMasterRosterText()
+      class_roster: getMasterRosterText(),
+      transportation_roster_text: document.getElementById('transportationRosterTextarea')?.value || ''
     }, { merge: true });
     if (saveBtn) {
       saveBtn.textContent = 'Saved!';
@@ -8415,8 +8564,9 @@ async function saveRosterField() {
 }
 
 function saveRosterImage() {
-  const names = parseRosterLines(getMasterRosterText());
-  if (!names.length) {
+  syncMasterRosterTextareas();
+  const rosterRows = getMasterRosterRowData();
+  if (!rosterRows.length) {
     alert('Add your roster before saving an image.');
     return;
   }
@@ -8428,7 +8578,10 @@ function saveRosterImage() {
     ink: getShareColor('--md-ink', '#2B2B2B'),
     white: '#ffffff'
   };
-  const rows = names.map((name, index) => `${index + 1}. ${name}`);
+  const rows = rosterRows.map(row => {
+    const details = row.details ? ` - ${row.details}` : '';
+    return `${row.name} | ${getTransportationTypeLabel(row.type)}${details}`;
+  });
   const columnCount = rows.length > 22 ? 2 : 1;
   const rowHeight = 42;
   const columnRows = Math.ceil(rows.length / columnCount);
@@ -8541,7 +8694,7 @@ function renderBirthdayPage(page) {
         <select id="birthdayStudent-${monthInfo.key}" aria-label="${monthInfo.name} birthday student" ${studentSelectDisabled}>
           ${renderBirthdayStudentOptions()}
         </select>
-        <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="addBirthdayEntry('${monthInfo.key}')">Add Birthday</button>
+        <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="addBirthdayEntry('${monthInfo.key}', this)">Add Birthday</button>
       </div>
     </div>
   `;
@@ -8586,11 +8739,12 @@ function queueBirthdayAutoSave() {
   }, 350);
 }
 
-function addBirthdayEntry(monthKey) {
+function addBirthdayEntry(monthKey, button = null) {
   if (!document.body.classList.contains('editing')) return;
   const monthInfo = getBirthdayMonthInfo(monthKey);
-  const daySelect = document.getElementById(`birthdayDay-${monthKey}`);
-  const studentSelect = document.getElementById(`birthdayStudent-${monthKey}`);
+  const panel = button?.closest('.birthday-edit-panel') || document;
+  const daySelect = panel.querySelector(`#birthdayDay-${monthKey}`) || document.getElementById(`birthdayDay-${monthKey}`);
+  const studentSelect = panel.querySelector(`#birthdayStudent-${monthKey}`) || document.getElementById(`birthdayStudent-${monthKey}`);
   const entry = normalizeBirthdayEntry(daySelect?.value, studentSelect?.value, monthInfo);
   if (!entry) {
     alert('Choose a birthday number and a scholar name first.');
@@ -8620,13 +8774,13 @@ function removeBirthdayEntry(monthKey, entryIndex) {
 document.addEventListener('DOMContentLoaded', function() {
   const masterRosterTextarea = document.getElementById('masterRosterTextarea');
   if (masterRosterTextarea) {
-    masterRosterTextarea.addEventListener('input', () => syncRosterTextareas('master'));
+    masterRosterTextarea.addEventListener('input', () => syncMasterRosterTextareas());
   }
   const rosterTextarea = document.getElementById('classRosterTextarea');
   if (rosterTextarea) {
-    rosterTextarea.addEventListener('input', () => syncRosterTextareas('legacy'));
+    rosterTextarea.addEventListener('input', () => syncMasterRosterTextareas());
   }
-  syncRosterTextareas('legacy');
+  syncMasterRosterTextareas();
   renderBirthdayCalendar();
 });
 
@@ -10313,8 +10467,9 @@ async function saveBirthdayField(fieldType) {
     
     // Prepare data for saving
     const data = {};
-    syncRosterTextareas('master');
+    syncMasterRosterTextareas({ renderBirthdays: true });
     data.class_roster = getMasterRosterText();
+    data.transportation_roster_text = document.getElementById('transportationRosterTextarea')?.value || '';
     
     // Save to Firestore
     await db.collection('classData').doc('current').set(data, { merge: true });
