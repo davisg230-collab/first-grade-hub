@@ -3786,6 +3786,7 @@
     // Track original values for change detection
     let originalValues = {};
     const EDIT_MODE_REDIRECT_KEY = 'firstGradeHub.pendingEditModeRedirect';
+    const EDIT_MODE_REDIRECT_MAX_AGE_MS = 10 * 60 * 1000;
     const approvedEditorEmails = [
       'davisg230@gmail.com',
       'lvest@crossroadsschoolskc.org'
@@ -3802,27 +3803,69 @@
       if (input) input.value = '';
     }
 
-    function rememberPendingEditRedirect() {
+    function getEditModeStorage(storageName) {
       try {
-        sessionStorage.setItem(EDIT_MODE_REDIRECT_KEY, isOwner ? 'owner' : 'teacher');
+        return window[storageName];
       } catch (error) {
-        console.warn('Could not remember pending edit mode redirect:', error);
+        console.warn(`Could not access ${storageName}:`, error);
+        return null;
       }
     }
 
-    function getPendingEditRedirect() {
+    function rememberPendingEditRedirect() {
+      const pendingEdit = JSON.stringify({
+        role: isOwner ? 'owner' : 'teacher',
+        startedAt: Date.now()
+      });
       try {
-        return sessionStorage.getItem(EDIT_MODE_REDIRECT_KEY) || '';
+        const sessionStore = getEditModeStorage('sessionStorage');
+        if (sessionStore) sessionStore.setItem(EDIT_MODE_REDIRECT_KEY, pendingEdit);
       } catch (error) {
+        console.warn('Could not remember pending edit mode redirect in session storage:', error);
+      }
+      try {
+        const localStore = getEditModeStorage('localStorage');
+        if (localStore) localStore.setItem(EDIT_MODE_REDIRECT_KEY, pendingEdit);
+      } catch (error) {
+        console.warn('Could not remember pending edit mode redirect in local storage:', error);
+      }
+    }
+
+    function readPendingEditRedirect(storage) {
+      if (!storage) return '';
+      try {
+        const storedValue = storage.getItem(EDIT_MODE_REDIRECT_KEY);
+        if (!storedValue) return '';
+        if (storedValue === 'owner' || storedValue === 'teacher') return storedValue;
+        const pendingEdit = JSON.parse(storedValue);
+        if (!pendingEdit || !pendingEdit.role) return '';
+        if (pendingEdit.startedAt && Date.now() - pendingEdit.startedAt > EDIT_MODE_REDIRECT_MAX_AGE_MS) {
+          storage.removeItem(EDIT_MODE_REDIRECT_KEY);
+          return '';
+        }
+        return pendingEdit.role === 'owner' ? 'owner' : 'teacher';
+      } catch (error) {
+        console.warn('Could not read pending edit mode redirect:', error);
         return '';
       }
     }
 
+    function getPendingEditRedirect() {
+      return readPendingEditRedirect(getEditModeStorage('sessionStorage')) || readPendingEditRedirect(getEditModeStorage('localStorage'));
+    }
+
     function clearPendingEditRedirect() {
       try {
-        sessionStorage.removeItem(EDIT_MODE_REDIRECT_KEY);
+        const sessionStore = getEditModeStorage('sessionStorage');
+        if (sessionStore) sessionStore.removeItem(EDIT_MODE_REDIRECT_KEY);
       } catch (error) {
-        console.warn('Could not clear pending edit mode redirect:', error);
+        console.warn('Could not clear pending edit mode redirect from session storage:', error);
+      }
+      try {
+        const localStore = getEditModeStorage('localStorage');
+        if (localStore) localStore.removeItem(EDIT_MODE_REDIRECT_KEY);
+      } catch (error) {
+        console.warn('Could not clear pending edit mode redirect from local storage:', error);
       }
     }
 
@@ -3851,10 +3894,12 @@
       const pendingRole = getPendingEditRedirect();
       if (!pendingRole || !auth) return;
       try {
+        let redirectUser = null;
         if (typeof auth.getRedirectResult === 'function') {
-          await auth.getRedirectResult();
+          const redirectResult = await auth.getRedirectResult();
+          redirectUser = redirectResult && redirectResult.user ? redirectResult.user : null;
         }
-        const user = auth.currentUser || await waitForGoogleAuthUser();
+        const user = redirectUser || auth.currentUser || await waitForGoogleAuthUser();
         if (!user) {
           clearPendingEditRedirect();
           hidePinOverlay();
@@ -3864,7 +3909,7 @@
         isOwner = pendingRole === 'owner';
         clearPendingEditRedirect();
         hidePinOverlay();
-        await enterEditMode({ skipSignIn: true });
+        await enterEditMode({ skipSignIn: true, authenticatedUser: user });
       } catch (error) {
         console.error('Mobile Google Sign-In return failed:', error);
         clearPendingEditRedirect();
@@ -4008,6 +4053,7 @@
     
     async function enterEditMode(options = {}){
       const skipSignIn = options.skipSignIn === true;
+      const authenticatedUser = options.authenticatedUser || null;
       // Authenticate with Firebase before enabling edit mode
       try {
         if (!auth) {
@@ -4017,7 +4063,8 @@
         }
         
         // Check if user is signed in with Google
-        const isGoogleUser = auth.currentUser && auth.currentUser.providerData.some(
+        const currentAuthUser = auth.currentUser || authenticatedUser;
+        const isGoogleUser = currentAuthUser && currentAuthUser.providerData.some(
           provider => provider.providerId === 'google.com'
         );
         
@@ -4046,7 +4093,8 @@
           }
         }
 
-        const signedInGoogleUser = auth.currentUser && auth.currentUser.providerData.some(
+        const signedInAuthUser = auth.currentUser || authenticatedUser;
+        const signedInGoogleUser = signedInAuthUser && signedInAuthUser.providerData.some(
           provider => provider.providerId === 'google.com'
         );
         if (!signedInGoogleUser) {
@@ -4055,9 +4103,9 @@
         }
         
         // Validate the user's email
-        const currentEditorEmail = (auth.currentUser && auth.currentUser.email || '').toLowerCase();
+        const currentEditorEmail = (signedInAuthUser && signedInAuthUser.email || '').toLowerCase();
         if (!approvedEditorEmails.includes(currentEditorEmail)) {
-          console.error('Unauthorized user:', auth.currentUser?.email);
+          console.error('Unauthorized user:', signedInAuthUser?.email);
           alert('Access denied. Please use an approved teacher Google account to edit this page.');
           // Sign out the unauthorized user
           await auth.signOut();
