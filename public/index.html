@@ -401,8 +401,57 @@
       border: 1px solid color-mix(in oklab, var(--md-slate) 24%, var(--md-white) 76%);
       padding: 1rem;
     }
+    .transportation-card-icon {
+      width: 3.25rem;
+      height: 3.25rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 1rem;
+      font-size: 2rem;
+      background: color-mix(in oklab, var(--md-cream) 64%, var(--md-white) 36%);
+      margin-bottom: .75rem;
+    }
     .transportation-teacher-panel { display: none; }
     body.editing .transportation-teacher-panel { display: block; }
+    .transportation-roster-row {
+      display: grid;
+      grid-template-columns: minmax(160px, 1.2fr) minmax(130px, .8fr) minmax(160px, 1fr) auto;
+      gap: .65rem;
+      align-items: center;
+      padding: .75rem;
+      border-radius: .9rem;
+      background: color-mix(in oklab, var(--md-white) 82%, var(--md-cream) 18%);
+      border: 1px solid color-mix(in oklab, var(--md-slate) 20%, var(--md-white) 80%);
+    }
+    .transportation-roster-row input,
+    .transportation-roster-row select,
+    .roster-input {
+      width: 100%;
+      border-radius: .75rem;
+      border: 1px solid color-mix(in oklab, var(--md-slate) 28%, var(--md-white) 72%);
+      padding: .7rem .8rem;
+      background: var(--md-white);
+      color: var(--md-ink);
+    }
+    .roster-image-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: .6rem;
+      margin-top: 1rem;
+    }
+    .roster-image-list div {
+      padding: .6rem .75rem;
+      border-radius: .8rem;
+      background: color-mix(in oklab, var(--md-white) 74%, var(--md-cream) 26%);
+      border: 1px solid color-mix(in oklab, var(--md-slate) 18%, var(--md-white) 82%);
+      font-weight: 700;
+    }
+    @media (max-width: 720px) {
+      .transportation-roster-row {
+        grid-template-columns: 1fr;
+      }
+    }
     .transportation-match-button,
     .transportation-choice-button {
       width: 100%;
@@ -1105,6 +1154,10 @@
       <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white"
               data-page="extras" data-tooltip="Classroom Updates&#10;Announcements&#10;Extra Reminders" style="background:#6b7280;">
         <span>📰</span><span>Extra News</span>
+      </button>
+      <button id="rosterPageBtn" class="pageTab edit-only inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white"
+              data-page="roster" data-tooltip="Teacher Roster&#10;Birthday Dropdowns&#10;Transportation Names" style="background: var(--md-slate);">
+        <span>&#128203;</span><span>Roster</span>
       </button>
     </nav>
     <!-- HOME TAB -->
@@ -1835,6 +1888,27 @@
         </div>
       </div>
     </section>
+    <!-- TEACHER ROSTER TAB -->
+    <section data-page-panel="roster" class="pagePanel fade-in">
+      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8 bg-white" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+          <div>
+            <h2 class="text-2xl font-display font-bold" style="color: var(--md-slate);">&#128203; Teacher Roster</h2>
+            <p class="text-sm text-gray-600 mt-1">Teacher-only list used for birthday dropdowns and transportation setup. Birthday dropdowns show first names only.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button id="saveMasterRosterBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveRosterField()">Save Roster</button>
+            <button class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="saveRosterImage()">Save Roster Image</button>
+          </div>
+        </div>
+        <textarea id="masterRosterTextarea" class="roster-input h-56 resize-none teacher-only-edit" placeholder="One scholar per line. Full names are okay here because this page is teacher-only."></textarea>
+        <div class="rounded-xl p-4 mt-4" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-cream) 30%);">
+          <div class="font-semibold mb-2">Birthday dropdown preview</div>
+          <p class="text-sm text-gray-600">If two scholars have the same first name, the dropdown adds a last initial so you can tell them apart.</p>
+          <div id="rosterPreviewList" class="roster-image-list"></div>
+        </div>
+      </div>
+    </section>
     <!-- SHOUTOUT YOUR SCHOLAR TAB -->
     <section data-page-panel="shoutouts" class="pagePanel fade-in">
       <div class="text-center mb-8">
@@ -2132,23 +2206,26 @@
           <div>
             <p class="text-sm font-bold uppercase tracking-wide" style="color: var(--md-slate);">Dismissal Desk</p>
             <h2 class="text-3xl font-display font-bold" style="color: var(--md-coral);">Transportation Updates</h2>
-            <p class="mt-2 text-sm text-[color:var(--md-ink)]/80 max-w-2xl">Need to change how your scholar gets home? Submit changes here. Please send updates at least 3 hours before dismissal whenever possible.</p>
+            <p class="mt-2 text-sm text-[color:var(--md-ink)]/80 max-w-2xl">Need to change how your scholar gets home? Submit changes here and your teacher will confirm the update before dismissal.</p>
           </div>
           <button class="px-5 py-3 rounded-xl text-white font-semibold shadow-soft" style="background: var(--md-coral);" onclick="openTransportationModal()">Update Transportation</button>
         </div>
 
         <div class="grid md:grid-cols-3 gap-4 mb-6">
           <div class="transportation-privacy-card">
+            <div class="transportation-card-icon">&#128652;</div>
             <div class="text-sm font-bold uppercase tracking-wide" style="color:#f59e0b;">Bus</div>
             <h3 class="text-xl font-display font-bold mt-1">Bus Riders</h3>
             <p class="text-sm text-gray-600 mt-2">Current bus numbers stay private. Families can request a bus change from the update form.</p>
           </div>
           <div class="transportation-privacy-card">
+            <div class="transportation-card-icon">&#128663;</div>
             <div class="text-sm font-bold uppercase tracking-wide" style="color:#10b981;">Car</div>
             <h3 class="text-xl font-display font-bold mt-1">Car Pickup</h3>
             <p class="text-sm text-gray-600 mt-2">Families can add who will pick up the scholar and whether the change is temporary or permanent.</p>
           </div>
           <div class="transportation-privacy-card">
+            <div class="transportation-card-icon">&#127968;</div>
             <div class="text-sm font-bold uppercase tracking-wide" style="color:#8b5cf6;">Porch</div>
             <h3 class="text-xl font-display font-bold mt-1">Porch Pickup</h3>
             <p class="text-sm text-gray-600 mt-2">Porch changes can include a quick note and the adult submitting the update.</p>
@@ -2163,11 +2240,20 @@
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <div>
               <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">Teacher Transportation Manager</h3>
-              <p class="text-sm text-gray-600">One scholar per line: Scholar Name | Last Name | Bus/Car/Porch | Current details | Optional family code</p>
+              <p class="text-sm text-gray-600">Paste your roster once, then choose each scholar's current transportation. Family codes are not used.</p>
             </div>
             <button id="saveTransportationRosterBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="saveTransportationRoster()">Save Transportation</button>
           </div>
-          <textarea id="transportationRosterTextarea" class="w-full h-44 p-4 text-sm border rounded-lg resize-none teacher-only-edit" placeholder="Emma Smith | Smith | Bus | 309 | 1234&#10;Jordan Lee | Lee | Car | Mom pickup | 2468&#10;Avery Brown | Brown | Porch | Front porch | 1357"></textarea>
+          <div class="rounded-xl p-4 mb-4" style="background: color-mix(in oklab, var(--md-white) 76%, var(--md-cream) 24%); border: 1px solid color-mix(in oklab, var(--md-slate) 18%, var(--md-white) 82%);">
+            <label class="block text-sm font-semibold mb-2">Paste roster to build transportation rows</label>
+            <textarea id="transportationImportTextarea" class="roster-input h-28 resize-none teacher-only-edit" placeholder="One scholar per line. You can also use the teacher Roster tab."></textarea>
+            <div class="flex flex-wrap gap-2 mt-3">
+              <button class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="buildTransportationRowsFromRoster()">Build Rows</button>
+              <button class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="addTransportationRosterRow()">Add Scholar Row</button>
+            </div>
+          </div>
+          <div id="transportationRosterRows" class="space-y-3"></div>
+          <textarea id="transportationRosterTextarea" class="teacher-only-edit" style="display:none;"></textarea>
 
           <div class="mt-6">
             <div class="flex items-center justify-between gap-3 mb-3">
@@ -2359,7 +2445,7 @@
     <!-- BIRTHDAYS TAB -->
     <section data-page-panel="birthdays" class="pagePanel fade-in">
       <h2 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">🎂 Birthdays</h2>
-      <div id="classRosterSection" class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8 bg-white" style="border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
+      <div id="classRosterSection" class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8 bg-white" style="display:none; border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
         <div class="flex justify-between items-center mb-5">
           <h3 class="text-xl font-semibold">👥 Class Roster</h3>
           <button id="saveClassRosterBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveBirthdayField('classRoster')">💾 Save</button>
@@ -2671,6 +2757,10 @@
         renderMathModules();
       } else if (pageId === 'listening-units') {
         renderListeningUnits();
+      } else if (pageId === 'roster') {
+        renderRosterPreview();
+      } else if (pageId === 'transportation') {
+        renderTransportationRosterManager();
       }
     }
         function getTodayKey() {
@@ -2754,14 +2844,29 @@
         return;
       }
       list.innerHTML = items.map(function(item) {
+        const clearButton = document.body.classList.contains('editing') && item.id
+          ? '<button class="px-3 py-1.5 rounded-lg text-white text-xs font-semibold" style="background: var(--md-coral);" onclick="clearTeacherActivity(\'' + escapeActivityText(item.id) + '\')">Clear</button>'
+          : '';
         return '<div class="activity-feed-item rounded-xl p-4">' +
           '<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">' +
             '<strong>' + escapeActivityText(item.title || 'Activity') + '</strong>' +
-            '<span class="text-xs text-gray-500">' + escapeActivityText(formatActivityTime(item)) + '</span>' +
+            '<div class="flex items-center gap-2"><span class="text-xs text-gray-500">' + escapeActivityText(formatActivityTime(item)) + '</span>' + clearButton + '</div>' +
           '</div>' +
           '<div class="text-gray-700 mt-1">' + escapeActivityText(item.details || '') + '</div>' +
         '</div>';
       }).join('');
+    }
+
+    async function clearTeacherActivity(activityId) {
+      if (!db || !activityId || !document.body.classList.contains('editing')) return;
+      try {
+        await ensureAuthenticated();
+        await db.collection('teacherActivity').doc(activityId).delete();
+        await loadTeacherActivityPanel();
+      } catch (error) {
+        console.error('Failed to clear teacher activity:', error);
+        alert('That action could not be cleared yet. Please try again.');
+      }
     }
 
     async function loadTeacherActivityPanel() {
@@ -2918,10 +3023,12 @@
       const classRosterSection = document.getElementById('classRosterSection');
       const classRosterTextarea = document.getElementById('classRosterTextarea');
       const saveClassRosterBtn = document.getElementById('saveClassRosterBtn');
+      const masterRosterTextarea = document.getElementById('masterRosterTextarea');
       
       if (classRosterSection) classRosterSection.style.display = 'none';
       if (classRosterTextarea) { classRosterTextarea.disabled = true; classRosterTextarea.readOnly = true; }
       if (saveClassRosterBtn) saveClassRosterBtn.style.display = 'none';
+      if (masterRosterTextarea) { masterRosterTextarea.disabled = true; masterRosterTextarea.readOnly = true; }
       
       // Disable Birthday sections
       const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
@@ -3077,16 +3184,20 @@
       const classRosterSection = document.getElementById('classRosterSection');
       const classRosterTextarea = document.getElementById('classRosterTextarea');
       const saveClassRosterBtn = document.getElementById('saveClassRosterBtn');
+      const masterRosterTextarea = document.getElementById('masterRosterTextarea');
       
       if (isOwner) {
-        // Show and enable roster section for owner
-        if (classRosterSection) classRosterSection.style.display = 'block';
+        // The visible roster lives on the teacher-only Roster tab.
+        if (classRosterSection) classRosterSection.style.display = 'none';
         if (classRosterTextarea) { classRosterTextarea.disabled = false; classRosterTextarea.readOnly = false; }
+        if (masterRosterTextarea) { masterRosterTextarea.disabled = false; masterRosterTextarea.readOnly = false; }
         if (saveClassRosterBtn) saveClassRosterBtn.style.display = 'inline-block';
       } else {
         // Hide roster section for non-owners
         if (classRosterSection) classRosterSection.style.display = 'none';
+        if (masterRosterTextarea) { masterRosterTextarea.disabled = true; masterRosterTextarea.readOnly = true; }
       }
+      renderRosterPreview();
       
       // Enable Birthday sections
       const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
@@ -3267,10 +3378,12 @@
       const classRosterSection = document.getElementById('classRosterSection');
       const classRosterTextarea = document.getElementById('classRosterTextarea');
       const saveClassRosterBtn = document.getElementById('saveClassRosterBtn');
+      const masterRosterTextarea = document.getElementById('masterRosterTextarea');
       
       if (classRosterSection) classRosterSection.style.display = 'none';
       if (classRosterTextarea) { classRosterTextarea.disabled = true; classRosterTextarea.readOnly = true; }
       if (saveClassRosterBtn) saveClassRosterBtn.style.display = 'none';
+      if (masterRosterTextarea) { masterRosterTextarea.disabled = true; masterRosterTextarea.readOnly = true; }
       
       // Disable Birthday sections
       const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
@@ -3682,6 +3795,9 @@
       });
       data.gallery_urls_json = JSON.stringify(specialsImages);
       
+      if (typeof syncTransportationRosterText === 'function') syncTransportationRosterText();
+      if (typeof syncRosterTextareas === 'function') syncRosterTextareas('master');
+
       // Transportation fields
       const busRidersEl = document.getElementById('busRidersTextarea');
       if (busRidersEl) data.bus_riders = busRidersEl.value || '';
@@ -3700,7 +3816,7 @@
       
       // Birthday fields
       const classRosterEl = document.getElementById('classRosterTextarea');
-      if (classRosterEl) data.class_roster = classRosterEl.value || '';
+      if (classRosterEl) data.class_roster = (typeof getMasterRosterText === 'function' ? getMasterRosterText() : '') || classRosterEl.value || '';
       
       data.birthday_calendar_json = getBirthdayCalendarJson();
       syncBirthdayLegacyFields();
@@ -7164,6 +7280,7 @@ function updateTransportationFields(data) {
   if (rosterEl) {
     rosterEl.value = data.transportation_roster_text || buildTransportationRosterFromLegacy(data);
   }
+  renderTransportationRosterManager();
 
   const updatesEl = document.getElementById('transportationUpdatesTextarea');
   if (updatesEl) {
@@ -7205,14 +7322,14 @@ function parseTransportationRosterText(text) {
         name,
         lastName,
         type,
-        details: parts[3] || '',
-        code: parts[4] || ''
+        details: parts[3] || ''
       };
     })
     .filter(Boolean);
 }
 
 function getTransportationRoster() {
+  syncTransportationRosterText();
   return parseTransportationRosterText(document.getElementById('transportationRosterTextarea')?.value || '');
 }
 
@@ -7225,6 +7342,136 @@ function normalizeTransportationType(type) {
 
 function getTransportationTypeLabel(type) {
   return ({ bus: 'Bus', car: 'Car Pickup', porch: 'Porch Pickup' })[normalizeTransportationType(type)] || 'Bus';
+}
+
+function getTransportationStorageType(type) {
+  return ({ bus: 'Bus', car: 'Car', porch: 'Porch' })[normalizeTransportationType(type)] || 'Bus';
+}
+
+function getTransportationDetailPlaceholder(type) {
+  const cleanType = normalizeTransportationType(type);
+  if (cleanType === 'bus') return 'Bus number';
+  if (cleanType === 'car') return 'Pickup person';
+  return 'Porch note';
+}
+
+function getLastNameFromRosterName(name) {
+  return String(name || '').trim().split(/\s+/).slice(-1)[0] || '';
+}
+
+function getTransportationRowData() {
+  const rowEls = Array.from(document.querySelectorAll('#transportationRosterRows .transportation-roster-row'));
+  if (!rowEls.length) {
+    return parseTransportationRosterText(document.getElementById('transportationRosterTextarea')?.value || '');
+  }
+  return rowEls.map((row, index) => {
+    const name = row.querySelector('.transportation-row-name')?.value.trim() || '';
+    const type = normalizeTransportationType(row.querySelector('.transportation-row-type')?.value || 'bus');
+    const details = row.querySelector('.transportation-row-details')?.value.trim() || '';
+    return {
+      index,
+      name,
+      lastName: getLastNameFromRosterName(name),
+      type,
+      details
+    };
+  }).filter(row => row.name);
+}
+
+function formatTransportationRosterRow(row) {
+  return `${row.name} | ${row.lastName || getLastNameFromRosterName(row.name)} | ${getTransportationStorageType(row.type)} | ${row.details || ''} |`;
+}
+
+function syncTransportationRosterText() {
+  const rosterEl = document.getElementById('transportationRosterTextarea');
+  if (!rosterEl) return;
+  const rowEls = document.querySelectorAll('#transportationRosterRows .transportation-roster-row');
+  if (!rowEls.length) return;
+  rosterEl.value = getTransportationRowData().map(formatTransportationRosterRow).join('\n');
+}
+
+function renderTransportationRosterManager() {
+  const container = document.getElementById('transportationRosterRows');
+  const rosterEl = document.getElementById('transportationRosterTextarea');
+  if (!container || !rosterEl) return;
+  const roster = parseTransportationRosterText(rosterEl.value || '');
+  if (!roster.length) {
+    container.innerHTML = '<div class="rounded-xl p-4 bg-white text-gray-600">Paste a roster above, then click Build Rows.</div>';
+    return;
+  }
+  container.innerHTML = roster.map((row, index) => {
+    const cleanType = normalizeTransportationType(row.type);
+    return `
+      <div class="transportation-roster-row" data-row-index="${index}">
+        <input class="transportation-row-name teacher-only-edit" value="${escapeBirthdayText(row.name)}" placeholder="Scholar name" oninput="handleTransportationRowInput()">
+        <select class="transportation-row-type teacher-only-edit" onchange="handleTransportationTypeChange(this)">
+          <option value="bus" ${cleanType === 'bus' ? 'selected' : ''}>Bus</option>
+          <option value="car" ${cleanType === 'car' ? 'selected' : ''}>Car</option>
+          <option value="porch" ${cleanType === 'porch' ? 'selected' : ''}>Porch</option>
+        </select>
+        <input class="transportation-row-details teacher-only-edit" value="${escapeBirthdayText(row.details || '')}" placeholder="${getTransportationDetailPlaceholder(cleanType)}" oninput="handleTransportationRowInput()">
+        <button type="button" class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="removeTransportationRosterRow(this)">Remove</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function buildTransportationRowsFromRoster() {
+  const importEl = document.getElementById('transportationImportTextarea');
+  const rosterEl = document.getElementById('transportationRosterTextarea');
+  if (!rosterEl) return;
+  const names = parseRosterLines((importEl?.value || '').trim() || getMasterRosterText());
+  if (!names.length) {
+    alert('Paste your roster first, or add names on the Roster tab.');
+    return;
+  }
+  const existing = parseTransportationRosterText(rosterEl.value || '');
+  const existingByName = new Map(existing.map(row => [row.name.toLowerCase(), row]));
+  const rows = names.map(name => {
+    const saved = existingByName.get(name.toLowerCase());
+    return saved || {
+      name,
+      lastName: getLastNameFromRosterName(name),
+      type: 'bus',
+      details: ''
+    };
+  });
+  rosterEl.value = rows.map(formatTransportationRosterRow).join('\n');
+  renderTransportationRosterManager();
+  syncTransportationRosterText();
+}
+
+function addTransportationRosterRow(name = '', type = 'bus', details = '') {
+  const rosterEl = document.getElementById('transportationRosterTextarea');
+  if (!rosterEl) return;
+  syncTransportationRosterText();
+  const rows = parseTransportationRosterText(rosterEl.value || '');
+  const cleanName = (typeof name === 'string' ? name.trim() : '') || 'New Scholar';
+  rows.push({
+    name: cleanName,
+    lastName: getLastNameFromRosterName(cleanName),
+    type: normalizeTransportationType(type),
+    details: typeof details === 'string' ? details.trim() : ''
+  });
+  rosterEl.value = rows.map(formatTransportationRosterRow).join('\n');
+  renderTransportationRosterManager();
+}
+
+function removeTransportationRosterRow(button) {
+  button?.closest('.transportation-roster-row')?.remove();
+  syncTransportationRosterText();
+  renderTransportationRosterManager();
+}
+
+function handleTransportationTypeChange(select) {
+  const row = select?.closest('.transportation-roster-row');
+  const detail = row?.querySelector('.transportation-row-details');
+  if (detail) detail.placeholder = getTransportationDetailPlaceholder(select.value);
+  syncTransportationRosterText();
+}
+
+function handleTransportationRowInput() {
+  syncTransportationRosterText();
 }
 
 function getTransportationStatus(scholar) {
@@ -7263,6 +7510,7 @@ function renderTransportationUpdates() {
     <div class="rounded-xl p-4 bg-white" style="border:1px solid color-mix(in oklab,var(--md-slate) 24%,var(--md-white) 76%);">
       <div class="font-semibold">${escapeBirthdayText(update.studentName)} -> ${escapeBirthdayText(getTransportationTypeLabel(update.requestedType))}</div>
       <div class="text-gray-600">${escapeBirthdayText(update.duration)} change requested by ${escapeBirthdayText(update.guardianName)}</div>
+      <div class="text-gray-700 font-semibold mt-1">${escapeBirthdayText(getTransportationChangeSentence(update))}</div>
       <div class="text-gray-600">Current: ${escapeBirthdayText(update.currentStatus || 'Not listed')}</div>
       ${update.details ? `<div class="text-gray-600">Details: ${escapeBirthdayText(update.details)}</div>` : ''}
       ${update.note ? `<div class="text-gray-600">Note: ${escapeBirthdayText(update.note)}</div>` : ''}
@@ -7370,6 +7618,7 @@ async function saveTransportationRoster() {
   try {
     await ensureAuthenticated();
     if (typeof db === 'undefined') throw new Error('Firebase not available');
+    syncTransportationRosterText();
     if (saveBtn) {
       saveBtn.textContent = 'Saving...';
       saveBtn.disabled = true;
@@ -7562,6 +7811,11 @@ function updateBirthdayFields(data) {
   if (classRosterEl && data.class_roster) {
     classRosterEl.value = data.class_roster;
   }
+  const masterRosterEl = document.getElementById('masterRosterTextarea');
+  if (masterRosterEl && data.class_roster) {
+    masterRosterEl.value = data.class_roster;
+  }
+  syncRosterTextareas('legacy');
   
   // Update monthly birthday fields for backward compatibility
   birthdayMonthKeys.forEach(month => {
@@ -8079,12 +8333,135 @@ function syncBirthdayLegacyFields() {
   });
 }
 
-function getBirthdayRosterNames() {
-  const roster = document.getElementById('classRosterTextarea')?.value || '';
-  const names = roster.split(/\r?\n/)
+function parseRosterLines(text) {
+  return String(text || '').split(/\r?\n/)
     .map(line => line.replace(/^[\s\-\*\u2022]+/, '').replace(/^\d+\.\s*/, '').trim())
     .filter(Boolean);
-  return Array.from(new Set(names));
+}
+
+function getMasterRosterText() {
+  return document.getElementById('masterRosterTextarea')?.value ||
+    document.getElementById('classRosterTextarea')?.value ||
+    '';
+}
+
+function syncRosterTextareas(source = 'master') {
+  const master = document.getElementById('masterRosterTextarea');
+  const legacy = document.getElementById('classRosterTextarea');
+  const text = source === 'legacy' ? (legacy?.value || '') : ((master?.value || '').trim() ? master.value : (legacy?.value || ''));
+  if (master && master.value !== text) master.value = text;
+  if (legacy && legacy.value !== text) legacy.value = text;
+  renderRosterPreview();
+  renderBirthdayCalendar();
+}
+
+function getRosterDisplayOptions() {
+  const names = Array.from(new Set(parseRosterLines(getMasterRosterText())));
+  const firstCounts = {};
+  names.forEach(name => {
+    const first = name.split(/\s+/)[0] || name;
+    const key = first.toLowerCase();
+    firstCounts[key] = (firstCounts[key] || 0) + 1;
+  });
+  return names.map(name => {
+    const parts = name.split(/\s+/);
+    const first = parts[0] || name;
+    const key = first.toLowerCase();
+    const lastPart = parts.length > 1 ? parts[parts.length - 1] : '';
+    const lastInitial = lastPart ? `${lastPart.charAt(0).toUpperCase()}.` : '';
+    return {
+      fullName: name,
+      label: firstCounts[key] > 1 && lastInitial ? `${first} ${lastInitial}` : first
+    };
+  });
+}
+
+function renderRosterPreview() {
+  const list = document.getElementById('rosterPreviewList');
+  if (!list) return;
+  const options = getRosterDisplayOptions();
+  if (!options.length) {
+    list.innerHTML = '<div>Add your roster to preview birthday names.</div>';
+    return;
+  }
+  list.innerHTML = options.map(option => `<div>${escapeBirthdayText(option.label)}</div>`).join('');
+}
+
+async function saveRosterField() {
+  const saveBtn = document.getElementById('saveMasterRosterBtn') || document.getElementById('saveClassRosterBtn');
+  const originalText = saveBtn ? saveBtn.textContent : '';
+  try {
+    syncRosterTextareas('master');
+    await ensureAuthenticated();
+    if (saveBtn) {
+      saveBtn.textContent = 'Saving...';
+      saveBtn.disabled = true;
+    }
+    await db.collection('classData').doc('current').set({
+      class_roster: getMasterRosterText()
+    }, { merge: true });
+    if (saveBtn) {
+      saveBtn.textContent = 'Saved!';
+      setTimeout(() => {
+        saveBtn.textContent = originalText;
+        saveBtn.disabled = false;
+      }, 1000);
+    }
+  } catch (error) {
+    console.error('Failed to save roster:', error);
+    alert('Roster could not be saved. Please try again.');
+    if (saveBtn) {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+    }
+  }
+}
+
+function saveRosterImage() {
+  const names = parseRosterLines(getMasterRosterText());
+  if (!names.length) {
+    alert('Add your roster before saving an image.');
+    return;
+  }
+  const colors = {
+    coral: getShareColor('--md-coral', '#E9867D'),
+    slate: getShareColor('--md-slate', '#7B8E9E'),
+    cream: getShareColor('--md-cream', '#F7EFE2'),
+    blush: getShareColor('--md-blush', '#F2C9BE'),
+    ink: getShareColor('--md-ink', '#2B2B2B'),
+    white: '#ffffff'
+  };
+  const rows = names.map((name, index) => `${index + 1}. ${name}`);
+  const columnCount = rows.length > 22 ? 2 : 1;
+  const rowHeight = 42;
+  const columnRows = Math.ceil(rows.length / columnCount);
+  const canvasHeight = Math.max(1080, 320 + columnRows * rowHeight + 150);
+  const { canvas, ctx } = createShareCanvas(1080, canvasHeight);
+  ctx.fillStyle = colors.cream;
+  ctx.fillRect(0, 0, 1080, canvasHeight);
+  drawShareHeader(ctx, 'First Grade Roster', 'Teacher copy', colors);
+  ctx.fillStyle = colors.white;
+  drawShareRoundRect(ctx, 90, 260, 900, canvasHeight - 350, 36);
+  ctx.fill();
+  ctx.strokeStyle = colors.blush;
+  ctx.lineWidth = 6;
+  ctx.stroke();
+  ctx.fillStyle = colors.ink;
+  ctx.font = '700 30px Arial, sans-serif';
+  const columnWidth = columnCount === 2 ? 390 : 800;
+  rows.forEach((row, index) => {
+    const column = columnCount === 2 && index >= columnRows ? 1 : 0;
+    const rowIndex = column ? index - columnRows : index;
+    ctx.fillText(row, 140 + column * 430, 325 + rowIndex * rowHeight, columnWidth);
+  });
+  ctx.fillStyle = colors.slate;
+  ctx.font = '700 24px Arial, sans-serif';
+  ctx.fillText('Saved from the teacher roster tab', 140, canvasHeight - 145);
+  downloadShareCanvas(canvas, getShareFileName('first grade roster'));
+}
+
+function getBirthdayRosterNames() {
+  return Array.from(new Set(getRosterDisplayOptions().map(option => option.label)));
 }
 
 function renderBirthdayDayOptions(monthInfo) {
@@ -8233,10 +8610,15 @@ function removeBirthdayEntry(monthKey, entryIndex) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+  const masterRosterTextarea = document.getElementById('masterRosterTextarea');
+  if (masterRosterTextarea) {
+    masterRosterTextarea.addEventListener('input', () => syncRosterTextareas('master'));
+  }
   const rosterTextarea = document.getElementById('classRosterTextarea');
   if (rosterTextarea) {
-    rosterTextarea.addEventListener('input', renderBirthdayCalendar);
+    rosterTextarea.addEventListener('input', () => syncRosterTextareas('legacy'));
   }
+  syncRosterTextareas('legacy');
   renderBirthdayCalendar();
 });
 
@@ -8361,7 +8743,7 @@ function closeTransportationModal() {
 function resetTransportationModal() {
   selectedTransportationScholar = null;
   selectedTransportationMethod = '';
-  ['transportationSearchInput', 'transportationFamilyCodeInput', 'transportationDetailInput', 'transportationGuardianInput', 'transportationNoteInput'].forEach(id => {
+  ['transportationSearchInput', 'transportationDetailInput', 'transportationGuardianInput', 'transportationNoteInput'].forEach(id => {
     const field = document.getElementById(id);
     if (field) field.value = '';
   });
@@ -8411,11 +8793,9 @@ function selectTransportationScholar(index) {
   const box = document.getElementById('transportationSelectedScholar');
   const name = document.getElementById('transportationSelectedName');
   const status = document.getElementById('transportationCurrentStatus');
-  const codeWrap = document.getElementById('transportationFamilyCodeWrap');
   const changeBox = document.getElementById('transportationChangeFields');
   if (name) name.textContent = scholar.name;
   if (status) status.textContent = getTransportationStatus(scholar);
-  if (codeWrap) codeWrap.style.display = scholar.code ? 'block' : 'none';
   if (box) box.style.display = 'block';
   if (changeBox) changeBox.style.display = 'none';
   selectedTransportationMethod = '';
@@ -8451,6 +8831,17 @@ function chooseTransportationMethod(method) {
   }
 }
 
+function getTransportationChangeSentence(update) {
+  const timing = update.duration === 'permanent' ? 'going forward' : 'today';
+  if (update.requestedType === 'bus') {
+    return `They will ride bus ${update.details || ''} ${timing}.`.replace(/\s+/g, ' ').trim();
+  }
+  if (update.requestedType === 'car') {
+    return `They will be car pickup ${timing}${update.details ? ` with ${update.details}` : ''}.`;
+  }
+  return `They will be porch pickup ${timing}${update.details ? ` (${update.details})` : ''}.`;
+}
+
 async function submitTransportationUpdate() {
   if (!selectedTransportationScholar) {
     alert('Please select your scholar first.');
@@ -8458,11 +8849,6 @@ async function submitTransportationUpdate() {
   }
   if (!selectedTransportationMethod) {
     alert('Please choose Bus, Car, or Porch.');
-    return;
-  }
-  const codeInput = document.getElementById('transportationFamilyCodeInput');
-  if (selectedTransportationScholar.code && codeInput?.value.trim() !== selectedTransportationScholar.code) {
-    alert('The family code does not match. Please try again or contact the teacher.');
     return;
   }
   const detail = document.getElementById('transportationDetailInput')?.value.trim() || '';
@@ -8498,7 +8884,7 @@ async function submitTransportationUpdate() {
     const updates = [...getTransportationUpdates(), update].slice(-60);
     setTransportationUpdates(updates);
     await db.collection('classData').doc('current').set({ transportation_updates_json: JSON.stringify(updates) }, { merge: true });
-    await logParentActivity('transportation', 'Transportation update submitted', `${guardianName} submitted a ${update.duration} transportation change for ${update.studentName}.`, update);
+    await logParentActivity('transportation', 'Transportation update submitted', `${guardianName} submitted a ${update.duration} transportation change for ${update.studentName}. ${getTransportationChangeSentence(update)}`, update);
     const success = document.getElementById('transportationSuccessMessage');
     if (success) success.style.display = 'block';
     setTimeout(closeTransportationModal, 1200);
@@ -9902,8 +10288,8 @@ function updateWebsiteCards(websitesJson) {
 
 // Function to save individual birthday fields
 async function saveBirthdayField(fieldType) {
-  const saveBtn = document.getElementById('saveClassRosterBtn');
-  const textarea = document.getElementById('classRosterTextarea');
+  const saveBtn = document.getElementById('saveMasterRosterBtn') || document.getElementById('saveClassRosterBtn');
+  const textarea = document.getElementById('masterRosterTextarea') || document.getElementById('classRosterTextarea');
   
   if (!saveBtn || !textarea) return;
   
@@ -9919,7 +10305,8 @@ async function saveBirthdayField(fieldType) {
     
     // Prepare data for saving
     const data = {};
-    data.class_roster = textarea.value || '';
+    syncRosterTextareas('master');
+    data.class_roster = getMasterRosterText();
     
     // Save to Firestore
     await db.collection('classData').doc('current').set(data, { merge: true });
@@ -14134,10 +14521,6 @@ document.head.appendChild(style);
           <div class="text-sm text-gray-500">Selected scholar</div>
           <div id="transportationSelectedName" class="font-display font-bold text-xl"></div>
           <div class="mt-2 text-sm">Current transportation: <span id="transportationCurrentStatus" class="font-semibold"></span></div>
-          <div id="transportationFamilyCodeWrap" class="mt-3" style="display:none;">
-            <label class="block text-sm font-semibold mb-1">Family code</label>
-            <input id="transportationFamilyCodeInput" class="transportation-modal-field" type="text" placeholder="Enter family code">
-          </div>
           <button class="mt-4 px-4 py-2 rounded-xl text-white font-semibold" style="background: var(--md-coral);" onclick="showTransportationChangeFields()">Change</button>
         </div>
 
@@ -14177,7 +14560,7 @@ document.head.appendChild(style);
         </div>
 
         <div id="transportationSuccessMessage" class="rounded-xl p-4 text-sm font-semibold" style="display:none; background: color-mix(in oklab, var(--md-white) 68%, #22c55e 32%);">
-          Transportation update sent.
+          Transportation update sent. The teacher will confirm this change before dismissal.
         </div>
       </div>
       
