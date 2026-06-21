@@ -3591,6 +3591,9 @@
 
     async function ensureParentActionAuth() {
       if (!auth) throw new Error('Firebase authentication not available');
+      if (getPendingEditRedirect()) {
+        throw new Error('Teacher edit sign-in is still finishing');
+      }
       if (auth.currentUser) {
         try {
           await auth.currentUser.getIdToken(true);
@@ -3709,7 +3712,7 @@
         if (list) list.innerHTML = '<div class="rounded-xl p-4 bg-white text-gray-600">Activity could not load yet. Try Refresh in a moment.</div>';
       }
     }
-    document.addEventListener('DOMContentLoaded',function(){
+    document.addEventListener('DOMContentLoaded',async function(){
       showPage('home');
       showHomeSubView('news');
       wireMobileHomeNewsCards();
@@ -3741,7 +3744,6 @@
       
       // Initialize read-only state on page load
       initializeReadOnlyState();
-      recordDailyVisit();
       
       document.getElementById('editModeBtn').onclick = function() {
         document.getElementById('pinOverlay').classList.add('show');
@@ -3780,7 +3782,8 @@
       
       // Save Changes button
       document.getElementById('saveChangesBtn').onclick = saveChangesToFirestore;
-      finishPendingEditRedirect();
+      const resumedEditMode = await finishPendingEditRedirect();
+      if (!resumedEditMode) recordDailyVisit();
     });
     
     // Track original values for change detection
@@ -3890,9 +3893,19 @@
       });
     }
 
+    async function prepareGoogleEditSignIn() {
+      try {
+        if (auth && firebase.auth && firebase.auth.Auth && firebase.auth.Auth.Persistence) {
+          await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        }
+      } catch (error) {
+        console.warn('Could not set teacher Google Sign-In persistence:', error);
+      }
+    }
+
     async function finishPendingEditRedirect() {
       const pendingRole = getPendingEditRedirect();
-      if (!pendingRole || !auth) return;
+      if (!pendingRole || !auth) return false;
       try {
         let redirectUser = null;
         if (typeof auth.getRedirectResult === 'function') {
@@ -3904,17 +3917,19 @@
           clearPendingEditRedirect();
           hidePinOverlay();
           alert('Google Sign-In did not finish. Please tap Edit Mode and try again.');
-          return;
+          return false;
         }
         isOwner = pendingRole === 'owner';
         clearPendingEditRedirect();
         hidePinOverlay();
-        await enterEditMode({ skipSignIn: true, authenticatedUser: user });
+        const entered = await enterEditMode({ skipSignIn: true, authenticatedUser: user });
+        return entered === true;
       } catch (error) {
         console.error('Mobile Google Sign-In return failed:', error);
         clearPendingEditRedirect();
         hidePinOverlay();
         alert('Google Sign-In did not finish. Please tap Edit Mode and try again.');
+        return false;
       }
     }
     
@@ -4073,6 +4088,7 @@
           console.log('Initiating Google Sign-In...');
           const provider = new firebase.auth.GoogleAuthProvider();
           provider.setCustomParameters({ prompt: 'select_account' });
+          await prepareGoogleEditSignIn();
           if (isMobileGoogleSignInFlow()) {
             rememberPendingEditRedirect();
             await auth.signInWithRedirect(provider);
