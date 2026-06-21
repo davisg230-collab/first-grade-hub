@@ -449,7 +449,7 @@
     }
     .master-roster-row {
       display: grid;
-      grid-template-columns: minmax(180px, 1.2fr) minmax(130px, .75fr) minmax(170px, 1fr) auto;
+      grid-template-columns: minmax(170px, 1.15fr) minmax(120px, .7fr) minmax(130px, .75fr) minmax(160px, 1fr) auto;
       gap: .65rem;
       align-items: center;
       padding: .75rem;
@@ -474,12 +474,103 @@
       color: color-mix(in oklab, var(--md-ink) 66%, var(--md-white) 34%);
       background: color-mix(in oklab, var(--md-slate) 10%, var(--md-white) 90%);
     }
+    .roster-import-panel {
+      display: none;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      border-radius: 1rem;
+      background: color-mix(in oklab, var(--md-white) 76%, var(--md-cream) 24%);
+      border: 1px solid color-mix(in oklab, var(--md-slate) 18%, var(--md-white) 82%);
+    }
+    .roster-import-panel.open { display: block; }
+    .home-submenu {
+      display: none;
+      position: absolute;
+      z-index: 40;
+      top: 4.75rem;
+      left: 1.5rem;
+      padding: .55rem;
+      border-radius: .9rem;
+      background: var(--md-white);
+      border: 1px solid color-mix(in oklab, var(--md-coral) 34%, var(--md-white) 66%);
+      box-shadow: 0 14px 30px rgba(43, 43, 43, .14);
+    }
+    .home-submenu.open { display: flex; }
+    .important-calendar-wrap {
+      background:
+        linear-gradient(90deg, rgba(123,142,158,.16) 1px, transparent 1px),
+        linear-gradient(rgba(123,142,158,.16) 1px, transparent 1px),
+        color-mix(in oklab, var(--md-white) 82%, var(--md-cream) 18%);
+      background-size: 28px 28px;
+      border: 1px solid color-mix(in oklab, var(--md-slate) 28%, var(--md-white) 72%);
+    }
+    .important-calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: .55rem;
+    }
+    .important-calendar-weekday {
+      text-align: center;
+      font-weight: 800;
+      font-size: .75rem;
+      color: color-mix(in oklab, var(--md-ink) 58%, var(--md-white) 42%);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .important-calendar-day {
+      min-height: 112px;
+      border-radius: .9rem;
+      padding: .6rem;
+      background: rgba(255,255,255,.86);
+      border: 1px solid color-mix(in oklab, var(--md-slate) 18%, var(--md-white) 82%);
+    }
+    .important-calendar-day.empty {
+      opacity: .35;
+      background: transparent;
+      border-style: dashed;
+    }
+    .important-date-number {
+      font-weight: 800;
+      color: var(--md-slate);
+      margin-bottom: .35rem;
+    }
+    .important-event-chip {
+      display: block;
+      border-radius: .65rem;
+      padding: .38rem .45rem;
+      margin-top: .35rem;
+      font-size: .78rem;
+      font-weight: 700;
+      background: color-mix(in oklab, var(--md-mustard) 26%, var(--md-white) 74%);
+      border: 1px solid color-mix(in oklab, var(--md-mustard) 42%, var(--md-white) 58%);
+      color: var(--md-ink);
+    }
+    .important-event-note {
+      display: block;
+      font-weight: 500;
+      color: color-mix(in oklab, var(--md-ink) 66%, var(--md-white) 34%);
+      margin-top: .2rem;
+    }
+    .important-date-remove {
+      display: none;
+      margin-top: .25rem;
+      color: #dc2626;
+      font-size: .72rem;
+      font-weight: 800;
+    }
+    body.editing .important-date-remove { display: inline-block; }
     @media (max-width: 720px) {
       .transportation-roster-row,
       .master-roster-row {
         grid-template-columns: 1fr;
       }
       .master-roster-heading { display: none; }
+      .home-submenu {
+        position: static;
+        margin: -.25rem 0 1rem;
+      }
+      .important-calendar-grid { gap: .35rem; }
+      .important-calendar-day { min-height: 86px; padding: .45rem; }
     }
     .transportation-match-button,
     .transportation-choice-button {
@@ -1140,7 +1231,7 @@
   <main class="max-w-6xl mx-auto px-6 pb-16">
     <!-- Top Navigation Bar -->
     <nav id="topNav" class="mt-6 mb-4 flex flex-wrap items-center gap-3 mobile-tab-scroll scrollbar-hide">
-      <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
+      <button id="homePageBtn" class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
               data-page="home" data-tooltip="Weekly News&#10;Important Dates&#10;Looking Ahead" style="background: var(--md-coral);">
         <span>🏠</span><span>Home</span>
       </button>
@@ -1189,6 +1280,9 @@
         <span>&#128203;</span><span>Roster</span>
       </button>
     </nav>
+    <div id="homeSubmenu" class="home-submenu no-print">
+      <button class="px-4 py-2 rounded-xl text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="showHomeSubView('calendar')">Important Dates</button>
+    </div>
     <!-- HOME TAB -->
     <section data-page-panel="home" class="pagePanel fade-in active">
       <div class="share-print-tools no-print justify-end gap-2 flex-wrap mb-4">
@@ -1255,44 +1349,61 @@
         </div>
       </div>
       </div>
-      <!-- Important Dates + Looking Ahead -->
-      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
-        <div class="grid xl:grid-cols-3 gap-5">
-          <div class="xl:col-span-2">
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-2xl font-display font-bold">Important Dates</h2>
-              <button class="edit-only px-4 py-2 rounded-xl text-white font-semibold" style="background: var(--md-coral);" onclick="addEvent()">+ Add Event</button>
+      <div id="homeCalendarView" style="display: none;">
+        <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8 important-calendar-wrap">
+          <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
+            <div>
+              <p class="text-sm font-semibold uppercase tracking-wide" style="color: var(--md-coral);">Home</p>
+              <h2 class="text-3xl font-display font-bold">Important Dates</h2>
+              <p class="text-sm text-gray-600 mt-1">A school-year calendar for events, reminders, and monthly looking ahead notes.</p>
             </div>
-            <div id="eventsList" class="space-y-4">
-              <div class="event-item flex items-center gap-3 p-3 rounded-xl bg-yellow-50 border" style="border-color:var(--md-mustard)">
-                <span class="event-emoji text-xl" data-edit="teacher" contenteditable="false">🎃</span>
-                <span class="event-text font-semibold flex-1" data-edit="teacher" contenteditable="false">Halloween Party - October 31st at 2pm</span>
-                <button class="edit-only text-red-500 hover:text-red-700" onclick="this.parentNode.remove()">✖</button>
+            <button class="px-4 py-2 rounded-xl text-white font-semibold no-print" style="background: var(--md-coral);" onclick="showHomeSubView('news')">Back to Class News</button>
+          </div>
+          <div class="p-4 rounded-xl mb-6" style="background: color-mix(in oklab, var(--md-white) 76%, var(--md-slate) 24%); border: 1px solid color-mix(in oklab, var(--md-slate) 36%, var(--md-white) 64%);">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <div>
+                <h3 class="font-semibold mb-1">School Year Calendar</h3>
+                <a id="schoolCalendarLink" href="#" target="_blank" class="text-sm text-blue-700 hover:text-blue-900 underline">View School Calendar</a>
+                <p class="text-xs text-gray-600 mt-1">This link stays here no matter which month is showing.</p>
               </div>
-              <div class="event-item flex items-center gap-3 p-3 rounded-xl bg-blue-50 border" style="border-color:var(--md-slate)">
-                <span class="event-emoji text-xl" data-edit="teacher" contenteditable="false">🦃</span>
-                <span class="event-text font-semibold flex-1" data-edit="teacher" contenteditable="false">Thanksgiving Break - November 23-27</span>
-                <button class="edit-only text-red-500 hover:text-red-700" onclick="this.parentNode.remove()">✖</button>
-              </div>
-            </div>
-            <div class="p-4 rounded-xl mt-6" style="background: color-mix(in oklab, var(--md-white) 70%, #8b5cf6 30%); border: 1px solid color-mix(in oklab, #8b5cf6 60%, var(--md-white) 40%);">
-              <h3 class="font-semibold mb-2">📅 School Calendar</h3>
-              <a id="schoolCalendarLink" href="#" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 underline">View School Calendar</a>
-              <p class="text-xs text-gray-600 mt-1">Click to visit the school calendar</p>
-              <div class="calendar-url-input">
-                <input type="url" id="calendarUrlInput" class="mt-2 w-full px-3 py-2 text-sm border rounded-lg" placeholder="Enter calendar URL (PDF or webpage)" value="#" onchange="updateCalendarUrl(this)">
-                <button id="saveCalendarBtn" class="mt-2 px-3 py-1.5 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveCalendarUrl()">💾 Save Calendar URL</button>
+              <div class="calendar-url-input min-w-[240px] flex-1 md:max-w-md">
+                <input type="url" id="calendarUrlInput" class="w-full px-3 py-2 text-sm border rounded-lg teacher-only-edit" placeholder="Enter calendar URL (PDF or webpage)" value="#" onchange="updateCalendarUrl(this)" disabled>
+                <button id="saveCalendarBtn" class="mt-2 px-3 py-1.5 rounded-lg text-white text-sm font-semibold edit-only" style="background: var(--md-coral);" onclick="saveCalendarUrl()">Save Calendar URL</button>
               </div>
             </div>
           </div>
-          <div>
-            <div class="rounded-2xl p-5 h-full" style="background: color-mix(in oklab, var(--md-white) 68%, var(--md-blush) 32%); border: 1px solid color-mix(in oklab, var(--md-blush) 60%, var(--md-white) 40%);">
-              <h3 class="font-semibold mb-3">🔮 Looking Ahead</h3>
-              <ul class="space-y-2 text-sm" data-edit="teacher" contenteditable="false">
-                <li>• Field trip permission slips due</li>
-                <li>• Parent-teacher conferences</li>
-                <li>• Winter concert practice begins</li>
-              </ul>
+          <div class="rounded-2xl bg-white/85 p-4 sm:p-5 border border-white">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+              <button class="px-4 py-2 rounded-xl font-semibold border bg-white" onclick="changeImportantDatesMonth(-1)">&larr; Previous Month</button>
+              <h3 id="importantDatesMonthTitle" class="text-2xl font-display font-bold text-center">August 2026</h3>
+              <button class="px-4 py-2 rounded-xl font-semibold border bg-white" onclick="changeImportantDatesMonth(1)">Next Month &rarr;</button>
+            </div>
+            <div id="importantDatesCalendarGrid" class="important-calendar-grid" aria-live="polite"></div>
+          </div>
+          <div class="grid lg:grid-cols-[1.2fr,.8fr] gap-5 mt-6">
+            <div class="rounded-2xl p-5 bg-white/85 border border-white">
+              <div class="flex items-center justify-between gap-3 mb-3">
+                <h3 class="font-display font-bold text-xl">Add Event</h3>
+                <button class="edit-only px-4 py-2 rounded-xl text-white font-semibold" style="background: var(--md-coral);" onclick="addImportantDateEvent()">Add Event</button>
+              </div>
+              <div class="grid sm:grid-cols-[.5fr,1fr,1fr] gap-3">
+                <label class="text-sm font-semibold">Day
+                  <select id="importantDateDaySelect" class="mt-1 w-full rounded-xl border px-3 py-2 teacher-only-edit" disabled></select>
+                </label>
+                <label class="text-sm font-semibold">Event
+                  <input id="importantDateTitleInput" type="text" class="mt-1 w-full rounded-xl border px-3 py-2 teacher-only-edit" placeholder="No school, party, picture day..." disabled>
+                </label>
+                <label class="text-sm font-semibold">Quick Note
+                  <input id="importantDateNoteInput" type="text" class="mt-1 w-full rounded-xl border px-3 py-2 teacher-only-edit" placeholder="Optional details" disabled>
+                </label>
+              </div>
+              <button id="saveImportantDatesBtn" class="edit-only mt-4 px-4 py-2 rounded-xl text-white font-semibold" style="background: var(--md-slate);" onclick="saveImportantDates()">Save Important Dates</button>
+            </div>
+            <div class="rounded-2xl p-5 bg-white/85 border border-white">
+              <h3 class="font-display font-bold text-xl mb-2">Looking Ahead</h3>
+              <p class="text-sm text-gray-600 mb-3">Notes for the month currently showing.</p>
+              <textarea id="importantDatesLookingAheadTextarea" class="w-full min-h-[150px] rounded-xl border px-3 py-3 teacher-only-edit" placeholder="Add monthly notes families should see here." oninput="updateImportantDatesLookingAhead()" disabled readonly></textarea>
+              <button class="edit-only mt-3 px-4 py-2 rounded-xl text-white font-semibold" style="background: var(--md-slate);" onclick="saveImportantDates()">Save Looking Ahead</button>
             </div>
           </div>
         </div>
@@ -1927,12 +2038,40 @@
           </div>
           <div class="flex flex-wrap gap-2">
             <button class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="addMasterRosterRow()">Add Scholar</button>
+            <button class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="showRosterImportPanel()">Insert Roster</button>
             <button id="saveMasterRosterBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveRosterField()">Save Roster</button>
-            <button class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="saveRosterImage()">Save Roster Image</button>
+            <button class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="saveRosterImage('davis')">Save Davis Image</button>
+            <button class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="saveRosterImage('vest')">Save Vest Image</button>
+          </div>
+        </div>
+        <div id="rosterImportPanel" class="roster-import-panel">
+          <div class="grid sm:grid-cols-2 gap-3 mb-3">
+            <div>
+              <label class="block text-sm font-semibold mb-2">Class</label>
+              <select id="rosterImportClassSelect" class="roster-input">
+                <option value="davis">Mr. Davis</option>
+                <option value="vest">Ms. Vest</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-2">Default dismissal</label>
+              <select id="rosterImportTypeSelect" class="roster-input">
+                <option value="bus">Bus</option>
+                <option value="car">Car</option>
+                <option value="porch">Porch</option>
+              </select>
+            </div>
+          </div>
+          <label class="block text-sm font-semibold mb-2">Paste names</label>
+          <textarea id="rosterImportTextarea" class="roster-input h-36 resize-none teacher-only-edit" placeholder="First Last&#10;First Last&#10;First Last"></textarea>
+          <div class="flex flex-wrap gap-2 mt-3">
+            <button class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="insertRosterFromPaste()">Insert Names</button>
+            <button class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="hideRosterImportPanel()">Cancel</button>
           </div>
         </div>
         <div class="master-roster-row master-roster-heading">
           <div>Scholar name</div>
+          <div>Class</div>
           <div>Dismissal</div>
           <div>Details</div>
           <div></div>
@@ -2790,7 +2929,345 @@
         renderBirthdayCalendar();
       }
     }
-        function getTodayKey() {
+
+    const importantDateMonths = [
+      { key: 'august', name: 'August', monthIndex: 7, year: 2026 },
+      { key: 'september', name: 'September', monthIndex: 8, year: 2026 },
+      { key: 'october', name: 'October', monthIndex: 9, year: 2026 },
+      { key: 'november', name: 'November', monthIndex: 10, year: 2026 },
+      { key: 'december', name: 'December', monthIndex: 11, year: 2026 },
+      { key: 'january', name: 'January', monthIndex: 0, year: 2027 },
+      { key: 'february', name: 'February', monthIndex: 1, year: 2027 },
+      { key: 'march', name: 'March', monthIndex: 2, year: 2027 },
+      { key: 'april', name: 'April', monthIndex: 3, year: 2027 },
+      { key: 'may', name: 'May', monthIndex: 4, year: 2027 }
+    ];
+    let visibleImportantDateMonth = 0;
+    let importantDatesCalendarData = createEmptyImportantDatesCalendar();
+    let importantDatesLookingAheadData = {};
+
+    function createEmptyImportantDatesCalendar() {
+      return importantDateMonths.reduce(function(result, month) {
+        result[month.key] = [];
+        return result;
+      }, {});
+    }
+
+    function escapeImportantDateText(value) {
+      return String(value || '').replace(/[&<>'"]/g, function(char) {
+        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char];
+      });
+    }
+
+    function parseImportantJson(value, fallback) {
+      if (!value) return fallback;
+      if (typeof value === 'object') return value;
+      try {
+        return JSON.parse(value);
+      } catch (error) {
+        return fallback;
+      }
+    }
+
+    function parseImportantArray(value) {
+      if (!value) return [];
+      if (Array.isArray(value)) return value;
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function getImportantMonthInfo(monthKey) {
+      return importantDateMonths.find(function(month) { return month.key === monthKey; }) || importantDateMonths[0];
+    }
+
+    function getImportantDateDaySuffix(day) {
+      const last = day % 10;
+      const teen = day % 100;
+      if (teen >= 11 && teen <= 13) return 'th';
+      if (last === 1) return 'st';
+      if (last === 2) return 'nd';
+      if (last === 3) return 'rd';
+      return 'th';
+    }
+
+    function getDaysInImportantMonth(monthInfo) {
+      return new Date(monthInfo.year, monthInfo.monthIndex + 1, 0).getDate();
+    }
+
+    function normalizeImportantDateEvent(event, monthInfo) {
+      const daysInMonth = getDaysInImportantMonth(monthInfo);
+      const day = Math.min(daysInMonth, Math.max(1, parseInt(event && event.day, 10) || 1));
+      const title = String(event && event.title || '').trim();
+      const note = String(event && event.note || '').trim();
+      if (!title && !note) return null;
+      return { day: day, title: title || note, note: note };
+    }
+
+    function sortImportantDateEvents(events) {
+      return events.slice().sort(function(a, b) {
+        if (a.day !== b.day) return a.day - b.day;
+        return String(a.title || '').localeCompare(String(b.title || ''));
+      });
+    }
+
+    function importantDatesFromLegacy(datesJson) {
+      const calendar = createEmptyImportantDatesCalendar();
+      const legacyEvents = parseImportantArray(datesJson);
+      const monthNames = importantDateMonths.map(function(month) { return month.name; }).join('|');
+      const datePattern = new RegExp('\\b(' + monthNames + ')\\b\\s+(\\d{1,2})(?:st|nd|rd|th)?', 'i');
+      legacyEvents.forEach(function(event) {
+        const text = String((event && event.text) || '').trim();
+        if (!text) return;
+        const match = text.match(datePattern);
+        const monthInfo = match ? importantDateMonths.find(function(month) {
+          return month.name.toLowerCase() === match[1].toLowerCase();
+        }) : importantDateMonths[0];
+        const eventData = normalizeImportantDateEvent({
+          day: match ? match[2] : 1,
+          title: text,
+          note: ''
+        }, monthInfo);
+        if (eventData) calendar[monthInfo.key].push(eventData);
+      });
+      importantDateMonths.forEach(function(month) {
+        calendar[month.key] = sortImportantDateEvents(calendar[month.key]);
+      });
+      return calendar;
+    }
+
+    function normalizeImportantDatesCalendar(rawCalendar, legacyDatesJson) {
+      const parsed = parseImportantJson(rawCalendar, null);
+      if (!parsed) return importantDatesFromLegacy(legacyDatesJson);
+      const calendar = createEmptyImportantDatesCalendar();
+      let hasEvents = false;
+      importantDateMonths.forEach(function(month) {
+        const events = Array.isArray(parsed[month.key]) ? parsed[month.key] : [];
+        calendar[month.key] = sortImportantDateEvents(events.map(function(event) {
+          return normalizeImportantDateEvent(event, month);
+        }).filter(Boolean));
+        if (calendar[month.key].length) hasEvents = true;
+      });
+      return hasEvents ? calendar : importantDatesFromLegacy(legacyDatesJson);
+    }
+
+    function normalizeImportantDatesLookingAhead(rawNotes, legacyLookingAhead) {
+      const parsed = parseImportantJson(rawNotes, {});
+      const notes = {};
+      importantDateMonths.forEach(function(month) {
+        notes[month.key] = String(parsed && parsed[month.key] || '').trim();
+      });
+      if (!Object.values(notes).some(Boolean) && legacyLookingAhead) {
+        notes[importantDateMonths[0].key] = String(legacyLookingAhead || '').trim();
+      }
+      return notes;
+    }
+
+    function renderImportantDateDayOptions(monthInfo) {
+      const select = document.getElementById('importantDateDaySelect');
+      if (!select) return;
+      const daysInMonth = getDaysInImportantMonth(monthInfo);
+      const selected = Math.min(daysInMonth, Math.max(1, parseInt(select.value, 10) || 1));
+      select.innerHTML = Array.from({ length: daysInMonth }, function(_, index) {
+        const day = index + 1;
+        return '<option value="' + day + '"' + (day === selected ? ' selected' : '') + '>' + day + '</option>';
+      }).join('');
+    }
+
+    function renderImportantDatesCalendar() {
+      const monthInfo = importantDateMonths[visibleImportantDateMonth] || importantDateMonths[0];
+      const title = document.getElementById('importantDatesMonthTitle');
+      const grid = document.getElementById('importantDatesCalendarGrid');
+      const noteBox = document.getElementById('importantDatesLookingAheadTextarea');
+      if (title) title.textContent = monthInfo.name + ' ' + monthInfo.year;
+      renderImportantDateDayOptions(monthInfo);
+      if (noteBox) noteBox.value = importantDatesLookingAheadData[monthInfo.key] || '';
+      if (!grid) return;
+      const events = importantDatesCalendarData[monthInfo.key] || [];
+      const eventsByDay = events.reduce(function(result, event, index) {
+        if (!result[event.day]) result[event.day] = [];
+        result[event.day].push(Object.assign({ originalIndex: index }, event));
+        return result;
+      }, {});
+      const firstDayOffset = new Date(monthInfo.year, monthInfo.monthIndex, 1).getDay();
+      const daysInMonth = getDaysInImportantMonth(monthInfo);
+      const weekdayHtml = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(function(day) {
+        return '<div class="important-calendar-weekday">' + day + '</div>';
+      }).join('');
+      const blankHtml = Array.from({ length: firstDayOffset }, function() {
+        return '<div class="important-calendar-day empty" aria-hidden="true"></div>';
+      }).join('');
+      const dayHtml = Array.from({ length: daysInMonth }, function(_, index) {
+        const day = index + 1;
+        const eventHtml = (eventsByDay[day] || []).map(function(event) {
+          const note = event.note ? '<span class="important-event-note">' + escapeImportantDateText(event.note) + '</span>' : '';
+          const remove = '<button class="important-date-remove" onclick="removeImportantDateEvent(\'' + monthInfo.key + '\',' + event.originalIndex + ')">Remove</button>';
+          return '<span class="important-event-chip">' + escapeImportantDateText(event.title) + note + remove + '</span>';
+        }).join('');
+        return '<div class="important-calendar-day"><div class="important-date-number">' + day + '</div>' + eventHtml + '</div>';
+      }).join('');
+      grid.innerHTML = weekdayHtml + blankHtml + dayHtml;
+    }
+
+    function changeImportantDatesMonth(direction) {
+      const total = importantDateMonths.length;
+      visibleImportantDateMonth = (visibleImportantDateMonth + direction + total) % total;
+      renderImportantDatesCalendar();
+    }
+
+    function addImportantDateEvent() {
+      if (!document.body.classList.contains('editing')) return;
+      const monthInfo = importantDateMonths[visibleImportantDateMonth] || importantDateMonths[0];
+      const daySelect = document.getElementById('importantDateDaySelect');
+      const titleInput = document.getElementById('importantDateTitleInput');
+      const noteInput = document.getElementById('importantDateNoteInput');
+      const eventData = normalizeImportantDateEvent({
+        day: daySelect ? daySelect.value : 1,
+        title: titleInput ? titleInput.value : '',
+        note: noteInput ? noteInput.value : ''
+      }, monthInfo);
+      if (!eventData) {
+        alert('Please add an event title first.');
+        return;
+      }
+      importantDatesCalendarData[monthInfo.key].push(eventData);
+      importantDatesCalendarData[monthInfo.key] = sortImportantDateEvents(importantDatesCalendarData[monthInfo.key]);
+      if (titleInput) titleInput.value = '';
+      if (noteInput) noteInput.value = '';
+      const saveBtn = document.getElementById('saveChangesBtn');
+      if (saveBtn) saveBtn.style.display = 'block';
+      renderImportantDatesCalendar();
+    }
+
+    function removeImportantDateEvent(monthKey, eventIndex) {
+      if (!document.body.classList.contains('editing')) return;
+      const events = importantDatesCalendarData[monthKey] || [];
+      events.splice(eventIndex, 1);
+      importantDatesCalendarData[monthKey] = sortImportantDateEvents(events);
+      const saveBtn = document.getElementById('saveChangesBtn');
+      if (saveBtn) saveBtn.style.display = 'block';
+      renderImportantDatesCalendar();
+    }
+
+    function updateImportantDatesLookingAhead() {
+      const monthInfo = importantDateMonths[visibleImportantDateMonth] || importantDateMonths[0];
+      const noteBox = document.getElementById('importantDatesLookingAheadTextarea');
+      importantDatesLookingAheadData[monthInfo.key] = noteBox ? noteBox.value : '';
+      const saveBtn = document.getElementById('saveChangesBtn');
+      if (saveBtn) saveBtn.style.display = 'block';
+    }
+
+    function getImportantDatesCalendarJson() {
+      importantDateMonths.forEach(function(month) {
+        importantDatesCalendarData[month.key] = sortImportantDateEvents(importantDatesCalendarData[month.key] || []);
+      });
+      return JSON.stringify(importantDatesCalendarData);
+    }
+
+    function getImportantDatesLookingAheadJson() {
+      return JSON.stringify(importantDatesLookingAheadData);
+    }
+
+    function getImportantDatesLegacyJson() {
+      const legacy = [];
+      importantDateMonths.forEach(function(month) {
+        (importantDatesCalendarData[month.key] || []).forEach(function(event) {
+          const dateText = month.name + ' ' + event.day + getImportantDateDaySuffix(event.day);
+          legacy.push({
+            icon: '',
+            text: dateText + ' - ' + event.title + (event.note ? ' (' + event.note + ')' : '')
+          });
+        });
+      });
+      return JSON.stringify(legacy);
+    }
+
+    function getImportantDatesLegacyLookingAheadText() {
+      return importantDateMonths.map(function(month) {
+        const note = String(importantDatesLookingAheadData[month.key] || '').trim();
+        return note ? month.name + ': ' + note : '';
+      }).filter(Boolean).join('\n');
+    }
+
+    function updateImportantDatesFields(data) {
+      data = data || {};
+      importantDatesCalendarData = normalizeImportantDatesCalendar(data.important_dates_calendar_json, data.dates_json);
+      importantDatesLookingAheadData = normalizeImportantDatesLookingAhead(data.important_dates_looking_ahead_json, data.looking_ahead);
+      renderImportantDatesCalendar();
+    }
+
+    async function saveImportantDates() {
+      if (!document.body.classList.contains('editing')) return;
+      updateImportantDatesLookingAhead();
+      const saveBtn = document.getElementById('saveImportantDatesBtn') || document.getElementById('saveChangesBtn');
+      const originalText = saveBtn ? saveBtn.textContent : '';
+      try {
+        await ensureAuthenticated();
+        if (saveBtn) {
+          saveBtn.textContent = 'Saving...';
+          saveBtn.disabled = true;
+        }
+        const data = {
+          important_dates_calendar_json: getImportantDatesCalendarJson(),
+          important_dates_looking_ahead_json: getImportantDatesLookingAheadJson(),
+          dates_json: getImportantDatesLegacyJson(),
+          looking_ahead: getImportantDatesLegacyLookingAheadText()
+        };
+        if (typeof db !== 'undefined') {
+          await db.collection('classData').doc('current').set(data, { merge: true });
+        } else {
+          Object.keys(data).forEach(function(key) {
+            localStorage.setItem('classData_' + key, data[key]);
+          });
+        }
+        if (saveBtn) {
+          saveBtn.textContent = 'Saved!';
+          setTimeout(function() {
+            saveBtn.textContent = originalText;
+            saveBtn.disabled = false;
+          }, 1200);
+        }
+      } catch (error) {
+        console.error('Failed to save important dates:', error);
+        if (saveBtn) {
+          saveBtn.textContent = 'Save Failed';
+          setTimeout(function() {
+            saveBtn.textContent = originalText;
+            saveBtn.disabled = false;
+          }, 1800);
+        }
+        alert('Important dates could not save yet. Please try again.');
+      }
+    }
+
+    function hideHomeSubmenu() {
+      const submenu = document.getElementById('homeSubmenu');
+      if (submenu) submenu.classList.remove('open');
+    }
+
+    function toggleHomeSubmenu() {
+      const submenu = document.getElementById('homeSubmenu');
+      if (submenu) submenu.classList.toggle('open');
+    }
+
+    function showHomeSubView(view) {
+      const homePanel = document.querySelector('[data-page-panel="home"]');
+      if (!homePanel) return;
+      const shareTools = homePanel.querySelector(':scope > .share-print-tools');
+      const newsGrid = homePanel.querySelector(':scope > .home-news-grid');
+      const calendarView = document.getElementById('homeCalendarView');
+      const showCalendar = view === 'calendar';
+      if (shareTools) shareTools.style.display = showCalendar ? 'none' : '';
+      if (newsGrid) newsGrid.style.display = showCalendar ? 'none' : '';
+      if (calendarView) calendarView.style.display = showCalendar ? 'block' : 'none';
+      if (showCalendar) renderImportantDatesCalendar();
+      hideHomeSubmenu();
+    }
+
+    function getTodayKey() {
       return new Date().toLocaleDateString('en-CA');
     }
 
@@ -2916,9 +3393,21 @@
     }
     document.addEventListener('DOMContentLoaded',function(){
       showPage('home');
+      showHomeSubView('news');
       document.querySelectorAll('.pageTab').forEach(btn=>{
         btn.addEventListener('click',function(e){
           e.preventDefault();
+          if (btn.dataset.page === 'home') {
+            const homePanel = document.querySelector('[data-page-panel="home"]');
+            if (homePanel && homePanel.classList.contains('active')) {
+              toggleHomeSubmenu();
+            } else {
+              showPage('home');
+              showHomeSubView('news');
+            }
+            return;
+          }
+          hideHomeSubmenu();
           showPage(btn.dataset.page);
         });
       });
@@ -3678,6 +4167,14 @@
             .filter(line => line.length > 0); // Remove empty lines
           data.looking_ahead = items.join('\n');
         }
+      }
+
+      if (typeof getImportantDatesCalendarJson === 'function') {
+        updateImportantDatesLookingAhead();
+        data.important_dates_calendar_json = getImportantDatesCalendarJson();
+        data.important_dates_looking_ahead_json = getImportantDatesLookingAheadJson();
+        data.dates_json = getImportantDatesLegacyJson();
+        data.looking_ahead = getImportantDatesLegacyLookingAheadText();
       }
       
       // Snacks grids - collect separate class snack items
@@ -6999,6 +7496,7 @@ function populateDataFromSheet(data) {
   updateRecapText(data.recap_davis || data.recap, data.recap_williams || data.recap);
   updateEventsList(data.dates_json);
   updateLookingAhead(data.looking_ahead);
+  updateImportantDatesFields(data);
   updateSnacksGrid(data.snacks_davis_json || data.snacks_json, 'snacksGridDavis');
   updateSnacksGrid(data.snacks_williams_json || data.snacks_json, 'snacksGridWilliams');
   updateSnackMessage(data.snack_message);
@@ -7344,7 +7842,8 @@ function parseTransportationRosterText(text) {
         name,
         lastName,
         type,
-        details: parts[3] || ''
+        details: parts[3] || '',
+        classKey: normalizeRosterClass(parts[4] || '')
       };
     })
     .filter(Boolean);
@@ -7383,6 +7882,24 @@ function getLastNameFromRosterName(name) {
   return String(name || '').trim().split(/\s+/).slice(-1)[0] || '';
 }
 
+function normalizeRosterClass(value) {
+  const clean = String(value || '').toLowerCase();
+  if (clean.includes('vest') || clean.includes('williams')) return 'vest';
+  return 'davis';
+}
+
+function getRosterClassLabel(classKey) {
+  return normalizeRosterClass(classKey) === 'vest' ? 'Ms. Vest' : 'Mr. Davis';
+}
+
+function getRosterClassOptions(selectedClass) {
+  const selected = normalizeRosterClass(selectedClass);
+  return `
+    <option value="davis" ${selected === 'davis' ? 'selected' : ''}>Mr. Davis</option>
+    <option value="vest" ${selected === 'vest' ? 'selected' : ''}>Ms. Vest</option>
+  `;
+}
+
 function getTransportationRowData() {
   const rowEls = Array.from(document.querySelectorAll('#transportationRosterRows .transportation-roster-row'));
   if (!rowEls.length) {
@@ -7403,7 +7920,7 @@ function getTransportationRowData() {
 }
 
 function formatTransportationRosterRow(row) {
-  return `${row.name} | ${row.lastName || getLastNameFromRosterName(row.name)} | ${getTransportationStorageType(row.type)} | ${row.details || ''} |`;
+  return `${row.name} | ${row.lastName || getLastNameFromRosterName(row.name)} | ${getTransportationStorageType(row.type)} | ${row.details || ''} | ${normalizeRosterClass(row.classKey)}`;
 }
 
 function syncTransportationRosterText() {
@@ -8387,11 +8904,13 @@ function getMasterRosterRowData() {
   if (rowEls.length) {
     return rowEls.map(row => {
       const name = row.querySelector('.master-row-name')?.value.trim() || '';
+      const classKey = normalizeRosterClass(row.querySelector('.master-row-class')?.value || 'davis');
       const type = normalizeTransportationType(row.querySelector('.master-row-type')?.value || 'bus');
       const details = row.querySelector('.master-row-details')?.value.trim() || '';
       return {
         name,
         lastName: getLastNameFromRosterName(name),
+        classKey,
         type,
         details
       };
@@ -8406,6 +8925,7 @@ function getMasterRosterRowData() {
     return {
       name,
       lastName: getLastNameFromRosterName(name),
+      classKey: savedTransportation?.classKey || 'davis',
       type: savedTransportation?.type || 'bus',
       details: savedTransportation?.details || ''
     };
@@ -8416,6 +8936,7 @@ function setMasterRosterData(rows) {
   const cleanRows = rows.map(row => ({
     name: String(row.name || '').trim(),
     lastName: getLastNameFromRosterName(row.name),
+    classKey: normalizeRosterClass(row.classKey || 'davis'),
     type: normalizeTransportationType(row.type || 'bus'),
     details: String(row.details || '').trim()
   })).filter(row => row.name);
@@ -8481,6 +9002,9 @@ function renderMasterRosterManager() {
     return `
       <div class="master-roster-row" data-roster-index="${index}">
         <input class="master-row-name teacher-only-edit" value="${escapeBirthdayText(row.name)}" placeholder="Scholar full name" oninput="handleMasterRosterInput()">
+        <select class="master-row-class teacher-only-edit" onchange="handleMasterRosterInput()">
+          ${getRosterClassOptions(row.classKey)}
+        </select>
         <select class="master-row-type teacher-only-edit" onchange="handleMasterRosterTypeChange(this)">
           <option value="bus" ${cleanType === 'bus' ? 'selected' : ''}>Bus</option>
           <option value="car" ${cleanType === 'car' ? 'selected' : ''}>Car</option>
@@ -8495,7 +9019,7 @@ function renderMasterRosterManager() {
 
 function addMasterRosterRow() {
   const rows = getMasterRosterRowData();
-  rows.push({ name: '', type: 'bus', details: '' });
+  rows.push({ name: '', classKey: 'davis', type: 'bus', details: '' });
   const container = document.getElementById('masterRosterRows');
   if (!container) return;
   container.innerHTML = rows.map((row, index) => {
@@ -8503,6 +9027,9 @@ function addMasterRosterRow() {
     return `
       <div class="master-roster-row" data-roster-index="${index}">
         <input class="master-row-name teacher-only-edit" value="${escapeBirthdayText(row.name)}" placeholder="Scholar full name" oninput="handleMasterRosterInput()">
+        <select class="master-row-class teacher-only-edit" onchange="handleMasterRosterInput()">
+          ${getRosterClassOptions(row.classKey)}
+        </select>
         <select class="master-row-type teacher-only-edit" onchange="handleMasterRosterTypeChange(this)">
           <option value="bus" ${cleanType === 'bus' ? 'selected' : ''}>Bus</option>
           <option value="car" ${cleanType === 'car' ? 'selected' : ''}>Car</option>
@@ -8530,6 +9057,40 @@ function handleMasterRosterTypeChange(select) {
 
 function handleMasterRosterInput() {
   syncMasterRosterTextareas();
+}
+
+function showRosterImportPanel() {
+  const panel = document.getElementById('rosterImportPanel');
+  if (panel) panel.classList.add('open');
+  setTimeout(() => document.getElementById('rosterImportTextarea')?.focus(), 50);
+}
+
+function hideRosterImportPanel() {
+  const panel = document.getElementById('rosterImportPanel');
+  if (panel) panel.classList.remove('open');
+}
+
+function insertRosterFromPaste() {
+  const textarea = document.getElementById('rosterImportTextarea');
+  const names = parseRosterLines(textarea?.value || '');
+  if (!names.length) {
+    alert('Paste one scholar name per line first.');
+    return;
+  }
+  const classKey = normalizeRosterClass(document.getElementById('rosterImportClassSelect')?.value || 'davis');
+  const type = normalizeTransportationType(document.getElementById('rosterImportTypeSelect')?.value || 'bus');
+  const rows = getMasterRosterRowData();
+  const existingNames = new Set(rows.map(row => row.name.toLowerCase()));
+  names.forEach(name => {
+    if (existingNames.has(name.toLowerCase())) return;
+    rows.push({ name, classKey, type, details: '' });
+    existingNames.add(name.toLowerCase());
+  });
+  setMasterRosterData(rows);
+  renderMasterRosterManager();
+  syncMasterRosterTextareas({ renderBirthdays: true });
+  if (textarea) textarea.value = '';
+  hideRosterImportPanel();
 }
 
 async function saveRosterField() {
@@ -8563,11 +9124,12 @@ async function saveRosterField() {
   }
 }
 
-function saveRosterImage() {
+function saveRosterImage(classKey = '') {
   syncMasterRosterTextareas();
-  const rosterRows = getMasterRosterRowData();
+  const normalizedClass = classKey ? normalizeRosterClass(classKey) : '';
+  const rosterRows = getMasterRosterRowData().filter(row => !normalizedClass || normalizeRosterClass(row.classKey) === normalizedClass);
   if (!rosterRows.length) {
-    alert('Add your roster before saving an image.');
+    alert(normalizedClass ? `No scholars are listed for ${getRosterClassLabel(normalizedClass)} yet.` : 'Add your roster before saving an image.');
     return;
   }
   const colors = {
@@ -8582,6 +9144,7 @@ function saveRosterImage() {
     const details = row.details ? ` - ${row.details}` : '';
     return `${row.name} | ${getTransportationTypeLabel(row.type)}${details}`;
   });
+  const classLabel = normalizedClass ? getRosterClassLabel(normalizedClass) : 'First Grade';
   const columnCount = rows.length > 22 ? 2 : 1;
   const rowHeight = 42;
   const columnRows = Math.ceil(rows.length / columnCount);
@@ -8589,7 +9152,7 @@ function saveRosterImage() {
   const { canvas, ctx } = createShareCanvas(1080, canvasHeight);
   ctx.fillStyle = colors.cream;
   ctx.fillRect(0, 0, 1080, canvasHeight);
-  drawShareHeader(ctx, 'First Grade Roster', 'Teacher copy', colors);
+  drawShareHeader(ctx, `${classLabel} Roster`, 'Teacher copy', colors);
   ctx.fillStyle = colors.white;
   drawShareRoundRect(ctx, 90, 260, 900, canvasHeight - 350, 36);
   ctx.fill();
@@ -8607,7 +9170,7 @@ function saveRosterImage() {
   ctx.fillStyle = colors.slate;
   ctx.font = '700 24px Arial, sans-serif';
   ctx.fillText('Saved from the teacher roster tab', 140, canvasHeight - 145);
-  downloadShareCanvas(canvas, getShareFileName('first grade roster'));
+  downloadShareCanvas(canvas, getShareFileName(`${classLabel} roster`));
 }
 
 function getBirthdayRosterNames() {
@@ -8995,13 +9558,14 @@ function chooseTransportationMethod(method) {
 
 function getTransportationChangeSentence(update) {
   const timing = update.duration === 'permanent' ? 'going forward' : 'today';
+  const noteText = update.note ? ` Note: ${update.note}` : '';
   if (update.requestedType === 'bus') {
-    return `They will ride bus ${update.details || ''} ${timing}.`.replace(/\s+/g, ' ').trim();
+    return `They will ride bus ${update.details || ''} ${timing}.${noteText}`.replace(/\s+/g, ' ').trim();
   }
   if (update.requestedType === 'car') {
-    return `They will be car pickup ${timing}${update.details ? ` with ${update.details}` : ''}.`;
+    return `They will be car pickup ${timing}${update.details ? ` with ${update.details}` : ''}.${noteText}`;
   }
-  return `They will be porch pickup ${timing}${update.details ? ` (${update.details})` : ''}.`;
+  return `They will be porch pickup ${timing}${update.details ? ` (${update.details})` : ''}.${noteText}`;
 }
 
 async function submitTransportationUpdate() {
