@@ -3987,8 +3987,20 @@
       'lvest@crossroadsschoolskc.org'
     ];
 
-    function isMobileGoogleSignInFlow() {
-      return window.matchMedia('(max-width: 768px)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
+    function getEditorUserEmail(user) {
+      return (user && user.email || '').toLowerCase();
+    }
+
+    function isApprovedEditorUser(user) {
+      return approvedEditorEmails.includes(getEditorUserEmail(user));
+    }
+
+    function isGoogleEditorUser(user) {
+      return !!(user && user.providerData && user.providerData.some(provider => provider.providerId === 'google.com'));
+    }
+
+    function getBestEditorUser(...users) {
+      return users.find(isApprovedEditorUser) || users.find(isGoogleEditorUser) || null;
     }
 
     function hidePinOverlay() {
@@ -4064,10 +4076,15 @@
       }
     }
 
-    function waitForGoogleAuthUser(timeoutMs = 10000) {
+    function waitForEditorAuthUser(timeoutMs = 10000) {
       return new Promise(resolve => {
-        if (!auth || auth.currentUser) {
-          resolve(auth ? auth.currentUser : null);
+        if (!auth) {
+          resolve(null);
+          return;
+        }
+        const currentEditorUser = getBestEditorUser(auth.currentUser);
+        if (currentEditorUser) {
+          resolve(currentEditorUser);
           return;
         }
         let settled = false;
@@ -4078,10 +4095,13 @@
           settled = true;
           if (timer) clearTimeout(timer);
           if (unsubscribe) unsubscribe();
-          resolve(user || auth.currentUser || null);
+          resolve(getBestEditorUser(user, auth.currentUser));
         };
-        unsubscribe = auth.onAuthStateChanged(user => finish(user));
-        timer = setTimeout(() => finish(auth.currentUser || null), timeoutMs);
+        unsubscribe = auth.onAuthStateChanged(user => {
+          const editorUser = getBestEditorUser(user, auth.currentUser);
+          if (editorUser) finish(editorUser);
+        });
+        timer = setTimeout(() => finish(getBestEditorUser(auth.currentUser)), timeoutMs);
       });
     }
 
@@ -4104,7 +4124,7 @@
           const redirectResult = await auth.getRedirectResult();
           redirectUser = redirectResult && redirectResult.user ? redirectResult.user : null;
         }
-        const user = redirectUser || auth.currentUser || await waitForGoogleAuthUser();
+        const user = getBestEditorUser(redirectUser, auth.currentUser) || await waitForEditorAuthUser();
         if (!user) {
           clearPendingEditRedirect();
           hidePinOverlay();
@@ -4269,29 +4289,23 @@
           return false;
         }
         
-        // Check if user is signed in with Google
-        const currentAuthUser = auth.currentUser || authenticatedUser;
-        const isGoogleUser = currentAuthUser && currentAuthUser.providerData.some(
-          provider => provider.providerId === 'google.com'
-        );
+        // Check if an approved teacher is already signed in.
+        let signedInAuthUser = getBestEditorUser(authenticatedUser, auth.currentUser);
         
-        if (!isGoogleUser && !skipSignIn) {
+        if (!signedInAuthUser && !skipSignIn) {
           // Trigger Google Sign-In
           console.log('Initiating Google Sign-In...');
           const provider = new firebase.auth.GoogleAuthProvider();
           provider.setCustomParameters({ prompt: 'select_account' });
-          await prepareGoogleEditSignIn();
-          if (isMobileGoogleSignInFlow()) {
-            rememberPendingEditRedirect();
-            await auth.signInWithRedirect(provider);
-            return false;
-          }
           try {
-            await auth.signInWithPopup(provider);
+            const popupResult = await auth.signInWithPopup(provider);
+            signedInAuthUser = getBestEditorUser(popupResult && popupResult.user, auth.currentUser);
+            clearPendingEditRedirect();
             console.log('Google Sign-In successful');
           } catch (error) {
             console.error('Google Sign-In failed:', error);
             if (['auth/popup-blocked', 'auth/popup-closed-by-user', 'auth/cancelled-popup-request', 'auth/operation-not-supported-in-this-environment'].includes(error.code)) {
+              await prepareGoogleEditSignIn();
               rememberPendingEditRedirect();
               await auth.signInWithRedirect(provider);
               return false;
@@ -4301,17 +4315,14 @@
           }
         }
 
-        const signedInAuthUser = auth.currentUser || authenticatedUser;
-        const signedInGoogleUser = signedInAuthUser && signedInAuthUser.providerData.some(
-          provider => provider.providerId === 'google.com'
-        );
-        if (!signedInGoogleUser) {
+        signedInAuthUser = signedInAuthUser || getBestEditorUser(auth.currentUser, authenticatedUser) || await waitForEditorAuthUser(2000);
+        if (!signedInAuthUser) {
           alert('Google Sign-In is required to enter edit mode. Please try again.');
           return false;
         }
         
         // Validate the user's email
-        const currentEditorEmail = (signedInAuthUser && signedInAuthUser.email || '').toLowerCase();
+        const currentEditorEmail = getEditorUserEmail(signedInAuthUser);
         if (!approvedEditorEmails.includes(currentEditorEmail)) {
           console.error('Unauthorized user:', signedInAuthUser?.email);
           alert('Access denied. Please use an approved teacher Google account to edit this page.');
