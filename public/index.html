@@ -862,14 +862,96 @@
       .birthday-edit-panel {
         grid-template-columns: 1fr;
       }
+
+      .snack-class-grid {
+        grid-template-columns: 1fr !important;
+        gap: .8rem !important;
+      }
+      .snack-class-card {
+        padding: 1rem !important;
+      }
+      .snack-class-title {
+        align-items: center;
+        cursor: pointer;
+        display: flex;
+        gap: .75rem;
+        justify-content: space-between;
+      }
+      .snack-class-title::after {
+        align-items: center;
+        background: color-mix(in oklab, var(--md-coral) 18%, var(--md-white) 82%);
+        border: 1px solid color-mix(in oklab, var(--md-coral) 40%, var(--md-white) 60%);
+        border-radius: 999px;
+        color: var(--md-coral);
+        content: "-";
+        display: inline-flex;
+        flex: 0 0 auto;
+        font-size: 1.15rem;
+        font-weight: 800;
+        height: 1.75rem;
+        justify-content: center;
+        line-height: 1;
+        width: 1.75rem;
+      }
+      .snack-class-card.mobile-snack-collapsed .snack-class-title::after {
+        content: "+";
+      }
+      .snack-class-card.mobile-snack-collapsed .snack-add-btn,
+      .snack-class-card.mobile-snack-collapsed .snacks-grid {
+        display: none;
+      }
+      body.editing .snack-class-title {
+        cursor: default;
+      }
+      body.editing .snack-class-title::after {
+        display: none;
+      }
+      body.editing .snack-class-card .snack-add-btn {
+        display: inline-flex;
+      }
+      body.editing .snack-class-card .snacks-grid {
+        display: grid;
+      }
       
       /* Specials cards mobile layout */
+      .specials-mobile-picker {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .7rem;
+      }
+      .specials-mobile-button {
+        align-items: center;
+        background: color-mix(in oklab, var(--md-white) 82%, var(--md-cream) 18%);
+        border: 1px solid color-mix(in oklab, var(--md-slate) 22%, var(--md-white) 78%);
+        border-radius: .9rem;
+        color: var(--md-ink);
+        display: inline-flex;
+        font-weight: 800;
+        gap: .45rem;
+        justify-content: center;
+        min-height: 3.1rem;
+        padding: .7rem .75rem;
+      }
+      .specials-mobile-button.mobile-specials-button-active {
+        background: color-mix(in oklab, var(--md-white) 60%, var(--md-mustard) 40%);
+        border-color: color-mix(in oklab, var(--md-mustard) 70%, var(--md-white) 30%);
+        box-shadow: 0 8px 18px rgba(43,43,43,.1);
+      }
+      .specials-swipe-note {
+        display: none !important;
+      }
       .specials-cards-mobile {
-        grid-template-columns: repeat(4, minmax(250px, 1fr)) !important;
+        display: block !important;
+        overflow-x: visible !important;
+        padding-bottom: 0 !important;
       }
       
       .specials-card {
-        min-width: 250px;
+        display: none;
+        min-width: 0 !important;
+      }
+      .specials-card.mobile-specials-active {
+        display: block;
       }
       
       /* Fix specials image slots to prevent elongation on mobile */
@@ -888,6 +970,12 @@
     
     /* Desktop keeps flex-wrap behavior */
     @media (min-width: 769px) {
+      .specials-mobile-picker {
+        display: none !important;
+      }
+      .specials-card {
+        display: block !important;
+      }
       .mobile-tab-scroll {
         flex-wrap: wrap !important;
         overflow-x: visible !important;
@@ -2000,15 +2088,15 @@
             readonly
             rows="4">Snacks help keep our energy up during learning time and teach us about sharing and community!</textarea>
         </div>
-        <div class="grid lg:grid-cols-2 gap-6">
+        <div class="snack-class-grid grid lg:grid-cols-2 gap-6">
 
-          <section class="rounded-2xl p-4 sm:p-5" style="background: color-mix(in oklab, var(--md-white) 76%, var(--md-cream)); border: 1px solid color-mix(in oklab, var(--md-slate) 26%, var(--md-white) 74%);">
-            <div class="flex items-center justify-between gap-3 mb-4">
+          <section class="snack-class-card rounded-2xl p-4 sm:p-5" data-snack-class-card="davis" style="background: color-mix(in oklab, var(--md-white) 76%, var(--md-cream)); border: 1px solid color-mix(in oklab, var(--md-slate) 26%, var(--md-white) 74%);">
+            <div class="snack-class-title flex items-center justify-between gap-3 mb-4">
               <div>
                 <h3 class="text-xl font-display font-bold">Mr. Davis Class</h3>
                 <p class="text-xs text-[color:var(--md-ink)]/70">Choose a snack for this class.</p>
               </div>
-              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="addSnackItem('davis')">+ Add other snack</button>
+              <button class="snack-add-btn px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="addSnackItem('davis')">+ Add other snack</button>
             </div>
             <div id="snacksGridDavis" class="snacks-grid grid gap-4">
 
@@ -2059,13 +2147,13 @@
             </div>
           </section>
 
-          <section class="rounded-2xl p-4 sm:p-5" style="background: color-mix(in oklab, var(--md-white) 76%, var(--md-cream)); border: 1px solid color-mix(in oklab, var(--md-slate) 26%, var(--md-white) 74%);">
-            <div class="flex items-center justify-between gap-3 mb-4">
+          <section class="snack-class-card rounded-2xl p-4 sm:p-5" data-snack-class-card="williams" style="background: color-mix(in oklab, var(--md-white) 76%, var(--md-cream)); border: 1px solid color-mix(in oklab, var(--md-slate) 26%, var(--md-white) 74%);">
+            <div class="snack-class-title flex items-center justify-between gap-3 mb-4">
               <div>
                 <h3 class="text-xl font-display font-bold">Ms. Vest Class</h3>
                 <p class="text-xs text-[color:var(--md-ink)]/70">Choose a snack for this class.</p>
               </div>
-              <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="addSnackItem('williams')">+ Add other snack</button>
+              <button class="snack-add-btn px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="addSnackItem('williams')">+ Add other snack</button>
             </div>
             <div id="snacksGridWilliams" class="snacks-grid grid gap-4">
 
@@ -2301,14 +2389,21 @@
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
         <h2 class="text-2xl font-display font-bold mb-6" style="color: #f59e0b;">🎨 Specials Classes</h2>
         
+        <div class="specials-mobile-picker md:hidden mb-4" aria-label="Choose a specials class">
+          <button class="specials-mobile-button mobile-specials-button-active" data-specials-button="art" onclick="showMobileSpecialsPanel('art')">🎨 Art</button>
+          <button class="specials-mobile-button" data-specials-button="stem" onclick="showMobileSpecialsPanel('stem')">🔬 STEM</button>
+          <button class="specials-mobile-button" data-specials-button="gym" onclick="showMobileSpecialsPanel('gym')">🏃 Gym</button>
+          <button class="specials-mobile-button" data-specials-button="music" onclick="showMobileSpecialsPanel('music')">🎵 Music</button>
+        </div>
+
         <!-- Mobile Arrow Indicator -->
-        <div class="md:hidden text-center text-sm text-gray-500 mb-4">
+        <div class="specials-swipe-note md:hidden text-center text-sm text-gray-500 mb-4">
           ← Swipe to view all specials →
         </div>
         
         <div class="specials-cards-mobile mobile-tab-scroll scrollbar-hide grid md:grid-cols-2 gap-8">
           <!-- Art -->
-          <div class="specials-card rounded-2xl overflow-hidden relative" style="background: color-mix(in oklab, var(--md-white) 70%, #ef4444 30%); border: 1px solid color-mix(in oklab, #ef4444 60%, var(--md-white) 40%);">
+          <div class="specials-card mobile-specials-active rounded-2xl overflow-hidden relative" data-specials-card="art" style="background: color-mix(in oklab, var(--md-white) 70%, #ef4444 30%); border: 1px solid color-mix(in oklab, #ef4444 60%, var(--md-white) 40%);">
             <div class="grid grid-cols-2 gap-4 m-4">
               <div class="specials-img-slot aspect-square bg-white rounded-lg flex items-center justify-center relative cursor-pointer" onclick="handleSpecialsImageClick(this, 'art', 0)" data-specials-type="art" data-slot-index="0">
                 <img src="" alt="Art" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:0.5rem;">
@@ -2327,7 +2422,7 @@
             </div>
           </div>
           <!-- STEM -->
-          <div class="specials-card rounded-2xl overflow-hidden relative" style="background: color-mix(in oklab, var(--md-white) 70%, #10b981 30%); border: 1px solid color-mix(in oklab, #10b981 60%, var(--md-white) 40%);">
+          <div class="specials-card rounded-2xl overflow-hidden relative" data-specials-card="stem" style="background: color-mix(in oklab, var(--md-white) 70%, #10b981 30%); border: 1px solid color-mix(in oklab, #10b981 60%, var(--md-white) 40%);">
             <div class="grid grid-cols-2 gap-4 m-4">
               <div class="specials-img-slot aspect-square bg-white rounded-lg flex items-center justify-center relative cursor-pointer" onclick="handleSpecialsImageClick(this, 'stem', 0)" data-specials-type="stem" data-slot-index="0">
                 <img src="" alt="STEM" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:0.5rem;">
@@ -2346,7 +2441,7 @@
             </div>
           </div>
           <!-- Gym -->
-          <div class="specials-card rounded-2xl overflow-hidden relative" style="background: color-mix(in oklab, var(--md-white) 70%, #3b82f6 30%); border: 1px solid color-mix(in oklab, #3b82f6 60%, var(--md-white) 40%);">
+          <div class="specials-card rounded-2xl overflow-hidden relative" data-specials-card="gym" style="background: color-mix(in oklab, var(--md-white) 70%, #3b82f6 30%); border: 1px solid color-mix(in oklab, #3b82f6 60%, var(--md-white) 40%);">
             <div class="grid grid-cols-2 gap-4 m-4">
               <div class="specials-img-slot aspect-square bg-white rounded-lg flex items-center justify-center relative cursor-pointer" onclick="handleSpecialsImageClick(this, 'gym', 0)" data-specials-type="gym" data-slot-index="0">
                 <img src="" alt="Gym" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:0.5rem;">
@@ -2365,7 +2460,7 @@
             </div>
           </div>
           <!-- Music -->
-          <div class="specials-card rounded-2xl overflow-hidden relative" style="background: color-mix(in oklab, var(--md-white) 70%, #8b5cf6 30%); border: 1px solid color-mix(in oklab, #8b5cf6 60%, var(--md-white) 40%);">
+          <div class="specials-card rounded-2xl overflow-hidden relative" data-specials-card="music" style="background: color-mix(in oklab, var(--md-white) 70%, #8b5cf6 30%); border: 1px solid color-mix(in oklab, #8b5cf6 60%, var(--md-white) 40%);">
             <div class="grid grid-cols-2 gap-4 m-4">
               <div class="specials-img-slot aspect-square bg-white rounded-lg flex items-center justify-center relative cursor-pointer" onclick="handleSpecialsImageClick(this, 'music', 0)" data-specials-type="music" data-slot-index="0">
                 <img src="" alt="Music" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:0.5rem;">
@@ -3086,6 +3181,10 @@
       } else if (pageId === 'birthdays') {
         syncMasterRosterTextareas();
         renderBirthdayCalendar();
+      } else if (pageId === 'snacks') {
+        syncMobileSnackCards();
+      } else if (pageId === 'specials') {
+        syncMobileSpecialsCards();
       }
     }
 
@@ -3547,6 +3646,92 @@
       syncMobileHomeNewsCards();
     }
 
+    function isMobileParentLayoutView() {
+      return window.matchMedia('(max-width: 768px)').matches;
+    }
+
+    function syncMobileSnackCards() {
+      const cards = document.querySelectorAll('.snack-class-card');
+      const shouldCollapse = isMobileParentLayoutView() && !document.body.classList.contains('editing');
+      cards.forEach(function(card) {
+        const title = card.querySelector('.snack-class-title');
+        const grid = card.querySelector('.snacks-grid');
+        if (!shouldCollapse) {
+          card.classList.remove('mobile-snack-collapsed');
+          delete card.dataset.mobileSnackReady;
+          if (title) {
+            title.removeAttribute('role');
+            title.removeAttribute('tabindex');
+            title.removeAttribute('aria-expanded');
+            title.removeAttribute('aria-controls');
+          }
+          return;
+        }
+        if (!card.dataset.mobileSnackReady) {
+          card.classList.add('mobile-snack-collapsed');
+          card.dataset.mobileSnackReady = 'true';
+        }
+        if (title) {
+          title.setAttribute('role', 'button');
+          title.setAttribute('tabindex', '0');
+          if (grid && grid.id) title.setAttribute('aria-controls', grid.id);
+          title.setAttribute('aria-expanded', card.classList.contains('mobile-snack-collapsed') ? 'false' : 'true');
+        }
+      });
+    }
+
+    function toggleMobileSnackCard(titleEl) {
+      if (!isMobileParentLayoutView() || document.body.classList.contains('editing')) return;
+      const card = titleEl.closest('.snack-class-card');
+      if (!card) return;
+      const shouldOpen = card.classList.contains('mobile-snack-collapsed');
+      document.querySelectorAll('.snack-class-card').forEach(function(otherCard) {
+        otherCard.classList.add('mobile-snack-collapsed');
+        otherCard.dataset.mobileSnackReady = 'true';
+      });
+      if (shouldOpen) card.classList.remove('mobile-snack-collapsed');
+      syncMobileSnackCards();
+    }
+
+    function wireMobileSnackCards() {
+      document.querySelectorAll('.snack-class-title').forEach(function(title) {
+        if (title.dataset.mobileSnackWired === 'true') return;
+        title.dataset.mobileSnackWired = 'true';
+        title.addEventListener('click', function(event) {
+          if (event.target.closest('button')) return;
+          toggleMobileSnackCard(title);
+        });
+        title.addEventListener('keydown', function(event) {
+          if (event.key !== 'Enter' && event.key !== ' ') return;
+          event.preventDefault();
+          toggleMobileSnackCard(title);
+        });
+      });
+      syncMobileSnackCards();
+    }
+
+    function syncMobileSpecialsCards() {
+      const cards = document.querySelectorAll('[data-specials-card]');
+      if (!cards.length) return;
+      if (!isMobileParentLayoutView()) {
+        cards.forEach(card => card.classList.remove('mobile-specials-active'));
+        document.querySelectorAll('[data-specials-button]').forEach(button => button.classList.remove('mobile-specials-button-active'));
+        return;
+      }
+      const activeCard = document.querySelector('[data-specials-card].mobile-specials-active') || cards[0];
+      const activeType = activeCard ? activeCard.getAttribute('data-specials-card') : 'art';
+      showMobileSpecialsPanel(activeType);
+    }
+
+    function showMobileSpecialsPanel(type) {
+      document.querySelectorAll('[data-specials-card]').forEach(function(card) {
+        card.classList.toggle('mobile-specials-active', card.getAttribute('data-specials-card') === type);
+      });
+      document.querySelectorAll('[data-specials-button]').forEach(function(button) {
+        button.classList.toggle('mobile-specials-button-active', button.getAttribute('data-specials-button') === type);
+      });
+    }
+
     function isHomeCalendarVisible() {
       const calendarView = document.getElementById('homeCalendarView');
       return !!calendarView && calendarView.style.display !== 'none';
@@ -3716,7 +3901,14 @@
       showPage('home');
       showHomeSubView('news');
       wireMobileHomeNewsCards();
-      window.addEventListener('resize', syncMobileHomeNewsCards);
+      wireMobileSnackCards();
+      syncMobileSpecialsCards();
+      window.addEventListener('resize', function() {
+        syncMobileHomeNewsCards();
+        syncMobileSnackCards();
+        syncMobileSpecialsCards();
+        if (document.querySelector('[data-page-panel="birthdays"].active')) renderBirthdayCalendar();
+      });
       document.querySelectorAll('.pageTab').forEach(btn=>{
         btn.addEventListener('click',function(e){
           e.preventDefault();
@@ -5167,7 +5359,6 @@
       if (checkbox.checked) {
         nameInput.disabled = false;
         saveButton.disabled = false;
-        nameInput.focus();
         // Add visual feedback that it's now active
         card.style.backgroundColor = 'rgba(224, 177, 74, 0.1)';
       } else {
@@ -7674,8 +7865,9 @@ function updateLessonCards(subject, lessons_data) {
   data.weekdays.forEach((weekday, index) => {
     const weekdayBox = document.createElement('div');
     weekdayBox.className = 'weekday-box relative rounded-xl p-4 transition-all';
-    weekdayBox.style.background = 'color-mix(in oklab, var(--md-white) 95%, ' + color + ' 5%)';
-    weekdayBox.style.border = '2px dashed color-mix(in oklab, ' + color + ' 30%, var(--md-white) 70%)';
+    weekdayBox.style.background = 'color-mix(in oklab, var(--md-white) 94%, ' + color + ' 6%)';
+    weekdayBox.style.border = '1px solid color-mix(in oklab, ' + color + ' 26%, var(--md-white) 74%)';
+    weekdayBox.style.boxShadow = '0 8px 18px rgba(43,43,43,.06)';
     weekdayBox.style.minHeight = '160px';
     weekdayBox.style.overflowX = 'hidden';
     weekdayBox.style.overflowY = 'visible';
@@ -7688,9 +7880,8 @@ function updateLessonCards(subject, lessons_data) {
     
     // Weekday title (editable in edit mode)
     const titleDiv = document.createElement('div');
-    titleDiv.className = 'weekday-title text-center font-bold text-lg mb-2';
+    titleDiv.className = 'weekday-title text-center font-display font-bold text-lg mb-2';
     titleDiv.style.color = color;
-    titleDiv.style.fontFamily = "'Comic Sans MS', cursive";
     titleDiv.contentEditable = isEditMode;
     titleDiv.textContent = weekday.title;
     if (isEditMode) {
@@ -7712,8 +7903,9 @@ function updateLessonCards(subject, lessons_data) {
       const lessonCard = document.createElement('div');
       lessonCard.className = 'lesson-card p-4 rounded-xl relative';
       lessonCard.draggable = true;
-      lessonCard.style.background = 'color-mix(in oklab, var(--md-white) 80%, ' + color + ' 20%)';
-      lessonCard.style.border = '2px solid color-mix(in oklab, ' + color + ' 40%, var(--md-white) 60%)';
+      lessonCard.style.background = 'color-mix(in oklab, var(--md-white) 86%, ' + color + ' 14%)';
+      lessonCard.style.border = '1px solid color-mix(in oklab, ' + color + ' 34%, var(--md-white) 66%)';
+      lessonCard.style.boxShadow = '0 8px 16px rgba(43,43,43,.06)';
       lessonCard.style.cursor = isEditMode ? 'move' : 'default';
       
       lessonCard.innerHTML = `
@@ -7722,15 +7914,15 @@ function updateLessonCards(subject, lessons_data) {
                 onclick="removeLessonCard(this, '${subject}')" 
                 title="Delete Card">🗑️</button>
         <div class="mb-3">
-          <input type="text" class="lesson-number w-full px-2 py-1 text-center font-semibold text-sm border-0 rounded" 
-                 style="background: transparent; color: ${color}; overflow-wrap: break-word; word-break: break-word; overflow-x: hidden;" 
+          <input type="text" class="lesson-number w-full px-2 py-1 text-center font-semibold text-sm border-0 rounded"
+                 style="background: transparent; color: ${color}; font-family: inherit; overflow-wrap: break-word; word-break: break-word; overflow-x: hidden;"
                  placeholder="Lesson #" 
                  value="${card.number || ''}"
                  ${isEditMode ? '' : 'disabled readonly'}>
         </div>
         <div>
-          <textarea class="lesson-title w-full px-2 py-1 text-center text-sm border-0 rounded resize-none" 
-                 style="background: transparent; overflow-wrap: break-word; word-break: break-word; white-space: pre-wrap; min-height: 2.5em; overflow-x: hidden; overflow-y: hidden;" 
+          <textarea class="lesson-title w-full px-2 py-1 text-center text-sm border-0 rounded resize-none"
+                 style="background: transparent; font-family: inherit; overflow-wrap: break-word; word-break: break-word; white-space: pre-wrap; min-height: 2.5em; overflow-x: hidden; overflow-y: hidden;"
                  placeholder="Lesson Title" 
                  rows="1"
                  ${isEditMode ? '' : 'disabled readonly'}>${card.title || ''}</textarea>
@@ -9245,6 +9437,10 @@ const birthdayBookSpreads = [
   { title: '2nd Grade!', note: 'Ready for the next adventure', left: { type: 'closing' }, right: { type: 'blank' } }
 ];
 let visibleBirthdaySpread = 0;
+let visibleBirthdayMobilePage = 0;
+const birthdayBookMobilePages = birthdayBookSpreads
+  .flatMap(spread => [spread.left, spread.right])
+  .filter(page => page && page.type !== 'blank');
 
 function createEmptyBirthdayCalendar() {
   const calendar = {};
@@ -9256,6 +9452,22 @@ function createEmptyBirthdayCalendar() {
 
 function getBirthdayMonthInfo(monthKey) {
   return birthdayBookMonths.find(month => month.key === monthKey);
+}
+
+function isMobileBirthdayBookView() {
+  return window.matchMedia('(max-width: 768px)').matches;
+}
+
+function getBirthdayMobilePageHeading(page) {
+  if (!page) return { title: 'Scholar Birthdays', note: '2026-2027 School Year' };
+  if (page.type === 'cover') return { title: 'Scholar Birthdays', note: '2026-2027 School Year' };
+  if (page.type === 'newyear') return { title: 'Happy New Year', note: 'Back together in January' };
+  if (page.type === 'closing') return { title: '2nd Grade!', note: 'Ready for the next adventure' };
+  if (page.type === 'month') {
+    const monthInfo = getBirthdayMonthInfo(page.key);
+    if (monthInfo) return { title: monthInfo.name, note: `${monthInfo.year} Birthdays` };
+  }
+  return { title: 'Scholar Birthdays', note: '2026-2027 School Year' };
 }
 
 function getBirthdayDaySuffix(day) {
@@ -9753,17 +9965,27 @@ function renderBirthdayCalendar() {
   const spreadConfig = birthdayBookSpreads[visibleBirthdaySpread] || birthdayBookSpreads[0];
   const title = document.getElementById('birthdayBookSpreadTitle');
   const note = document.getElementById('birthdayBookSpreadNote');
-  if (title) title.textContent = spreadConfig.title;
-  if (note) note.textContent = spreadConfig.note;
+  const isMobile = isMobileBirthdayBookView();
 
-  spread.innerHTML = [renderBirthdayPage(spreadConfig.left), renderBirthdayPage(spreadConfig.right)].join('');
+  if (isMobile) {
+    visibleBirthdayMobilePage = Math.max(0, Math.min(birthdayBookMobilePages.length - 1, visibleBirthdayMobilePage));
+    const page = birthdayBookMobilePages[visibleBirthdayMobilePage] || birthdayBookMobilePages[0];
+    const heading = getBirthdayMobilePageHeading(page);
+    if (title) title.textContent = heading.title;
+    if (note) note.textContent = heading.note;
+    spread.innerHTML = renderBirthdayPage(page);
+  } else {
+    if (title) title.textContent = spreadConfig.title;
+    if (note) note.textContent = spreadConfig.note;
+    spread.innerHTML = [renderBirthdayPage(spreadConfig.left), renderBirthdayPage(spreadConfig.right)].join('');
+  }
   ['birthdayBookPrevTop', 'birthdayBookPrevBottom'].forEach(id => {
     const button = document.getElementById(id);
-    if (button) button.disabled = visibleBirthdaySpread === 0;
+    if (button) button.disabled = isMobile ? visibleBirthdayMobilePage === 0 : visibleBirthdaySpread === 0;
   });
   ['birthdayBookNextTop', 'birthdayBookNextBottom'].forEach(id => {
     const button = document.getElementById(id);
-    if (button) button.disabled = visibleBirthdaySpread === birthdayBookSpreads.length - 1;
+    if (button) button.disabled = isMobile ? visibleBirthdayMobilePage === birthdayBookMobilePages.length - 1 : visibleBirthdaySpread === birthdayBookSpreads.length - 1;
   });
 }
 
@@ -9772,7 +9994,11 @@ function focusBirthdayDay() {
 }
 
 function changeBirthdayMonth(direction) {
-  visibleBirthdaySpread = Math.max(0, Math.min(birthdayBookSpreads.length - 1, visibleBirthdaySpread + direction));
+  if (isMobileBirthdayBookView()) {
+    visibleBirthdayMobilePage = Math.max(0, Math.min(birthdayBookMobilePages.length - 1, visibleBirthdayMobilePage + direction));
+  } else {
+    visibleBirthdaySpread = Math.max(0, Math.min(birthdayBookSpreads.length - 1, visibleBirthdaySpread + direction));
+  }
   renderBirthdayCalendar();
 }
 
