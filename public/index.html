@@ -485,10 +485,8 @@
     .roster-import-panel.open { display: block; }
     .home-submenu {
       display: none;
-      position: absolute;
+      position: fixed;
       z-index: 40;
-      top: 4.75rem;
-      left: 1.5rem;
       padding: .55rem;
       border-radius: .9rem;
       background: var(--md-white);
@@ -559,6 +557,23 @@
       font-weight: 800;
     }
     body.editing .important-date-remove { display: inline-block; }
+    .important-date-editor,
+    .important-looking-ahead-editor {
+      display: none;
+    }
+    body.editing .important-date-editor,
+    body.editing .important-looking-ahead-editor {
+      display: block;
+    }
+    body.editing .important-looking-ahead-display {
+      display: none;
+    }
+    #importantDatesLookingAheadTextarea {
+      resize: none;
+    }
+    body.editing #importantDatesLookingAheadTextarea {
+      resize: vertical;
+    }
     @media (max-width: 720px) {
       .transportation-roster-row,
       .master-roster-row {
@@ -1232,7 +1247,7 @@
     <!-- Top Navigation Bar -->
     <nav id="topNav" class="mt-6 mb-4 flex flex-wrap items-center gap-3 mobile-tab-scroll scrollbar-hide">
       <button id="homePageBtn" class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
-              data-page="home" data-tooltip="Weekly News&#10;Important Dates&#10;Looking Ahead" style="background: var(--md-coral);">
+              data-page="home" data-tooltip="Weekly News&#10;Calendar&#10;Looking Ahead" style="background: var(--md-coral);">
         <span>🏠</span><span>Home</span>
       </button>
       <button id="aboutMeDavisBtn"
@@ -1281,7 +1296,7 @@
       </button>
     </nav>
     <div id="homeSubmenu" class="home-submenu no-print">
-      <button class="px-4 py-2 rounded-xl text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="showHomeSubView('calendar')">Important Dates</button>
+      <button class="px-4 py-2 rounded-xl text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="showHomeSubView('calendar')">Calendar</button>
     </div>
     <!-- HOME TAB -->
     <section data-page-panel="home" class="pagePanel fade-in active">
@@ -1354,22 +1369,8 @@
           <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
             <div>
               <p class="text-sm font-semibold uppercase tracking-wide" style="color: var(--md-coral);">Home</p>
-              <h2 class="text-3xl font-display font-bold">Important Dates</h2>
-              <p class="text-sm text-gray-600 mt-1">A school-year calendar for events, reminders, and monthly looking ahead notes.</p>
-            </div>
-            <button class="px-4 py-2 rounded-xl text-white font-semibold no-print" style="background: var(--md-coral);" onclick="showHomeSubView('news')">Back to Class News</button>
-          </div>
-          <div class="p-4 rounded-xl mb-6" style="background: color-mix(in oklab, var(--md-white) 76%, var(--md-slate) 24%); border: 1px solid color-mix(in oklab, var(--md-slate) 36%, var(--md-white) 64%);">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-              <div>
-                <h3 class="font-semibold mb-1">School Year Calendar</h3>
-                <a id="schoolCalendarLink" href="#" target="_blank" class="text-sm text-blue-700 hover:text-blue-900 underline">View School Calendar</a>
-                <p class="text-xs text-gray-600 mt-1">This link stays here no matter which month is showing.</p>
-              </div>
-              <div class="calendar-url-input min-w-[240px] flex-1 md:max-w-md">
-                <input type="url" id="calendarUrlInput" class="w-full px-3 py-2 text-sm border rounded-lg teacher-only-edit" placeholder="Enter calendar URL (PDF or webpage)" value="#" onchange="updateCalendarUrl(this)" disabled>
-                <button id="saveCalendarBtn" class="mt-2 px-3 py-1.5 rounded-lg text-white text-sm font-semibold edit-only" style="background: var(--md-coral);" onclick="saveCalendarUrl()">Save Calendar URL</button>
-              </div>
+              <h2 class="text-3xl font-display font-bold">Class Calendar</h2>
+              <p class="text-sm text-gray-600 mt-1">Check this month for class events, school reminders, and what is coming up next.</p>
             </div>
           </div>
           <div class="rounded-2xl bg-white/85 p-4 sm:p-5 border border-white">
@@ -1381,10 +1382,10 @@
             <div id="importantDatesCalendarGrid" class="important-calendar-grid" aria-live="polite"></div>
           </div>
           <div class="grid lg:grid-cols-[1.2fr,.8fr] gap-5 mt-6">
-            <div class="rounded-2xl p-5 bg-white/85 border border-white">
+            <div class="rounded-2xl p-5 bg-white/85 border border-white important-date-editor">
               <div class="flex items-center justify-between gap-3 mb-3">
                 <h3 class="font-display font-bold text-xl">Add Event</h3>
-                <button class="edit-only px-4 py-2 rounded-xl text-white font-semibold" style="background: var(--md-coral);" onclick="addImportantDateEvent()">Add Event</button>
+                <button class="px-4 py-2 rounded-xl text-white font-semibold" style="background: var(--md-coral);" onclick="addImportantDateEvent()">Add Event</button>
               </div>
               <div class="grid sm:grid-cols-[.5fr,1fr,1fr] gap-3">
                 <label class="text-sm font-semibold">Day
@@ -1397,13 +1398,23 @@
                   <input id="importantDateNoteInput" type="text" class="mt-1 w-full rounded-xl border px-3 py-2 teacher-only-edit" placeholder="Optional details" disabled>
                 </label>
               </div>
-              <button id="saveImportantDatesBtn" class="edit-only mt-4 px-4 py-2 rounded-xl text-white font-semibold" style="background: var(--md-slate);" onclick="saveImportantDates()">Save Important Dates</button>
+              <button id="saveImportantDatesBtn" class="edit-only mt-4 px-4 py-2 rounded-xl text-white font-semibold" style="background: var(--md-slate);" onclick="saveImportantDates()">Save Calendar</button>
             </div>
             <div class="rounded-2xl p-5 bg-white/85 border border-white">
               <h3 class="font-display font-bold text-xl mb-2">Looking Ahead</h3>
-              <p class="text-sm text-gray-600 mb-3">Notes for the month currently showing.</p>
-              <textarea id="importantDatesLookingAheadTextarea" class="w-full min-h-[150px] rounded-xl border px-3 py-3 teacher-only-edit" placeholder="Add monthly notes families should see here." oninput="updateImportantDatesLookingAhead()" disabled readonly></textarea>
-              <button class="edit-only mt-3 px-4 py-2 rounded-xl text-white font-semibold" style="background: var(--md-slate);" onclick="saveImportantDates()">Save Looking Ahead</button>
+              <div id="importantDatesLookingAheadDisplay" class="important-looking-ahead-display text-sm leading-relaxed text-gray-700">No extra reminders right now.</div>
+              <div class="important-looking-ahead-editor">
+                <textarea id="importantDatesLookingAheadTextarea" class="w-full min-h-[150px] rounded-xl border px-3 py-3 teacher-only-edit" placeholder="Add family-facing reminders for this month." oninput="updateImportantDatesLookingAhead()" disabled readonly></textarea>
+                <button class="mt-3 px-4 py-2 rounded-xl text-white font-semibold" style="background: var(--md-slate);" onclick="saveImportantDates()">Save Looking Ahead</button>
+              </div>
+              <div class="mt-5 pt-4 border-t border-gray-200">
+                <h3 class="font-semibold mb-1">School Year Calendar</h3>
+                <a id="schoolCalendarLink" href="#" target="_blank" class="text-sm text-blue-700 hover:text-blue-900 underline">View School Calendar</a>
+                <div class="calendar-url-input mt-3">
+                  <input type="url" id="calendarUrlInput" class="w-full px-3 py-2 text-sm border rounded-lg teacher-only-edit" placeholder="Enter calendar URL (PDF or webpage)" value="#" onchange="updateCalendarUrl(this)" disabled>
+                  <button id="saveCalendarBtn" class="mt-2 px-3 py-1.5 rounded-lg text-white text-sm font-semibold edit-only" style="background: var(--md-coral);" onclick="saveCalendarUrl()">Save Calendar URL</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -2931,6 +2942,8 @@
     }
 
     const importantDateMonths = [
+      { key: 'june', name: 'June', monthIndex: 5, year: 2026 },
+      { key: 'july', name: 'July', monthIndex: 6, year: 2026 },
       { key: 'august', name: 'August', monthIndex: 7, year: 2026 },
       { key: 'september', name: 'September', monthIndex: 8, year: 2026 },
       { key: 'october', name: 'October', monthIndex: 9, year: 2026 },
@@ -2942,9 +2955,23 @@
       { key: 'april', name: 'April', monthIndex: 3, year: 2027 },
       { key: 'may', name: 'May', monthIndex: 4, year: 2027 }
     ];
-    let visibleImportantDateMonth = 0;
+    let visibleImportantDateMonth = getCurrentImportantDateMonthIndex();
     let importantDatesCalendarData = createEmptyImportantDatesCalendar();
     let importantDatesLookingAheadData = {};
+
+    function getCurrentImportantDateMonthIndex() {
+      const today = new Date();
+      const exactIndex = importantDateMonths.findIndex(function(month) {
+        return month.year === today.getFullYear() && month.monthIndex === today.getMonth();
+      });
+      if (exactIndex >= 0) return exactIndex;
+      const currentValue = today.getFullYear() * 12 + today.getMonth();
+      const first = importantDateMonths[0].year * 12 + importantDateMonths[0].monthIndex;
+      const last = importantDateMonths[importantDateMonths.length - 1].year * 12 + importantDateMonths[importantDateMonths.length - 1].monthIndex;
+      if (currentValue < first) return 0;
+      if (currentValue > last) return importantDateMonths.length - 1;
+      return 0;
+    }
 
     function createEmptyImportantDatesCalendar() {
       return importantDateMonths.reduce(function(result, month) {
@@ -3082,9 +3109,16 @@
       const title = document.getElementById('importantDatesMonthTitle');
       const grid = document.getElementById('importantDatesCalendarGrid');
       const noteBox = document.getElementById('importantDatesLookingAheadTextarea');
+      const noteDisplay = document.getElementById('importantDatesLookingAheadDisplay');
+      const monthNote = importantDatesLookingAheadData[monthInfo.key] || '';
       if (title) title.textContent = monthInfo.name + ' ' + monthInfo.year;
       renderImportantDateDayOptions(monthInfo);
-      if (noteBox) noteBox.value = importantDatesLookingAheadData[monthInfo.key] || '';
+      if (noteBox) noteBox.value = monthNote;
+      if (noteDisplay) {
+        noteDisplay.innerHTML = monthNote
+          ? escapeImportantDateText(monthNote).replace(/\r?\n/g, '<br>')
+          : 'No extra reminders right now.';
+      }
       if (!grid) return;
       const events = importantDatesCalendarData[monthInfo.key] || [];
       const eventsByDay = events.reduce(function(result, event, index) {
@@ -3155,7 +3189,14 @@
     function updateImportantDatesLookingAhead() {
       const monthInfo = importantDateMonths[visibleImportantDateMonth] || importantDateMonths[0];
       const noteBox = document.getElementById('importantDatesLookingAheadTextarea');
-      importantDatesLookingAheadData[monthInfo.key] = noteBox ? noteBox.value : '';
+      const note = noteBox ? noteBox.value : '';
+      importantDatesLookingAheadData[monthInfo.key] = note;
+      const noteDisplay = document.getElementById('importantDatesLookingAheadDisplay');
+      if (noteDisplay) {
+        noteDisplay.innerHTML = note
+          ? escapeImportantDateText(note).replace(/\r?\n/g, '<br>')
+          : 'No extra reminders right now.';
+      }
       const saveBtn = document.getElementById('saveChangesBtn');
       if (saveBtn) saveBtn.style.display = 'block';
     }
@@ -3239,7 +3280,7 @@
             saveBtn.disabled = false;
           }, 1800);
         }
-        alert('Important dates could not save yet. Please try again.');
+        alert('Calendar could not save yet. Please try again.');
       }
     }
 
@@ -3248,9 +3289,27 @@
       if (submenu) submenu.classList.remove('open');
     }
 
+    function isHomeCalendarVisible() {
+      const calendarView = document.getElementById('homeCalendarView');
+      return !!calendarView && calendarView.style.display !== 'none';
+    }
+
     function toggleHomeSubmenu() {
       const submenu = document.getElementById('homeSubmenu');
-      if (submenu) submenu.classList.toggle('open');
+      const homeButton = document.getElementById('homePageBtn');
+      if (!submenu || !homeButton || isHomeCalendarVisible()) {
+        hideHomeSubmenu();
+        return;
+      }
+      if (window.matchMedia('(min-width: 721px)').matches) {
+        const rect = homeButton.getBoundingClientRect();
+        submenu.style.top = (rect.bottom + 8) + 'px';
+        submenu.style.left = rect.left + 'px';
+      } else {
+        submenu.style.top = '';
+        submenu.style.left = '';
+      }
+      submenu.classList.toggle('open');
     }
 
     function showHomeSubView(view) {
@@ -3400,6 +3459,10 @@
           if (btn.dataset.page === 'home') {
             const homePanel = document.querySelector('[data-page-panel="home"]');
             if (homePanel && homePanel.classList.contains('active')) {
+              if (isHomeCalendarVisible()) {
+                showHomeSubView('news');
+                return;
+              }
               toggleHomeSubmenu();
             } else {
               showPage('home');
@@ -8989,32 +9052,37 @@ function renderRosterPreview() {
   renderMasterRosterManager();
 }
 
-function renderMasterRosterManager() {
+function getMasterRosterRowMarkup(row, index) {
+  const cleanType = normalizeTransportationType(row.type);
+  return `
+    <div class="master-roster-row" data-roster-index="${index}">
+      <input class="master-row-name teacher-only-edit" value="${escapeBirthdayText(row.name)}" placeholder="Scholar full name" oninput="handleMasterRosterInput()">
+      <select class="master-row-class teacher-only-edit" onchange="handleMasterRosterInput()">
+        ${getRosterClassOptions(row.classKey)}
+      </select>
+      <select class="master-row-type teacher-only-edit" onchange="handleMasterRosterTypeChange(this)">
+        <option value="bus" ${cleanType === 'bus' ? 'selected' : ''}>Bus</option>
+        <option value="car" ${cleanType === 'car' ? 'selected' : ''}>Car</option>
+        <option value="porch" ${cleanType === 'porch' ? 'selected' : ''}>Porch</option>
+      </select>
+      <input class="master-row-details teacher-only-edit" value="${escapeBirthdayText(row.details || '')}" placeholder="${getTransportationDetailPlaceholder(cleanType)}" oninput="handleMasterRosterInput()">
+      <button type="button" class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="removeMasterRosterRow(this)">Remove</button>
+    </div>
+  `;
+}
+
+function renderMasterRosterRows(rows) {
   const container = document.getElementById('masterRosterRows');
   if (!container) return;
-  const rows = getMasterRosterRowData();
   if (!rows.length) {
     container.innerHTML = '<div class="rounded-xl p-4 bg-white text-gray-600">Click Add Scholar to start your roster.</div>';
     return;
   }
-  container.innerHTML = rows.map((row, index) => {
-    const cleanType = normalizeTransportationType(row.type);
-    return `
-      <div class="master-roster-row" data-roster-index="${index}">
-        <input class="master-row-name teacher-only-edit" value="${escapeBirthdayText(row.name)}" placeholder="Scholar full name" oninput="handleMasterRosterInput()">
-        <select class="master-row-class teacher-only-edit" onchange="handleMasterRosterInput()">
-          ${getRosterClassOptions(row.classKey)}
-        </select>
-        <select class="master-row-type teacher-only-edit" onchange="handleMasterRosterTypeChange(this)">
-          <option value="bus" ${cleanType === 'bus' ? 'selected' : ''}>Bus</option>
-          <option value="car" ${cleanType === 'car' ? 'selected' : ''}>Car</option>
-          <option value="porch" ${cleanType === 'porch' ? 'selected' : ''}>Porch</option>
-        </select>
-        <input class="master-row-details teacher-only-edit" value="${escapeBirthdayText(row.details || '')}" placeholder="${getTransportationDetailPlaceholder(cleanType)}" oninput="handleMasterRosterInput()">
-        <button type="button" class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="removeMasterRosterRow(this)">Remove</button>
-      </div>
-    `;
-  }).join('');
+  container.innerHTML = rows.map(getMasterRosterRowMarkup).join('');
+}
+
+function renderMasterRosterManager() {
+  renderMasterRosterRows(getMasterRosterRowData());
 }
 
 function addMasterRosterRow() {
@@ -9022,24 +9090,7 @@ function addMasterRosterRow() {
   rows.push({ name: '', classKey: 'davis', type: 'bus', details: '' });
   const container = document.getElementById('masterRosterRows');
   if (!container) return;
-  container.innerHTML = rows.map((row, index) => {
-    const cleanType = normalizeTransportationType(row.type);
-    return `
-      <div class="master-roster-row" data-roster-index="${index}">
-        <input class="master-row-name teacher-only-edit" value="${escapeBirthdayText(row.name)}" placeholder="Scholar full name" oninput="handleMasterRosterInput()">
-        <select class="master-row-class teacher-only-edit" onchange="handleMasterRosterInput()">
-          ${getRosterClassOptions(row.classKey)}
-        </select>
-        <select class="master-row-type teacher-only-edit" onchange="handleMasterRosterTypeChange(this)">
-          <option value="bus" ${cleanType === 'bus' ? 'selected' : ''}>Bus</option>
-          <option value="car" ${cleanType === 'car' ? 'selected' : ''}>Car</option>
-          <option value="porch" ${cleanType === 'porch' ? 'selected' : ''}>Porch</option>
-        </select>
-        <input class="master-row-details teacher-only-edit" value="${escapeBirthdayText(row.details || '')}" placeholder="${getTransportationDetailPlaceholder(cleanType)}" oninput="handleMasterRosterInput()">
-        <button type="button" class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="removeMasterRosterRow(this)">Remove</button>
-      </div>
-    `;
-  }).join('');
+  renderMasterRosterRows(rows);
   container.querySelector('.master-roster-row:last-child .master-row-name')?.focus();
 }
 
@@ -9087,7 +9138,7 @@ function insertRosterFromPaste() {
     existingNames.add(name.toLowerCase());
   });
   setMasterRosterData(rows);
-  renderMasterRosterManager();
+  renderMasterRosterRows(rows);
   syncMasterRosterTextareas({ renderBirthdays: true });
   if (textarea) textarea.value = '';
   hideRosterImportPanel();
