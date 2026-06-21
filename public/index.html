@@ -543,6 +543,9 @@
       border: 1px solid color-mix(in oklab, var(--md-mustard) 42%, var(--md-white) 58%);
       color: var(--md-ink);
     }
+    .important-mobile-event-count {
+      display: none;
+    }
     .important-event-note {
       display: block;
       font-weight: 500;
@@ -574,6 +577,28 @@
     body.editing #importantDatesLookingAheadTextarea {
       resize: vertical;
     }
+    .important-mobile-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 2100;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      background: rgba(43, 43, 43, .55);
+    }
+    .important-mobile-modal.open {
+      display: flex;
+    }
+    .important-mobile-modal-card {
+      width: min(92vw, 26rem);
+      max-height: 80vh;
+      overflow-y: auto;
+      border-radius: 1.15rem;
+      background: var(--md-white);
+      border: 1px solid color-mix(in oklab, var(--md-slate) 28%, var(--md-white) 72%);
+      box-shadow: 0 20px 45px rgba(43, 43, 43, .24);
+    }
     @media (max-width: 720px) {
       .transportation-roster-row,
       .master-roster-row {
@@ -585,7 +610,55 @@
         margin: -.25rem 0 1rem;
       }
       .important-calendar-grid { gap: .35rem; }
-      .important-calendar-day { min-height: 86px; padding: .45rem; }
+      .important-calendar-day {
+        position: relative;
+        min-height: 52px;
+        aspect-ratio: 1 / 1;
+        padding: .35rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+      .important-calendar-day.has-events {
+        cursor: pointer;
+        background: color-mix(in oklab, var(--md-mustard) 46%, var(--md-white) 54%);
+        border-color: color-mix(in oklab, var(--md-coral) 55%, var(--md-white) 45%);
+        box-shadow: inset 0 0 0 2px rgba(255,255,255,.7);
+      }
+      .important-calendar-day.has-events:focus-visible {
+        outline: 3px solid var(--md-coral);
+        outline-offset: 2px;
+      }
+      .important-calendar-day .important-event-chip {
+        display: none;
+      }
+      .important-date-number {
+        margin-bottom: 0;
+      }
+      .important-calendar-day.has-events .important-date-number {
+        color: var(--md-ink);
+      }
+      .important-mobile-event-count {
+        display: inline-grid;
+        place-items: center;
+        position: absolute;
+        right: .25rem;
+        top: .25rem;
+        min-width: 1rem;
+        height: 1rem;
+        padding: 0 .25rem;
+        border-radius: 999px;
+        background: var(--md-coral);
+        color: var(--md-white);
+        font-size: .65rem;
+        font-weight: 800;
+      }
+    }
+    @media (min-width: 721px) {
+      .important-mobile-modal {
+        display: none !important;
+      }
     }
     .transportation-match-button,
     .transportation-choice-button {
@@ -1417,6 +1490,15 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+      <div id="importantDateMobileModal" class="important-mobile-modal" onclick="if(event.target === this) closeImportantDateMobileModal()">
+        <div class="important-mobile-modal-card p-5">
+          <div class="flex items-start justify-between gap-3 mb-4">
+            <h3 id="importantDateMobileModalTitle" class="font-display font-bold text-xl">Calendar Event</h3>
+            <button class="px-3 py-1.5 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="closeImportantDateMobileModal()">Close</button>
+          </div>
+          <div id="importantDateMobileModalBody" class="space-y-3 text-sm"></div>
         </div>
       </div>
     </section>
@@ -3136,14 +3218,61 @@
       }).join('');
       const dayHtml = Array.from({ length: daysInMonth }, function(_, index) {
         const day = index + 1;
-        const eventHtml = (eventsByDay[day] || []).map(function(event) {
+        const dayEvents = eventsByDay[day] || [];
+        const eventHtml = dayEvents.map(function(event) {
           const note = event.note ? '<span class="important-event-note">' + escapeImportantDateText(event.note) + '</span>' : '';
           const remove = '<button class="important-date-remove" onclick="removeImportantDateEvent(\'' + monthInfo.key + '\',' + event.originalIndex + ')">Remove</button>';
           return '<span class="important-event-chip">' + escapeImportantDateText(event.title) + note + remove + '</span>';
         }).join('');
-        return '<div class="important-calendar-day"><div class="important-date-number">' + day + '</div>' + eventHtml + '</div>';
+        const hasEvents = dayEvents.length > 0;
+        const countBadge = hasEvents ? '<span class="important-mobile-event-count">' + dayEvents.length + '</span>' : '';
+        return '<div class="important-calendar-day' + (hasEvents ? ' has-events' : '') + '" data-month-key="' + monthInfo.key + '" data-day="' + day + '"><div class="important-date-number">' + day + '</div>' + countBadge + eventHtml + '</div>';
       }).join('');
       grid.innerHTML = weekdayHtml + blankHtml + dayHtml;
+      setupImportantDateMobileClicks();
+    }
+
+    function setupImportantDateMobileClicks() {
+      const grid = document.getElementById('importantDatesCalendarGrid');
+      if (!grid) return;
+      grid.querySelectorAll('.important-calendar-day.has-events').forEach(function(dayEl) {
+        dayEl.addEventListener('click', function() {
+          openImportantDateMobileModal(dayEl.dataset.monthKey, parseInt(dayEl.dataset.day, 10));
+        });
+      });
+    }
+
+    function isMobileImportantCalendar() {
+      return window.matchMedia('(max-width: 720px)').matches;
+    }
+
+    function openImportantDateMobileModal(monthKey, day) {
+      if (!isMobileImportantCalendar()) return;
+      const monthInfo = getImportantMonthInfo(monthKey);
+      const events = (importantDatesCalendarData[monthInfo.key] || []).map(function(event, index) {
+        return Object.assign({ originalIndex: index }, event);
+      }).filter(function(event) {
+        return Number(event.day) === Number(day);
+      });
+      if (!events.length) return;
+      const modal = document.getElementById('importantDateMobileModal');
+      const title = document.getElementById('importantDateMobileModalTitle');
+      const body = document.getElementById('importantDateMobileModalBody');
+      if (!modal || !title || !body) return;
+      title.textContent = monthInfo.name + ' ' + day;
+      body.innerHTML = events.map(function(event) {
+        const note = event.note ? '<div class="text-gray-600 mt-1">' + escapeImportantDateText(event.note).replace(/\r?\n/g, '<br>') + '</div>' : '';
+        const remove = document.body.classList.contains('editing')
+          ? '<button class="important-date-remove" style="display:inline-block;" onclick="removeImportantDateEvent(\'' + monthInfo.key + '\',' + event.originalIndex + '); closeImportantDateMobileModal();">Remove</button>'
+          : '';
+        return '<div class="rounded-xl p-3" style="background: color-mix(in oklab, var(--md-white) 72%, var(--md-mustard) 28%); border: 1px solid color-mix(in oklab, var(--md-mustard) 42%, var(--md-white) 58%);"><strong>' + escapeImportantDateText(event.title) + '</strong>' + note + remove + '</div>';
+      }).join('');
+      modal.classList.add('open');
+    }
+
+    function closeImportantDateMobileModal() {
+      const modal = document.getElementById('importantDateMobileModal');
+      if (modal) modal.classList.remove('open');
     }
 
     function changeImportantDatesMonth(direction) {
