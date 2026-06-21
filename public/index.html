@@ -1085,10 +1085,16 @@
       box-shadow: 0 12px 24px rgba(43,43,43,.11);
     }
     @media (max-width: 768px) {
-      header .max-w-6xl { padding-top: 4.75rem; }
+      header .max-w-6xl {
+        align-items: center;
+        padding-top: 4rem;
+        text-align: center;
+      }
       #shoutoutBtn {
-        top: .9rem !important; bottom: auto !important; width: calc(100% - 3rem);
+        top: .65rem !important; bottom: auto !important; width: calc(100% - 2rem);
         max-width: 22rem; justify-content: center;
+        padding-top: .45rem !important;
+        padding-bottom: .45rem !important;
       }
       #topNav {
         display: grid !important;
@@ -1306,10 +1312,18 @@
         width: auto;
       }
       #mainHeading {
-        max-width: 9ch;
+        max-width: 12ch;
+        text-align: center;
+      }
+      #weekText {
+        margin-left: auto;
+        margin-right: auto;
+        padding: .42rem .75rem;
       }
       header .max-w-6xl {
-        min-height: 11.5rem;
+        min-height: 9.75rem;
+        padding-bottom: 1.2rem;
+        gap: .35rem;
       }
       #topNav {
         border-radius: .95rem;
