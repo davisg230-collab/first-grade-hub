@@ -543,17 +543,23 @@
       border: 1px solid color-mix(in oklab, var(--md-slate) 18%, var(--md-white) 82%);
     }
     .roster-import-panel.open { display: block; }
-    .home-submenu {
-      display: none;
-      position: fixed;
-      z-index: 40;
-      padding: .55rem;
-      border-radius: .9rem;
-      background: var(--md-white);
-      border: 1px solid color-mix(in oklab, var(--md-coral) 34%, var(--md-white) 66%);
-      box-shadow: 0 14px 30px rgba(43, 43, 43, .14);
+    .week-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: .65rem;
     }
-    .home-submenu.open { display: flex; }
+    .calendar-jump-button {
+      border-radius: 999px;
+      background: color-mix(in oklab, var(--md-white) 90%, var(--md-cream));
+      color: var(--md-ink);
+      box-shadow: 0 10px 22px rgba(43,43,43,.14);
+      border: 1px solid color-mix(in oklab, var(--md-white) 60%, transparent);
+    }
+    .calendar-jump-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 28px rgba(43,43,43,.18);
+    }
     .important-calendar-wrap {
       background:
         linear-gradient(90deg, rgba(123,142,158,.16) 1px, transparent 1px),
@@ -665,10 +671,6 @@
         grid-template-columns: 1fr;
       }
       .master-roster-heading { display: none; }
-      .home-submenu {
-        position: static;
-        margin: -.25rem 0 1rem;
-      }
       .important-calendar-grid { gap: .35rem; }
       .important-calendar-day {
         position: relative;
@@ -1395,12 +1397,13 @@
     @media (min-width: 1024px) {
       #topNav {
         display: grid !important;
-        grid-template-columns: repeat(9, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(7.25rem, 1fr));
         align-items: stretch;
       }
       #topNav button {
         width: 100%;
-        padding-inline: .7rem !important;
+        padding-inline: .6rem !important;
+        font-size: .94rem;
         line-height: 1.1;
       }
     }
@@ -1415,10 +1418,16 @@
         max-width: 12ch;
         text-align: center;
       }
+      .week-meta-row {
+        justify-content: center;
+      }
       #weekText {
         margin-left: auto;
         margin-right: auto;
         padding: .42rem .75rem;
+      }
+      .calendar-jump-button {
+        min-height: 2.65rem;
       }
       header .max-w-6xl {
         min-height: 9.75rem;
@@ -1474,8 +1483,15 @@
           data-edit="teacher" contenteditable="false">
         Hey Hey First Grade!
       </h1>
-      <p id="weekText" class="mt-2 text-white/95 font-semibold"
-         data-edit="teacher" contenteditable="false">Week of September 1–5</p>
+      <div class="week-meta-row mt-2">
+        <p id="weekText" class="text-white/95 font-semibold"
+           data-edit="teacher" contenteditable="false">Week of September 1–5</p>
+        <button id="headerCalendarBtn" type="button"
+                class="calendar-jump-button no-print inline-flex items-center gap-2 px-4 py-2 text-sm font-bold"
+                onclick="showPage('home'); showHomeSubView('calendar');">
+          <span aria-hidden="true">&#128197;</span><span>Calendar</span>
+        </button>
+      </div>
     </div>
   </header>
   <!-- Tab Separator -->
@@ -1486,12 +1502,12 @@
     <!-- Top Navigation Bar -->
     <nav id="topNav" class="mt-6 mb-4 flex flex-wrap items-center gap-3 mobile-tab-scroll scrollbar-hide">
       <button id="homePageBtn" class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
-              data-page="home" data-tooltip="Weekly News&#10;Calendar&#10;Looking Ahead" style="background: var(--md-coral);">
+              data-page="home" data-tooltip="Weekly News&#10;Looking Ahead" style="background: var(--md-coral);">
         <span>🏠</span><span>Home</span>
       </button>
       <button id="aboutMeDavisBtn"
               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
-              data-page="aboutme" data-tooltip="About Mr. Davis&#10;Contact Info" style="background: var(--md-coral);">
+              data-page="aboutme" data-tooltip="About Mr. Davis&#10;Contact Info&#10;Grade Portal" style="background: var(--md-coral);">
         <span>👨‍🏫</span><span>Mr. Davis</span>
       </button>
       <button id="aboutMeWilliamsBtn"
@@ -1504,10 +1520,6 @@
               data-tooltip="Mr. Davis Scholar&#10;Ms. Vest Scholar&#10;Class Skill Meter"
               style="background: var(--md-mustard);">
         <span>⭐</span><span>Scholar of the Month</span>
-      </button>
-      <button id="gradesBtn" class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white hover:opacity-90"
-              data-page="grades" data-tooltip="Grade Portal&#10;Class Progress Notes" style="background: var(--md-coral);">
-        <span>📊</span><span>Grades</span>
       </button>
       <button id="learningHubBtn"
               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
@@ -1534,9 +1546,6 @@
         <span>&#128203;</span><span>Roster</span>
       </button>
     </nav>
-    <div id="homeSubmenu" class="home-submenu no-print">
-      <button class="px-4 py-2 rounded-xl text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="showHomeSubView('calendar')">Calendar</button>
-    </div>
     <!-- HOME TAB -->
     <section data-page-panel="home" class="pagePanel fade-in active">
       <div class="share-print-tools no-print justify-end gap-2 flex-wrap mb-4">
@@ -1909,7 +1918,7 @@
     <!-- GRADES TAB -->
     <section data-page-panel="grades" class="pagePanel fade-in">
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
-        <h2 id="gradesTitle" class="text-2xl font-display font-bold mb-6 text-center" data-edit="teacher" contenteditable="false">Mr. Davis Class</h2>
+        <h2 id="gradesTitle" class="text-2xl font-display font-bold mb-6 text-center" data-edit="teacher" contenteditable="false">Mr. Davis Grade Portal</h2>
         
         <div class="rounded-xl p-6 mb-6" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-slate) 30%); border: 1px solid color-mix(in oklab, var(--md-slate) 60%, var(--md-white) 40%);">
           <p id="gradesDescription" class="leading-relaxed text-center" data-edit="teacher" contenteditable="false">
@@ -3590,11 +3599,6 @@
       }
     }
 
-    function hideHomeSubmenu() {
-      const submenu = document.getElementById('homeSubmenu');
-      if (submenu) submenu.classList.remove('open');
-    }
-
     function isMobileHomeNewsView() {
       return window.matchMedia('(max-width: 720px)').matches;
     }
@@ -3749,24 +3753,6 @@
       return !!calendarView && calendarView.style.display !== 'none';
     }
 
-    function toggleHomeSubmenu() {
-      const submenu = document.getElementById('homeSubmenu');
-      const homeButton = document.getElementById('homePageBtn');
-      if (!submenu || !homeButton || isHomeCalendarVisible()) {
-        hideHomeSubmenu();
-        return;
-      }
-      if (window.matchMedia('(min-width: 721px)').matches) {
-        const rect = homeButton.getBoundingClientRect();
-        submenu.style.top = (rect.bottom + 8) + 'px';
-        submenu.style.left = rect.left + 'px';
-      } else {
-        submenu.style.top = '';
-        submenu.style.left = '';
-      }
-      submenu.classList.toggle('open');
-    }
-
     function showHomeSubView(view) {
       const homePanel = document.querySelector('[data-page-panel="home"]');
       if (!homePanel) return;
@@ -3779,7 +3765,6 @@
       if (calendarView) calendarView.style.display = showCalendar ? 'block' : 'none';
       if (showCalendar) renderImportantDatesCalendar();
       if (!showCalendar) syncMobileHomeNewsCards();
-      hideHomeSubmenu();
     }
 
     function getTodayKey() {
@@ -3929,16 +3914,13 @@
             if (homePanel && homePanel.classList.contains('active')) {
               if (isHomeCalendarVisible()) {
                 showHomeSubView('news');
-                return;
               }
-              toggleHomeSubmenu();
             } else {
               showPage('home');
               showHomeSubView('news');
             }
             return;
           }
-          hideHomeSubmenu();
           showPage(btn.dataset.page);
         });
       });
@@ -16186,13 +16168,16 @@ document.head.appendChild(style);
     <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-8 max-w-md mx-4" onclick="event.stopPropagation();" style="border: 3px solid var(--md-coral);">
       <div class="text-center">
         <div class="text-5xl mb-4">👨‍🏫</div>
-        <h3 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">About Mr. Davis</h3>
+        <h3 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">Mr. Davis Class</h3>
         <div class="space-y-3">
           <button onclick="closeAboutMeDavisModal(); showPage('aboutme');" class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
             <span>👨‍🏫</span><span>About Mr. Davis</span>
           </button>
           <button onclick="closeAboutMeDavisModal(); openContactModal();" class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
-            <span>📧</span><span>Contact Me</span>
+            <span>📧</span><span>Contact Mr. Davis</span>
+          </button>
+          <button onclick="closeAboutMeDavisModal(); showPage('grades');" class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-slate);">
+            <span>&#128202;</span><span>Grade Portal</span>
           </button>
         </div>
         <button onclick="closeAboutMeDavisModal()" class="mt-6 px-6 py-2 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
@@ -16207,13 +16192,13 @@ document.head.appendChild(style);
     <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-8 max-w-md mx-4" onclick="event.stopPropagation();" style="border: 3px solid var(--md-coral);">
       <div class="text-center">
         <div class="text-5xl mb-4">👩‍🏫</div>
-        <h3 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">About Ms. Vest</h3>
+        <h3 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">Ms. Vest Class</h3>
         <div class="space-y-3">
           <button onclick="closeAboutMeWilliamsModal(); showPage('aboutmewilliams');" class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
             <span>👩‍🏫</span><span>About Ms. Vest</span>
           </button>
           <button onclick="closeAboutMeWilliamsModal(); openContactWilliamsModal();" class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
-            <span>📧</span><span>Contact Me</span>
+            <span>📧</span><span>Contact Ms. Vest</span>
           </button>
         </div>
         <button onclick="closeAboutMeWilliamsModal()" class="mt-6 px-6 py-2 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
