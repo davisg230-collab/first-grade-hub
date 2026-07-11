@@ -34,12 +34,19 @@ An email is queued when a parent creates one of these activity records:
 
 Daily visitor totals are saved for the teacher dashboard, but they do not send an email each time someone opens the site.
 
-## Recipient
+## Recipients
 
 By default, emails go to:
 
 ```text
 dgonzalezjr@crossroadsschoolskc.org
+lvest@crossroadsschoolskc.org
 ```
 
-If this ever needs to change without editing code, set the Firebase Functions environment variable `TEACHER_NOTIFICATION_EMAIL` to the new address.
+If this ever needs to change without editing code, set the Firebase Functions environment variable `TEACHER_NOTIFICATION_EMAILS` to a comma-separated list of addresses. The older single-address variable `TEACHER_NOTIFICATION_EMAIL` is still supported.
+
+## Text notifications
+
+The same email pipeline can also send text-message notifications through carrier email-to-SMS gateways. Set `TEACHER_NOTIFICATION_SMS_EMAILS` to a comma-separated list of gateway addresses, such as `5551234567@vtext.com`.
+
+SMS gateway delivery depends on the phone carrier and is less reliable than regular email. For more dependable texting, use a dedicated SMS provider such as Twilio instead of the Firebase email extension.

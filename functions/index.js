@@ -5,7 +5,16 @@ const admin = require("firebase-admin");
 admin.initializeApp();
 
 const MAIL_COLLECTION = process.env.MAIL_COLLECTION || "mail";
-const TEACHER_EMAIL = process.env.TEACHER_NOTIFICATION_EMAIL || "dgonzalezjr@crossroadsschoolskc.org";
+const DEFAULT_TEACHER_EMAILS = [
+  "dgonzalezjr@crossroadsschoolskc.org",
+  "lvest@crossroadsschoolskc.org",
+];
+const NOTIFICATION_RECIPIENTS = uniqueRecipients([
+  ...DEFAULT_TEACHER_EMAILS,
+  ...parseRecipientList(process.env.TEACHER_NOTIFICATION_EMAIL),
+  ...parseRecipientList(process.env.TEACHER_NOTIFICATION_EMAILS),
+  ...parseRecipientList(process.env.TEACHER_NOTIFICATION_SMS_EMAILS),
+]);
 
 exports.queueTeacherActivityEmail = onDocumentCreated("teacherActivity/{activityId}", async (event) => {
   const snapshot = event.data;
@@ -25,6 +34,7 @@ exports.queueTeacherActivityEmail = onDocumentCreated("teacherActivity/{activity
     activityId: event.params.activityId,
     activityType: activity.type || "activity",
     mailCollection: MAIL_COLLECTION,
+    recipientCount: NOTIFICATION_RECIPIENTS.length,
   });
 });
 
@@ -56,13 +66,25 @@ function buildActivityEmail(activity, activityId) {
   `;
 
   return {
-    to: [TEACHER_EMAIL],
+    to: NOTIFICATION_RECIPIENTS,
     message: {
       subject,
       text,
       html,
     },
   };
+}
+
+function parseRecipientList(value) {
+  if (!value) return [];
+  return String(value)
+    .split(",")
+    .map((recipient) => recipient.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function uniqueRecipients(recipients) {
+  return Array.from(new Set(recipients.filter(Boolean)));
 }
 
 function labelForType(type) {
