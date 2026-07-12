@@ -48,37 +48,12 @@ jobs:
             printf 'TEACHER_NOTIFICATION_SMS_EMAILS=%s\n' "$TEACHER_NOTIFICATION_SMS_EMAILS" >> "$env_file"
           fi
 
-          if [ -n "$ENABLE_EMAIL_TO_SMS_GATEWAYS" ]; then
-            printf 'ENABLE_EMAIL_TO_SMS_GATEWAYS=%s\n' "$ENABLE_EMAIL_TO_SMS_GATEWAYS" >> "$env_file"
-          fi
-
-          if [ -n "$TEACHER_NOTIFICATION_PHONE_NUMBERS" ]; then
-            printf 'TEACHER_NOTIFICATION_PHONE_NUMBERS=%s\n' "$TEACHER_NOTIFICATION_PHONE_NUMBERS" >> "$env_file"
-          fi
-
-          if [ -n "$TWILIO_ACCOUNT_SID" ]; then
-            printf 'TWILIO_ACCOUNT_SID=%s\n' "$TWILIO_ACCOUNT_SID" >> "$env_file"
-          fi
-
-          if [ -n "$TWILIO_AUTH_TOKEN" ]; then
-            printf 'TWILIO_AUTH_TOKEN=%s\n' "$TWILIO_AUTH_TOKEN" >> "$env_file"
-          fi
-
-          if [ -n "$TWILIO_FROM_NUMBER" ]; then
-            printf 'TWILIO_FROM_NUMBER=%s\n' "$TWILIO_FROM_NUMBER" >> "$env_file"
-          fi
-
           if [ ! -s "$env_file" ]; then
             rm -f "$env_file"
           fi
         env:
           TEACHER_NOTIFICATION_EMAILS: ${{ secrets.TEACHER_NOTIFICATION_EMAILS }}
           TEACHER_NOTIFICATION_SMS_EMAILS: ${{ secrets.TEACHER_NOTIFICATION_SMS_EMAILS }}
-          ENABLE_EMAIL_TO_SMS_GATEWAYS: ${{ secrets.ENABLE_EMAIL_TO_SMS_GATEWAYS }}
-          TEACHER_NOTIFICATION_PHONE_NUMBERS: ${{ secrets.TEACHER_NOTIFICATION_PHONE_NUMBERS }}
-          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
-          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
-          TWILIO_FROM_NUMBER: ${{ secrets.TWILIO_FROM_NUMBER }}
 
       - name: Deploy to Firebase Hosting, Functions, and Firestore Rules
         run: |
