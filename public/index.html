@@ -10413,7 +10413,7 @@ async function submitTransportationUpdate() {
   }
   const guardianName = document.getElementById('transportationGuardianInput')?.value.trim() || '';
   if (!guardianName) {
-    alert('Please enter your full parent/guardian name so the teacher knows who submitted this change.');
+    alert('Please enter your first and last name so the teacher can verify the approved pickup list.');
     return;
   }
   const guardianApproval = getGuardianApprovalResult(selectedTransportationScholar, guardianName);
@@ -16109,8 +16109,9 @@ document.head.appendChild(style);
               </select>
             </div>
             <div>
-              <label class="block text-sm font-semibold mb-2">Parent/guardian full name</label>
+              <label class="block text-sm font-semibold mb-2">Parent/guardian first and last name</label>
               <input id="transportationGuardianInput" class="transportation-modal-field" type="text" placeholder="Example: Maria Gonzalez">
+              <p class="text-xs text-gray-500 mt-1">Use the adult's full name so the teacher can verify it with the approved pickup list.</p>
             </div>
           </div>
 
