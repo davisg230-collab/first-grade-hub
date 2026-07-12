@@ -1201,7 +1201,8 @@
       box-shadow: 0 20px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
     }
     .shoutout-mobile-channels,
-    .shoutout-mobile-actions {
+    .shoutout-mobile-actions,
+    .shoutout-mobile-teacher-tools {
       display: none;
     }
     .shoutout-tv-screen {
@@ -1415,6 +1416,16 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: .5rem;
         margin-top: .75rem;
+      }
+      body.editing .shoutout-mobile-teacher-tools {
+        display: grid !important;
+        gap: .5rem;
+        margin-top: .75rem;
+        padding-top: .75rem;
+        border-top: 1px solid rgba(255,255,255,.22);
+      }
+      .shoutout-mobile-teacher-tools .shoutout-remote-label {
+        text-align: center;
       }
       .shoutout-tv-built-in-button {
         width: 100%;
@@ -2688,6 +2699,18 @@
                     &#10024; Create
                   </button>
                 </div>
+                <div class="shoutout-mobile-teacher-tools edit-only" aria-label="Teacher tools">
+                  <span class="shoutout-remote-label">Teacher tools</span>
+                  <button id="mobileCreatedShoutsBtn" class="shoutout-tv-built-in-button inline-flex items-center px-3 py-2 text-white font-semibold hover:opacity-90" style="background: var(--md-slate);">
+                    &#128203; Created Shoutouts
+                  </button>
+                  <button id="mobileSetShoutoutTvImageBtn" class="shoutout-tv-built-in-button inline-flex items-center px-3 py-2 text-white font-semibold hover:opacity-90" style="background: var(--md-coral);" onclick="document.getElementById('shoutoutTvImageInput').click();">
+                    &#128444; Set TV Image
+                  </button>
+                  <button id="mobileRemoveShoutoutTvImageBtn" class="shoutout-tv-built-in-button inline-flex items-center px-3 py-2 text-white font-semibold hover:opacity-90" style="background: var(--md-mustard);" onclick="removeShoutoutTvImage();">
+                    Remove TV Image
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -2734,9 +2757,9 @@
                 <button id="removeShoutoutTvImageBtn" class="shoutout-remote-button inline-flex items-center px-4 py-2 text-white font-semibold hover:opacity-90" style="background: var(--md-mustard);" onclick="removeShoutoutTvImage();">
                   Remove TV Image
                 </button>
-                <input id="shoutoutTvImageInput" type="file" accept="image/*" class="hidden" onchange="handleShoutoutTvImageUpload(event)">
               </div>
             </aside>
+            <input id="shoutoutTvImageInput" type="file" accept="image/*" class="hidden" onchange="handleShoutoutTvImageUpload(event)">
           </div>
           <div id="shoutoutTvHelpText" class="max-w-2xl mx-auto mb-8 rounded-2xl p-4 text-sm leading-relaxed" style="background: color-mix(in oklab, var(--md-white) 72%, var(--md-pebble) 28%); color: var(--md-slate); border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
             You are watching Mr. Davis Channel. Shuffle approved shoutouts or send a new shoutout to Mr. Davis's class.
@@ -15801,10 +15824,12 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   
   // Admin shoutouts button
-  const createdShoutsBtn = document.getElementById('createdShoutsBtn');
-  if (createdShoutsBtn) {
-    createdShoutsBtn.addEventListener('click', openAdminShoutsModal);
-  }
+  ['createdShoutsBtn', 'mobileCreatedShoutsBtn'].forEach(buttonId => {
+    const createdShoutsBtn = document.getElementById(buttonId);
+    if (createdShoutsBtn) {
+      createdShoutsBtn.addEventListener('click', openAdminShoutsModal);
+    }
+  });
   
   // Load shoutouts data on page load
   loadShoutoutsFromFirebase();
