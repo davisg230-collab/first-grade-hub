@@ -1181,12 +1181,168 @@
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
     #shoutoutTVDisplay, #shoutoutDisplay { text-wrap: balance; }
+    .shoutout-tv-stage {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(13rem, 16rem);
+      gap: 1.35rem;
+      align-items: center;
+      text-align: left;
+    }
+    .shoutout-tv-set {
+      width: 100%;
+      max-width: 800px;
+      background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+      border-radius: 40px;
+      padding: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+    .shoutout-tv-screen {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      min-height: clamp(220px, 34vw, 350px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: #050505;
+      border: 12px solid #333;
+      border-radius: 1rem;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+    }
+    #shoutoutTVDisplay {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif;
+      font-size: clamp(1.15rem, 4.5vw, 2rem);
+      line-height: 1.35;
+      color: var(--md-white);
+      text-align: center;
+    }
+    #shoutoutTVDisplay > div:not(.shoutout-tv-image-frame) {
+      width: 100%;
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(1rem, 3vw, 2rem);
+    }
+    .shoutout-tv-image-frame,
+    .shoutout-tv-image {
+      width: 100%;
+      height: 100%;
+    }
+    .shoutout-tv-image-frame {
+      position: relative;
+      overflow: hidden;
+      color: var(--md-white);
+    }
+    .shoutout-tv-image {
+      display: block;
+      object-fit: cover;
+    }
+    .shoutout-tv-channel-chip,
+    .shoutout-tv-empty-note {
+      position: absolute;
+      left: 1rem;
+      right: 1rem;
+      padding: .45rem .7rem;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, .62);
+      border: 1px solid rgba(255,255,255,.22);
+      color: var(--md-white);
+      font-size: .9rem;
+      text-align: center;
+      backdrop-filter: blur(4px);
+    }
+    .shoutout-tv-channel-chip { bottom: 1rem; color: var(--md-mustard); }
+    .shoutout-tv-empty-note { top: 1rem; }
+    .shoutout-remote {
+      width: 100%;
+      min-height: 100%;
+      align-self: stretch;
+      display: flex;
+      flex-direction: column;
+      gap: .8rem;
+      padding: 1rem;
+      border-radius: 1.65rem;
+      background: linear-gradient(180deg, color-mix(in oklab, var(--md-slate) 92%, #000), color-mix(in oklab, var(--md-slate) 74%, #000));
+      color: var(--md-white);
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: 0 16px 30px rgba(43,43,43,.22), inset 0 1px 0 rgba(255,255,255,.18);
+    }
+    .shoutout-remote-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: color-mix(in oklab, var(--md-white) 76%, var(--md-mustard));
+    }
+    .shoutout-remote-light {
+      width: .72rem;
+      height: .72rem;
+      border-radius: 999px;
+      background: var(--md-coral);
+      box-shadow: 0 0 14px color-mix(in oklab, var(--md-coral) 76%, transparent);
+      flex: 0 0 auto;
+    }
+    .shoutout-remote-status {
+      padding: .55rem .65rem;
+      border-radius: .9rem;
+      background: rgba(255,255,255,.1);
+      color: color-mix(in oklab, var(--md-white) 82%, var(--md-mustard));
+      font-size: .85rem;
+      font-weight: 700;
+      text-align: center;
+    }
+    .shoutout-remote-section {
+      display: grid;
+      gap: .55rem;
+    }
+    .shoutout-remote-label {
+      color: color-mix(in oklab, var(--md-white) 72%, transparent);
+      font-size: .75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .shoutout-remote-button {
+      width: 100%;
+      min-height: 2.7rem;
+      justify-content: center;
+      border-radius: 1rem;
+      box-shadow: inset 0 -2px 0 rgba(0,0,0,.18), 0 8px 14px rgba(0,0,0,.16);
+    }
+    .shoutout-remote-edit {
+      display: none !important;
+      padding-top: .75rem;
+      border-top: 1px solid rgba(255,255,255,.18);
+    }
+    body.editing .shoutout-remote-edit {
+      display: grid !important;
+      gap: .55rem;
+    }
     .snacks-grid .p-4, .website-card, .transportation-card, .birthday-month, .specials-card { box-shadow: 0 8px 18px rgba(43,43,43,.07); }
     .snacks-grid .p-4:hover, .website-card:hover, .transportation-card:hover, .birthday-month:hover, .specials-card:hover {
       transform: translateY(-2px);
       box-shadow: 0 12px 24px rgba(43,43,43,.11);
     }
     @media (max-width: 768px) {
+      .shoutout-tv-stage {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+      .shoutout-remote {
+        max-width: 23rem;
+        margin-inline: auto;
+      }
       header .max-w-6xl {
         align-items: center;
         padding-top: 4rem;
@@ -2421,53 +2577,58 @@
     <section data-page-panel="shoutouts" class="pagePanel fade-in">
       <div class="text-center mb-8">
         <!-- Large TV Display (functional TV without decorative emoji) -->
-        <div class="mx-auto max-w-5xl">
+        <div class="mx-auto max-w-6xl">
           <h2 class="text-4xl font-display font-bold mb-4" style="color: var(--md-coral); font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif;">Shoutout TV!</h2>
-          <div class="inline-flex flex-wrap items-center justify-center gap-2 mb-6 rounded-2xl p-2" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-pebble) 30%); border: 2px solid color-mix(in oklab, var(--md-slate) 45%, var(--md-white) 55%);">
-            <span class="text-sm font-semibold px-2" style="color: var(--md-slate);">Change the channel:</span>
-            <button id="channelDavisBtn" class="shoutout-channel-btn px-4 py-2 rounded-xl font-semibold text-white" style="background: var(--md-coral);" onclick="switchShoutoutChannel('davis')">Mr. Davis</button>
-            <button id="channelVestBtn" class="shoutout-channel-btn px-4 py-2 rounded-xl font-semibold" style="background: var(--md-white); color: var(--md-slate); border: 1px solid color-mix(in oklab, var(--md-slate) 45%, var(--md-white) 55%);" onclick="switchShoutoutChannel('vest')">Ms. Vest</button>
-          </div>
-          <div id="activeChannelLabel" class="text-sm font-semibold mb-4" style="color: var(--md-slate);">Now watching: Mr. Davis Channel</div>
-          
-          <!-- Enhanced TV Screen with TV-like appearance -->
-          <div class="tv-container mx-auto" style="max-width: 800px; background: linear-gradient(145deg, #2a2a2a, #1a1a1a); border-radius: 40px; padding: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);">
-            <div class="bg-black rounded-2xl p-5 sm:p-8 mb-4" style="min-height: clamp(220px, 52vw, 350px); display: flex; align-items: center; justify-content: center; border: 12px solid #333; box-shadow: inset 0 0 30px rgba(0,0,0,0.8);">
-              <div id="shoutoutTVDisplay" class="text-white text-center" style="font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif; font-size: clamp(1.15rem, 5vw, 2rem); line-height: 1.35; max-width: 90%;">
-                Choose a channel to see scholar shoutouts!
+          <div class="shoutout-tv-stage mb-4">
+            <!-- Enhanced TV Screen with TV-like appearance -->
+            <div class="tv-container shoutout-tv-set mx-auto">
+              <div class="shoutout-tv-screen mb-4">
+                <div id="shoutoutTVDisplay">
+                  <div>Choose a channel to see scholar shoutouts!</div>
+                </div>
+              </div>
+              <!-- TV Brand/Controls Area -->
+              <div class="text-center" style="color: #666; font-size: 0.8rem; margin-top: 8px;">
+                <div style="background: #333; border-radius: 8px; padding: 4px 12px; display: inline-block;">Classroom TV</div>
               </div>
             </div>
-            <!-- TV Brand/Controls Area -->
-            <div class="text-center" style="color: #666; font-size: 0.8rem; margin-top: 8px;">
-              <div style="background: #333; border-radius: 8px; padding: 4px 12px; display: inline-block;">Classroom TV</div>
-            </div>
-          </div>
-          
-          <!-- Control Buttons -->
-          <div class="flex flex-wrap gap-4 justify-center mb-4">
-            <button id="shuffleTVBtn" class="px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90 text-lg" style="background: var(--md-mustard);">
-              🎲 Shuffle
-            </button>
-            <button id="createShoutoutBtn" class="px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90 text-lg" style="background: var(--md-coral);">
-              ✨ Create Shoutout
-            </button>
+
+            <aside class="shoutout-remote" aria-label="Shoutout TV remote control">
+              <div class="shoutout-remote-title">
+                <span>&#128250; Remote</span>
+                <span class="shoutout-remote-light" aria-hidden="true"></span>
+              </div>
+              <div id="activeChannelLabel" class="shoutout-remote-status">Now watching: Mr. Davis Channel</div>
+              <div class="shoutout-remote-section">
+                <span class="shoutout-remote-label">Change the channel</span>
+                <button id="channelDavisBtn" class="shoutout-channel-btn shoutout-remote-button inline-flex items-center px-4 py-2 font-semibold text-white" style="background: var(--md-coral);" onclick="switchShoutoutChannel('davis')">Mr. Davis</button>
+                <button id="channelVestBtn" class="shoutout-channel-btn shoutout-remote-button inline-flex items-center px-4 py-2 font-semibold" style="background: var(--md-white); color: var(--md-slate); border: 1px solid color-mix(in oklab, var(--md-slate) 45%, var(--md-white) 55%);" onclick="switchShoutoutChannel('vest')">Ms. Vest</button>
+              </div>
+              <div class="shoutout-remote-section">
+                <button id="shuffleTVBtn" class="shoutout-remote-button inline-flex items-center px-4 py-2 text-white font-semibold hover:opacity-90" style="background: var(--md-mustard);">
+                  &#127922; Shuffle
+                </button>
+                <button id="createShoutoutBtn" class="shoutout-remote-button inline-flex items-center px-4 py-2 text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
+                  &#10024; Create Shoutout
+                </button>
+              </div>
+              <div class="shoutout-remote-edit edit-only">
+                <span class="shoutout-remote-label">Teacher tools</span>
+                <button id="createdShoutsBtn" class="shoutout-remote-button inline-flex items-center px-4 py-2 text-white font-semibold hover:opacity-90" style="background: var(--md-slate);">
+                  &#128203; Created Shoutouts
+                </button>
+                <button id="setShoutoutTvImageBtn" class="shoutout-remote-button inline-flex items-center px-4 py-2 text-white font-semibold hover:opacity-90" style="background: var(--md-coral);" onclick="document.getElementById('shoutoutTvImageInput').click();">
+                  &#128444; Set TV Image
+                </button>
+                <button id="removeShoutoutTvImageBtn" class="shoutout-remote-button inline-flex items-center px-4 py-2 text-white font-semibold hover:opacity-90" style="background: var(--md-mustard);" onclick="removeShoutoutTvImage();">
+                  Remove TV Image
+                </button>
+                <input id="shoutoutTvImageInput" type="file" accept="image/*" class="hidden" onchange="handleShoutoutTvImageUpload(event)">
+              </div>
+            </aside>
           </div>
           <div id="shoutoutTvHelpText" class="max-w-2xl mx-auto mb-8 rounded-2xl p-4 text-sm leading-relaxed" style="background: color-mix(in oklab, var(--md-white) 72%, var(--md-pebble) 28%); color: var(--md-slate); border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
             You are watching Mr. Davis Channel. Shuffle approved shoutouts or send a new shoutout to Mr. Davis's class.
-          </div>
-          
-          <!-- Admin Button (appears in Edit Mode) -->
-          <div class="mb-4">
-            <button id="createdShoutsBtn" class="edit-only px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-slate);">
-              📋 Created Shoutouts
-            </button>
-            <button id="setShoutoutTvImageBtn" class="edit-only px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90 ml-2" style="background: var(--md-coral);" onclick="document.getElementById('shoutoutTvImageInput').click();">
-              🖼️ Set TV Image
-            </button>
-            <button id="removeShoutoutTvImageBtn" class="edit-only px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90 ml-2" style="background: var(--md-mustard);" onclick="removeShoutoutTvImage();">
-              Remove TV Image
-            </button>
-            <input id="shoutoutTvImageInput" type="file" accept="image/*" class="hidden" onchange="handleShoutoutTvImageUpload(event)">
           </div>
           
 
@@ -3079,7 +3240,7 @@
     <div class="max-w-6xl mx-auto px-6 py-8">
       <div class="flex items-center justify-between">
         <div>
-          <p class="text-sm text-gray-600">© 2026 Mr. Davis's First Grade Class</p>
+          <p id="siteFooterText" class="text-sm text-gray-600" data-edit="teacher" contenteditable="false">&copy; 2026 Mr. Davis's First Grade Class</p>
         </div>
         <div class="flex gap-3">
           <button id="saveChangesBtn" class="px-4 py-2 rounded-xl font-semibold text-white shadow-soft" style="background: var(--md-coral); display: none;">
@@ -4883,6 +5044,9 @@
       // Week text
       const weekEl = document.getElementById('weekText');
       if (weekEl) data.week = weekEl.textContent || '';
+
+      const siteFooterEl = document.getElementById('siteFooterText');
+      if (siteFooterEl) data.site_footer_text = siteFooterEl.textContent || '';
       
       // What We Did section titles
       const whatWeDidDavisTitleEl = document.getElementById('whatWeDidDavisTitle');
@@ -8289,6 +8453,10 @@ function populateDataFromSheet(data) {
   }
   
   updateWeekText(data.week);
+  const siteFooterEl = document.getElementById('siteFooterText');
+  if (siteFooterEl && Object.prototype.hasOwnProperty.call(data, 'site_footer_text')) {
+    siteFooterEl.textContent = data.site_footer_text || '';
+  }
   updateWhatWeDidTitles(data.what_we_did_davis_title, data.what_we_did_williams_title);
   updateRecapText(data.recap_davis || data.recap, data.recap_williams || data.recap);
   updateEventsList(data.dates_json);
@@ -11322,13 +11490,14 @@ function getActiveShoutoutTvImageUrl() {
 }
 
 function getShoutoutChannelSlate(showEmptyNote = false) {
-  const emptyNote = showEmptyNote ? '<div style="font-size: 1rem; opacity: 0.8; margin-top: 1rem;">No approved shoutouts on this channel yet.</div>' : '';
+  const imageEmptyNote = showEmptyNote ? '<div class="shoutout-tv-empty-note">No approved shoutouts on this channel yet.</div>' : '';
+  const textEmptyNote = showEmptyNote ? '<div style="font-size: 1rem; opacity: 0.8; margin-top: 1rem;">No approved shoutouts on this channel yet.</div>' : '';
   const channelName = getShoutoutChannelName(activeShoutoutChannel);
   const channelImageUrl = getActiveShoutoutTvImageUrl();
   if (channelImageUrl) {
-    return `<div style="width: 100%; color: var(--md-white);"><img src="${escapeShoutoutText(channelImageUrl)}" alt="${channelName} welcome image" style="max-width: 100%; max-height: clamp(170px, 42vw, 290px); object-fit: contain; border-radius: 1rem; box-shadow: 0 10px 24px rgba(0,0,0,0.35);"><div style="color: var(--md-mustard); font-size: 1rem; margin-top: 0.85rem;">${channelName}</div>${emptyNote}</div>`;
+    return `<div class="shoutout-tv-image-frame"><img class="shoutout-tv-image" src="${escapeShoutoutText(channelImageUrl)}" alt="${channelName} welcome image"><div class="shoutout-tv-channel-chip">${channelName}</div>${imageEmptyNote}</div>`;
   }
-  return `<div style="color: var(--md-white);"><div style="color: var(--md-mustard); font-size: 1.1rem; margin-bottom: 0.5rem;">${channelName}</div><div>Ready for scholar shoutouts!</div>${emptyNote}</div>`;
+  return `<div style="color: var(--md-white);"><div style="color: var(--md-mustard); font-size: 1.1rem; margin-bottom: 0.5rem;">${channelName}</div><div>Ready for scholar shoutouts!</div>${textEmptyNote}</div>`;
 }
 
 function getShoutoutClass(shoutout) {
