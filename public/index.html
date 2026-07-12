@@ -1254,7 +1254,7 @@
       justify-content: center;
       gap: .55rem;
       isolation: isolate;
-      padding-right: min(36rem, 48vw);
+      padding-left: min(31rem, 42vw);
     }
     #mainHeading {
       max-width: 12ch;
@@ -1269,9 +1269,9 @@
     }
     .header-character-stage {
       position: absolute;
-      right: clamp(-3.75rem, -1vw, .25rem);
+      left: clamp(-3.25rem, -1vw, .25rem);
       bottom: -.9rem;
-      width: min(48vw, 33rem);
+      width: min(44vw, 30rem);
       aspect-ratio: 3 / 2;
       pointer-events: none;
       z-index: 1;
@@ -1479,27 +1479,29 @@
       #shoutoutBtn {
         top: .7rem !important;
         bottom: auto !important;
-        left: 50% !important;
+        left: 1rem !important;
         right: auto !important;
-        transform: translateX(-50%) !important;
+        transform: none !important;
         z-index: 3;
         white-space: nowrap;
         padding: .48rem .85rem !important;
         font-size: .84rem;
       }
       header .max-w-6xl {
-        min-height: 20rem;
+        min-height: 22rem;
         justify-content: flex-start;
         padding-top: 4.35rem;
-        padding-bottom: 8.75rem;
+        padding-bottom: 10.75rem;
+        padding-left: 1.5rem;
         padding-right: 1.5rem;
         gap: .35rem;
       }
       .header-character-stage {
-        width: min(86vw, 19.5rem);
-        right: 50%;
-        bottom: -.65rem;
-        transform: translateX(50%);
+        width: min(58vw, 17rem);
+        left: .65rem;
+        right: auto;
+        bottom: -.4rem;
+        transform: none;
         opacity: .93;
       }
       #mainHeading,
@@ -1518,13 +1520,14 @@
     }
     @media (max-width: 420px) {
       header .max-w-6xl {
-        min-height: 19.25rem;
+        min-height: 21rem;
         padding-top: 4.15rem;
-        padding-bottom: 8.15rem;
+        padding-bottom: 10rem;
       }
       .header-character-stage {
-        width: min(90vw, 18rem);
-        bottom: -.55rem;
+        width: min(68vw, 15rem);
+        left: .25rem;
+        bottom: -.35rem;
       }
     }
 
