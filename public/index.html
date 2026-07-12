@@ -1265,19 +1265,20 @@
       text-wrap: balance;
       filter: drop-shadow(0 5px 12px rgba(43,43,43,.14));
     }
-    .title-word {
+    #mainHeading .title-word {
       display: inline-block;
       transform-origin: 50% 82%;
-      animation: titleWordPop 4.8s ease-in-out infinite;
+      animation: titleWordPop 3.8s cubic-bezier(.34, 1.56, .64, 1) infinite both;
+      backface-visibility: hidden;
       will-change: transform;
     }
-    .title-word:nth-child(2) { animation-delay: .5s; }
-    .title-word:nth-child(3) { animation-delay: 1s; }
-    .title-word:nth-child(4) { animation-delay: 1.5s; }
+    #mainHeading .title-word:nth-child(2) { animation-delay: .42s; }
+    #mainHeading .title-word:nth-child(3) { animation-delay: .84s; }
+    #mainHeading .title-word:nth-child(4) { animation-delay: 1.26s; }
     @keyframes titleWordPop {
-      0%, 9%, 100% { transform: translateY(0) rotate(0deg); }
-      3.5% { transform: translateY(-.14em) rotate(-1.4deg); }
-      6.5% { transform: translateY(.03em) rotate(.8deg); }
+      0%, 10%, 100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+      4% { transform: translate3d(0, -.15em, 0) rotate(-1.3deg) scale(1.035); }
+      7% { transform: translate3d(0, .025em, 0) rotate(.7deg) scale(.99); }
     }
     #mainHeading,
     .week-meta-row {
@@ -1285,9 +1286,18 @@
       z-index: 2;
     }
     @media (prefers-reduced-motion: reduce) {
-      .title-word {
-        animation: none;
+      #mainHeading .title-word {
+        animation: none !important;
+        transform: none !important;
       }
+    }
+    @media (min-width: 769px) {
+      #mainHeading .title-word {
+        animation: titleWordPop 3.6s cubic-bezier(.34, 1.56, .64, 1) infinite both !important;
+      }
+      #mainHeading .title-word:nth-child(2) { animation-delay: .36s; }
+      #mainHeading .title-word:nth-child(3) { animation-delay: .72s; }
+      #mainHeading .title-word:nth-child(4) { animation-delay: 1.08s; }
     }
     #weekText {
       width: fit-content;
