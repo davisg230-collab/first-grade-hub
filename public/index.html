@@ -3951,6 +3951,7 @@
     document.addEventListener('DOMContentLoaded',async function(){
       showPage('home');
       showHomeSubView('news');
+      if (typeof renderAnimatedMainHeading === 'function') renderAnimatedMainHeading();
       wireMobileHomeNewsCards();
       wireMobileSnackCards();
       syncMobileSpecialsCards();
@@ -4386,6 +4387,7 @@
         return false;
       }
       
+      flattenMainHeadingForEdit();
       storeOriginalValues();
       document.body.classList.add('editing');
       document.querySelectorAll('[data-edit="teacher"]').forEach(el=>el.contentEditable=true);
@@ -4750,9 +4752,11 @@
         document.getElementById('pinInput').focus();
       };
       
-      // Check for changes and show/hide save button
+      // Check for changes and show/hide save button before rebuilding the animated title
+      const hasPendingChanges = hasChanges();
+      renderAnimatedMainHeading();
       const saveBtn = document.getElementById('saveChangesBtn');
-      if (hasChanges()) {
+      if (hasPendingChanges) {
         saveBtn.style.display = 'block';
       } else {
         saveBtn.style.display = 'none';
@@ -7395,6 +7399,38 @@ function parseArray(val) {
   try { return JSON.parse(val); } catch { return []; }
 }
 
+function getMainHeadingText() {
+  const heading = document.getElementById('mainHeading');
+  if (!heading) return 'Hey Hey First Grade!';
+  return (heading.getAttribute('aria-label') || heading.textContent || 'Hey Hey First Grade!')
+    .replace(/\s+/g, ' ')
+    .trim() || 'Hey Hey First Grade!';
+}
+
+function renderAnimatedMainHeading() {
+  const heading = document.getElementById('mainHeading');
+  if (!heading || document.body.classList.contains('editing')) return;
+
+  const titleText = getMainHeadingText();
+  const words = titleText.match(/\S+/g) || ['Hey', 'Hey', 'First', 'Grade!'];
+  heading.innerHTML = '';
+  heading.setAttribute('aria-label', titleText);
+  words.forEach(word => {
+    const span = document.createElement('span');
+    span.className = 'title-word';
+    span.setAttribute('aria-hidden', 'true');
+    span.textContent = word;
+    heading.appendChild(span);
+  });
+}
+
+function flattenMainHeadingForEdit() {
+  const heading = document.getElementById('mainHeading');
+  if (!heading) return;
+  heading.textContent = getMainHeadingText();
+  heading.removeAttribute('aria-label');
+}
+
 // --- Section Updaters (these match your new sheet keys) ---
 function updateWeekText(week) {
   const el = document.getElementById('weekText');
@@ -8314,6 +8350,8 @@ function populateDataFromSheet(data) {
     const calInput = document.getElementById('calendarUrlInput');
     if (calInput) calInput.value = data.calendar_url;
   }
+
+  renderAnimatedMainHeading();
 }
 
 // Function to update Learning Hub Info page
