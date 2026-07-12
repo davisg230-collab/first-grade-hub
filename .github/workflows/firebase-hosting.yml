@@ -44,16 +44,11 @@ jobs:
             printf 'TEACHER_NOTIFICATION_EMAILS=%s\n' "$TEACHER_NOTIFICATION_EMAILS" >> "$env_file"
           fi
 
-          if [ -n "$TEACHER_NOTIFICATION_SMS_EMAILS" ]; then
-            printf 'TEACHER_NOTIFICATION_SMS_EMAILS=%s\n' "$TEACHER_NOTIFICATION_SMS_EMAILS" >> "$env_file"
-          fi
-
           if [ ! -s "$env_file" ]; then
             rm -f "$env_file"
           fi
         env:
           TEACHER_NOTIFICATION_EMAILS: ${{ secrets.TEACHER_NOTIFICATION_EMAILS }}
-          TEACHER_NOTIFICATION_SMS_EMAILS: ${{ secrets.TEACHER_NOTIFICATION_SMS_EMAILS }}
 
       - name: Deploy to Firebase Hosting, Functions, and Firestore Rules
         run: |
