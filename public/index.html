@@ -1476,20 +1476,31 @@
       .calendar-jump-button {
         min-height: 2.65rem;
       }
+      #shoutoutBtn {
+        top: .7rem !important;
+        bottom: auto !important;
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important;
+        z-index: 3;
+        white-space: nowrap;
+        padding: .48rem .85rem !important;
+        font-size: .84rem;
+      }
       header .max-w-6xl {
-        min-height: 18rem;
+        min-height: 20rem;
         justify-content: flex-start;
-        padding-top: 1.75rem;
-        padding-bottom: 8.25rem;
+        padding-top: 4.35rem;
+        padding-bottom: 8.75rem;
         padding-right: 1.5rem;
         gap: .35rem;
       }
       .header-character-stage {
-        width: min(92vw, 22rem);
+        width: min(86vw, 19.5rem);
         right: 50%;
-        bottom: -1.1rem;
+        bottom: -.65rem;
         transform: translateX(50%);
-        opacity: .94;
+        opacity: .93;
       }
       #mainHeading,
       .week-meta-row {
@@ -1503,6 +1514,17 @@
       }
       #topNav button {
         min-height: 3.35rem;
+      }
+    }
+    @media (max-width: 420px) {
+      header .max-w-6xl {
+        min-height: 19.25rem;
+        padding-top: 4.15rem;
+        padding-bottom: 8.15rem;
+      }
+      .header-character-stage {
+        width: min(90vw, 18rem);
+        bottom: -.55rem;
       }
     }
 
