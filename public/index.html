@@ -509,7 +509,7 @@
     }
     .master-roster-row {
       display: grid;
-      grid-template-columns: minmax(170px, 1.15fr) minmax(120px, .7fr) minmax(130px, .75fr) minmax(160px, 1fr) auto;
+      grid-template-columns: minmax(160px, 1.05fr) minmax(110px, .65fr) minmax(120px, .7fr) minmax(120px, .7fr) minmax(145px, .85fr) minmax(190px, 1.15fr) auto;
       gap: .65rem;
       align-items: center;
       padding: .75rem;
@@ -2341,7 +2341,9 @@
           <div>Scholar name</div>
           <div>Class</div>
           <div>Dismissal</div>
+          <div>Status</div>
           <div>Details</div>
+          <div>Approved guardians</div>
           <div></div>
         </div>
         <div id="masterRosterRows" class="space-y-3 mt-3"></div>
@@ -8515,7 +8517,7 @@ function buildTransportationRosterFromLegacy(data = {}) {
       const name = (parts[0] || cleanLine).trim();
       const details = (parts.slice(1).join(' - ') || '').trim();
       const lastName = name.split(/\s+/).slice(-1)[0] || name;
-      rows.push(`${name} | ${lastName} | ${group.type} | ${details} |`);
+      rows.push(`${name} | ${lastName} | ${group.type} | ${details} | | Permanent |`);
     });
   });
   return rows.join('\n');
@@ -8535,7 +8537,9 @@ function parseTransportationRosterText(text) {
         lastName,
         type,
         details: parts[3] || '',
-        classKey: normalizeRosterClass(parts[4] || '')
+        classKey: normalizeRosterClass(parts[4] || ''),
+        duration: normalizeTransportationDuration(parts[5] || 'permanent'),
+        approvedGuardians: parts.slice(6).join(' | ').trim()
       };
     })
     .filter(Boolean);
@@ -8568,6 +8572,82 @@ function getTransportationDetailPlaceholder(type) {
   if (cleanType === 'bus') return 'Bus number';
   if (cleanType === 'car') return 'Pickup person';
   return 'Porch note';
+}
+
+function normalizeTransportationDuration(value) {
+  const clean = String(value || '').toLowerCase();
+  return clean.startsWith('temp') ? 'temporary' : 'permanent';
+}
+
+function getTransportationDurationLabel(value) {
+  return normalizeTransportationDuration(value) === 'temporary' ? 'Temporary' : 'Permanent';
+}
+
+function getTransportationDurationOptions(selectedDuration) {
+  const selected = normalizeTransportationDuration(selectedDuration);
+  return `
+    <option value="permanent" ${selected === 'permanent' ? 'selected' : ''}>Permanent</option>
+    <option value="temporary" ${selected === 'temporary' ? 'selected' : ''}>Temporary</option>
+  `;
+}
+
+function cleanRosterStorageField(value) {
+  return String(value || '').replace(/\|/g, '/').trim();
+}
+
+function parseApprovedGuardianNames(value) {
+  return String(value || '')
+    .split(/[,;\n]+/)
+    .map(name => name.trim())
+    .filter(Boolean);
+}
+
+function normalizeGuardianName(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function getGuardianApprovalResult(scholar, guardianName) {
+  const approvedNames = parseApprovedGuardianNames(scholar?.approvedGuardians || '');
+  const submittedName = String(guardianName || '').trim();
+  if (!approvedNames.length) {
+    return {
+      status: 'no-list',
+      approved: false,
+      label: 'No approved guardians listed for this scholar',
+      matchedName: ''
+    };
+  }
+
+  const normalizedSubmittedName = normalizeGuardianName(submittedName);
+  const matchedName = approvedNames.find(name => normalizeGuardianName(name) === normalizedSubmittedName) || '';
+  if (matchedName) {
+    return {
+      status: 'approved',
+      approved: true,
+      label: `Approved guardian matched: ${matchedName}`,
+      matchedName
+    };
+  }
+
+  return {
+    status: 'not-found',
+    approved: false,
+    label: 'Not on approved guardian list',
+    matchedName: ''
+  };
+}
+
+function getGuardianApprovalBadgeText(update) {
+  if (!update.guardianApprovalStatus) return 'Not checked on older update';
+  if (update.guardianApprovalStatus === 'approved') {
+    return update.guardianMatchedName ? `Approved: ${update.guardianMatchedName}` : 'Approved guardian';
+  }
+  if (update.guardianApprovalStatus === 'no-list') return 'No approved guardian list';
+  return 'Not on approved guardian list';
 }
 
 function getLastNameFromRosterName(name) {
@@ -8606,13 +8686,21 @@ function getTransportationRowData() {
       name,
       lastName: getLastNameFromRosterName(name),
       type,
-      details
+      details,
+      duration: 'permanent',
+      approvedGuardians: ''
     };
   }).filter(row => row.name);
 }
 
 function formatTransportationRosterRow(row) {
-  return `${row.name} | ${row.lastName || getLastNameFromRosterName(row.name)} | ${getTransportationStorageType(row.type)} | ${row.details || ''} | ${normalizeRosterClass(row.classKey)}`;
+  const name = cleanRosterStorageField(row.name);
+  const lastName = cleanRosterStorageField(row.lastName || getLastNameFromRosterName(row.name));
+  const details = cleanRosterStorageField(row.details || '');
+  const classKey = normalizeRosterClass(row.classKey);
+  const duration = getTransportationDurationLabel(row.duration);
+  const approvedGuardians = cleanRosterStorageField(row.approvedGuardians || '');
+  return `${name} | ${lastName} | ${getTransportationStorageType(row.type)} | ${details} | ${classKey} | ${duration} | ${approvedGuardians}`;
 }
 
 function syncTransportationRosterText() {
@@ -8670,7 +8758,9 @@ function buildTransportationRowsFromRoster() {
       name,
       lastName: getLastNameFromRosterName(name),
       type: 'bus',
-      details: ''
+      details: '',
+      duration: 'permanent',
+      approvedGuardians: ''
     };
   });
   rosterEl.value = rows.map(formatTransportationRosterRow).join('\n');
@@ -8688,7 +8778,9 @@ function addTransportationRosterRow(name = '', type = 'bus', details = '') {
     name: cleanName,
     lastName: getLastNameFromRosterName(cleanName),
     type: normalizeTransportationType(type),
-    details: typeof details === 'string' ? details.trim() : ''
+    details: typeof details === 'string' ? details.trim() : '',
+    duration: 'permanent',
+    approvedGuardians: ''
   });
   rosterEl.value = rows.map(formatTransportationRosterRow).join('\n');
   renderTransportationRosterManager();
@@ -8713,9 +8805,10 @@ function handleTransportationRowInput() {
 
 function getTransportationStatus(scholar) {
   if (!scholar) return '';
-  if (scholar.type === 'bus') return scholar.details ? `Bus ${scholar.details.replace(/^bus\s*/i, '')}` : 'Bus';
-  if (scholar.type === 'car') return scholar.details ? `Car Pickup: ${scholar.details}` : 'Car Pickup';
-  return scholar.details ? `Porch Pickup: ${scholar.details}` : 'Porch Pickup';
+  const duration = ` (${getTransportationDurationLabel(scholar.duration)})`;
+  if (scholar.type === 'bus') return `${scholar.details ? `Bus ${scholar.details.replace(/^bus\s*/i, '')}` : 'Bus'}${duration}`;
+  if (scholar.type === 'car') return `${scholar.details ? `Car Pickup: ${scholar.details}` : 'Car Pickup'}${duration}`;
+  return `${scholar.details ? `Porch Pickup: ${scholar.details}` : 'Porch Pickup'}${duration}`;
 }
 
 function getTransportationUpdates() {
@@ -8743,17 +8836,27 @@ function renderTransportationUpdates() {
     list.innerHTML = '<div class="rounded-xl p-4 bg-white text-gray-600">No submitted updates yet.</div>';
     return;
   }
-  list.innerHTML = updates.slice().reverse().map(update => `
-    <div class="rounded-xl p-4 bg-white" style="border:1px solid color-mix(in oklab,var(--md-slate) 24%,var(--md-white) 76%);">
-      <div class="font-semibold">${escapeBirthdayText(update.studentName)} -> ${escapeBirthdayText(getTransportationTypeLabel(update.requestedType))}</div>
-      <div class="text-gray-600">${escapeBirthdayText(update.duration)} change requested by ${escapeBirthdayText(update.guardianName)}</div>
-      <div class="text-gray-700 font-semibold mt-1">${escapeBirthdayText(getTransportationChangeSentence(update))}</div>
-      <div class="text-gray-600">Current: ${escapeBirthdayText(update.currentStatus || 'Not listed')}</div>
-      ${update.details ? `<div class="text-gray-600">Details: ${escapeBirthdayText(update.details)}</div>` : ''}
-      ${update.note ? `<div class="text-gray-600">Note: ${escapeBirthdayText(update.note)}</div>` : ''}
-      <div class="text-xs text-gray-500 mt-2">${escapeBirthdayText(update.createdAt || '')}</div>
-    </div>
-  `).join('');
+  list.innerHTML = updates.slice().reverse().map(update => {
+    const approvalStatus = update.guardianApprovalStatus || '';
+    const approvalText = getGuardianApprovalBadgeText(update);
+    const approvalStyle = approvalStatus === 'approved'
+      ? 'background: color-mix(in oklab, var(--md-white) 65%, #22c55e 35%); color:#14532d;'
+      : approvalStatus
+        ? 'background: color-mix(in oklab, var(--md-white) 58%, #f97316 42%); color:#7c2d12;'
+        : 'background: color-mix(in oklab, var(--md-white) 72%, var(--md-slate) 28%); color:var(--md-ink);';
+    return `
+      <div class="rounded-xl p-4 bg-white" style="border:1px solid color-mix(in oklab,var(--md-slate) 24%,var(--md-white) 76%);">
+        <div class="font-semibold">${escapeBirthdayText(update.studentName)} -> ${escapeBirthdayText(getTransportationTypeLabel(update.requestedType))}</div>
+        <div class="text-gray-600">${escapeBirthdayText(update.duration)} change requested by ${escapeBirthdayText(update.guardianName)}</div>
+        <div class="inline-flex mt-2 px-3 py-1 rounded-full text-xs font-bold" style="${approvalStyle}">Guardian check: ${escapeBirthdayText(approvalText)}</div>
+        <div class="text-gray-700 font-semibold mt-2">${escapeBirthdayText(getTransportationChangeSentence(update))}</div>
+        <div class="text-gray-600">Current: ${escapeBirthdayText(update.currentStatus || 'Not listed')}</div>
+        ${update.details ? `<div class="text-gray-600">Details: ${escapeBirthdayText(update.details)}</div>` : ''}
+        ${update.note ? `<div class="text-gray-600">Note: ${escapeBirthdayText(update.note)}</div>` : ''}
+        <div class="text-xs text-gray-500 mt-2">${escapeBirthdayText(update.createdAt || '')}</div>
+      </div>
+    `;
+  }).join('');
 }
 
 // Function to save individual transportation fields
@@ -9618,13 +9721,17 @@ function getMasterRosterRowData() {
       const name = row.querySelector('.master-row-name')?.value.trim() || '';
       const classKey = normalizeRosterClass(row.querySelector('.master-row-class')?.value || 'davis');
       const type = normalizeTransportationType(row.querySelector('.master-row-type')?.value || 'bus');
+      const duration = normalizeTransportationDuration(row.querySelector('.master-row-duration')?.value || 'permanent');
       const details = row.querySelector('.master-row-details')?.value.trim() || '';
+      const approvedGuardians = row.querySelector('.master-row-guardians')?.value.trim() || '';
       return {
         name,
         lastName: getLastNameFromRosterName(name),
         classKey,
         type,
-        details
+        duration,
+        details,
+        approvedGuardians
       };
     }).filter(row => row.name);
   }
@@ -9639,7 +9746,9 @@ function getMasterRosterRowData() {
       lastName: getLastNameFromRosterName(name),
       classKey: savedTransportation?.classKey || 'davis',
       type: savedTransportation?.type || 'bus',
-      details: savedTransportation?.details || ''
+      duration: savedTransportation?.duration || 'permanent',
+      details: savedTransportation?.details || '',
+      approvedGuardians: savedTransportation?.approvedGuardians || ''
     };
   });
 }
@@ -9650,7 +9759,9 @@ function setMasterRosterData(rows) {
     lastName: getLastNameFromRosterName(row.name),
     classKey: normalizeRosterClass(row.classKey || 'davis'),
     type: normalizeTransportationType(row.type || 'bus'),
-    details: String(row.details || '').trim()
+    duration: normalizeTransportationDuration(row.duration || 'permanent'),
+    details: String(row.details || '').trim(),
+    approvedGuardians: String(row.approvedGuardians || '').trim()
   })).filter(row => row.name);
 
   const namesText = cleanRows.map(row => row.name).join('\n');
@@ -9714,7 +9825,11 @@ function getMasterRosterRowMarkup(row, index) {
         <option value="car" ${cleanType === 'car' ? 'selected' : ''}>Car</option>
         <option value="porch" ${cleanType === 'porch' ? 'selected' : ''}>Porch</option>
       </select>
+      <select class="master-row-duration teacher-only-edit" onchange="handleMasterRosterInput()">
+        ${getTransportationDurationOptions(row.duration)}
+      </select>
       <input class="master-row-details teacher-only-edit" value="${escapeBirthdayText(row.details || '')}" placeholder="${getTransportationDetailPlaceholder(cleanType)}" oninput="handleMasterRosterInput()">
+      <input class="master-row-guardians teacher-only-edit" value="${escapeBirthdayText(row.approvedGuardians || '')}" placeholder="Names separated by commas" oninput="handleMasterRosterInput()">
       <button type="button" class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="removeMasterRosterRow(this)">Remove</button>
     </div>
   `;
@@ -9736,7 +9851,7 @@ function renderMasterRosterManager() {
 
 function addMasterRosterRow() {
   const rows = getMasterRosterRowData();
-  rows.push({ name: '', classKey: 'davis', type: 'bus', details: '' });
+  rows.push({ name: '', classKey: 'davis', type: 'bus', duration: 'permanent', details: '', approvedGuardians: '' });
   const container = document.getElementById('masterRosterRows');
   if (!container) return;
   renderMasterRosterRows(rows);
@@ -9783,7 +9898,7 @@ function insertRosterFromPaste() {
   const existingNames = new Set(rows.map(row => row.name.toLowerCase()));
   names.forEach(name => {
     if (existingNames.has(name.toLowerCase())) return;
-    rows.push({ name, classKey, type, details: '' });
+    rows.push({ name, classKey, type, duration: 'permanent', details: '', approvedGuardians: '' });
     existingNames.add(name.toLowerCase());
   });
   setMasterRosterData(rows);
@@ -9842,7 +9957,7 @@ function saveRosterImage(classKey = '') {
   };
   const rows = rosterRows.map(row => {
     const details = row.details ? ` - ${row.details}` : '';
-    return `${row.name} | ${getTransportationTypeLabel(row.type)}${details}`;
+    return `${row.name} | ${getTransportationTypeLabel(row.type)} (${getTransportationDurationLabel(row.duration)})${details}`;
   });
   const classLabel = normalizedClass ? getRosterClassLabel(normalizedClass) : 'First Grade';
   const columnCount = rows.length > 22 ? 2 : 1;
@@ -10298,9 +10413,10 @@ async function submitTransportationUpdate() {
   }
   const guardianName = document.getElementById('transportationGuardianInput')?.value.trim() || '';
   if (!guardianName) {
-    alert('Please enter your name so the teacher knows who submitted this change.');
+    alert('Please enter your full parent/guardian name so the teacher knows who submitted this change.');
     return;
   }
+  const guardianApproval = getGuardianApprovalResult(selectedTransportationScholar, guardianName);
   const submitBtn = document.getElementById('transportationSubmitBtn');
   const originalText = submitBtn ? submitBtn.textContent : '';
   try {
@@ -10318,13 +10434,17 @@ async function submitTransportationUpdate() {
       details: detail,
       duration: document.getElementById('transportationDurationSelect')?.value || 'temporary',
       guardianName,
+      guardianApprovalStatus: guardianApproval.status,
+      guardianApproved: guardianApproval.approved,
+      guardianMatchedName: guardianApproval.matchedName,
+      guardianApprovalLabel: guardianApproval.label,
       note: document.getElementById('transportationNoteInput')?.value.trim() || '',
       createdAt: new Date().toLocaleString()
     };
     const updates = [...getTransportationUpdates(), update].slice(-60);
     setTransportationUpdates(updates);
     await db.collection('classData').doc('current').set({ transportation_updates_json: JSON.stringify(updates) }, { merge: true });
-    await logParentActivity('transportation', 'Transportation update submitted', `${guardianName} submitted a ${update.duration} transportation change for ${update.studentName}. ${getTransportationChangeSentence(update)}`, update);
+    await logParentActivity('transportation', 'Transportation update submitted', `${guardianName} submitted a ${update.duration} transportation change for ${update.studentName}. ${getTransportationChangeSentence(update)} Guardian check: ${guardianApproval.label}.`, update);
     const success = document.getElementById('transportationSuccessMessage');
     if (success) success.style.display = 'block';
     setTimeout(closeTransportationModal, 5500);
@@ -15989,8 +16109,8 @@ document.head.appendChild(style);
               </select>
             </div>
             <div>
-              <label class="block text-sm font-semibold mb-2">Your name</label>
-              <input id="transportationGuardianInput" class="transportation-modal-field" type="text" placeholder="Parent/guardian name">
+              <label class="block text-sm font-semibold mb-2">Parent/guardian full name</label>
+              <input id="transportationGuardianInput" class="transportation-modal-field" type="text" placeholder="Example: Maria Gonzalez">
             </div>
           </div>
 
