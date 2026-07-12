@@ -13,7 +13,6 @@ const NOTIFICATION_RECIPIENTS = uniqueRecipients([
   ...DEFAULT_TEACHER_EMAILS,
   ...parseRecipientList(process.env.TEACHER_NOTIFICATION_EMAIL),
   ...parseRecipientList(process.env.TEACHER_NOTIFICATION_EMAILS),
-  ...parseRecipientList(process.env.TEACHER_NOTIFICATION_SMS_EMAILS),
 ]);
 
 exports.queueTeacherActivityEmail = onDocumentCreated("teacherActivity/{activityId}", async (event) => {

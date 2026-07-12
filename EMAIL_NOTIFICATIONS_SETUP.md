@@ -47,8 +47,6 @@ If this ever needs to change without editing code, set the Firebase Functions en
 
 ## Text notifications
 
-The same email pipeline can also send text-message notifications through carrier email-to-SMS gateways. Set `TEACHER_NOTIFICATION_SMS_EMAILS` to a comma-separated list of gateway addresses, such as `5551234567@vtext.com`.
+Carrier email-to-text gateways are disabled for this site because AT&T gateway addresses such as `mms.att.net` and `txt.att.net` bounced instead of sending reliable text messages.
 
-For this GitHub-hosted deploy, add `TEACHER_NOTIFICATION_SMS_EMAILS` as a GitHub repository secret. The deploy workflow copies that secret into a temporary Firebase Functions `.env` file during deployment so the phone number does not get committed to the public repo.
-
-SMS gateway delivery depends on the phone carrier and is less reliable than regular email. For more dependable texting, use a dedicated SMS provider such as Twilio instead of the Firebase email extension.
+Teacher notifications are sent by email only.
