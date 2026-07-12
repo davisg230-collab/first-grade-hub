@@ -1254,12 +1254,59 @@
       justify-content: center;
       gap: .55rem;
       isolation: isolate;
+      padding-right: min(36rem, 48vw);
     }
     #mainHeading {
       max-width: 12ch;
       line-height: .96;
       text-wrap: balance;
       filter: drop-shadow(0 5px 12px rgba(43,43,43,.14));
+    }
+    #mainHeading,
+    .week-meta-row {
+      position: relative;
+      z-index: 2;
+    }
+    .header-character-stage {
+      position: absolute;
+      right: clamp(-3.75rem, -1vw, .25rem);
+      bottom: -.9rem;
+      width: min(48vw, 33rem);
+      aspect-ratio: 3 / 2;
+      pointer-events: none;
+      z-index: 1;
+      filter: drop-shadow(0 18px 26px rgba(43,43,43,.18));
+    }
+    .header-character-layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center bottom;
+    }
+    .header-character-arm-left {
+      transform-origin: 13.5% 78%;
+      animation: headerWaveLeft 2.8s ease-in-out infinite;
+    }
+    .header-character-arm-right {
+      transform-origin: 81.5% 58%;
+      animation: headerWaveRight 3.05s ease-in-out infinite;
+      animation-delay: .18s;
+    }
+    @keyframes headerWaveLeft {
+      0%, 100% { transform: rotate(-2deg); }
+      50% { transform: rotate(5deg); }
+    }
+    @keyframes headerWaveRight {
+      0%, 100% { transform: rotate(2deg); }
+      50% { transform: rotate(-5deg); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .header-character-arm-left,
+      .header-character-arm-right {
+        animation: none;
+      }
     }
     #weekText {
       width: fit-content;
@@ -1430,9 +1477,24 @@
         min-height: 2.65rem;
       }
       header .max-w-6xl {
-        min-height: 9.75rem;
-        padding-bottom: 1.2rem;
+        min-height: 18rem;
+        justify-content: flex-start;
+        padding-top: 1.75rem;
+        padding-bottom: 8.25rem;
+        padding-right: 1.5rem;
         gap: .35rem;
+      }
+      .header-character-stage {
+        width: min(92vw, 22rem);
+        right: 50%;
+        bottom: -1.1rem;
+        transform: translateX(50%);
+        opacity: .94;
+      }
+      #mainHeading,
+      .week-meta-row {
+        position: relative;
+        z-index: 2;
       }
       #topNav {
         border-radius: .95rem;
@@ -1491,6 +1553,11 @@
                 onclick="showPage('home'); showHomeSubView('calendar');">
           <span aria-hidden="true">&#128197;</span><span>Calendar</span>
         </button>
+      </div>
+      <div class="header-character-stage" aria-hidden="true">
+        <img class="header-character-layer header-character-body" src="characters/teachers-body.png" alt="">
+        <img class="header-character-layer header-character-arm-left" src="characters/teacher-left-arm.png" alt="">
+        <img class="header-character-layer header-character-arm-right" src="characters/teacher-right-arm.png" alt="">
       </div>
     </div>
   </header>
