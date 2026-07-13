@@ -70,7 +70,7 @@ exports.analyzeCurriculumLesson = onCall(
       throw new HttpsError("failed-precondition", "The OpenAI API key is not configured yet.");
     }
 
-    const model = process.env.OPENAI_MODEL || "gpt-5.4-mini";
+    const model = process.env.OPENAI_MODEL || "gpt-5.6-luna";
     const prompt = buildCurriculumAnalysisPrompt({
       subject: asText(data.subject),
       unitOrModule: asText(data.unitOrModule),
