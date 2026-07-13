@@ -3331,6 +3331,10 @@
               <h3 class="font-display font-bold">Curriculum Library</h3>
               <p>Upload lessons, save AI drafts, schedule parent pages, and print weekly plans.</p>
             </button>
+            <button id="teacherEditWebsiteTool" type="button" class="teacher-tool-book" style="background: linear-gradient(90deg, #2f6f73 0 .55rem, #3f8f8b .55rem);" onclick="openTeacherEditTool()">
+              <h3 id="teacherEditWebsiteTitle" class="font-display font-bold">Edit Website</h3>
+              <p id="teacherEditWebsiteDesc">Unlock the public site editor for photos, text, tabs, calendars, and classroom updates.</p>
+            </button>
             <button type="button" class="teacher-tool-book" style="background: linear-gradient(90deg, #be5b45 0 .55rem, var(--md-coral) .55rem);" disabled>
               <h3 class="font-display font-bold">Roster Tools</h3>
               <p>Coming later for scholar lists, guardians, and classroom records.</p>
@@ -3888,10 +3892,10 @@
             <span>🌓</span><span>Light/Dark</span>
           </button>
           <button id="curriculumBuilderBtn" class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white shadow-soft"
-                  data-page="curriculum-builder" data-tooltip="Teacher Curriculum Builder&#10;AI Lesson Extractor&#10;Saved Lesson Library" style="background: #475569;">
+                  data-page="curriculum-builder" data-tooltip="Teacher Tools&#10;Edit Website&#10;Curriculum Library" style="background: #475569;">
             <span>&#128274;</span><span>Teacher Tools</span>
           </button>
-          <button id="editModeBtn" class="px-4 py-2 rounded-xl font-semibold text-white shadow-soft" style="background: var(--md-slate);">
+          <button id="editModeBtn" class="px-4 py-2 rounded-xl font-semibold text-white shadow-soft" style="background: var(--md-slate); display: none;">
             ✏️ Edit Mode
           </button>
         </div>
@@ -4854,10 +4858,7 @@
       // Initialize read-only state on page load
       initializeReadOnlyState();
       
-      document.getElementById('editModeBtn').onclick = function() {
-        document.getElementById('pinOverlay').classList.add('show');
-        document.getElementById('pinInput').focus();
-      };
+      document.getElementById('editModeBtn').onclick = openEditModePinOverlay;
       document.getElementById('pinCancel').onclick = function() {
         document.getElementById('pinOverlay').classList.remove('show');
         document.getElementById('pinInput').value = '';
@@ -4968,6 +4969,25 @@
       const input = document.getElementById('pinInput');
       if (overlay) overlay.classList.remove('show');
       if (input) input.value = '';
+    }
+
+    function openEditModePinOverlay() {
+      const overlay = document.getElementById('pinOverlay');
+      const input = document.getElementById('pinInput');
+      if (overlay) overlay.classList.add('show');
+      if (input) input.focus();
+    }
+
+    function updateTeacherEditToolState() {
+      const title = document.getElementById('teacherEditWebsiteTitle');
+      const description = document.getElementById('teacherEditWebsiteDesc');
+      const isEditing = document.body.classList.contains('editing');
+      if (title) title.textContent = isEditing ? 'Exit Website Editor' : 'Edit Website';
+      if (description) {
+        description.textContent = isEditing
+          ? 'Close edit mode and return the public site to family view.'
+          : 'Unlock the public site editor for photos, text, tabs, calendars, and classroom updates.';
+      }
     }
 
     function getEditModeStorage(storageName) {
@@ -5161,6 +5181,19 @@
       showCurriculumWorkspace(!!getApprovedCurriculumUser());
     }
 
+    async function openTeacherEditTool() {
+      const user = await ensureCurriculumTeacherUser();
+      if (!user) return;
+      if (document.body.classList.contains('editing')) {
+        exitEditMode();
+        showCurriculumToolShelf();
+        setCurriculumStatus('Website editor closed.', 'success');
+        return;
+      }
+      openEditModePinOverlay();
+      setCurriculumStatus('Enter your edit PIN to unlock the website editor.', 'info');
+    }
+
     async function openCurriculumTool(toolId) {
       if (toolId !== 'curriculum') return;
       const user = await ensureCurriculumTeacherUser();
@@ -5265,6 +5298,7 @@
       if (backBtn) backBtn.style.display = show && curriculumToolView === 'curriculum' ? 'inline-flex' : 'none';
       if (refreshBtn) refreshBtn.style.display = show && curriculumToolView === 'curriculum' ? 'inline-flex' : 'none';
       updateCurriculumToolHeader();
+      updateTeacherEditToolState();
     }
 
     function updateCurriculumToolHeader() {
@@ -6002,13 +6036,17 @@
         if (!db) throw new Error('The parent learning pages are not available. Please refresh and try again.');
         const payload = { curriculum_weekly_plan_json: JSON.stringify(curriculumWeeklyPlan) };
         const updatedSubjects = [];
-        curriculumSubjects.forEach(subject => {
+        let usedSpotlightFallback = false;
+        setCurriculumBusy(true, 'Preparing learning pages...');
+        for (const subject of curriculumSubjects) {
           const fields = getCurriculumSubjectFields(subject);
           const spotlight = buildCurriculumWeekDraft(subject, 'spotlight');
           const upcoming = buildCurriculumWeekDraft(subject, 'upcoming');
-          if (!spotlight.selectedLessons.length && !upcoming.selectedLessons.length) return;
+          if (!spotlight.selectedLessons.length && !upcoming.selectedLessons.length) continue;
           if (spotlight.selectedLessons.length) {
-            payload[fields.text] = spotlight.spotlight;
+            const aiSpotlight = await generateCurriculumSpotlightText(subject, spotlight);
+            if (!aiSpotlight) usedSpotlightFallback = true;
+            payload[fields.text] = aiSpotlight || spotlight.spotlight;
             if (fields.moduleLabel) payload[fields.moduleLabel] = spotlight.moduleLabel;
           }
           if (upcoming.selectedLessons.length) {
@@ -6029,11 +6067,11 @@
             }
           }
           updatedSubjects.push(getCurriculumSubjectLabel(subject));
-        });
+        }
         if (!updatedSubjects.length) {
           throw new Error('Schedule at least one lesson with the calendar button first.');
         }
-        setCurriculumBusy(true, 'Publishing learning pages...');
+        setCurriculumStatus('Saving learning pages...');
         await db.collection('classData').doc('current').set(payload, { merge: true });
         if (payload.skills_text || payload.sounds_json || payload.skills_week_module_label) {
           updateSkillsSection(payload.skills_text, payload.sounds_json, payload.skills_week_module_label);
@@ -6048,12 +6086,41 @@
           const fields = getCurriculumSubjectFields(subject);
           if (payload[fields.lessons]) updateLessonCards(subject, payload[fields.lessons]);
         });
-        setCurriculumStatus(`Parent pages updated for ${updatedSubjects.join(', ')}.`, 'success');
+        const fallbackNote = usedSpotlightFallback ? ' One spotlight used backup wording because the AI writer did not respond.' : '';
+        setCurriculumStatus(`Parent pages updated for ${updatedSubjects.join(', ')}.${fallbackNote}`, 'success');
       } catch (error) {
         console.error('Publishing learning pages failed:', error);
         setCurriculumStatus(error.message || 'The learning pages could not be published.', 'error');
       } finally {
         setCurriculumBusy(false);
+      }
+    }
+
+    async function generateCurriculumSpotlightText(subject, week) {
+      if (!cloudFunctions || !week || !week.selectedLessons.length) return '';
+      try {
+        setCurriculumStatus(`Writing ${getCurriculumSubjectLabel(subject)} spotlight with AI...`);
+        const writeSpotlight = cloudFunctions.httpsCallable('generateCurriculumSpotlight');
+        const result = await writeSpotlight({
+          subject,
+          weekLabel: week.weekLabel,
+          moduleLabel: week.moduleLabel,
+          lessons: week.lessonsByDay.map((lesson, index) => lesson ? ({
+            day: curriculumWeekdays[index]?.title || '',
+            lessonNumber: lesson.lessonNumber || '',
+            lessonTitle: getCurriculumCardTitle(lesson),
+            objective: lesson.objective || '',
+            iCanStatement: lesson.iCanStatement || '',
+            parentSummary: lesson.parentSummary || '',
+            priorityStandard: lesson.priorityStandard || '',
+            vocabulary: Array.isArray(lesson.vocabulary) ? lesson.vocabulary : []
+          }) : null).filter(Boolean)
+        });
+        const text = result && result.data && result.data.spotlight ? String(result.data.spotlight).trim() : '';
+        return text;
+      } catch (error) {
+        console.warn('AI weekly spotlight failed, using backup summary:', error);
+        return '';
       }
     }
 
@@ -6182,6 +6249,13 @@
       return items.length > limit ? `${listText}, and more` : listText;
     }
 
+    function formatInlineLearningList(items, limit = 14) {
+      const cleanItems = uniqueList(items).slice(0, limit);
+      if (!cleanItems.length) return '';
+      const listText = cleanItems.join(', ');
+      return items.length > limit ? `${listText}, and more` : listText;
+    }
+
     function getSkillsSoundList(corpus) {
       const sounds = [];
       const allowedDigraphs = new Set(['ch', 'sh', 'th', 'wh', 'ph', 'ck', 'ng']);
@@ -6233,7 +6307,7 @@
         mainSkills.push('blending and breaking apart sounds');
       }
       if (sounds.length) {
-        mainSkills.push(`learning and reviewing letter sounds and spellings like ${formatCompactLearningList(sounds, 14)}`);
+        mainSkills.push(`learning and reviewing letter sounds and spellings (${formatInlineLearningList(sounds, 14)})`);
       } else if (/\b(sound|sounds|spelling|spellings|letter|letters)\b/i.test(lower)) {
         mainSkills.push('learning and reviewing letter sounds and spellings');
       }
@@ -6243,13 +6317,13 @@
 
       const trickyWords = getSkillsTrickyWords(corpus);
       if (trickyWords.length) {
-        extras.push(`Tricky Words ${formatCompactLearningList(trickyWords, 6)}`);
+        extras.push('Tricky Words');
       }
       if (/\bnouns?\b/i.test(lower)) {
-        extras.push('nouns that name people, places, and things');
+        extras.push('naming nouns');
       }
       if (/\bword chains?\b/i.test(lower)) {
-        extras.push('building and reading word chains');
+        extras.push('building word chains');
       }
 
       if (!mainSkills.length && !extras.length) return getCurriculumDefaultSpotlight('skills');
@@ -6292,10 +6366,7 @@
 
     function getCurriculumWeekSpotlight(lessons, moduleLabel, subject = 'skills') {
       if (!lessons.length) return getCurriculumDefaultSpotlight(subject);
-      const vocab = uniqueList(lessons.flatMap(lesson => lesson.vocabulary || [])).slice(0, 4);
-      const focus = getCurriculumCombinedObjectiveSummary(lessons, subject);
-      const vocabText = vocab.length ? ` We will also use words like ${vocab.join(', ')}.` : '';
-      return `${focus}${vocabText}`;
+      return getCurriculumCombinedObjectiveSummary(lessons, subject);
     }
 
     function getCurriculumDefaultFamilySummary(subject = 'skills') {
@@ -6893,6 +6964,7 @@
       restoreEditDraftIfAvailable();
       loadTeacherActivityPanel();
       syncMobileHomeNewsCards();
+      updateTeacherEditToolState();
       return true;
     }
     function exitEditMode(){
@@ -7064,10 +7136,8 @@
       });
       
       document.getElementById('editModeBtn').textContent = '✏️ Edit Mode';
-      document.getElementById('editModeBtn').onclick = function(){
-        document.getElementById('pinOverlay').classList.add('show');
-        document.getElementById('pinInput').focus();
-      };
+      document.getElementById('editModeBtn').onclick = openEditModePinOverlay;
+      updateTeacherEditToolState();
       
       // Check for changes and show/hide save button before rebuilding the animated title
       const hasPendingChanges = hasChanges();

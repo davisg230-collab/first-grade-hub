@@ -151,6 +151,109 @@ exports.analyzeCurriculumLesson = onCall(
   }
 );
 
+exports.generateCurriculumSpotlight = onCall(
+  {
+    secrets: [OPENAI_API_KEY],
+    timeoutSeconds: 90,
+    memory: "512MiB",
+  },
+  async (request) => {
+    const email = asText(request.auth && request.auth.token && request.auth.token.email).toLowerCase();
+    if (!APPROVED_EDITOR_EMAILS.has(email)) {
+      throw new HttpsError("permission-denied", "Teacher sign-in is required to write curriculum spotlights.");
+    }
+
+    const data = request.data || {};
+    const subject = normalizeCurriculumSubject(data.subject);
+    const lessons = normalizeSpotlightLessons(data.lessons).slice(0, 5);
+    if (!lessons.length) {
+      throw new HttpsError("invalid-argument", "Choose current or previous week lessons before writing a spotlight.");
+    }
+
+    const apiKey = OPENAI_API_KEY.value();
+    if (!apiKey) {
+      throw new HttpsError("failed-precondition", "The OpenAI API key is not configured yet.");
+    }
+
+    const model = process.env.OPENAI_MODEL || "gpt-5.6-luna";
+    const prompt = buildCurriculumSpotlightPrompt({
+      subject,
+      weekLabel: asText(data.weekLabel),
+      moduleLabel: asText(data.moduleLabel),
+      lessons,
+    });
+
+    let response;
+    try {
+      response = await fetch("https://api.openai.com/v1/responses", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          instructions: [
+            "You write concise first grade family updates.",
+            "Use the selected current or previous week lesson objectives as the source.",
+            "Combine the lessons into one simple, warm summary instead of listing each objective separately.",
+            "Write for families who may not know curriculum language.",
+            "Do not mention upcoming lessons, the teacher, standards codes, lesson numbers, module numbers, or AI.",
+            "Do not add a separate vocabulary sentence. Vocabulary is shown elsewhere on the page.",
+          ].join(" "),
+          input: prompt,
+          max_output_tokens: 450,
+          text: {
+            format: {
+              type: "json_schema",
+              name: "curriculum_week_spotlight",
+              strict: true,
+              schema: CURRICULUM_SPOTLIGHT_SCHEMA,
+            },
+          },
+        }),
+      });
+    } catch (error) {
+      logger.error("OpenAI spotlight request failed before response.", { message: error.message });
+      throw new HttpsError("unavailable", "The AI spotlight writer could not be reached. Please try again.");
+    }
+
+    const responseBody = await readJsonResponse(response);
+    if (!response.ok) {
+      const openAiError = responseBody && responseBody.error ? responseBody.error : {};
+      logger.error("OpenAI spotlight request failed.", {
+        status: response.status,
+        code: openAiError.code,
+        type: openAiError.type,
+        param: openAiError.param,
+        message: openAiError.message,
+      });
+      throw new HttpsError("failed-precondition", getOpenAICurriculumFailureMessage(response.status, responseBody));
+    }
+
+    const outputText = extractOpenAIOutputText(responseBody);
+    if (!outputText) {
+      logger.error("OpenAI spotlight response had no output text.", { responseId: responseBody && responseBody.id });
+      throw new HttpsError("internal", "The AI spotlight writer did not return usable text.");
+    }
+
+    let result;
+    try {
+      result = JSON.parse(outputText);
+    } catch (error) {
+      logger.error("OpenAI spotlight response was not valid JSON.", { message: error.message });
+      throw new HttpsError("internal", "The AI spotlight writer returned text in the wrong format.");
+    }
+
+    return {
+      spotlight: normalizeSpotlightText(result.spotlight),
+      sourceConfidence: ["high", "medium", "low"].includes(result.sourceConfidence) ? result.sourceConfidence : "medium",
+      generatedAt: new Date().toISOString(),
+      model,
+    };
+  }
+);
+
 const CURRICULUM_LESSON_SCHEMA = {
   type: "object",
   additionalProperties: false,
@@ -200,6 +303,16 @@ const CURRICULUM_LESSON_SCHEMA = {
     "missingInformation",
     "sourceConfidence",
   ],
+};
+
+const CURRICULUM_SPOTLIGHT_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    spotlight: { type: "string" },
+    sourceConfidence: { type: "string", enum: ["high", "medium", "low"] },
+  },
+  required: ["spotlight", "sourceConfidence"],
 };
 
 function buildActivityEmail(activity, activityId) {
@@ -289,6 +402,79 @@ function buildCurriculumAnalysisPrompt(data) {
     "Lesson source:",
     data.sourceText,
   ].join("\n");
+}
+
+function buildCurriculumSpotlightPrompt(data) {
+  const subjectLabel = labelForCurriculumSubject(data.subject);
+  const lessonLines = data.lessons.map((lesson, index) => {
+    return [
+      `Lesson ${index + 1}:`,
+      `Day: ${lesson.day || "not provided"}`,
+      `Title: ${lesson.lessonTitle || "not provided"}`,
+      `Objective: ${lesson.objective || "not provided"}`,
+      `I can: ${lesson.iCanStatement || "not provided"}`,
+      `Parent summary: ${lesson.parentSummary || "not provided"}`,
+      `Vocabulary/teaching words: ${lesson.vocabulary.join(", ") || "not provided"}`,
+    ].join("\n");
+  }).join("\n\n");
+
+  return [
+    `Write the parent-facing weekly spotlight for ${subjectLabel}.`,
+    `Week label: ${data.weekLabel || "current or previous week"}`,
+    `Module/lesson label shown separately on the page: ${data.moduleLabel || "not provided"}`,
+    "",
+    "Important:",
+    "- This spotlight is for what students learned in the current or previous week.",
+    "- Do not write about upcoming lessons.",
+    "- Read all objectives and combine the big ideas.",
+    "- Use 1-2 short sentences, about 35-70 words total.",
+    "- Prefer plain language like \"worked with letter sounds\" over curriculum-heavy language like \"phonemes\" unless the word is necessary.",
+    "- For Skills, it is okay to mention the main sounds/letters if provided, but do not list so many details that the sentence feels crowded.",
+    "- Do not include a separate vocabulary sentence.",
+    "",
+    "Selected current/previous week lessons:",
+    lessonLines,
+  ].join("\n");
+}
+
+function normalizeSpotlightLessons(value) {
+  if (!Array.isArray(value)) return [];
+  return value.map((lesson) => ({
+    day: asText(lesson && lesson.day),
+    lessonNumber: asText(lesson && lesson.lessonNumber),
+    lessonTitle: asText(lesson && lesson.lessonTitle),
+    objective: asText(lesson && lesson.objective),
+    iCanStatement: asText(lesson && lesson.iCanStatement),
+    parentSummary: asText(lesson && lesson.parentSummary),
+    priorityStandard: asText(lesson && lesson.priorityStandard),
+    vocabulary: normalizeStringArray(lesson && lesson.vocabulary).slice(0, 12),
+  })).filter((lesson) => lesson.objective || lesson.iCanStatement || lesson.parentSummary || lesson.lessonTitle);
+}
+
+function normalizeSpotlightText(value) {
+  let text = asText(value).replace(/\s+/g, " ");
+  if (!text) return "";
+  text = text.replace(/\b(upcoming|next week)\b/gi, "this week");
+  text = text.replace(/\s+We will also use words like .+$/i, "");
+  if (!/[.!?]$/.test(text)) text += ".";
+  return text;
+}
+
+function normalizeCurriculumSubject(subject) {
+  return ["skills", "listening", "math", "other"].includes(subject) ? subject : "other";
+}
+
+function labelForCurriculumSubject(subject) {
+  switch (subject) {
+    case "skills":
+      return "Skills";
+    case "listening":
+      return "Listening & Learning";
+    case "math":
+      return "Math";
+    default:
+      return "First Grade";
+  }
 }
 
 async function readJsonResponse(response) {
