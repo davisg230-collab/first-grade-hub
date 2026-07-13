@@ -276,6 +276,7 @@ function buildCurriculumAnalysisPrompt(data) {
     `Lesson title selected by teacher: ${data.lessonTitle || "not provided"}`,
     "",
     "Return the exact structured fields requested by the schema.",
+    "For lessonTitle, use the printed lesson title when it is clear. If not, create a short family-friendly title from the lesson's main learning focus or priority standard.",
     "For priorityStandard, identify the one main standard focus for the lesson, or two if the lesson genuinely has two equal main goals. Prefer standards listed in the source, choosing the one or two that best match the lesson's main teaching point. If the source provides no standard codes, write the main standard skill in plain language instead of inventing a code.",
     "For the I can statement, create one student-friendly sentence starting with \"I can\" by turning the lesson objective or main teaching goal into kid language. It does not need to appear word-for-word in the source.",
     "For vocabulary, choose lesson words, teaching terms, or curriculum words that students or families may need explained, even if the lesson does not provide a labeled vocabulary list.",

@@ -1827,17 +1827,82 @@
       overflow-y: auto;
     }
     .curriculum-library-item {
+      position: relative;
       width: 100%;
       border: 1px solid color-mix(in oklab, var(--md-slate) 18%, var(--md-white));
       border-radius: .85rem;
       background: color-mix(in oklab, var(--md-white) 92%, var(--md-pebble));
-      padding: .85rem;
+      padding: .85rem 4.8rem .85rem .85rem;
       text-align: left;
     }
     .curriculum-library-item:hover,
     .curriculum-library-item.active {
       border-color: var(--md-coral);
       box-shadow: 0 8px 18px rgba(43,43,43,.1);
+    }
+    .curriculum-library-group {
+      border: 1px solid color-mix(in oklab, var(--md-slate) 18%, var(--md-white));
+      border-radius: .9rem;
+      background: color-mix(in oklab, var(--md-white) 90%, var(--md-pebble));
+      overflow: hidden;
+    }
+    .curriculum-library-group summary {
+      cursor: pointer;
+      padding: .75rem .85rem;
+      font-weight: 800;
+      color: var(--md-slate);
+      list-style: none;
+    }
+    .curriculum-library-group summary::-webkit-details-marker {
+      display: none;
+    }
+    .curriculum-library-group summary::before {
+      content: "▸";
+      display: inline-block;
+      margin-right: .45rem;
+      transition: transform .15s ease;
+    }
+    .curriculum-library-group[open] summary::before {
+      transform: rotate(90deg);
+    }
+    .curriculum-library-folder-body {
+      display: grid;
+      gap: .55rem;
+      padding: 0 .75rem .75rem;
+    }
+    .curriculum-weekday-select {
+      position: absolute;
+      top: .65rem;
+      right: .65rem;
+      width: 3.75rem;
+      min-height: 2rem;
+      border-radius: .6rem;
+      border: 1px solid color-mix(in oklab, var(--md-slate) 24%, var(--md-white));
+      background: var(--md-white);
+      color: var(--md-slate);
+      font-size: .76rem;
+      font-weight: 900;
+      padding: 0 .35rem;
+    }
+    .curriculum-weekday-select.active {
+      background: var(--md-coral);
+      border-color: var(--md-coral);
+      color: var(--md-white);
+    }
+    .curriculum-week-preview {
+      border: 1px solid color-mix(in oklab, var(--md-coral) 25%, var(--md-white));
+      background: color-mix(in oklab, var(--md-white) 86%, var(--md-coral) 14%);
+    }
+    .skills-week-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 2rem;
+      border-radius: 999px;
+      padding: .35rem .75rem;
+      background: color-mix(in oklab, var(--md-white) 78%, var(--md-slate) 22%);
+      color: var(--md-slate);
+      font-size: .82rem;
+      font-weight: 900;
     }
     @media (max-width: 900px) {
       .curriculum-builder-shell {
@@ -2330,41 +2395,32 @@
     <section data-page-panel="skills" class="pagePanel fade-in">
       <!-- Section 1: Skills Spotlight Description (Top Section) -->
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
-        <h2 class="text-2xl font-display font-bold mb-4" style="color: var(--md-coral);">📖 Skills Spotlight</h2>
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <h2 class="text-2xl font-display font-bold" style="color: var(--md-coral);">📖 Skills Spotlight</h2>
+          <span id="skillsWeekModuleLabel" class="skills-week-badge">Module will appear here</span>
+        </div>
         <p class="leading-relaxed" data-edit="teacher" contenteditable="false">
           This week we're focusing on building strong reading foundations through sight word recognition and phonics practice. Students are learning to blend sounds together to read new words and are practicing writing complete sentences with proper capitalization and punctuation.
         </p>
       </div>
       
-      <!-- Section 2: Current Unit (Middle Section) - Merged with Upcoming Lessons -->
+      <!-- Section 2: Upcoming Lessons -->
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">📚 Current Unit</h3>
-          <button id="saveSkillsModuleBtn" class="edit-only px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate); display: none;" onclick="saveCurrentModule('skills')">💾 Save</button>
-        </div>
-        <div id="skillsCurrentModuleContent" class="space-y-3 mb-6">
-          <!-- Content will be populated by JavaScript -->
-        </div>
-        
-        <!-- Upcoming Lessons subsection -->
-        <div class="mt-6 pt-6 border-t" style="border-color: color-mix(in oklab, var(--md-slate) 20%, var(--md-white) 80%);">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-display font-semibold" style="color: var(--md-coral);">Upcoming Lessons</h3>
-            <div class="edit-only flex gap-2" style="display: none;">
-              <button id="saveSkillsLessonsBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveLessonCards('skills')">💾 Save</button>
-            </div>
+          <h3 class="text-xl font-display font-bold" style="color: var(--md-coral);">Upcoming Lessons</h3>
+          <div class="edit-only flex gap-2" style="display: none;">
+            <button id="saveSkillsLessonsBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveLessonCards('skills')">💾 Save</button>
           </div>
-          <div id="skillsLessonsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-            <!-- Weekday boxes will be populated by JavaScript -->
-          </div>
+        </div>
+        <div id="skillsLessonsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          <!-- Weekday boxes will be populated by JavaScript -->
         </div>
       </div>
       
-      <!-- Section 3: Vocabulary and Strategies + View by Unit Button (Bottom Section) -->
+      <!-- Section 3: Vocabulary and Strategies -->
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-display font-semibold" style="color: var(--md-coral);">Sounds / Sight Words / Vocab</h3>
-          <button onclick="showPage('skills-units')" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);">📚 View by Unit</button>
         </div>
         <div class="rounded-xl p-4" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-coral) 30%); border: 1px solid color-mix(in oklab, var(--md-coral) 60%, var(--md-white) 40%);">
           <ul class="text-sm list-disc pl-5" data-edit="teacher" contenteditable="false">
@@ -3098,7 +3154,6 @@
 
         <div id="curriculumAccessPanel" class="curriculum-builder-panel rounded-2xl p-5 mb-5">
           <h3 class="text-xl font-display font-bold mb-2" style="color: var(--md-slate);">Teacher sign-in required</h3>
-          <p class="text-sm text-gray-600 mb-4">This workspace is separate from Edit Mode and only opens for approved teacher Google accounts.</p>
           <button id="curriculumSignInBtn" class="curriculum-builder-button inline-flex items-center px-5 py-3 text-white" style="background: var(--md-coral);" onclick="signInForCurriculumBuilder()">
             Sign in with Google
           </button>
@@ -3211,6 +3266,19 @@
               <div class="flex items-center justify-between gap-3 mb-4">
                 <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">Saved Lessons</h3>
                 <span id="curriculumLibraryCount" class="text-sm font-bold text-gray-500">0</span>
+              </div>
+              <div class="curriculum-week-preview rounded-2xl p-4 mb-4">
+                <div class="flex items-center justify-between gap-3 mb-2">
+                  <h4 class="font-display font-bold" style="color: var(--md-coral);">Weekly Skills Plan</h4>
+                  <button type="button" class="text-xs font-bold underline" style="color: var(--md-slate);" onclick="clearCurriculumWeeklyPlan()">Clear</button>
+                </div>
+                <p class="text-xs text-[color:var(--md-ink)]/70 mb-3">Pick M-F from saved Skills lessons, preview the week, then publish it to the parent Skills page.</p>
+                <div id="curriculumWeekPreview" class="grid gap-2 text-sm">
+                  <p class="text-sm text-gray-500">No lessons picked yet.</p>
+                </div>
+                <button id="curriculumPublishWeekBtn" type="button" class="curriculum-builder-button w-full mt-3 px-4 py-2 text-white" style="background: var(--md-coral);" onclick="publishCurriculumWeekToSkills()">
+                  Publish to Skills Page
+                </button>
               </div>
               <div class="grid gap-3 mb-4">
                 <select id="curriculumLibrarySubjectFilter" class="curriculum-builder-field" onchange="renderCurriculumLibraryList()">
@@ -4571,12 +4639,21 @@
     const EDIT_MODE_REDIRECT_MAX_AGE_MS = 10 * 60 * 1000;
     const CURRICULUM_PDFJS_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
     const CURRICULUM_PDFJS_WORKER_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const curriculumWeekdays = [
+      { short: 'M', title: 'Monday' },
+      { short: 'T', title: 'Tuesday' },
+      { short: 'W', title: 'Wednesday' },
+      { short: 'Th', title: 'Thursday' },
+      { short: 'F', title: 'Friday' }
+    ];
     const approvedEditorEmails = [
       'davisg230@gmail.com',
       'lvest@crossroadsschoolskc.org'
     ];
     let curriculumLessonsCache = [];
     let curriculumActiveLessonId = '';
+    let curriculumWeeklyPlan = { skills: {} };
+    let curriculumLastPdfSuggestedTitle = '';
     let curriculumPdfJsLoadPromise = null;
 
     function getEditorUserEmail(user) {
@@ -4809,13 +4886,16 @@
       }
       curriculumLessonsCache = [];
       curriculumActiveLessonId = '';
+      curriculumWeeklyPlan = { skills: {} };
       showCurriculumWorkspace(false);
       setCurriculumPdfStatus('');
       setCurriculumStatus('');
       const list = document.getElementById('curriculumLibraryList');
       const count = document.getElementById('curriculumLibraryCount');
+      const preview = document.getElementById('curriculumWeekPreview');
       if (count) count.textContent = '0';
       if (list) list.innerHTML = '<p class="text-sm text-gray-500">Sign in to load saved lessons.</p>';
+      if (preview) preview.innerHTML = '<p class="text-sm text-gray-500">No lessons picked yet.</p>';
     }
 
     async function ensureCurriculumTeacherUser() {
@@ -4932,10 +5012,7 @@
         }
 
         setInputValue('curriculumSourceTextInput', text);
-        const titleInput = document.getElementById('curriculumLessonTitleInput');
-        if (titleInput && !titleInput.value.trim()) {
-          titleInput.value = file.name.replace(/\.pdf$/i, '');
-        }
+        applyCurriculumPdfGuesses(file.name, text);
         setCurriculumPdfStatus(`${pdf.numPages} page PDF loaded.`, 'success');
         setCurriculumStatus(text.length > 20000 ? 'PDF text loaded. It is long, so trim it to one lesson before analyzing.' : 'PDF text loaded. Review it, then analyze the lesson.', 'success');
       } catch (error) {
@@ -4946,6 +5023,36 @@
         if (input) input.value = '';
         setCurriculumBusy(false);
       }
+    }
+
+    function applyCurriculumPdfGuesses(fileName, text) {
+      const guess = inferCurriculumLessonDetails(fileName, text);
+      if (guess.unitOrModule && !document.getElementById('curriculumUnitInput')?.value.trim()) {
+        setInputValue('curriculumUnitInput', guess.unitOrModule);
+      }
+      if (guess.lessonNumber && !document.getElementById('curriculumLessonNumberInput')?.value.trim()) {
+        setInputValue('curriculumLessonNumberInput', guess.lessonNumber);
+      }
+      if (guess.lessonTitle && !document.getElementById('curriculumLessonTitleInput')?.value.trim()) {
+        curriculumLastPdfSuggestedTitle = guess.lessonTitle;
+        setInputValue('curriculumLessonTitleInput', guess.lessonTitle);
+      }
+    }
+
+    function inferCurriculumLessonDetails(fileName, text) {
+      const combined = `${fileName || ''}\n${String(text || '').slice(0, 2500)}`;
+      const baseName = String(fileName || '').replace(/\.pdf$/i, '').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+      const moduleMatch = combined.match(/\b(module|unit)\s*[:#-]?\s*([0-9]+[A-Za-z]?)/i);
+      const lessonMatch = combined.match(/\blesson\s*[:#-]?\s*([0-9]+[A-Za-z]?)/i);
+      const focusLine = String(text || '')
+        .split(/\n+/)
+        .map(line => line.replace(/\s+/g, ' ').trim())
+        .find(line => line.length >= 12 && line.length <= 90 && !/^page\s+\d+/i.test(line) && !/\b(module|unit|lesson)\s*[:#-]?\s*[0-9]/i.test(line));
+      return {
+        unitOrModule: moduleMatch ? `${capitalizeWord(moduleMatch[1])} ${moduleMatch[2]}` : '',
+        lessonNumber: lessonMatch ? `Lesson ${lessonMatch[1]}` : '',
+        lessonTitle: focusLine || baseName
+      };
     }
 
     async function analyzeCurriculumLesson() {
@@ -4990,10 +5097,15 @@
     }
 
     function applyCurriculumAnalysis(analysis) {
+      const currentTitle = document.getElementById('curriculumLessonTitleInput')?.value.trim() || '';
+      const nextTitle = analysis.lessonTitle || getCurriculumLearningTitle(analysis);
       setInputValue('curriculumSubjectInput', ['skills', 'listening', 'math'].includes(analysis.subject) ? analysis.subject : (document.getElementById('curriculumSubjectInput')?.value || 'skills'));
       setInputValue('curriculumUnitInput', analysis.unitOrModule || document.getElementById('curriculumUnitInput')?.value || '');
       setInputValue('curriculumLessonNumberInput', analysis.lessonNumber || document.getElementById('curriculumLessonNumberInput')?.value || '');
-      setInputValue('curriculumLessonTitleInput', analysis.lessonTitle || document.getElementById('curriculumLessonTitleInput')?.value || '');
+      if (!currentTitle || currentTitle === curriculumLastPdfSuggestedTitle) {
+        setInputValue('curriculumLessonTitleInput', nextTitle || currentTitle);
+        curriculumLastPdfSuggestedTitle = '';
+      }
       setInputValue('curriculumICanOutput', analysis.iCanStatement || '');
       setInputValue('curriculumStandardOutput', analysis.priorityStandard || '');
       setInputValue('curriculumObjectiveOutput', analysis.objective || '');
@@ -5009,6 +5121,20 @@
     function setInputValue(id, value) {
       const el = document.getElementById(id);
       if (el) el.value = value || '';
+    }
+
+    function capitalizeWord(value) {
+      const text = String(value || '').trim();
+      return text ? text.charAt(0).toUpperCase() + text.slice(1).toLowerCase() : '';
+    }
+
+    function getCurriculumLearningTitle(analysis) {
+      const source = analysis.priorityStandard || analysis.objective || analysis.iCanStatement || '';
+      return plainFamilySentence(source)
+        .replace(/^Your child will\s+/i, '')
+        .replace(/^i can\s+/i, '')
+        .replace(/\.$/, '')
+        .slice(0, 80);
     }
 
     function listToLines(value) {
@@ -5111,12 +5237,32 @@
         if (!user) return;
         if (!db) throw new Error('The lesson library is not available. Please refresh and try again.');
         showCurriculumWorkspace(true);
-        const snapshot = await db.collection('curriculumLessons').orderBy('updatedAt', 'desc').limit(150).get();
+        const snapshot = await db.collection('curriculumLessons').orderBy('updatedAt', 'desc').limit(500).get();
         curriculumLessonsCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        await loadCurriculumWeeklyPlan();
         renderCurriculumLibraryList();
+        renderCurriculumWeekPreview();
       } catch (error) {
         console.error('Loading curriculum library failed:', error);
         setCurriculumStatus(error.message || 'Could not load saved lessons.', 'error');
+      }
+    }
+
+    async function loadCurriculumWeeklyPlan() {
+      if (!db) return;
+      curriculumWeeklyPlan = { skills: {} };
+      try {
+        const doc = await db.collection('classData').doc('current').get();
+        const data = doc.exists ? doc.data() : {};
+        if (data && data.curriculum_weekly_plan_json) {
+          const parsed = JSON.parse(data.curriculum_weekly_plan_json);
+          curriculumWeeklyPlan = {
+            skills: parsed && parsed.skills ? parsed.skills : {}
+          };
+        }
+      } catch (error) {
+        console.warn('Weekly curriculum plan could not be loaded:', error);
+        curriculumWeeklyPlan = { skills: {} };
       }
     }
 
@@ -5136,18 +5282,246 @@
         list.innerHTML = '<p class="text-sm text-gray-500">No saved lessons yet.</p>';
         return;
       }
-      list.innerHTML = filtered.map(lesson => {
-        const subjectLabel = getCurriculumSubjectLabel(lesson.subject);
-        const title = lesson.lessonTitle || lesson.iCanStatement || 'Untitled lesson';
-        const isActive = lesson.id === curriculumActiveLessonId ? ' active' : '';
-        return `
-          <button class="curriculum-library-item${isActive}" type="button" onclick="loadCurriculumLessonIntoBuilder('${lesson.id}')">
-            <div class="text-xs font-bold uppercase tracking-wide text-gray-500">${escapeHtml(subjectLabel)}</div>
-            <div class="font-display font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(lesson.unitOrModule || 'Unit')} - ${escapeHtml(lesson.lessonNumber || 'Lesson')}</div>
-            <div class="text-sm mt-1 text-[color:var(--md-ink)]/80">${escapeHtml(title)}</div>
-          </button>
-        `;
-      }).join('');
+      const groups = groupCurriculumLessonsByModule(filtered);
+      list.innerHTML = groups.map(group => `
+        <details class="curriculum-library-group" open>
+          <summary>${escapeHtml(group.label)} <span class="text-xs text-gray-500">(${group.lessons.length})</span></summary>
+          <div class="curriculum-library-folder-body">
+            ${group.lessons.map(lesson => renderCurriculumLibraryLesson(lesson)).join('')}
+          </div>
+        </details>
+      `).join('');
+      renderCurriculumWeekPreview();
+    }
+
+    function groupCurriculumLessonsByModule(lessons) {
+      const groups = new Map();
+      lessons.forEach(lesson => {
+        const subject = getCurriculumSubjectLabel(lesson.subject);
+        const moduleName = lesson.unitOrModule || 'No module yet';
+        const key = `${subject}|||${moduleName}`;
+        if (!groups.has(key)) {
+          groups.set(key, { label: `${subject} - ${moduleName}`, lessons: [] });
+        }
+        groups.get(key).lessons.push(lesson);
+      });
+      return Array.from(groups.values()).map(group => ({
+        ...group,
+        lessons: group.lessons.sort(compareCurriculumLessons)
+      }));
+    }
+
+    function compareCurriculumLessons(a, b) {
+      const aNum = getLessonSortNumber(a.lessonNumber);
+      const bNum = getLessonSortNumber(b.lessonNumber);
+      if (aNum !== bNum) return aNum - bNum;
+      return (a.lessonTitle || '').localeCompare(b.lessonTitle || '');
+    }
+
+    function getLessonSortNumber(value) {
+      const match = String(value || '').match(/\d+/);
+      return match ? Number(match[0]) : 9999;
+    }
+
+    function renderCurriculumLibraryLesson(lesson) {
+      const title = lesson.lessonTitle || getCurriculumLearningTitle(lesson) || 'Untitled lesson';
+      const isActive = lesson.id === curriculumActiveLessonId ? ' active' : '';
+      const selectedDayIndex = lesson.subject === 'skills'
+        ? curriculumWeekdays.findIndex((day, index) => curriculumWeeklyPlan.skills && curriculumWeeklyPlan.skills[index] === lesson.id)
+        : -1;
+      const daySelect = lesson.subject === 'skills' ? `
+        <select class="curriculum-weekday-select${selectedDayIndex >= 0 ? ' active' : ''}" aria-label="Assign lesson to weekday" onclick="event.stopPropagation();" onchange="event.stopPropagation(); setCurriculumWeekLesson('${lesson.id}', this.value);">
+          <option value="">Week</option>
+          ${curriculumWeekdays.map((day, index) => `<option value="${index}" ${selectedDayIndex === index ? 'selected' : ''}>${day.short}</option>`).join('')}
+        </select>
+      ` : '';
+      return `
+        <div class="curriculum-library-item${isActive}" role="button" tabindex="0" onclick="loadCurriculumLessonIntoBuilder('${lesson.id}')">
+          ${daySelect}
+          <div class="text-xs font-bold uppercase tracking-wide text-gray-500">${escapeHtml(lesson.lessonNumber || 'Lesson')}</div>
+          <div class="font-display font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(title)}</div>
+          <div class="text-sm mt-1 text-[color:var(--md-ink)]/80">${escapeHtml(plainFamilySentence(lesson.parentSummary || lesson.iCanStatement || lesson.objective || '').slice(0, 120))}</div>
+          ${lesson.subject === 'skills' ? '' : '<div class="text-xs font-semibold mt-2 text-gray-500">Weekly publishing starts with Skills.</div>'}
+        </div>
+      `;
+    }
+
+    async function setCurriculumWeekLesson(lessonId, dayIndex) {
+      const lesson = curriculumLessonsCache.find(item => item.id === lessonId);
+      if (!lesson || lesson.subject !== 'skills') {
+        setCurriculumStatus('Only Skills lessons can publish to the Skills page right now.', 'error');
+        return;
+      }
+      const nextDayIndex = dayIndex === '' ? -1 : Number(dayIndex);
+      if (!Number.isInteger(nextDayIndex) || nextDayIndex < -1 || nextDayIndex >= curriculumWeekdays.length) return;
+      curriculumWeeklyPlan.skills = curriculumWeeklyPlan.skills || {};
+      Object.keys(curriculumWeeklyPlan.skills).forEach(key => {
+        if (curriculumWeeklyPlan.skills[key] === lessonId) delete curriculumWeeklyPlan.skills[key];
+      });
+      if (nextDayIndex >= 0) {
+        curriculumWeeklyPlan.skills[nextDayIndex] = lessonId;
+      }
+      renderCurriculumLibraryList();
+      renderCurriculumWeekPreview();
+      await saveCurriculumWeeklyPlanDraft();
+      setCurriculumStatus(nextDayIndex >= 0
+        ? `${lesson.lessonNumber || 'Lesson'} assigned to ${curriculumWeekdays[nextDayIndex].title}.`
+        : `${lesson.lessonNumber || 'Lesson'} removed from the weekly plan.`);
+    }
+
+    async function clearCurriculumWeeklyPlan() {
+      curriculumWeeklyPlan.skills = {};
+      renderCurriculumLibraryList();
+      renderCurriculumWeekPreview();
+      await saveCurriculumWeeklyPlanDraft();
+      setCurriculumStatus('Weekly Skills plan cleared.');
+    }
+
+    async function saveCurriculumWeeklyPlanDraft() {
+      if (!db) return;
+      try {
+        await db.collection('classData').doc('current').set({
+          curriculum_weekly_plan_json: JSON.stringify(curriculumWeeklyPlan)
+        }, { merge: true });
+      } catch (error) {
+        console.warn('Weekly curriculum plan draft could not be saved:', error);
+      }
+    }
+
+    function renderCurriculumWeekPreview() {
+      const preview = document.getElementById('curriculumWeekPreview');
+      if (!preview) return;
+      const week = buildCurriculumWeekDraft();
+      if (!week.selectedLessons.length) {
+        preview.innerHTML = '<p class="text-sm text-gray-500">No lessons picked yet.</p>';
+        return;
+      }
+      preview.innerHTML = `
+        <div class="text-xs font-bold uppercase tracking-wide" style="color: var(--md-slate);">${escapeHtml(week.moduleLabel)}</div>
+        ${curriculumWeekdays.map((day, index) => {
+          const lesson = week.lessonsByDay[index];
+          return `
+            <div class="rounded-lg p-2" style="background: color-mix(in oklab, var(--md-white) 82%, var(--md-coral) 18%);">
+              <span class="font-bold" style="color: var(--md-coral);">${day.title}:</span>
+              <span>${lesson ? escapeHtml(getCurriculumCardTitle(lesson)) : 'No lesson picked'}</span>
+            </div>
+          `;
+        }).join('')}
+      `;
+    }
+
+    async function publishCurriculumWeekToSkills() {
+      try {
+        const user = await ensureCurriculumTeacherUser();
+        if (!user) return;
+        if (!db) throw new Error('The parent Skills page is not available. Please refresh and try again.');
+        const week = buildCurriculumWeekDraft();
+        if (!week.selectedLessons.length) {
+          throw new Error('Pick at least one Skills lesson for the week first.');
+        }
+        setCurriculumBusy(true, 'Publishing Skills week...');
+        const payload = {
+          skills_text: week.spotlight,
+          skills_week_module_label: week.moduleLabel,
+          sounds_json: JSON.stringify(week.vocabulary),
+          skills_lessons_json: JSON.stringify({
+            weekdays: week.weekdays,
+            cards: week.cards
+          }),
+          curriculum_weekly_plan_json: JSON.stringify(curriculumWeeklyPlan)
+        };
+        await db.collection('classData').doc('current').set(payload, { merge: true });
+        updateSkillsSection(payload.skills_text, payload.sounds_json, payload.skills_week_module_label);
+        updateLessonCards('skills', { weekdays: week.weekdays, cards: week.cards });
+        setCurriculumStatus('Skills page updated for families. Check the Skills tab to preview it.', 'success');
+      } catch (error) {
+        console.error('Publishing Skills week failed:', error);
+        setCurriculumStatus(error.message || 'The Skills week could not be published.', 'error');
+      } finally {
+        setCurriculumBusy(false);
+      }
+    }
+
+    function buildCurriculumWeekDraft() {
+      const plan = curriculumWeeklyPlan.skills || {};
+      const lessonsByDay = curriculumWeekdays.map((day, index) =>
+        curriculumLessonsCache.find(lesson => lesson.id === plan[index]) || null
+      );
+      const selectedLessons = lessonsByDay.filter(Boolean);
+      const moduleLabel = getCurriculumWeekModuleLabel(selectedLessons);
+      const vocabulary = uniqueList(selectedLessons.flatMap(lesson => lesson.vocabulary || [])).slice(0, 14);
+      const cards = lessonsByDay.map((lesson, dayIndex) => lesson ? getCurriculumWeekCard(lesson, dayIndex) : null).filter(Boolean);
+      return {
+        lessonsByDay,
+        selectedLessons,
+        moduleLabel,
+        vocabulary,
+        cards,
+        weekdays: curriculumWeekdays.map(day => ({ title: day.title, placeholder: 'No lesson' })),
+        spotlight: getCurriculumWeekSpotlight(selectedLessons, moduleLabel)
+      };
+    }
+
+    function getCurriculumWeekCard(lesson, dayIndex) {
+      const videoLinks = Array.isArray(lesson.videoLinks) ? lesson.videoLinks.filter(link => link && link.url) : [];
+      return {
+        dayIndex,
+        lessonId: lesson.id,
+        number: lesson.lessonNumber || '',
+        title: getCurriculumCardTitle(lesson),
+        summary: getCurriculumFamilySummary(lesson),
+        iCanStatement: plainFamilySentence(lesson.iCanStatement || ''),
+        familyQuestion: Array.isArray(lesson.familyQuestions) && lesson.familyQuestions.length ? lesson.familyQuestions[0] : '',
+        videoLinks,
+        vocabulary: Array.isArray(lesson.vocabulary) ? lesson.vocabulary : []
+      };
+    }
+
+    function getCurriculumCardTitle(lesson) {
+      return lesson.lessonTitle || getCurriculumLearningTitle(lesson) || lesson.lessonNumber || 'Lesson';
+    }
+
+    function getCurriculumFamilySummary(lesson) {
+      return plainFamilySentence(lesson.parentSummary || lesson.iCanStatement || lesson.objective || 'We will practice an important reading skill.');
+    }
+
+    function getCurriculumWeekModuleLabel(lessons) {
+      if (!lessons.length) return 'Skills week';
+      const moduleNames = lessons.map(lesson => lesson.unitOrModule).filter(Boolean);
+      const moduleName = mostCommonValue(moduleNames) || 'Skills';
+      const lessonNumbers = lessons.map(lesson => lesson.lessonNumber).filter(Boolean);
+      return lessonNumbers.length ? `${moduleName}, ${lessonNumbers.join(', ')}` : moduleName;
+    }
+
+    function getCurriculumWeekSpotlight(lessons, moduleLabel) {
+      if (!lessons.length) return 'This week, we will practice important reading skills.';
+      const summaries = uniqueList(lessons.map(getCurriculumFamilySummary)).slice(0, 2);
+      const vocab = uniqueList(lessons.flatMap(lesson => lesson.vocabulary || [])).slice(0, 4);
+      const focus = summaries.length ? summaries.join(' ') : 'We will practice reading, spelling, and word work skills.';
+      const vocabText = vocab.length ? ` We will also use words like ${vocab.join(', ')}.` : '';
+      return `${moduleLabel}: ${focus}${vocabText}`;
+    }
+
+    function plainFamilySentence(value) {
+      let text = String(value || '').replace(/\s+/g, ' ').trim();
+      text = text.replace(/^objective\s*:\s*/i, '');
+      text = text.replace(/^students?\s+will\s+/i, 'Your child will ');
+      text = text.replace(/^i can\s+/i, 'Your child will ');
+      if (text && !/[.!?]$/.test(text)) text += '.';
+      return text;
+    }
+
+    function mostCommonValue(values) {
+      const counts = {};
+      values.forEach(value => { counts[value] = (counts[value] || 0) + 1; });
+      return Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0] || '';
+    }
+
+    function uniqueList(values) {
+      const seen = new Set();
+      return values
+        .map(value => String(value || '').trim())
+        .filter(value => value && !seen.has(value.toLowerCase()) && seen.add(value.toLowerCase()));
     }
 
     function loadCurriculumLessonIntoBuilder(lessonId) {
@@ -5188,7 +5562,7 @@
     }
 
     function setCurriculumBusy(isBusy, message = '') {
-      ['curriculumAnalyzeBtn', 'curriculumSaveBtn', 'curriculumRefreshLibraryBtn', 'curriculumSignOutBtn', 'curriculumPdfSelectBtn', 'curriculumPdfInput'].forEach(id => {
+      ['curriculumAnalyzeBtn', 'curriculumSaveBtn', 'curriculumRefreshLibraryBtn', 'curriculumSignOutBtn', 'curriculumPdfSelectBtn', 'curriculumPdfInput', 'curriculumPublishWeekBtn'].forEach(id => {
         const button = document.getElementById(id);
         if (button) button.disabled = isBusy;
       });
@@ -6001,6 +6375,8 @@
       // Skills section
       const skillsDescEl = document.querySelector('[data-page-panel="skills"] p[data-edit="teacher"]');
       if (skillsDescEl) data.skills_text = skillsDescEl.textContent || '';
+      const skillsModuleEl = document.getElementById('skillsWeekModuleLabel');
+      if (skillsModuleEl) data.skills_week_module_label = skillsModuleEl.textContent || '';
       
       const skillsUl = document.querySelector('[data-page-panel="skills"] ul[data-edit="teacher"]');
       if (skillsUl) {
@@ -6993,8 +7369,14 @@
           if (numberInput && titleInput) {
             cards.push({
               dayIndex: index,
+              lessonId: card.dataset.lessonId || '',
               number: numberInput.value || '',
               title: titleInput.value || '',
+              summary: card.dataset.summary || '',
+              iCanStatement: card.dataset.iCanStatement || '',
+              familyQuestion: card.dataset.familyQuestion || '',
+              videoLinks: safeJsonParse(card.dataset.videoLinks, []),
+              vocabulary: safeJsonParse(card.dataset.vocabulary, []),
               height: titleInput.style.height || 'auto' // Save the calculated height
             });
           }
@@ -8409,6 +8791,14 @@ function parseArray(val) {
   try { return JSON.parse(val); } catch { return []; }
 }
 
+function safeJsonParse(value, fallback) {
+  try {
+    return value ? JSON.parse(value) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function getMainHeadingText() {
   const heading = document.getElementById('mainHeading');
   if (!heading) return 'Hey Hey First Grade!';
@@ -8827,10 +9217,12 @@ async function saveClassSkillMeter() {
     }, 2000);
   }
 }
-function updateSkillsSection(skills_text, sounds_json) {
+function updateSkillsSection(skills_text, sounds_json, moduleLabel = '') {
   const descEl = document.querySelector('[data-page-panel="skills"] p[data-edit="teacher"]');
   const vocabUl = document.querySelector('[data-page-panel="skills"] ul[data-edit="teacher"]');
+  const moduleEl = document.getElementById('skillsWeekModuleLabel');
   if (descEl && skills_text) descEl.textContent = skills_text;
+  if (moduleEl) moduleEl.textContent = moduleLabel || 'Skills week';
   if (vocabUl && sounds_json) {
     const arr = parseArray(sounds_json);
     vocabUl.innerHTML = '';
@@ -9012,6 +9404,12 @@ function updateLessonCards(subject, lessons_data) {
       lessonCard.style.border = '1px solid color-mix(in oklab, ' + color + ' 34%, var(--md-white) 66%)';
       lessonCard.style.boxShadow = '0 8px 16px rgba(43,43,43,.06)';
       lessonCard.style.cursor = isEditMode ? 'move' : 'default';
+      lessonCard.dataset.lessonId = card.lessonId || '';
+      lessonCard.dataset.summary = card.summary || '';
+      lessonCard.dataset.iCanStatement = card.iCanStatement || '';
+      lessonCard.dataset.familyQuestion = card.familyQuestion || '';
+      lessonCard.dataset.videoLinks = JSON.stringify(Array.isArray(card.videoLinks) ? card.videoLinks : []);
+      lessonCard.dataset.vocabulary = JSON.stringify(Array.isArray(card.vocabulary) ? card.vocabulary : []);
       
       lessonCard.innerHTML = `
         <button class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-lg edit-only" 
@@ -9033,6 +9431,20 @@ function updateLessonCards(subject, lessons_data) {
                  ${isEditMode ? '' : 'disabled readonly'}>${card.title || ''}</textarea>
         </div>
       `;
+
+      const videoLinks = Array.isArray(card.videoLinks) ? card.videoLinks.filter(link => link && link.url) : [];
+      const primaryVideo = videoLinks[0];
+      const hasFamilyDetails = !!(card.summary || card.iCanStatement || card.familyQuestion || primaryVideo);
+      if (hasFamilyDetails && !isEditMode) {
+        lessonCard.innerHTML = `
+          <div class="text-xs font-bold uppercase tracking-wide mb-2" style="color: ${color};">${escapeHtml(card.number || 'Lesson')}</div>
+          <h4 class="font-display font-bold text-base mb-2" style="color: var(--md-slate);">${escapeHtml(card.title || 'Lesson')}</h4>
+          ${card.summary ? `<p class="text-sm leading-relaxed mb-2">${escapeHtml(card.summary)}</p>` : ''}
+          ${card.iCanStatement ? `<p class="text-sm leading-relaxed mb-2"><strong>I can:</strong> ${escapeHtml(card.iCanStatement.replace(/^Your child will\s+/i, ''))}</p>` : ''}
+          ${card.familyQuestion ? `<p class="text-xs leading-relaxed mb-3 text-[color:var(--md-ink)]/75"><strong>Ask:</strong> ${escapeHtml(card.familyQuestion)}</p>` : ''}
+          ${primaryVideo ? `<a href="${escapeHtml(primaryVideo.url)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center w-full px-3 py-2 rounded-lg text-white text-xs font-bold" style="background: ${color};">Watch lesson video</a>` : ''}
+        `;
+      }
       
       // Add drag event listeners only in edit mode
       if (isEditMode) {
@@ -9298,7 +9710,7 @@ function populateDataFromSheet(data) {
   updateSnackMessage(data.snack_message);
   updateScholarInfo(data);
   updateClassSkillMeter(data.class_skill_meter_skill, data.class_skill_meter_progress, data.class_skill_meter_family_note, data.class_skill_meter_history);
-  updateSkillsSection(data.skills_text, data.sounds_json);
+  updateSkillsSection(data.skills_text, data.sounds_json, data.skills_week_module_label);
   updateListeningSection(data.listening_text, data.ask_json);
   updateMathSection(data.math_text, data.math_vocab_json);
   updateExtrasSection(data.extras_json);
@@ -13352,8 +13764,14 @@ async function saveLessonCards(subject) {
           if (numberInput && titleInput) {
             cards.push({
               dayIndex: index,
+              lessonId: card.dataset.lessonId || '',
               number: numberInput.value || '',
               title: titleInput.value || '',
+              summary: card.dataset.summary || '',
+              iCanStatement: card.dataset.iCanStatement || '',
+              familyQuestion: card.dataset.familyQuestion || '',
+              videoLinks: safeJsonParse(card.dataset.videoLinks, []),
+              vocabulary: safeJsonParse(card.dataset.vocabulary, []),
               height: titleInput.style.height || 'auto' // Save the calculated height
             });
           }
@@ -16258,6 +16676,7 @@ function getDefaultFallbackData() {
     class_skill_meter_family_note: "This week we are focusing on showing kindness to others. Please reinforce this skill at home!",
     class_skill_meter_history: JSON.stringify([]),
     skills_text: "This week we focused on phonics and reading skills.",
+    skills_week_module_label: "Skills week",
     sounds_json: JSON.stringify(["ch", "sh", "th", "wh"]),
     listening_text: "We practiced active listening and following directions.",
     ask_json: JSON.stringify(["What is the main idea?", "How do you know?", "What evidence supports this?"]),
@@ -16267,6 +16686,7 @@ function getDefaultFallbackData() {
     skills_lessons_json: JSON.stringify([]),
     math_lessons_json: JSON.stringify([]),
     listening_lessons_json: JSON.stringify([]),
+    curriculum_weekly_plan_json: JSON.stringify({ skills: {} }),
     skills_units_json: JSON.stringify([]),
     math_modules_json: JSON.stringify([]),
     listening_units_json: JSON.stringify([]),
