@@ -1827,13 +1827,25 @@
       overflow-y: auto;
     }
     .curriculum-library-item {
-      position: relative;
+      box-sizing: border-box;
       width: 100%;
+      max-width: 100%;
       border: 1px solid color-mix(in oklab, var(--md-slate) 18%, var(--md-white));
       border-radius: .85rem;
       background: color-mix(in oklab, var(--md-white) 92%, var(--md-pebble));
-      padding: .85rem 4.8rem .85rem .85rem;
+      padding: .85rem;
       text-align: left;
+      overflow: hidden;
+    }
+    .curriculum-library-item.has-weekday-select {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 3.75rem;
+      column-gap: .6rem;
+      align-items: start;
+    }
+    .curriculum-library-item.has-weekday-select > div {
+      min-width: 0;
+      overflow-wrap: anywhere;
     }
     .curriculum-library-item:hover,
     .curriculum-library-item.active {
@@ -1871,10 +1883,10 @@
       padding: 0 .75rem .75rem;
     }
     .curriculum-weekday-select {
-      position: absolute;
-      top: .65rem;
-      right: .65rem;
-      width: 3.75rem;
+      grid-column: 2;
+      grid-row: 1 / span 3;
+      justify-self: end;
+      width: 100%;
       min-height: 2rem;
       border-radius: .6rem;
       border: 1px solid color-mix(in oklab, var(--md-slate) 24%, var(--md-white));
@@ -5336,7 +5348,7 @@
         </select>
       ` : '';
       return `
-        <div class="curriculum-library-item${isActive}" role="button" tabindex="0" onclick="loadCurriculumLessonIntoBuilder('${lesson.id}')">
+        <div class="curriculum-library-item${isActive}${lesson.subject === 'skills' ? ' has-weekday-select' : ''}" role="button" tabindex="0" onclick="loadCurriculumLessonIntoBuilder('${lesson.id}')">
           ${daySelect}
           <div class="text-xs font-bold uppercase tracking-wide text-gray-500">${escapeHtml(lesson.lessonNumber || 'Lesson')}</div>
           <div class="font-display font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(title)}</div>
