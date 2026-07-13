@@ -3407,20 +3407,20 @@
                 <h3 class="text-xl font-display font-bold mb-4" style="color: var(--md-slate);">AI Draft</h3>
                 <div class="curriculum-builder-preview">
                   <div>
-                    <label class="curriculum-builder-label" for="curriculumICanOutput">I can statement</label>
-                    <textarea id="curriculumICanOutput" class="curriculum-builder-field curriculum-builder-output" rows="2"></textarea>
-                  </div>
-                  <div>
                     <label class="curriculum-builder-label" for="curriculumStandardOutput">Priority standard</label>
                     <textarea id="curriculumStandardOutput" class="curriculum-builder-field curriculum-builder-output" rows="2"></textarea>
+                  </div>
+                  <div>
+                    <label class="curriculum-builder-label" for="curriculumICanOutput">I can statement</label>
+                    <textarea id="curriculumICanOutput" class="curriculum-builder-field curriculum-builder-output" rows="2"></textarea>
                   </div>
                   <div>
                     <label class="curriculum-builder-label" for="curriculumObjectiveOutput">Objective</label>
                     <textarea id="curriculumObjectiveOutput" class="curriculum-builder-field curriculum-builder-output" rows="2"></textarea>
                   </div>
                   <div>
-                    <label class="curriculum-builder-label" for="curriculumParentSummaryOutput">Parent summary</label>
-                    <textarea id="curriculumParentSummaryOutput" class="curriculum-builder-field curriculum-builder-output" rows="3"></textarea>
+                    <label class="curriculum-builder-label" for="curriculumTeacherNotesOutput">Teacher notes</label>
+                    <textarea id="curriculumTeacherNotesOutput" class="curriculum-builder-field curriculum-builder-output" rows="3" placeholder="One per line"></textarea>
                   </div>
                   <div class="grid md:grid-cols-2 gap-3">
                     <div>
@@ -3437,12 +3437,12 @@
                     <textarea id="curriculumVideoLinksOutput" class="curriculum-builder-field curriculum-builder-output" rows="3" placeholder="Add manually: Title | URL | Note"></textarea>
                   </div>
                   <div>
-                    <label class="curriculum-builder-label" for="curriculumFamilyQuestionsOutput">Family questions</label>
-                    <textarea id="curriculumFamilyQuestionsOutput" class="curriculum-builder-field curriculum-builder-output" rows="3" placeholder="One per line"></textarea>
+                    <label class="curriculum-builder-label" for="curriculumParentSummaryOutput">Parent summary</label>
+                    <textarea id="curriculumParentSummaryOutput" class="curriculum-builder-field curriculum-builder-output" rows="3"></textarea>
                   </div>
                   <div>
-                    <label class="curriculum-builder-label" for="curriculumTeacherNotesOutput">Teacher notes</label>
-                    <textarea id="curriculumTeacherNotesOutput" class="curriculum-builder-field curriculum-builder-output" rows="3" placeholder="One per line"></textarea>
+                    <label class="curriculum-builder-label" for="curriculumFamilyQuestionsOutput">Family questions</label>
+                    <textarea id="curriculumFamilyQuestionsOutput" class="curriculum-builder-field curriculum-builder-output" rows="3" placeholder="One per line"></textarea>
                   </div>
                   <div>
                     <label class="curriculum-builder-label" for="curriculumMissingOutput">Missing or not found</label>
@@ -6022,8 +6022,22 @@
       if (!lessons.length) return `${getCurriculumSubjectLabel(subject)} week`;
       const moduleNames = lessons.map(lesson => lesson.unitOrModule).filter(Boolean);
       const moduleName = mostCommonValue(moduleNames) || getCurriculumSubjectLabel(subject);
-      const lessonNumbers = lessons.map(lesson => lesson.lessonNumber).filter(Boolean);
-      return lessonNumbers.length ? `${moduleName}, ${lessonNumbers.join(', ')}` : moduleName;
+      const lessonRange = getCurriculumLessonRangeLabel(lessons.map(lesson => lesson.lessonNumber).filter(Boolean));
+      return lessonRange ? `${moduleName} ${lessonRange}` : moduleName;
+    }
+
+    function getCurriculumLessonRangeLabel(lessonNumbers) {
+      const numbers = uniqueList(lessonNumbers.map(value => {
+        const match = String(value || '').match(/\d+/);
+        return match ? String(Number(match[0])) : '';
+      })).filter(Boolean);
+      if (!numbers.length) return '';
+      const numeric = numbers.map(Number).filter(Number.isFinite).sort((a, b) => a - b);
+      if (numeric.length === numbers.length && numeric.length > 1) {
+        const isContiguous = numeric.every((number, index) => index === 0 || number === numeric[index - 1] + 1);
+        if (isContiguous) return `Lessons ${numeric[0]}-${numeric[numeric.length - 1]}`;
+      }
+      return `Lessons ${numbers.join(', ')}`;
     }
 
     function getCurriculumWeekSpotlight(lessons, moduleLabel, subject = 'skills') {
@@ -6032,7 +6046,7 @@
       const vocab = uniqueList(lessons.flatMap(lesson => lesson.vocabulary || [])).slice(0, 4);
       const focus = summaries.length ? summaries.join(' ') : getCurriculumDefaultSpotlight(subject);
       const vocabText = vocab.length ? ` We will also use words like ${vocab.join(', ')}.` : '';
-      return `${moduleLabel}: ${focus}${vocabText}`;
+      return `${focus}${vocabText}`;
     }
 
     function getCurriculumDefaultFamilySummary(subject = 'skills') {
@@ -6077,24 +6091,26 @@
       }
       const title = `Upcoming Lesson Plan - ${weeks[0].weekLabel || 'Week'}`;
       const sections = weeks.map(renderCurriculumPrintSubject).join('');
-      printWindow.document.write(`
-        <!doctype html>
+      const printHtml = `<!doctype html>
         <html>
           <head>
             <title>${escapeHtml(title)}</title>
             <style>
-              body { font-family: Arial, sans-serif; color: #1f2937; margin: 24px; }
+              @page { margin: .45in; }
+              html, body { margin: 0; padding: 0; }
+              body { font-family: Arial, sans-serif; color: #1f2937; }
               h1 { margin: 0 0 6px; font-size: 26px; }
               h2 { margin: 24px 0 8px; font-size: 20px; color: #475569; border-bottom: 2px solid #f4b56a; padding-bottom: 6px; }
               h3 { margin: 0 0 6px; font-size: 16px; color: #be5b45; }
               .meta { color: #64748b; font-size: 13px; margin-bottom: 18px; }
               .lesson { break-inside: avoid; border: 1px solid #d8c7ad; border-radius: 10px; padding: 12px; margin: 10px 0; }
+              section:first-of-type h2 { margin-top: 14px; }
               .day { font-weight: 800; color: #475569; text-transform: uppercase; font-size: 12px; letter-spacing: .04em; }
               .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; margin-top: 8px; }
               .field { font-size: 13px; line-height: 1.4; }
               .field strong { display: block; color: #475569; margin-bottom: 2px; }
               ul { margin: 4px 0 0 18px; padding: 0; }
-              @media print { body { margin: 16px; } }
+              @media print { html, body { width: auto; height: auto; } }
             </style>
           </head>
           <body>
@@ -6102,8 +6118,9 @@
             <div class="meta">Generated from Teacher Tools</div>
             ${sections}
           </body>
-        </html>
-      `);
+        </html>`;
+      printWindow.document.open();
+      printWindow.document.write(printHtml);
       printWindow.document.close();
       printWindow.focus();
       setTimeout(() => printWindow.print(), 250);
@@ -10309,10 +10326,9 @@ function openLessonDetailModal(subject, dayTitle, card) {
     ? card.familyQuestions
     : (card.familyQuestion ? [card.familyQuestion] : []);
   body.innerHTML = [
-    renderLessonDetailField('What we will practice', card.summary),
-    renderLessonDetailField('I can', getLessonCardICanText(card.iCanStatement)),
-    renderLessonDetailField('Learning goal', card.objective),
     renderLessonDetailField('Standard focus', card.priorityStandard),
+    renderLessonDetailField('I can', getLessonCardICanText(card.iCanStatement)),
+    renderLessonDetailField('Learning goal', getLessonDetailLearningGoal(card)),
     renderLessonDetailList('Ask at home', familyQuestions),
     renderLessonDetailVideos(card.videoLinks)
   ].filter(Boolean).join('');
@@ -10324,6 +10340,15 @@ function closeLessonDetailModal() {
   const modal = document.getElementById('lessonDetailModal');
   if (modal) modal.classList.remove('open');
   document.body.style.overflow = '';
+}
+
+function getLessonDetailLearningGoal(card) {
+  const objective = String(card.objective || '').replace(/\s+/g, ' ').trim();
+  const summary = String(card.summary || '').replace(/\s+/g, ' ').trim();
+  if (objective && summary && objective.toLowerCase() !== summary.toLowerCase()) {
+    return `${objective} ${summary}`;
+  }
+  return objective || summary;
 }
 
 function renderLessonDetailField(label, value) {
