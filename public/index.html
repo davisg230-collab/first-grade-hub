@@ -3329,7 +3329,25 @@
           </div>
         </div>
 
-        <input id="curriculumScheduleDateInput" class="curriculum-schedule-date-hidden" type="date" onchange="setCurriculumScheduledLessonDateFromPicker(this.value)">
+        <div id="curriculumScheduleModal" class="lesson-detail-modal" onclick="if(event.target === this) closeCurriculumScheduleModal()">
+          <div class="lesson-detail-card p-5 sm:p-6" onclick="event.stopPropagation();">
+            <div class="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <p id="curriculumScheduleModalMeta" class="text-sm font-bold uppercase tracking-wide" style="color: var(--md-coral);">Schedule lesson</p>
+                <h3 id="curriculumScheduleModalTitle" class="text-2xl font-display font-bold" style="color: var(--md-slate);">Choose a date</h3>
+              </div>
+              <button type="button" class="w-9 h-9 rounded-full text-white font-bold" style="background: var(--md-slate);" onclick="closeCurriculumScheduleModal()" aria-label="Close schedule picker">&times;</button>
+            </div>
+            <label class="curriculum-builder-label" for="curriculumScheduleModalDate">Lesson date</label>
+            <input id="curriculumScheduleModalDate" class="curriculum-builder-field" type="date">
+            <p class="mt-2 text-xs text-[color:var(--md-ink)]/70">Pick a Monday-Friday date. Future weeks update upcoming lessons; this week or past weeks update the spotlight.</p>
+            <div class="flex flex-col sm:flex-row gap-2 mt-5">
+              <button type="button" class="curriculum-builder-button inline-flex px-4 py-2 text-white" style="background: var(--md-coral);" onclick="saveCurriculumScheduleModalDate()">Save Date</button>
+              <button type="button" class="curriculum-builder-button inline-flex px-4 py-2 text-white" style="background: var(--md-slate);" onclick="clearCurriculumScheduleModalDate()">Clear Date</button>
+              <button type="button" class="curriculum-builder-button inline-flex px-4 py-2" style="background: var(--md-pebble); color: var(--md-ink);" onclick="closeCurriculumScheduleModal()">Cancel</button>
+            </div>
+          </div>
+        </div>
 
         <div id="curriculumWorkspace" style="display: none;">
           <div class="curriculum-builder-shell">
@@ -5284,6 +5302,14 @@
 
     function inferCurriculumFocusTitle(text) {
       const compact = String(text || '').replace(/\s+/g, ' ').trim();
+      const slashLetters = uniqueList((compact.match(/\/[a-z]\//gi) || [])
+        .map(item => item.replace(/\//g, '').toLowerCase()))
+        .slice(0, 8);
+      if (slashLetters.length >= 2) return `Sounds ${slashLetters.join(', ')}`;
+      const objectiveMatch = compact.match(/\b(?:objective|learning goal)\b\s*:?\s*(.{20,180})/i)
+        || compact.match(/\bstudents?\s+will\s+(.{20,180})/i);
+      const objectiveTitle = objectiveMatch ? getCurriculumObjectiveLessonTitle({ objective: objectiveMatch[1] || objectiveMatch[0] }) : '';
+      if (objectiveTitle) return objectiveTitle;
       const soundWindow = compact.match(/\b(?:sounds?|sound-spellings?|spellings?|phonemes?)\b.{0,140}/i);
       if (!soundWindow) return '';
       const letters = uniqueList((soundWindow[0].match(/\/[a-z]\u0304?\/|\b[a-z]\b/gi) || [])
@@ -5296,6 +5322,14 @@
       const text = String(value || '').trim();
       if (!text) return false;
       return /_/.test(text) || /\.pdf$/i.test(text) || /\bteacher\s+guide\b/i.test(text) || /\b(?:ela|skills|unit|lesson)[_\s-]*\d/i.test(text);
+    }
+
+    function looksLikeUnhelpfulCurriculumTitle(value) {
+      const text = String(value || '').replace(/\s+/g, ' ').trim().toLowerCase();
+      if (!text) return true;
+      return /^(lesson|unit|module|skills|math|reading|phonics|curriculum)(\s+\d+[a-z]?)?$/.test(text)
+        || /^lesson\s+\d+[a-z]?\s*[:\-]?\s*(skills|reading|phonics|math)?$/i.test(text)
+        || text.length > 80;
     }
 
     async function analyzeCurriculumLesson() {
@@ -5342,8 +5376,8 @@
 
     function applyCurriculumAnalysis(analysis) {
       const currentTitle = document.getElementById('curriculumLessonTitleInput')?.value.trim() || '';
-      const aiTitle = analysis.lessonTitle && !looksLikeCurriculumFileTitle(analysis.lessonTitle) ? analysis.lessonTitle : '';
-      const nextTitle = aiTitle || getCurriculumLearningTitle(analysis);
+      const aiTitle = analysis.lessonTitle && !looksLikeCurriculumFileTitle(analysis.lessonTitle) && !looksLikeUnhelpfulCurriculumTitle(analysis.lessonTitle) ? analysis.lessonTitle : '';
+      const nextTitle = aiTitle || getCurriculumObjectiveLessonTitle(analysis) || getCurriculumLearningTitle(analysis);
       setInputValue('curriculumSubjectInput', ['skills', 'listening', 'math'].includes(analysis.subject) ? analysis.subject : (document.getElementById('curriculumSubjectInput')?.value || 'skills'));
       setInputValue('curriculumUnitInput', analysis.unitOrModule || document.getElementById('curriculumUnitInput')?.value || '');
       setInputValue('curriculumLessonNumberInput', analysis.lessonNumber || document.getElementById('curriculumLessonNumberInput')?.value || '');
@@ -5380,6 +5414,30 @@
         .replace(/^i can\s+/i, '')
         .replace(/\.$/, '')
         .slice(0, 80);
+    }
+
+    function getCurriculumObjectiveLessonTitle(analysis) {
+      const source = String(analysis.objective || analysis.iCanStatement || analysis.parentSummary || '').replace(/\s+/g, ' ').trim();
+      if (!source) return '';
+      const soundLetters = uniqueList((source.match(/\/[a-z]\//gi) || []).map(item => item.replace(/\//g, '').toLowerCase())).slice(0, 8);
+      if (soundLetters.length >= 2) return `Sounds ${soundLetters.join(', ')}`;
+      let title = source
+        .replace(/^objective\s*:\s*/i, '')
+        .replace(/^students?\s+(will|can|are learning to|learn to)\s+/i, '')
+        .replace(/^the student\s+(will|can)\s+/i, '')
+        .replace(/^i can\s+/i, '')
+        .replace(/^your child will\s+/i, '')
+        .replace(/\b(first grade|students?|children|scholars?)\b/gi, '')
+        .replace(/[.;:]+$/g, '')
+        .trim();
+      const words = title.split(/\s+/).filter(Boolean).slice(0, 7);
+      if (!words.length) return '';
+      title = words.join(' ')
+        .replace(/\bto\b$/i, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (!title || looksLikeUnhelpfulCurriculumTitle(title)) return '';
+      return title.replace(/\b\w/g, letter => letter.toUpperCase());
     }
 
     function listToLines(value) {
@@ -5629,38 +5687,58 @@
       const lesson = curriculumLessonsCache.find(item => item.id === lessonId);
       if (!lesson) return;
       curriculumSchedulePickerLessonId = lessonId;
-      const input = document.getElementById('curriculumScheduleDateInput');
-      if (!input) return;
+      const modal = document.getElementById('curriculumScheduleModal');
+      const title = document.getElementById('curriculumScheduleModalTitle');
+      const meta = document.getElementById('curriculumScheduleModalMeta');
+      const input = document.getElementById('curriculumScheduleModalDate');
+      if (!modal || !input) return;
+      if (title) title.textContent = getCurriculumCardTitle(lesson);
+      if (meta) meta.textContent = `${getCurriculumSubjectLabel(lesson.subject)} - ${lesson.lessonNumber || 'Lesson'}`;
       input.value = getCurriculumPrimaryScheduleDate(lesson) || '';
-      try {
-        if (typeof input.showPicker === 'function') {
-          input.showPicker();
-          return;
-        }
-      } catch (error) {
-        console.warn('Date picker could not open directly:', error);
-      }
-      input.focus();
-      input.click();
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => input.focus(), 0);
     }
 
     async function setCurriculumScheduledLessonDateFromPicker(dateKey) {
       if (!curriculumSchedulePickerLessonId) return;
       await setCurriculumScheduledLessonDate(curriculumSchedulePickerLessonId, dateKey);
       curriculumSchedulePickerLessonId = '';
-      const input = document.getElementById('curriculumScheduleDateInput');
+      const input = document.getElementById('curriculumScheduleModalDate');
       if (input) input.value = '';
+    }
+
+    async function saveCurriculumScheduleModalDate() {
+      if (!curriculumSchedulePickerLessonId) return;
+      const input = document.getElementById('curriculumScheduleModalDate');
+      const saved = await setCurriculumScheduledLessonDate(curriculumSchedulePickerLessonId, input ? input.value : '');
+      if (saved) closeCurriculumScheduleModal();
+    }
+
+    async function clearCurriculumScheduleModalDate() {
+      if (!curriculumSchedulePickerLessonId) return;
+      const cleared = await setCurriculumScheduledLessonDate(curriculumSchedulePickerLessonId, '');
+      if (cleared) closeCurriculumScheduleModal();
+    }
+
+    function closeCurriculumScheduleModal() {
+      const modal = document.getElementById('curriculumScheduleModal');
+      const input = document.getElementById('curriculumScheduleModalDate');
+      if (modal) modal.classList.remove('open');
+      if (input) input.value = '';
+      curriculumSchedulePickerLessonId = '';
+      document.body.style.overflow = '';
     }
 
     async function setCurriculumScheduledLessonDate(lessonId, dateKey) {
       const lesson = curriculumLessonsCache.find(item => item.id === lessonId);
-      if (!lesson) return;
+      if (!lesson) return false;
       const subject = lesson.subject || 'skills';
       const subjectPlan = getCurriculumSubjectPlan(subject);
       if (dateKey && getCurriculumSchoolDayIndex(dateKey) < 0) {
         setCurriculumStatus('Choose a Monday-Friday school day for the lesson.', 'error');
         renderCurriculumLibraryList();
-        return;
+        return false;
       }
       Object.keys(subjectPlan.dates).forEach(key => {
         if (subjectPlan.dates[key] === lessonId) delete subjectPlan.dates[key];
@@ -5679,6 +5757,7 @@
       } else {
         setCurriculumStatus(`${lesson.lessonNumber || 'Lesson'} removed from the schedule.`);
       }
+      return true;
     }
 
     function renderCurriculumLibraryList() {
@@ -6036,6 +6115,7 @@
         <section>
           <h2>${escapeHtml(getCurriculumSubjectLabel(week.subject))} <span style="font-weight:400;">${escapeHtml(week.weekLabel)}</span></h2>
           ${curriculumWeekdays.map((day, index) => renderCurriculumPrintLesson(day.title, week.lessonsByDay[index])).join('')}
+          ${renderCurriculumPrintSharedVocabulary(week)}
         </section>
       `;
     }
@@ -6051,9 +6131,7 @@
           <div class="grid">
             ${renderCurriculumPrintField('I can statement', lesson.iCanStatement)}
             ${renderCurriculumPrintField('Priority standard', lesson.priorityStandard)}
-            ${renderCurriculumPrintField('Objective', lesson.objective)}
-            ${renderCurriculumPrintField('Description', getCurriculumFamilySummary(lesson))}
-            ${renderCurriculumPrintList('Vocabulary', lesson.vocabulary)}
+            ${renderCurriculumPrintField('Focus', getCurriculumPrintFocus(lesson))}
             ${renderCurriculumPrintList('Materials', lesson.materials)}
             ${renderCurriculumPrintList('Video links', (lesson.videoLinks || []).map(link => link && link.url ? `${link.title || 'Video'} - ${link.url}` : '').filter(Boolean))}
             ${renderCurriculumPrintList('Teacher notes', lesson.teacherNotes)}
@@ -6072,6 +6150,26 @@
       const items = Array.isArray(values) ? values.filter(Boolean) : [];
       if (!items.length) return '';
       return `<div class="field"><strong>${escapeHtml(label)}</strong><ul>${items.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></div>`;
+    }
+
+    function getCurriculumPrintFocus(lesson) {
+      const objective = String(lesson.objective || '').replace(/\s+/g, ' ').trim();
+      const summary = getCurriculumFamilySummary(lesson);
+      if (objective && summary && objective.toLowerCase() !== summary.toLowerCase()) {
+        return `${objective} ${summary}`;
+      }
+      return objective || summary;
+    }
+
+    function renderCurriculumPrintSharedVocabulary(week) {
+      const words = uniqueList(week.selectedLessons.flatMap(lesson => lesson.vocabulary || [])).slice(0, 24);
+      if (!words.length) return '';
+      return `
+        <div class="lesson">
+          <div class="day">Weekly vocabulary</div>
+          <ul>${words.map(word => `<li>${escapeHtml(word)}</li>`).join('')}</ul>
+        </div>
+      `;
     }
 
     function plainFamilySentence(value) {
