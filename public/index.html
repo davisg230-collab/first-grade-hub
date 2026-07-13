@@ -6036,13 +6036,17 @@
         if (!db) throw new Error('The parent learning pages are not available. Please refresh and try again.');
         const payload = { curriculum_weekly_plan_json: JSON.stringify(curriculumWeeklyPlan) };
         const updatedSubjects = [];
-        curriculumSubjects.forEach(subject => {
+        let usedSpotlightFallback = false;
+        setCurriculumBusy(true, 'Preparing learning pages...');
+        for (const subject of curriculumSubjects) {
           const fields = getCurriculumSubjectFields(subject);
           const spotlight = buildCurriculumWeekDraft(subject, 'spotlight');
           const upcoming = buildCurriculumWeekDraft(subject, 'upcoming');
-          if (!spotlight.selectedLessons.length && !upcoming.selectedLessons.length) return;
+          if (!spotlight.selectedLessons.length && !upcoming.selectedLessons.length) continue;
           if (spotlight.selectedLessons.length) {
-            payload[fields.text] = spotlight.spotlight;
+            const aiSpotlight = await generateCurriculumSpotlightText(subject, spotlight);
+            if (!aiSpotlight) usedSpotlightFallback = true;
+            payload[fields.text] = aiSpotlight || spotlight.spotlight;
             if (fields.moduleLabel) payload[fields.moduleLabel] = spotlight.moduleLabel;
           }
           if (upcoming.selectedLessons.length) {
@@ -6063,11 +6067,11 @@
             }
           }
           updatedSubjects.push(getCurriculumSubjectLabel(subject));
-        });
+        }
         if (!updatedSubjects.length) {
           throw new Error('Schedule at least one lesson with the calendar button first.');
         }
-        setCurriculumBusy(true, 'Publishing learning pages...');
+        setCurriculumStatus('Saving learning pages...');
         await db.collection('classData').doc('current').set(payload, { merge: true });
         if (payload.skills_text || payload.sounds_json || payload.skills_week_module_label) {
           updateSkillsSection(payload.skills_text, payload.sounds_json, payload.skills_week_module_label);
@@ -6082,12 +6086,41 @@
           const fields = getCurriculumSubjectFields(subject);
           if (payload[fields.lessons]) updateLessonCards(subject, payload[fields.lessons]);
         });
-        setCurriculumStatus(`Parent pages updated for ${updatedSubjects.join(', ')}.`, 'success');
+        const fallbackNote = usedSpotlightFallback ? ' One spotlight used backup wording because the AI writer did not respond.' : '';
+        setCurriculumStatus(`Parent pages updated for ${updatedSubjects.join(', ')}.${fallbackNote}`, 'success');
       } catch (error) {
         console.error('Publishing learning pages failed:', error);
         setCurriculumStatus(error.message || 'The learning pages could not be published.', 'error');
       } finally {
         setCurriculumBusy(false);
+      }
+    }
+
+    async function generateCurriculumSpotlightText(subject, week) {
+      if (!cloudFunctions || !week || !week.selectedLessons.length) return '';
+      try {
+        setCurriculumStatus(`Writing ${getCurriculumSubjectLabel(subject)} spotlight with AI...`);
+        const writeSpotlight = cloudFunctions.httpsCallable('generateCurriculumSpotlight');
+        const result = await writeSpotlight({
+          subject,
+          weekLabel: week.weekLabel,
+          moduleLabel: week.moduleLabel,
+          lessons: week.lessonsByDay.map((lesson, index) => lesson ? ({
+            day: curriculumWeekdays[index]?.title || '',
+            lessonNumber: lesson.lessonNumber || '',
+            lessonTitle: getCurriculumCardTitle(lesson),
+            objective: lesson.objective || '',
+            iCanStatement: lesson.iCanStatement || '',
+            parentSummary: lesson.parentSummary || '',
+            priorityStandard: lesson.priorityStandard || '',
+            vocabulary: Array.isArray(lesson.vocabulary) ? lesson.vocabulary : []
+          }) : null).filter(Boolean)
+        });
+        const text = result && result.data && result.data.spotlight ? String(result.data.spotlight).trim() : '';
+        return text;
+      } catch (error) {
+        console.warn('AI weekly spotlight failed, using backup summary:', error);
+        return '';
       }
     }
 
