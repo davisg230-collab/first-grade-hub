@@ -40,6 +40,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
   <script>
     const firebaseConfig = {
@@ -52,12 +53,13 @@
       measurementId: "G-5SF4RE6KLS"
     };
     // Initialize Firebase with error handling
-    let db, auth, storage;
+    let db, auth, storage, cloudFunctions;
     try {
       firebase.initializeApp(firebaseConfig);
       try { firebase.analytics(); } catch (e) { console.warn('Firebase analytics failed:', e); }
       db = firebase.firestore();
       auth = firebase.auth();
+      cloudFunctions = firebase.functions();
       storage = firebase.storage();
       console.log('Firebase initialized successfully');
     } catch (e) {
@@ -65,6 +67,7 @@
       // Set db to undefined so we can check for it later
       db = undefined;
       auth = undefined;
+      cloudFunctions = undefined;
       storage = undefined;
     }
     
@@ -1776,6 +1779,71 @@
       border-left: .35rem solid var(--md-coral);
       background: color-mix(in oklab, var(--md-white) 88%, var(--md-cream));
     }
+    .curriculum-builder-shell {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(17rem, .85fr);
+      gap: 1rem;
+      align-items: start;
+    }
+    .curriculum-builder-panel {
+      border: 1px solid color-mix(in oklab, var(--md-slate) 22%, transparent);
+      background: color-mix(in oklab, var(--md-white) 88%, var(--md-cream));
+      box-shadow: 0 12px 26px rgba(43,43,43,.07);
+    }
+    .curriculum-builder-field {
+      width: 100%;
+      border: 1px solid color-mix(in oklab, var(--md-slate) 25%, var(--md-white));
+      border-radius: .75rem;
+      background: var(--md-white);
+      padding: .7rem .85rem;
+      color: var(--md-ink);
+    }
+    .curriculum-builder-label {
+      display: block;
+      margin-bottom: .35rem;
+      color: var(--md-slate);
+      font-size: .82rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .curriculum-builder-button {
+      min-height: 2.75rem;
+      justify-content: center;
+      border-radius: .85rem;
+      font-weight: 800;
+      box-shadow: inset 0 -2px 0 rgba(0,0,0,.14), 0 8px 16px rgba(43,43,43,.1);
+    }
+    .curriculum-builder-preview {
+      display: grid;
+      gap: .7rem;
+    }
+    .curriculum-builder-output {
+      min-height: 4.2rem;
+      resize: vertical;
+    }
+    .curriculum-library-list {
+      max-height: 28rem;
+      overflow-y: auto;
+    }
+    .curriculum-library-item {
+      width: 100%;
+      border: 1px solid color-mix(in oklab, var(--md-slate) 18%, var(--md-white));
+      border-radius: .85rem;
+      background: color-mix(in oklab, var(--md-white) 92%, var(--md-pebble));
+      padding: .85rem;
+      text-align: left;
+    }
+    .curriculum-library-item:hover,
+    .curriculum-library-item.active {
+      border-color: var(--md-coral);
+      box-shadow: 0 8px 18px rgba(43,43,43,.1);
+    }
+    @media (max-width: 900px) {
+      .curriculum-builder-shell {
+        grid-template-columns: 1fr;
+      }
+    }
     /* Drag and drop visual indicators for listening units */
     .drag-over-top {
       border-top: 3px solid var(--md-coral) !important;
@@ -3009,6 +3077,143 @@
         </div>
       </div>
     </section>
+    <!-- TEACHER CURRICULUM BUILDER -->
+    <section data-page-panel="curriculum-builder" class="pagePanel fade-in">
+      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
+        <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-6">
+          <div>
+            <p class="text-sm font-bold uppercase tracking-wide" style="color: var(--md-slate);">Teacher Tools</p>
+            <h2 class="text-3xl font-display font-bold" style="color: var(--md-coral);">Curriculum Builder</h2>
+            <p class="mt-2 text-sm text-[color:var(--md-ink)]/80 max-w-3xl">Paste one lesson, let AI pull out the planning pieces, then save the approved result to your private lesson library.</p>
+          </div>
+          <button id="curriculumRefreshLibraryBtn" class="curriculum-builder-button inline-flex items-center px-4 py-2 text-white" style="background: var(--md-slate);" onclick="loadCurriculumLessons()">
+            Refresh Library
+          </button>
+        </div>
+
+        <div id="curriculumAccessPanel" class="curriculum-builder-panel rounded-2xl p-5 mb-5">
+          <h3 class="text-xl font-display font-bold mb-2" style="color: var(--md-slate);">Teacher sign-in required</h3>
+          <p class="text-sm text-gray-600 mb-4">This workspace is separate from Edit Mode and only opens for approved teacher Google accounts.</p>
+          <button id="curriculumSignInBtn" class="curriculum-builder-button inline-flex items-center px-5 py-3 text-white" style="background: var(--md-coral);" onclick="signInForCurriculumBuilder()">
+            Sign in with Google
+          </button>
+        </div>
+
+        <div id="curriculumWorkspace" style="display: none;">
+          <div class="curriculum-builder-shell">
+            <div class="space-y-4">
+              <div class="curriculum-builder-panel rounded-2xl p-5">
+                <div class="grid sm:grid-cols-3 gap-3 mb-4">
+                  <div>
+                    <label class="curriculum-builder-label" for="curriculumSubjectInput">Subject</label>
+                    <select id="curriculumSubjectInput" class="curriculum-builder-field">
+                      <option value="skills">Skills</option>
+                      <option value="listening">Listening & Learning</option>
+                      <option value="math">Math</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="curriculum-builder-label" for="curriculumUnitInput">Unit / Module</label>
+                    <input id="curriculumUnitInput" class="curriculum-builder-field" type="text" placeholder="Unit 1 or Module 2">
+                  </div>
+                  <div>
+                    <label class="curriculum-builder-label" for="curriculumLessonNumberInput">Lesson</label>
+                    <input id="curriculumLessonNumberInput" class="curriculum-builder-field" type="text" placeholder="Lesson 4">
+                  </div>
+                </div>
+                <div class="mb-4">
+                  <label class="curriculum-builder-label" for="curriculumLessonTitleInput">Optional title</label>
+                  <input id="curriculumLessonTitleInput" class="curriculum-builder-field" type="text" placeholder="Leave blank if the AI should find it">
+                </div>
+                <div>
+                  <label class="curriculum-builder-label" for="curriculumSourceTextInput">Lesson source text</label>
+                  <textarea id="curriculumSourceTextInput" class="curriculum-builder-field" rows="12" placeholder="Paste one lesson here, including any video links, objectives, standards, vocabulary, or materials."></textarea>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-2 mt-4">
+                  <button id="curriculumAnalyzeBtn" class="curriculum-builder-button inline-flex items-center px-5 py-3 text-white" style="background: var(--md-coral);" onclick="analyzeCurriculumLesson()">
+                    Analyze Lesson
+                  </button>
+                  <button id="curriculumSaveBtn" class="curriculum-builder-button inline-flex items-center px-5 py-3 text-white" style="background: var(--md-slate);" onclick="saveCurriculumLesson()">
+                    Save Lesson
+                  </button>
+                  <button class="curriculum-builder-button inline-flex items-center px-5 py-3" style="background: var(--md-pebble); color: var(--md-ink);" onclick="clearCurriculumBuilderForm()">
+                    New Blank
+                  </button>
+                </div>
+                <div id="curriculumStatus" class="mt-3 text-sm font-semibold text-gray-600" aria-live="polite"></div>
+              </div>
+
+              <div class="curriculum-builder-panel rounded-2xl p-5">
+                <h3 class="text-xl font-display font-bold mb-4" style="color: var(--md-slate);">AI Draft</h3>
+                <div class="curriculum-builder-preview">
+                  <div>
+                    <label class="curriculum-builder-label" for="curriculumICanOutput">I can statement</label>
+                    <textarea id="curriculumICanOutput" class="curriculum-builder-field curriculum-builder-output" rows="2"></textarea>
+                  </div>
+                  <div>
+                    <label class="curriculum-builder-label" for="curriculumStandardOutput">Priority standard</label>
+                    <textarea id="curriculumStandardOutput" class="curriculum-builder-field curriculum-builder-output" rows="2"></textarea>
+                  </div>
+                  <div>
+                    <label class="curriculum-builder-label" for="curriculumObjectiveOutput">Objective</label>
+                    <textarea id="curriculumObjectiveOutput" class="curriculum-builder-field curriculum-builder-output" rows="2"></textarea>
+                  </div>
+                  <div>
+                    <label class="curriculum-builder-label" for="curriculumParentSummaryOutput">Parent summary</label>
+                    <textarea id="curriculumParentSummaryOutput" class="curriculum-builder-field curriculum-builder-output" rows="3"></textarea>
+                  </div>
+                  <div class="grid md:grid-cols-2 gap-3">
+                    <div>
+                      <label class="curriculum-builder-label" for="curriculumVocabularyOutput">Vocabulary</label>
+                      <textarea id="curriculumVocabularyOutput" class="curriculum-builder-field curriculum-builder-output" rows="4" placeholder="One per line"></textarea>
+                    </div>
+                    <div>
+                      <label class="curriculum-builder-label" for="curriculumMaterialsOutput">Materials</label>
+                      <textarea id="curriculumMaterialsOutput" class="curriculum-builder-field curriculum-builder-output" rows="4" placeholder="One per line"></textarea>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="curriculum-builder-label" for="curriculumVideoLinksOutput">Video links</label>
+                    <textarea id="curriculumVideoLinksOutput" class="curriculum-builder-field curriculum-builder-output" rows="3" placeholder="Title | URL | Note"></textarea>
+                  </div>
+                  <div>
+                    <label class="curriculum-builder-label" for="curriculumFamilyQuestionsOutput">Family questions</label>
+                    <textarea id="curriculumFamilyQuestionsOutput" class="curriculum-builder-field curriculum-builder-output" rows="3" placeholder="One per line"></textarea>
+                  </div>
+                  <div>
+                    <label class="curriculum-builder-label" for="curriculumTeacherNotesOutput">Teacher notes</label>
+                    <textarea id="curriculumTeacherNotesOutput" class="curriculum-builder-field curriculum-builder-output" rows="3" placeholder="One per line"></textarea>
+                  </div>
+                  <div>
+                    <label class="curriculum-builder-label" for="curriculumMissingOutput">Missing or not found</label>
+                    <textarea id="curriculumMissingOutput" class="curriculum-builder-field curriculum-builder-output" rows="3" placeholder="One per line"></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <aside class="curriculum-builder-panel rounded-2xl p-5">
+              <div class="flex items-center justify-between gap-3 mb-4">
+                <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">Saved Lessons</h3>
+                <span id="curriculumLibraryCount" class="text-sm font-bold text-gray-500">0</span>
+              </div>
+              <div class="grid gap-3 mb-4">
+                <select id="curriculumLibrarySubjectFilter" class="curriculum-builder-field" onchange="renderCurriculumLibraryList()">
+                  <option value="all">All subjects</option>
+                  <option value="skills">Skills</option>
+                  <option value="listening">Listening & Learning</option>
+                  <option value="math">Math</option>
+                </select>
+                <input id="curriculumLibrarySearchInput" class="curriculum-builder-field" type="search" placeholder="Search lessons..." oninput="renderCurriculumLibraryList()">
+              </div>
+              <div id="curriculumLibraryList" class="curriculum-library-list grid gap-2">
+                <p class="text-sm text-gray-500">Sign in to load saved lessons.</p>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </section>
     <!-- TRANSPORTATION TAB (always editable) -->
     <section data-page-panel="transportation" class="pagePanel fade-in">
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8 transportation-hero">
@@ -3384,6 +3589,10 @@
                   class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-[color:var(--md-ink)] font-semibold hover:opacity-90">
             <span>🌓</span><span>Light/Dark</span>
           </button>
+          <button id="curriculumBuilderBtn" class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white shadow-soft"
+                  data-page="curriculum-builder" data-tooltip="Teacher Curriculum Builder&#10;AI Lesson Extractor&#10;Saved Lesson Library" style="background: #475569;">
+            <span>&#128274;</span><span>Teacher Tools</span>
+          </button>
           <button id="editModeBtn" class="px-4 py-2 rounded-xl font-semibold text-white shadow-soft" style="background: var(--md-slate);">
             ✏️ Edit Mode
           </button>
@@ -3570,6 +3779,8 @@
         syncMobileSnackCards();
       } else if (pageId === 'specials') {
         syncMobileSpecialsCards();
+      } else if (pageId === 'curriculum-builder') {
+        initializeCurriculumBuilder();
       }
     }
 
@@ -4334,17 +4545,21 @@
       // Save Changes button
       document.getElementById('saveChangesBtn').onclick = saveChangesToFirestore;
       const resumedEditMode = await finishPendingEditRedirect();
-      if (!resumedEditMode) recordDailyVisit();
+      const resumedCurriculumBuilder = await finishPendingCurriculumRedirect();
+      if (!resumedEditMode && !resumedCurriculumBuilder) recordDailyVisit();
     });
     
     // Track original values for change detection
     let originalValues = {};
     const EDIT_MODE_REDIRECT_KEY = 'firstGradeHub.pendingEditModeRedirect';
+    const CURRICULUM_BUILDER_REDIRECT_KEY = 'firstGradeHub.pendingCurriculumBuilderRedirect';
     const EDIT_MODE_REDIRECT_MAX_AGE_MS = 10 * 60 * 1000;
     const approvedEditorEmails = [
       'davisg230@gmail.com',
       'lvest@crossroadsschoolskc.org'
     ];
+    let curriculumLessonsCache = [];
+    let curriculumActiveLessonId = '';
 
     function getEditorUserEmail(user) {
       return (user && user.email || '').toLowerCase();
@@ -4502,6 +4717,369 @@
         alert('Google Sign-In did not finish. Please tap Edit Mode and try again.');
         return false;
       }
+    }
+
+    function rememberPendingCurriculumRedirect() {
+      try {
+        const sessionStore = getEditModeStorage('sessionStorage');
+        if (sessionStore) sessionStore.setItem(CURRICULUM_BUILDER_REDIRECT_KEY, String(Date.now()));
+      } catch (error) {
+        console.warn('Could not remember pending curriculum redirect:', error);
+      }
+    }
+
+    function hasPendingCurriculumRedirect() {
+      try {
+        const sessionStore = getEditModeStorage('sessionStorage');
+        const startedAt = Number(sessionStore && sessionStore.getItem(CURRICULUM_BUILDER_REDIRECT_KEY));
+        return !!(startedAt && Date.now() - startedAt < EDIT_MODE_REDIRECT_MAX_AGE_MS);
+      } catch (error) {
+        console.warn('Could not read pending curriculum redirect:', error);
+        return false;
+      }
+    }
+
+    function clearPendingCurriculumRedirect() {
+      try {
+        const sessionStore = getEditModeStorage('sessionStorage');
+        if (sessionStore) sessionStore.removeItem(CURRICULUM_BUILDER_REDIRECT_KEY);
+      } catch (error) {
+        console.warn('Could not clear pending curriculum redirect:', error);
+      }
+    }
+
+    async function finishPendingCurriculumRedirect() {
+      if (!hasPendingCurriculumRedirect() || !auth) return false;
+      try {
+        if (typeof auth.getRedirectResult === 'function') {
+          await auth.getRedirectResult();
+        }
+        clearPendingCurriculumRedirect();
+        showPage('curriculum-builder');
+        await initializeCurriculumBuilder();
+        return true;
+      } catch (error) {
+        console.error('Teacher Tools sign-in return failed:', error);
+        clearPendingCurriculumRedirect();
+        alert('Teacher Tools sign-in did not finish. Please try again.');
+        return false;
+      }
+    }
+
+    function getApprovedCurriculumUser() {
+      return auth && auth.currentUser && isApprovedEditorUser(auth.currentUser) ? auth.currentUser : null;
+    }
+
+    async function signInForCurriculumBuilder() {
+      try {
+        const user = await ensureCurriculumTeacherUser();
+        if (user) {
+          showCurriculumWorkspace(true);
+          await loadCurriculumLessons();
+        }
+      } catch (error) {
+        console.error('Teacher Tools sign-in failed:', error);
+        setCurriculumStatus(error.message || 'Teacher sign-in failed.', 'error');
+      }
+    }
+
+    async function ensureCurriculumTeacherUser() {
+      if (!auth) {
+        throw new Error('Firebase sign-in is not available. Please refresh and try again.');
+      }
+      let user = getApprovedCurriculumUser();
+      if (!user) {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+        try {
+          const result = await auth.signInWithPopup(provider);
+          user = result && result.user ? result.user : auth.currentUser;
+        } catch (error) {
+          if (['auth/popup-blocked', 'auth/popup-closed-by-user', 'auth/cancelled-popup-request', 'auth/operation-not-supported-in-this-environment'].includes(error.code)) {
+            rememberPendingCurriculumRedirect();
+            await auth.signInWithRedirect(provider);
+            return null;
+          }
+          throw error;
+        }
+      }
+      if (!isApprovedEditorUser(user)) {
+        const email = getEditorUserEmail(user) || 'that account';
+        try { await auth.signOut(); } catch (error) { console.warn('Could not sign out unauthorized user:', error); }
+        throw new Error(`Access denied for ${email}. Use an approved teacher Google account.`);
+      }
+      return user;
+    }
+
+    async function initializeCurriculumBuilder() {
+      const hasAccess = !!getApprovedCurriculumUser();
+      showCurriculumWorkspace(hasAccess);
+      if (hasAccess && curriculumLessonsCache.length === 0) {
+        await loadCurriculumLessons();
+      }
+    }
+
+    function showCurriculumWorkspace(show) {
+      const accessPanel = document.getElementById('curriculumAccessPanel');
+      const workspace = document.getElementById('curriculumWorkspace');
+      if (accessPanel) accessPanel.style.display = show ? 'none' : 'block';
+      if (workspace) workspace.style.display = show ? 'block' : 'none';
+    }
+
+    function setCurriculumStatus(message, type = 'info') {
+      const status = document.getElementById('curriculumStatus');
+      if (!status) return;
+      status.textContent = message || '';
+      status.style.color = type === 'error' ? '#dc2626' : (type === 'success' ? '#15803d' : '#4b5563');
+    }
+
+    async function analyzeCurriculumLesson() {
+      try {
+        const user = await ensureCurriculumTeacherUser();
+        if (!user) return;
+        if (!cloudFunctions) {
+          throw new Error('The AI connection is not available. Please refresh and try again.');
+        }
+        const payload = collectCurriculumRequestPayload();
+        if (!payload.sourceText || payload.sourceText.length < 40) {
+          throw new Error('Paste one full lesson first so the AI has enough to read.');
+        }
+        setCurriculumBusy(true, 'Analyzing lesson...');
+        const analyzeLesson = cloudFunctions.httpsCallable('analyzeCurriculumLesson');
+        const result = await analyzeLesson(payload);
+        const analysis = result && result.data ? result.data.analysis : null;
+        if (!analysis) {
+          throw new Error('The AI did not return a lesson draft.');
+        }
+        applyCurriculumAnalysis(analysis);
+        setCurriculumStatus('Draft ready. Review it, edit anything you want, then save it to the lesson library.', 'success');
+      } catch (error) {
+        console.error('Curriculum analysis failed:', error);
+        setCurriculumStatus(error.message || 'Analysis failed.', 'error');
+      } finally {
+        setCurriculumBusy(false);
+      }
+    }
+
+    function collectCurriculumRequestPayload() {
+      return {
+        subject: document.getElementById('curriculumSubjectInput')?.value || 'skills',
+        unitOrModule: document.getElementById('curriculumUnitInput')?.value.trim() || '',
+        lessonNumber: document.getElementById('curriculumLessonNumberInput')?.value.trim() || '',
+        lessonTitle: document.getElementById('curriculumLessonTitleInput')?.value.trim() || '',
+        sourceText: document.getElementById('curriculumSourceTextInput')?.value.trim() || ''
+      };
+    }
+
+    function applyCurriculumAnalysis(analysis) {
+      setInputValue('curriculumSubjectInput', ['skills', 'listening', 'math'].includes(analysis.subject) ? analysis.subject : (document.getElementById('curriculumSubjectInput')?.value || 'skills'));
+      setInputValue('curriculumUnitInput', analysis.unitOrModule || document.getElementById('curriculumUnitInput')?.value || '');
+      setInputValue('curriculumLessonNumberInput', analysis.lessonNumber || document.getElementById('curriculumLessonNumberInput')?.value || '');
+      setInputValue('curriculumLessonTitleInput', analysis.lessonTitle || document.getElementById('curriculumLessonTitleInput')?.value || '');
+      setInputValue('curriculumICanOutput', analysis.iCanStatement || '');
+      setInputValue('curriculumStandardOutput', analysis.priorityStandard || '');
+      setInputValue('curriculumObjectiveOutput', analysis.objective || '');
+      setInputValue('curriculumParentSummaryOutput', analysis.parentSummary || '');
+      setInputValue('curriculumVocabularyOutput', listToLines(analysis.vocabulary));
+      setInputValue('curriculumMaterialsOutput', listToLines(analysis.materials));
+      setInputValue('curriculumVideoLinksOutput', videoLinksToLines(analysis.videoLinks));
+      setInputValue('curriculumFamilyQuestionsOutput', listToLines(analysis.familyQuestions));
+      setInputValue('curriculumTeacherNotesOutput', listToLines(analysis.teacherNotes));
+      setInputValue('curriculumMissingOutput', listToLines(analysis.missingInformation));
+    }
+
+    function setInputValue(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.value = value || '';
+    }
+
+    function listToLines(value) {
+      return Array.isArray(value) ? value.filter(Boolean).join('\n') : '';
+    }
+
+    function linesToList(value) {
+      return String(value || '').split('\n').map(item => item.trim()).filter(Boolean);
+    }
+
+    function videoLinksToLines(links) {
+      if (!Array.isArray(links)) return '';
+      return links
+        .map(link => {
+          if (!link) return '';
+          const title = String(link.title || '').trim();
+          const url = String(link.url || '').trim();
+          const note = String(link.note || '').trim();
+          return [title, url, note].filter(Boolean).join(' | ');
+        })
+        .filter(Boolean)
+        .join('\n');
+    }
+
+    function linesToVideoLinks(value) {
+      return String(value || '').split('\n').map(line => {
+        const clean = line.trim();
+        if (!clean) return null;
+        const parts = clean.split('|').map(part => part.trim());
+        if (parts.length >= 2) {
+          return { title: parts[0] || 'Video', url: parts[1] || '', note: parts.slice(2).join(' | ') };
+        }
+        const urlMatch = clean.match(/https?:\/\/\S+/);
+        const url = urlMatch ? urlMatch[0] : '';
+        const title = url ? clean.replace(url, '').trim() || 'Video' : clean;
+        return { title, url, note: '' };
+      }).filter(Boolean);
+    }
+
+    function collectCurriculumLessonDraft() {
+      const request = collectCurriculumRequestPayload();
+      return {
+        subject: request.subject,
+        unitOrModule: request.unitOrModule,
+        lessonNumber: request.lessonNumber,
+        lessonTitle: request.lessonTitle,
+        sourceText: request.sourceText,
+        iCanStatement: document.getElementById('curriculumICanOutput')?.value.trim() || '',
+        priorityStandard: document.getElementById('curriculumStandardOutput')?.value.trim() || '',
+        objective: document.getElementById('curriculumObjectiveOutput')?.value.trim() || '',
+        parentSummary: document.getElementById('curriculumParentSummaryOutput')?.value.trim() || '',
+        vocabulary: linesToList(document.getElementById('curriculumVocabularyOutput')?.value || ''),
+        materials: linesToList(document.getElementById('curriculumMaterialsOutput')?.value || ''),
+        videoLinks: linesToVideoLinks(document.getElementById('curriculumVideoLinksOutput')?.value || ''),
+        familyQuestions: linesToList(document.getElementById('curriculumFamilyQuestionsOutput')?.value || ''),
+        teacherNotes: linesToList(document.getElementById('curriculumTeacherNotesOutput')?.value || ''),
+        missingInformation: linesToList(document.getElementById('curriculumMissingOutput')?.value || '')
+      };
+    }
+
+    async function saveCurriculumLesson() {
+      try {
+        const user = await ensureCurriculumTeacherUser();
+        if (!user) return;
+        if (!db) throw new Error('The lesson library is not available. Please refresh and try again.');
+        const lesson = collectCurriculumLessonDraft();
+        if (!lesson.unitOrModule || !lesson.lessonNumber) {
+          throw new Error('Add the unit/module and lesson number before saving.');
+        }
+        if (!lesson.lessonTitle && !lesson.iCanStatement && !lesson.objective) {
+          throw new Error('Analyze the lesson or add details before saving.');
+        }
+        setCurriculumBusy(true, 'Saving lesson...');
+        const lessonsRef = db.collection('curriculumLessons');
+        const docRef = curriculumActiveLessonId ? lessonsRef.doc(curriculumActiveLessonId) : lessonsRef.doc();
+        const payload = {
+          ...lesson,
+          updatedBy: getEditorUserEmail(user),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        if (!curriculumActiveLessonId) {
+          payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+          payload.createdBy = getEditorUserEmail(user);
+        }
+        await docRef.set(payload, { merge: true });
+        curriculumActiveLessonId = docRef.id;
+        setCurriculumStatus('Lesson saved to the private curriculum library.', 'success');
+        await loadCurriculumLessons();
+      } catch (error) {
+        console.error('Saving curriculum lesson failed:', error);
+        setCurriculumStatus(error.message || 'Lesson save failed.', 'error');
+      } finally {
+        setCurriculumBusy(false);
+      }
+    }
+
+    async function loadCurriculumLessons() {
+      try {
+        const user = await ensureCurriculumTeacherUser();
+        if (!user) return;
+        if (!db) throw new Error('The lesson library is not available. Please refresh and try again.');
+        showCurriculumWorkspace(true);
+        const snapshot = await db.collection('curriculumLessons').orderBy('updatedAt', 'desc').limit(150).get();
+        curriculumLessonsCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderCurriculumLibraryList();
+      } catch (error) {
+        console.error('Loading curriculum library failed:', error);
+        setCurriculumStatus(error.message || 'Could not load saved lessons.', 'error');
+      }
+    }
+
+    function renderCurriculumLibraryList() {
+      const list = document.getElementById('curriculumLibraryList');
+      const count = document.getElementById('curriculumLibraryCount');
+      if (!list) return;
+      const subjectFilter = document.getElementById('curriculumLibrarySubjectFilter')?.value || 'all';
+      const search = (document.getElementById('curriculumLibrarySearchInput')?.value || '').toLowerCase().trim();
+      const filtered = curriculumLessonsCache.filter(lesson => {
+        const subjectMatches = subjectFilter === 'all' || lesson.subject === subjectFilter;
+        const haystack = [lesson.subject, lesson.unitOrModule, lesson.lessonNumber, lesson.lessonTitle, lesson.iCanStatement, lesson.objective].join(' ').toLowerCase();
+        return subjectMatches && (!search || haystack.includes(search));
+      });
+      if (count) count.textContent = String(filtered.length);
+      if (!filtered.length) {
+        list.innerHTML = '<p class="text-sm text-gray-500">No saved lessons yet.</p>';
+        return;
+      }
+      list.innerHTML = filtered.map(lesson => {
+        const subjectLabel = getCurriculumSubjectLabel(lesson.subject);
+        const title = lesson.lessonTitle || lesson.iCanStatement || 'Untitled lesson';
+        const isActive = lesson.id === curriculumActiveLessonId ? ' active' : '';
+        return `
+          <button class="curriculum-library-item${isActive}" type="button" onclick="loadCurriculumLessonIntoBuilder('${lesson.id}')">
+            <div class="text-xs font-bold uppercase tracking-wide text-gray-500">${escapeHtml(subjectLabel)}</div>
+            <div class="font-display font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(lesson.unitOrModule || 'Unit')} - ${escapeHtml(lesson.lessonNumber || 'Lesson')}</div>
+            <div class="text-sm mt-1 text-[color:var(--md-ink)]/80">${escapeHtml(title)}</div>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function loadCurriculumLessonIntoBuilder(lessonId) {
+      const lesson = curriculumLessonsCache.find(item => item.id === lessonId);
+      if (!lesson) return;
+      curriculumActiveLessonId = lesson.id;
+      setInputValue('curriculumSubjectInput', lesson.subject || 'skills');
+      setInputValue('curriculumUnitInput', lesson.unitOrModule || '');
+      setInputValue('curriculumLessonNumberInput', lesson.lessonNumber || '');
+      setInputValue('curriculumLessonTitleInput', lesson.lessonTitle || '');
+      setInputValue('curriculumSourceTextInput', lesson.sourceText || '');
+      applyCurriculumAnalysis(lesson);
+      renderCurriculumLibraryList();
+      setCurriculumStatus('Saved lesson loaded. You can edit and save it again.', 'success');
+    }
+
+    function clearCurriculumBuilderForm() {
+      curriculumActiveLessonId = '';
+      [
+        'curriculumUnitInput',
+        'curriculumLessonNumberInput',
+        'curriculumLessonTitleInput',
+        'curriculumSourceTextInput',
+        'curriculumICanOutput',
+        'curriculumStandardOutput',
+        'curriculumObjectiveOutput',
+        'curriculumParentSummaryOutput',
+        'curriculumVocabularyOutput',
+        'curriculumMaterialsOutput',
+        'curriculumVideoLinksOutput',
+        'curriculumFamilyQuestionsOutput',
+        'curriculumTeacherNotesOutput',
+        'curriculumMissingOutput'
+      ].forEach(id => setInputValue(id, ''));
+      renderCurriculumLibraryList();
+      setCurriculumStatus('Ready for a new lesson.');
+    }
+
+    function setCurriculumBusy(isBusy, message = '') {
+      ['curriculumAnalyzeBtn', 'curriculumSaveBtn', 'curriculumRefreshLibraryBtn'].forEach(id => {
+        const button = document.getElementById(id);
+        if (button) button.disabled = isBusy;
+      });
+      if (message) setCurriculumStatus(message);
+    }
+
+    function getCurriculumSubjectLabel(subject) {
+      if (subject === 'math') return 'Math';
+      if (subject === 'listening') return 'Listening & Learning';
+      return 'Skills';
     }
     
     function storeOriginalValues() {
