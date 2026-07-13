@@ -2034,6 +2034,16 @@
       background: var(--card-bg);
       box-shadow: 0 24px 60px rgba(0,0,0,.32);
     }
+    #curriculumScheduleModal {
+      align-items: flex-start;
+      overflow-y: auto;
+      padding-top: max(1rem, env(safe-area-inset-top));
+      padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+    #curriculumScheduleModal .lesson-detail-card {
+      max-height: none;
+      margin: 1rem auto;
+    }
     @media (max-width: 900px) {
       .curriculum-builder-shell {
         grid-template-columns: 1fr;
@@ -2571,6 +2581,7 @@
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-display font-semibold" style="color: var(--md-coral);">Sounds / Sight Words / Vocab</h3>
+          <button onclick="showPage('skills-units')" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);">View by Unit</button>
         </div>
         <div class="rounded-xl p-4" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-coral) 30%); border: 1px solid color-mix(in oklab, var(--md-coral) 60%, var(--md-white) 40%);">
           <ul class="text-sm list-disc pl-5" data-edit="teacher" contenteditable="false">
@@ -2587,6 +2598,7 @@
       <!-- Section 1: Listening & Learning Description (Top Section) -->
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
         <h2 class="text-2xl font-display font-bold mb-4" style="color: var(--md-coral);">👂 This Week's Listening & Learning Spotlight</h2>
+        <span id="listeningWeekModuleLabel" class="skills-week-badge mb-4">Listening week</span>
         <p class="leading-relaxed" data-edit="teacher" contenteditable="false">
           We're building strong listening skills through daily read-alouds and interactive discussions. Students practice following multi-step directions and learn to ask thoughtful questions about the stories we read together.
         </p>
@@ -2636,6 +2648,7 @@
       <!-- Section 1: Math Adventures Description (Top Section) -->
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
         <h2 class="text-2xl font-display font-bold mb-4" style="color: var(--md-slate);">🧮 This Week's Math Spotlight</h2>
+        <span id="mathWeekModuleLabel" class="skills-week-badge mb-4">Math week</span>
         <p class="leading-relaxed" data-edit="teacher" contenteditable="false">
           We're exploring number patterns and building addition skills using hands-on manipulatives and fun games. Students are learning to count by 2s, 5s, and 10s while practicing addition facts within 20.
         </p>
@@ -3834,15 +3847,24 @@
       </div>
       <div class="grid sm:grid-cols-3 gap-3 mb-5">
         <div class="rounded-xl p-4 bg-white">
-          <div class="text-sm font-semibold text-gray-600">Visitors Today</div>
+          <div class="flex items-center justify-between gap-2">
+            <div class="text-sm font-semibold text-gray-600">Visitors Today</div>
+            <button class="px-2 py-1 rounded-lg text-white text-xs font-semibold" style="background: var(--md-coral);" onclick="clearVisitStat('today')">Clear</button>
+          </div>
           <div id="visitsTodayCount" class="text-3xl font-display font-bold" style="color: var(--md-coral);">--</div>
         </div>
         <div class="rounded-xl p-4 bg-white">
-          <div class="text-sm font-semibold text-gray-600">Total Daily Visits</div>
+          <div class="flex items-center justify-between gap-2">
+            <div class="text-sm font-semibold text-gray-600">Total Daily Visits</div>
+            <button class="px-2 py-1 rounded-lg text-white text-xs font-semibold" style="background: var(--md-slate);" onclick="clearVisitStat('total')">Clear</button>
+          </div>
           <div id="totalVisitsCount" class="text-3xl font-display font-bold" style="color: var(--md-slate);">--</div>
         </div>
         <div class="rounded-xl p-4 bg-white">
-          <div class="text-sm font-semibold text-gray-600">Recent Actions</div>
+          <div class="flex items-center justify-between gap-2">
+            <div class="text-sm font-semibold text-gray-600">Recent Actions</div>
+            <button class="px-2 py-1 rounded-lg text-white text-xs font-semibold" style="background: var(--md-mustard);" onclick="clearTeacherActivityFeed()">Clear</button>
+          </div>
           <div id="recentActionsCount" class="text-3xl font-display font-bold" style="color: var(--md-mustard);">--</div>
         </div>
       </div>
@@ -4641,11 +4663,13 @@
 
     async function recordDailyVisit() {
       if (!db || !auth) return;
+      if (isKnownTeacherDevice()) return;
       const today = getTodayKey();
       const storageKey = 'firstGradeHub.visitRecorded.' + today;
       if (localStorage.getItem(storageKey) === 'true') return;
       try {
         await ensureParentActionAuth();
+        if (isKnownTeacherDevice()) return;
         const increment = firebase.firestore.FieldValue.increment;
         const serverTimestamp = firebase.firestore.FieldValue.serverTimestamp;
         await db.collection('siteStats').doc(today).set({
@@ -4724,6 +4748,53 @@
       } catch (error) {
         console.error('Failed to clear teacher activity:', error);
         alert('That action could not be cleared yet. Please try again.');
+      }
+    }
+
+    async function clearTeacherActivityFeed() {
+      if (!db || !document.body.classList.contains('editing')) return;
+      if (!confirm('Clear recent parent actions from the teacher activity panel?')) return;
+      try {
+        await ensureAuthenticated();
+        const snapshot = await db.collection('teacherActivity').orderBy('createdAt', 'desc').limit(200).get();
+        if (!snapshot.empty) {
+          const batch = db.batch();
+          snapshot.docs.forEach(doc => batch.delete(doc.ref));
+          await batch.commit();
+        }
+        await loadTeacherActivityPanel();
+      } catch (error) {
+        console.error('Failed to clear teacher activity feed:', error);
+        alert('Recent actions could not be cleared yet. Please try again.');
+      }
+    }
+
+    async function clearVisitStat(statType) {
+      if (!db || !document.body.classList.contains('editing')) return;
+      const isToday = statType === 'today';
+      const message = isToday ? "Clear today's visitor count?" : 'Clear the total daily visits count?';
+      if (!confirm(message)) return;
+      try {
+        await ensureAuthenticated();
+        const serverTimestamp = firebase.firestore.FieldValue.serverTimestamp;
+        if (isToday) {
+          const today = getTodayKey();
+          await db.collection('siteStats').doc(today).set({
+            date: today,
+            visits: 0,
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+          try { localStorage.removeItem('firstGradeHub.visitRecorded.' + today); } catch (error) {}
+        } else {
+          await db.collection('siteStats').doc('summary').set({
+            totalDailyVisits: 0,
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+        }
+        await loadTeacherActivityPanel();
+      } catch (error) {
+        console.error('Failed to clear visit stat:', error);
+        alert('That visit count could not be cleared yet. Please try again.');
       }
     }
 
@@ -4829,6 +4900,7 @@
     let originalValues = {};
     const EDIT_MODE_REDIRECT_KEY = 'firstGradeHub.pendingEditModeRedirect';
     const CURRICULUM_BUILDER_REDIRECT_KEY = 'firstGradeHub.pendingCurriculumBuilderRedirect';
+    const TEACHER_DEVICE_KEY = 'firstGradeHub.knownTeacherEmail';
     const EDIT_MODE_REDIRECT_MAX_AGE_MS = 10 * 60 * 1000;
     const CURRICULUM_PDFJS_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
     const CURRICULUM_PDFJS_WORKER_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -4852,6 +4924,7 @@
     let curriculumToolView = 'shelf';
     let curriculumSchedulePickerLessonId = '';
     let learningMobileActiveDays = { skills: 0, listening: 0, math: 0 };
+    let learningLessonDataCache = { skills: null, listening: null, math: null };
 
     function getEditorUserEmail(user) {
       return (user && user.email || '').toLowerCase();
@@ -4867,6 +4940,27 @@
 
     function getBestEditorUser(...users) {
       return users.find(isApprovedEditorUser) || users.find(isGoogleEditorUser) || null;
+    }
+
+    function rememberTeacherDevice(user) {
+      const email = getEditorUserEmail(user);
+      if (!approvedEditorEmails.includes(email)) return;
+      try {
+        localStorage.setItem(TEACHER_DEVICE_KEY, email);
+      } catch (error) {
+        console.warn('Could not remember teacher device:', error);
+      }
+    }
+
+    function isKnownTeacherDevice() {
+      if (auth && isApprovedEditorUser(auth.currentUser)) return true;
+      try {
+        const storedEmail = (localStorage.getItem(TEACHER_DEVICE_KEY) || '').toLowerCase();
+        return approvedEditorEmails.includes(storedEmail);
+      } catch (error) {
+        console.warn('Could not read teacher device marker:', error);
+        return false;
+      }
     }
 
     function hidePinOverlay() {
@@ -5141,11 +5235,13 @@
         try { await auth.signOut(); } catch (error) { console.warn('Could not sign out unauthorized user:', error); }
         throw new Error(`Access denied for ${email}. Use an approved teacher Google account.`);
       }
+      rememberTeacherDevice(user);
       return user;
     }
 
     async function initializeCurriculumBuilder() {
       const hasAccess = !!getApprovedCurriculumUser();
+      if (hasAccess) rememberTeacherDevice(auth.currentUser);
       if (hasAccess && curriculumToolView !== 'curriculum') {
         curriculumToolView = 'shelf';
       }
@@ -5696,7 +5792,6 @@
       if (meta) meta.textContent = `${getCurriculumSubjectLabel(lesson.subject)} - ${lesson.lessonNumber || 'Lesson'}`;
       input.value = getCurriculumPrimaryScheduleDate(lesson) || '';
       modal.classList.add('open');
-      document.body.style.overflow = 'hidden';
       setTimeout(() => input.focus(), 0);
     }
 
@@ -5935,11 +6030,11 @@
         if (payload.skills_text || payload.sounds_json || payload.skills_week_module_label) {
           updateSkillsSection(payload.skills_text, payload.sounds_json, payload.skills_week_module_label);
         }
-        if (payload.listening_text || payload.ask_json) {
-          updateListeningSection(payload.listening_text, payload.ask_json);
+        if (payload.listening_text || payload.ask_json || payload.listening_week_module_label) {
+          updateListeningSection(payload.listening_text, payload.ask_json, payload.listening_week_module_label);
         }
-        if (payload.math_text || payload.math_vocab_json) {
-          updateMathSection(payload.math_text, payload.math_vocab_json);
+        if (payload.math_text || payload.math_vocab_json || payload.math_week_module_label) {
+          updateMathSection(payload.math_text, payload.math_vocab_json, payload.math_week_module_label);
         }
         curriculumSubjects.forEach(subject => {
           const fields = getCurriculumSubjectFields(subject);
@@ -6040,11 +6135,50 @@
       return `Lessons ${numbers.join(', ')}`;
     }
 
+    function getCurriculumLessonObjectiveText(lesson) {
+      return lesson.objective || lesson.iCanStatement || lesson.parentSummary || lesson.lessonTitle || '';
+    }
+
+    function getCurriculumFamilyLearningPhrase(value) {
+      let text = String(value || '').replace(/\s+/g, ' ').trim();
+      text = text.replace(/^objective\s*:\s*/i, '');
+      text = text.replace(/^students?\s+will\s+be\s+able\s+to\s+/i, '');
+      text = text.replace(/^students?\s+(?:will|are learning to|learn to|practice|practiced)\s+/i, '');
+      text = text.replace(/^your child\s+(?:will|is learning to|learns to|practiced)\s+/i, '');
+      text = text.replace(/^i can\s+/i, '');
+      text = text.replace(/^to\s+/i, '');
+      text = text.replace(/[.!?]+$/g, '');
+      text = text.trim();
+      if (!text) return '';
+      const firstWord = text.split(/\s+/)[0].toLowerCase();
+      const actionWords = ['add', 'answer', 'ask', 'blend', 'compare', 'count', 'describe', 'explain', 'identify', 'listen', 'read', 'recognize', 'retell', 'segment', 'solve', 'spell', 'subtract', 'use', 'write'];
+      if (actionWords.includes(firstWord)) {
+        text = `learning to ${text}`;
+      }
+      return text.charAt(0).toLowerCase() + text.slice(1);
+    }
+
+    function joinNaturalList(items) {
+      const cleanItems = uniqueList(items).filter(Boolean);
+      if (cleanItems.length <= 1) return cleanItems[0] || '';
+      if (cleanItems.length === 2) return `${cleanItems[0]} and ${cleanItems[1]}`;
+      return `${cleanItems.slice(0, -1).join(', ')}, and ${cleanItems[cleanItems.length - 1]}`;
+    }
+
+    function getCurriculumCombinedObjectiveSummary(lessons, subject = 'skills') {
+      const phrases = uniqueList(lessons
+        .map(getCurriculumLessonObjectiveText)
+        .map(getCurriculumFamilyLearningPhrase)
+        .filter(Boolean))
+        .slice(0, 5);
+      if (!phrases.length) return getCurriculumDefaultSpotlight(subject);
+      return `This week, students worked on ${joinNaturalList(phrases)}.`;
+    }
+
     function getCurriculumWeekSpotlight(lessons, moduleLabel, subject = 'skills') {
       if (!lessons.length) return getCurriculumDefaultSpotlight(subject);
-      const summaries = uniqueList(lessons.map(getCurriculumFamilySummary)).slice(0, 2);
       const vocab = uniqueList(lessons.flatMap(lesson => lesson.vocabulary || [])).slice(0, 4);
-      const focus = summaries.length ? summaries.join(' ') : getCurriculumDefaultSpotlight(subject);
+      const focus = getCurriculumCombinedObjectiveSummary(lessons, subject);
       const vocabText = vocab.length ? ` We will also use words like ${vocab.join(', ')}.` : '';
       return `${focus}${vocabText}`;
     }
@@ -6068,10 +6202,10 @@
 
     function getCurriculumSubjectFields(subject) {
       if (subject === 'math') {
-        return { text: 'math_text', bottomList: 'math_vocab_json', lessons: 'math_lessons_json' };
+        return { text: 'math_text', bottomList: 'math_vocab_json', lessons: 'math_lessons_json', moduleLabel: 'math_week_module_label' };
       }
       if (subject === 'listening') {
-        return { text: 'listening_text', bottomList: 'ask_json', lessons: 'listening_lessons_json' };
+        return { text: 'listening_text', bottomList: 'ask_json', lessons: 'listening_lessons_json', moduleLabel: 'listening_week_module_label' };
       }
       return { text: 'skills_text', bottomList: 'sounds_json', lessons: 'skills_lessons_json', moduleLabel: 'skills_week_module_label' };
     }
@@ -6448,6 +6582,7 @@
           return false;
         }
         
+        rememberTeacherDevice(signedInAuthUser);
         console.log('Authentication successful for authorized user');
       } catch (error) {
         console.error('Firebase authentication failed:', error);
@@ -6573,8 +6708,8 @@
         // Refresh lesson cards to update for edit mode
         const grid = document.getElementById(subject + 'LessonsGrid');
         if (grid && grid.children.length > 0) {
-          // Get current data from grid and rebuild
-          const currentData = getLessonCardsData(subject);
+          // Use the last saved lesson data so compact parent cards do not rebuild as empty.
+          const currentData = learningLessonDataCache[subject] || getLessonCardsData(subject);
           updateLessonCards(subject, currentData);
         }
       });
@@ -6760,8 +6895,7 @@
         // Refresh lesson cards to update for non-edit mode
         const grid = document.getElementById(subject + 'LessonsGrid');
         if (grid && grid.children.length > 0) {
-          // Get current data from grid and rebuild
-          const currentData = getLessonCardsData(subject);
+          const currentData = getLessonCardsData(subject) || learningLessonDataCache[subject];
           updateLessonCards(subject, currentData);
         }
       });
@@ -7074,6 +7208,8 @@
       // Listening section
       const listeningDescEl = document.querySelector('[data-page-panel="listening"] p[data-edit="teacher"]');
       if (listeningDescEl) data.listening_text = listeningDescEl.textContent || '';
+      const listeningModuleEl = document.getElementById('listeningWeekModuleLabel');
+      if (listeningModuleEl) data.listening_week_module_label = listeningModuleEl.textContent || '';
       
       const listeningUl = document.querySelector('[data-page-panel="listening"] ul[data-edit="teacher"]');
       if (listeningUl) {
@@ -7084,6 +7220,8 @@
       // Math section
       const mathDescEl = document.querySelector('[data-page-panel="math"] p[data-edit="teacher"]');
       if (mathDescEl) data.math_text = mathDescEl.textContent || '';
+      const mathModuleEl = document.getElementById('mathWeekModuleLabel');
+      if (mathModuleEl) data.math_week_module_label = mathModuleEl.textContent || '';
       
       const mathUl = document.querySelector('[data-page-panel="math"] ul[data-edit="teacher"]');
       if (mathUl) {
@@ -8013,6 +8151,7 @@
           const dataField = subject === 'skills' ? 'skills_lessons_json' : (subject === 'listening' ? 'listening_lessons_json' : 'math_lessons_json');
           const data = {};
           data[dataField] = lessonData;
+          learningLessonDataCache[subject] = cloneLearningLessonData(safeJsonParse(lessonData, null));
           await db.collection('classData').doc('current').set(data, { merge: true });
         } catch (error) {
           console.error('Failed to auto-save lesson card positions:', error);
@@ -9924,10 +10063,12 @@ function updateSkillsSection(skills_text, sounds_json, moduleLabel = '') {
     });
   }
 }
-function updateListeningSection(listening_text, ask_json) {
+function updateListeningSection(listening_text, ask_json, moduleLabel = '') {
   const descEl = document.querySelector('[data-page-panel="listening"] p[data-edit="teacher"]');
   const ul = document.querySelector('[data-page-panel="listening"] ul[data-edit="teacher"]');
+  const moduleEl = document.getElementById('listeningWeekModuleLabel');
   if (descEl && listening_text) descEl.textContent = listening_text;
+  if (moduleEl && moduleLabel !== undefined) moduleEl.textContent = moduleLabel || 'Listening week';
   if (ul && ask_json) {
     const arr = parseArray(ask_json);
     ul.innerHTML = '';
@@ -9938,10 +10079,12 @@ function updateListeningSection(listening_text, ask_json) {
     });
   }
 }
-function updateMathSection(math_text, math_vocab_json) {
+function updateMathSection(math_text, math_vocab_json, moduleLabel = '') {
   const descEl = document.querySelector('[data-page-panel="math"] p[data-edit="teacher"]');
   const ul = document.querySelector('[data-page-panel="math"] ul[data-edit="teacher"]');
+  const moduleEl = document.getElementById('mathWeekModuleLabel');
   if (descEl && math_text) descEl.textContent = math_text;
+  if (moduleEl && moduleLabel !== undefined) moduleEl.textContent = moduleLabel || 'Math week';
   if (ul && math_vocab_json) {
     const arr = parseArray(math_vocab_json);
     ul.innerHTML = '';
@@ -10003,6 +10146,16 @@ function updateExtrasSection(extras_json) {
   });
 }
 
+function cloneLearningLessonData(data) {
+  if (!data) return null;
+  try {
+    return JSON.parse(JSON.stringify(data));
+  } catch (error) {
+    console.warn('Could not copy lesson card data:', error);
+    return data;
+  }
+}
+
 function updateLessonCards(subject, lessons_data) {
   const grid = document.getElementById(subject + 'LessonsGrid');
   if (!grid) return;
@@ -10048,6 +10201,7 @@ function updateLessonCards(subject, lessons_data) {
     data.weekdays.push({ title: curriculumWeekdays[data.weekdays.length]?.title || 'Day', placeholder: 'No Lesson' });
   }
   data.cards = Array.isArray(data.cards) ? data.cards : [];
+  learningLessonDataCache[subject] = cloneLearningLessonData(data);
   
   // Get color based on subject
   const color = (subject === 'skills' || subject === 'listening') ? 'var(--md-coral)' : 'var(--md-slate)';
@@ -10326,7 +10480,7 @@ function openLessonDetailModal(subject, dayTitle, card) {
     ? card.familyQuestions
     : (card.familyQuestion ? [card.familyQuestion] : []);
   body.innerHTML = [
-    renderLessonDetailField('Standard focus', card.priorityStandard),
+    renderLessonDetailField('Standard', card.priorityStandard),
     renderLessonDetailField('I can', getLessonCardICanText(card.iCanStatement)),
     renderLessonDetailField('Learning goal', getLessonDetailLearningGoal(card)),
     renderLessonDetailList('Ask at home', familyQuestions),
@@ -10343,8 +10497,8 @@ function closeLessonDetailModal() {
 }
 
 function getLessonDetailLearningGoal(card) {
-  const objective = String(card.objective || '').replace(/\s+/g, ' ').trim();
-  const summary = String(card.summary || '').replace(/\s+/g, ' ').trim();
+  const objective = plainFamilySentence(card.objective || '');
+  const summary = plainFamilySentence(card.summary || '');
   if (objective && summary && objective.toLowerCase() !== summary.toLowerCase()) {
     return `${objective} ${summary}`;
   }
@@ -10538,8 +10692,8 @@ function populateDataFromSheet(data) {
   updateScholarInfo(data);
   updateClassSkillMeter(data.class_skill_meter_skill, data.class_skill_meter_progress, data.class_skill_meter_family_note, data.class_skill_meter_history);
   updateSkillsSection(data.skills_text, data.sounds_json, data.skills_week_module_label);
-  updateListeningSection(data.listening_text, data.ask_json);
-  updateMathSection(data.math_text, data.math_vocab_json);
+  updateListeningSection(data.listening_text, data.ask_json, data.listening_week_module_label);
+  updateMathSection(data.math_text, data.math_vocab_json, data.math_week_module_label);
   updateExtrasSection(data.extras_json);
   updateLessonCards('skills', data.skills_lessons_json);
   updateLessonCards('math', data.math_lessons_json);
@@ -14612,8 +14766,10 @@ async function saveLessonCards(subject) {
     
     // Prepare data for saving
     const dataField = subject === 'skills' ? 'skills_lessons_json' : (subject === 'listening' ? 'listening_lessons_json' : 'math_lessons_json');
+    const lessonPayload = { weekdays, cards };
+    learningLessonDataCache[subject] = cloneLearningLessonData(lessonPayload);
     const data = {};
-    data[dataField] = JSON.stringify({ weekdays, cards });
+    data[dataField] = JSON.stringify(lessonPayload);
     
     // Save to Firestore
     await db.collection('classData').doc('current').set(data, { merge: true });
@@ -17510,8 +17666,10 @@ function getDefaultFallbackData() {
     skills_week_module_label: "Skills week",
     sounds_json: JSON.stringify(["ch", "sh", "th", "wh"]),
     listening_text: "We practiced active listening and following directions.",
+    listening_week_module_label: "Listening week",
     ask_json: JSON.stringify(["What is the main idea?", "How do you know?", "What evidence supports this?"]),
     math_text: "We explored numbers and counting patterns.",
+    math_week_module_label: "Math week",
     math_vocab_json: JSON.stringify(["add", "subtract", "count", "pattern"]),
     extras_json: JSON.stringify([]),
     skills_lessons_json: JSON.stringify([]),
