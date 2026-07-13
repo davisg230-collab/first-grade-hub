@@ -3080,11 +3080,11 @@
     <!-- TEACHER CURRICULUM BUILDER -->
     <section data-page-panel="curriculum-builder" class="pagePanel fade-in">
       <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
-        <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-6">
+        <div id="curriculumWorkspaceHeader" class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-6" style="display: none;">
           <div>
             <p class="text-sm font-bold uppercase tracking-wide" style="color: var(--md-slate);">Teacher Tools</p>
             <h2 class="text-3xl font-display font-bold" style="color: var(--md-coral);">Curriculum Builder</h2>
-            <p class="mt-2 text-sm text-[color:var(--md-ink)]/80 max-w-3xl">Paste one lesson, let AI pull out the planning pieces, then save the approved result to your private lesson library.</p>
+            <p class="mt-2 text-sm text-[color:var(--md-ink)]/80 max-w-3xl">Load a lesson PDF or paste lesson text, let AI pull out the planning pieces, then save the approved result to your private lesson library.</p>
           </div>
           <button id="curriculumRefreshLibraryBtn" class="curriculum-builder-button inline-flex items-center px-4 py-2 text-white" style="background: var(--md-slate);" onclick="loadCurriculumLessons()">
             Refresh Library
@@ -3125,9 +3125,19 @@
                   <label class="curriculum-builder-label" for="curriculumLessonTitleInput">Optional title</label>
                   <input id="curriculumLessonTitleInput" class="curriculum-builder-field" type="text" placeholder="Leave blank if the AI should find it">
                 </div>
+                <div class="mb-4">
+                  <label class="curriculum-builder-label" for="curriculumPdfInput">Lesson PDF</label>
+                  <input id="curriculumPdfInput" type="file" accept="application/pdf,.pdf" style="display: none;" onchange="extractCurriculumPdfText(event)">
+                  <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+                    <button id="curriculumPdfSelectBtn" type="button" class="curriculum-builder-button inline-flex items-center px-4 py-2 text-white" style="background: var(--md-slate);" onclick="document.getElementById('curriculumPdfInput').click();">
+                      Choose PDF
+                    </button>
+                    <span id="curriculumPdfStatus" class="text-sm font-semibold text-gray-600"></span>
+                  </div>
+                </div>
                 <div>
                   <label class="curriculum-builder-label" for="curriculumSourceTextInput">Lesson source text</label>
-                  <textarea id="curriculumSourceTextInput" class="curriculum-builder-field" rows="12" placeholder="Paste one lesson here, including any video links, objectives, standards, vocabulary, or materials."></textarea>
+                  <textarea id="curriculumSourceTextInput" class="curriculum-builder-field" rows="12" placeholder="Paste one lesson here, or choose a PDF above."></textarea>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-2 mt-4">
                   <button id="curriculumAnalyzeBtn" class="curriculum-builder-button inline-flex items-center px-5 py-3 text-white" style="background: var(--md-coral);" onclick="analyzeCurriculumLesson()">
@@ -3174,7 +3184,7 @@
                   </div>
                   <div>
                     <label class="curriculum-builder-label" for="curriculumVideoLinksOutput">Video links</label>
-                    <textarea id="curriculumVideoLinksOutput" class="curriculum-builder-field curriculum-builder-output" rows="3" placeholder="Title | URL | Note"></textarea>
+                    <textarea id="curriculumVideoLinksOutput" class="curriculum-builder-field curriculum-builder-output" rows="3" placeholder="Add manually: Title | URL | Note"></textarea>
                   </div>
                   <div>
                     <label class="curriculum-builder-label" for="curriculumFamilyQuestionsOutput">Family questions</label>
@@ -4554,12 +4564,15 @@
     const EDIT_MODE_REDIRECT_KEY = 'firstGradeHub.pendingEditModeRedirect';
     const CURRICULUM_BUILDER_REDIRECT_KEY = 'firstGradeHub.pendingCurriculumBuilderRedirect';
     const EDIT_MODE_REDIRECT_MAX_AGE_MS = 10 * 60 * 1000;
+    const CURRICULUM_PDFJS_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    const CURRICULUM_PDFJS_WORKER_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     const approvedEditorEmails = [
       'davisg230@gmail.com',
       'lvest@crossroadsschoolskc.org'
     ];
     let curriculumLessonsCache = [];
     let curriculumActiveLessonId = '';
+    let curriculumPdfJsLoadPromise = null;
 
     function getEditorUserEmail(user) {
       return (user && user.email || '').toLowerCase();
@@ -4821,8 +4834,10 @@
 
     function showCurriculumWorkspace(show) {
       const accessPanel = document.getElementById('curriculumAccessPanel');
+      const workspaceHeader = document.getElementById('curriculumWorkspaceHeader');
       const workspace = document.getElementById('curriculumWorkspace');
       if (accessPanel) accessPanel.style.display = show ? 'none' : 'block';
+      if (workspaceHeader) workspaceHeader.style.display = show ? 'flex' : 'none';
       if (workspace) workspace.style.display = show ? 'block' : 'none';
     }
 
@@ -4831,6 +4846,84 @@
       if (!status) return;
       status.textContent = message || '';
       status.style.color = type === 'error' ? '#dc2626' : (type === 'success' ? '#15803d' : '#4b5563');
+    }
+
+    function setCurriculumPdfStatus(message, type = 'info') {
+      const status = document.getElementById('curriculumPdfStatus');
+      if (!status) return;
+      status.textContent = message || '';
+      status.style.color = type === 'error' ? '#dc2626' : (type === 'success' ? '#15803d' : '#4b5563');
+    }
+
+    async function loadCurriculumPdfLibrary() {
+      if (window.pdfjsLib) return window.pdfjsLib;
+      if (!curriculumPdfJsLoadPromise) {
+        curriculumPdfJsLoadPromise = new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = CURRICULUM_PDFJS_SRC;
+          script.async = true;
+          script.onload = () => {
+            if (!window.pdfjsLib) {
+              reject(new Error('The PDF reader did not load. Please try again.'));
+              return;
+            }
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = CURRICULUM_PDFJS_WORKER_SRC;
+            resolve(window.pdfjsLib);
+          };
+          script.onerror = () => reject(new Error('The PDF reader could not load. Check your connection and try again.'));
+          document.head.appendChild(script);
+        });
+      }
+      return curriculumPdfJsLoadPromise;
+    }
+
+    async function extractCurriculumPdfText(event) {
+      const input = event && event.target ? event.target : document.getElementById('curriculumPdfInput');
+      const file = input && input.files && input.files[0];
+      if (!file) return;
+
+      try {
+        if (file.size > 25 * 1024 * 1024) {
+          throw new Error('Choose a smaller PDF for one lesson at a time.');
+        }
+        setCurriculumBusy(true, 'Reading PDF...');
+        setCurriculumPdfStatus('Reading PDF...');
+        const pdfjsLib = await loadCurriculumPdfLibrary();
+        const data = new Uint8Array(await file.arrayBuffer());
+        const pdf = await pdfjsLib.getDocument({ data }).promise;
+        const pages = [];
+
+        for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+          const page = await pdf.getPage(pageNumber);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items
+            .map(item => item && item.str ? item.str : '')
+            .join(' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+          if (pageText) pages.push(`Page ${pageNumber}\n${pageText}`);
+        }
+
+        const text = pages.join('\n\n').trim();
+        if (!text) {
+          throw new Error('I could not find readable text in that PDF. It may be a scanned image.');
+        }
+
+        setInputValue('curriculumSourceTextInput', text);
+        const titleInput = document.getElementById('curriculumLessonTitleInput');
+        if (titleInput && !titleInput.value.trim()) {
+          titleInput.value = file.name.replace(/\.pdf$/i, '');
+        }
+        setCurriculumPdfStatus(`${pdf.numPages} page PDF loaded.`, 'success');
+        setCurriculumStatus(text.length > 20000 ? 'PDF text loaded. It is long, so trim it to one lesson before analyzing.' : 'PDF text loaded. Review it, then analyze the lesson.', 'success');
+      } catch (error) {
+        console.error('PDF lesson text extraction failed:', error);
+        setCurriculumPdfStatus('PDF not loaded.', 'error');
+        setCurriculumStatus(error.message || 'The PDF could not be read.', 'error');
+      } finally {
+        if (input) input.value = '';
+        setCurriculumBusy(false);
+      }
     }
 
     async function analyzeCurriculumLesson() {
@@ -4843,6 +4936,9 @@
         const payload = collectCurriculumRequestPayload();
         if (!payload.sourceText || payload.sourceText.length < 40) {
           throw new Error('Paste one full lesson first so the AI has enough to read.');
+        }
+        if (payload.sourceText.length > 20000) {
+          throw new Error('Trim the lesson text to one lesson before running the AI analyzer.');
         }
         setCurriculumBusy(true, 'Analyzing lesson...');
         const analyzeLesson = cloudFunctions.httpsCallable('analyzeCurriculumLesson');
@@ -5065,11 +5161,12 @@
         'curriculumMissingOutput'
       ].forEach(id => setInputValue(id, ''));
       renderCurriculumLibraryList();
+      setCurriculumPdfStatus('');
       setCurriculumStatus('Ready for a new lesson.');
     }
 
     function setCurriculumBusy(isBusy, message = '') {
-      ['curriculumAnalyzeBtn', 'curriculumSaveBtn', 'curriculumRefreshLibraryBtn'].forEach(id => {
+      ['curriculumAnalyzeBtn', 'curriculumSaveBtn', 'curriculumRefreshLibraryBtn', 'curriculumPdfSelectBtn', 'curriculumPdfInput'].forEach(id => {
         const button = document.getElementById(id);
         if (button) button.disabled = isBusy;
       });
