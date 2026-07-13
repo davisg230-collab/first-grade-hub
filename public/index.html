@@ -6019,6 +6019,14 @@
             if (fields.bottomList) {
               payload[fields.bottomList] = JSON.stringify(getCurriculumSubjectBottomList(subject, upcoming));
             }
+          } else {
+            payload[fields.lessons] = JSON.stringify({
+              weekdays: upcoming.weekdays,
+              cards: []
+            });
+            if (fields.bottomList) {
+              payload[fields.bottomList] = JSON.stringify([]);
+            }
           }
           updatedSubjects.push(getCurriculumSubjectLabel(subject));
         });
@@ -6158,6 +6166,112 @@
       return text.charAt(0).toLowerCase() + text.slice(1);
     }
 
+    function getCurriculumObjectiveCorpus(lessons) {
+      return lessons.map(lesson => [
+        lesson.objective,
+        lesson.iCanStatement,
+        lesson.parentSummary,
+        lesson.lessonTitle
+      ].filter(Boolean).join(' ')).join(' ');
+    }
+
+    function formatCompactLearningList(items, limit = 12) {
+      const cleanItems = uniqueList(items).slice(0, limit);
+      if (!cleanItems.length) return '';
+      const listText = joinNaturalList(cleanItems);
+      return items.length > limit ? `${listText}, and more` : listText;
+    }
+
+    function getSkillsSoundList(corpus) {
+      const sounds = [];
+      const allowedDigraphs = new Set(['ch', 'sh', 'th', 'wh', 'ph', 'ck', 'ng']);
+      const addSound = value => {
+        const sound = String(value || '').replace(/[^a-z]/gi, '').trim().toLowerCase();
+        if (sound && (sound.length === 1 || allowedDigraphs.has(sound))) sounds.push(sound);
+      };
+      String(corpus || '').replace(/\/([a-z]{1,2})\//gi, (match, sound) => {
+        addSound(sound);
+        return match;
+      });
+      const listPattern = /\b(?:sounds?|spellings?|letters?)\s+(?:and\s+spellings?\s+)?for\s+([^.;]+)/gi;
+      String(corpus || '').replace(listPattern, (match, listText) => {
+        String(listText || '')
+          .replace(/\b(?:and|or)\b/gi, ',')
+          .split(/[,\s]+/)
+          .forEach(addSound);
+        return match;
+      });
+      return uniqueList(sounds);
+    }
+
+    function getSkillsTrickyWords(corpus) {
+      const words = [];
+      const stopWords = new Set(['blend', 'segment', 'identify', 'read', 'write', 'review', 'print', 'form', 'use', 'build', 'change', 'orally', 'nouns', 'words']);
+      String(corpus || '').replace(/\bTricky Words?\s+([^.;]+)/gi, (match, listText) => {
+        const rawWords = String(listText || '')
+          .replace(/\b(?:and|or)\b/gi, ',')
+          .split(/[,\s]+/)
+          .map(word => word.replace(/[^a-z]/gi, '').trim())
+          .filter(Boolean);
+        for (const word of rawWords) {
+          if (stopWords.has(word.toLowerCase())) break;
+          if (word.length <= 6) words.push(word);
+        }
+        return match;
+      });
+      return uniqueList(words);
+    }
+
+    function getSkillsSpotlightSummary(lessons) {
+      const corpus = getCurriculumObjectiveCorpus(lessons);
+      const lower = corpus.toLowerCase();
+      const sounds = getSkillsSoundList(corpus);
+      const mainSkills = [];
+      const extras = [];
+
+      if (/\b(blend|segment|phoneme|phonemes)\b/i.test(lower)) {
+        mainSkills.push('blending and breaking apart sounds');
+      }
+      if (sounds.length) {
+        mainSkills.push(`learning and reviewing letter sounds and spellings like ${formatCompactLearningList(sounds, 14)}`);
+      } else if (/\b(sound|sounds|spelling|spellings|letter|letters)\b/i.test(lower)) {
+        mainSkills.push('learning and reviewing letter sounds and spellings');
+      }
+      if (/\bshort[-\s]?vowel\b/i.test(lower) || /\bread(?:ing)?\s+and\s+writ(?:e|ing)\b/i.test(lower) || /\bone[-\s]?syllable\b/i.test(lower)) {
+        mainSkills.push('reading and writing short-vowel words');
+      }
+
+      const trickyWords = getSkillsTrickyWords(corpus);
+      if (trickyWords.length) {
+        extras.push(`Tricky Words ${formatCompactLearningList(trickyWords, 6)}`);
+      }
+      if (/\bnouns?\b/i.test(lower)) {
+        extras.push('nouns that name people, places, and things');
+      }
+      if (/\bword chains?\b/i.test(lower)) {
+        extras.push('building and reading word chains');
+      }
+
+      if (!mainSkills.length && !extras.length) return getCurriculumDefaultSpotlight('skills');
+      let summary = mainSkills.length
+        ? `This week, students practiced ${joinNaturalList(mainSkills.slice(0, 3))}.`
+        : 'This week, students practiced important reading and word work skills.';
+      if (extras.length) {
+        summary += ` They also worked on ${joinNaturalList(extras.slice(0, 3))}.`;
+      }
+      return summary;
+    }
+
+    function getCompactCurriculumLearningPhrase(value) {
+      let text = getCurriculumFamilyLearningPhrase(value);
+      text = text.split(/\s*[.;:]\s*/)[0] || text;
+      text = text.replace(/\s+\b(?:while|using|with|by)\b\s+.+$/i, '').trim();
+      if (text.length > 95) {
+        text = text.slice(0, 95).replace(/\s+\S*$/, '').trim();
+      }
+      return text;
+    }
+
     function joinNaturalList(items) {
       const cleanItems = uniqueList(items).filter(Boolean);
       if (cleanItems.length <= 1) return cleanItems[0] || '';
@@ -6166,11 +6280,12 @@
     }
 
     function getCurriculumCombinedObjectiveSummary(lessons, subject = 'skills') {
+      if (subject === 'skills') return getSkillsSpotlightSummary(lessons);
       const phrases = uniqueList(lessons
         .map(getCurriculumLessonObjectiveText)
-        .map(getCurriculumFamilyLearningPhrase)
+        .map(getCompactCurriculumLearningPhrase)
         .filter(Boolean))
-        .slice(0, 5);
+        .slice(0, 3);
       if (!phrases.length) return getCurriculumDefaultSpotlight(subject);
       return `This week, students worked on ${joinNaturalList(phrases)}.`;
     }
