@@ -91,10 +91,12 @@ exports.analyzeCurriculumLesson = onCall(
           model,
           instructions: [
             "You are a careful first grade curriculum assistant.",
-            "Extract only what is supported by the provided lesson source.",
-            "Do not invent standards, objectives, vocabulary, or materials.",
+            "Use the provided lesson source as evidence, but create teacher-useful planning fields when the lesson implies them.",
+            "Do not make up lesson facts, materials, URLs, or official standard codes that are not supported by the source.",
+            "The I can statement, priority standard focus, vocabulary, parent summary, family questions, and teacher notes are expected to be inferred or written from the lesson when possible.",
             "Leave videoLinks empty unless explicit URLs are present in the lesson source.",
-            "If a field is not present, leave it empty and add a short note to missingInformation, except do not mark missing video links.",
+            "Do not mark a field missing only because the lesson did not label it explicitly.",
+            "Only add missingInformation when the source is too incomplete to make a responsible teacher draft, except do not mark missing video links.",
             "Write parent-facing language clearly and warmly for families.",
           ].join(" "),
           input: prompt,
@@ -274,10 +276,14 @@ function buildCurriculumAnalysisPrompt(data) {
     `Lesson title selected by teacher: ${data.lessonTitle || "not provided"}`,
     "",
     "Return the exact structured fields requested by the schema.",
-    "For the I can statement, write one student-friendly sentence starting with \"I can\" when possible.",
+    "For priorityStandard, identify the one main standard focus for the lesson, or two if the lesson genuinely has two equal main goals. Prefer standards listed in the source, choosing the one or two that best match the lesson's main teaching point. If the source provides no standard codes, write the main standard skill in plain language instead of inventing a code.",
+    "For the I can statement, create one student-friendly sentence starting with \"I can\" by turning the lesson objective or main teaching goal into kid language. It does not need to appear word-for-word in the source.",
+    "For vocabulary, choose lesson words, teaching terms, or curriculum words that students or families may need explained, even if the lesson does not provide a labeled vocabulary list.",
     "For parentSummary, explain the lesson in 1-2 short family-friendly sentences without curriculum jargon.",
+    "For familyQuestions, create 2-3 simple questions families could ask at home based on the lesson, even if the source does not include family questions.",
+    "For teacherNotes, include practical teaching notes or watch-fors that are directly grounded in the lesson.",
     "For videoLinks, return an empty array unless the source includes explicit URLs. The teacher can add lesson video links manually later.",
-    "For missingInformation, list any important fields that were not found in the source.",
+    "For missingInformation, do not list missing I can statements, missing priority labels, missing vocabulary lists, or missing family questions just because those labels are not printed in the source. Only list information that is truly needed but unavailable, such as a missing lesson objective, unreadable lesson text, or a missing standards list when no standard focus can be responsibly identified.",
     "",
     "Lesson source:",
     data.sourceText,
@@ -348,7 +354,7 @@ function extractOpenAIOutputText(responseBody) {
 }
 
 function normalizeCurriculumAnalysis(analysis) {
-  return {
+  const normalized = {
     subject: ["skills", "listening", "math", "other"].includes(analysis.subject) ? analysis.subject : "other",
     unitOrModule: asText(analysis.unitOrModule),
     lessonNumber: asText(analysis.lessonNumber),
@@ -365,11 +371,24 @@ function normalizeCurriculumAnalysis(analysis) {
     missingInformation: normalizeStringArray(analysis.missingInformation),
     sourceConfidence: ["high", "medium", "low"].includes(analysis.sourceConfidence) ? analysis.sourceConfidence : "medium",
   };
+  normalized.missingInformation = normalizeCurriculumMissingInformation(normalized);
+  return normalized;
 }
 
 function normalizeStringArray(value) {
   if (!Array.isArray(value)) return [];
   return value.map((item) => asText(item)).filter(Boolean);
+}
+
+function normalizeCurriculumMissingInformation(analysis) {
+  return normalizeStringArray(analysis.missingInformation).filter((item) => {
+    const text = item.toLowerCase();
+    if (analysis.iCanStatement && (text.includes("i can") || text.includes("student-facing"))) return false;
+    if (analysis.priorityStandard && text.includes("priority standard") && (text.includes("single") || text.includes("identify"))) return false;
+    if (analysis.vocabulary.length && (text.includes("vocabulary") || text.includes("vocab"))) return false;
+    if (analysis.familyQuestions.length && (text.includes("family") || text.includes("discussion question"))) return false;
+    return true;
+  });
 }
 
 function normalizeVideoLinks(value) {
