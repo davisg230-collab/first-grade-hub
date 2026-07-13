@@ -1827,11 +1827,12 @@
       overflow-y: auto;
     }
     .curriculum-library-item {
+      position: relative;
       width: 100%;
       border: 1px solid color-mix(in oklab, var(--md-slate) 18%, var(--md-white));
       border-radius: .85rem;
       background: color-mix(in oklab, var(--md-white) 92%, var(--md-pebble));
-      padding: .85rem;
+      padding: .85rem 4.8rem .85rem .85rem;
       text-align: left;
     }
     .curriculum-library-item:hover,
@@ -1869,13 +1870,11 @@
       gap: .55rem;
       padding: 0 .75rem .75rem;
     }
-    .curriculum-weekday-picker {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(2rem, 1fr));
-      gap: .3rem;
-      margin-top: .7rem;
-    }
-    .curriculum-weekday-picker button {
+    .curriculum-weekday-select {
+      position: absolute;
+      top: .65rem;
+      right: .65rem;
+      width: 3.75rem;
       min-height: 2rem;
       border-radius: .6rem;
       border: 1px solid color-mix(in oklab, var(--md-slate) 24%, var(--md-white));
@@ -1883,8 +1882,9 @@
       color: var(--md-slate);
       font-size: .76rem;
       font-weight: 900;
+      padding: 0 .35rem;
     }
-    .curriculum-weekday-picker button.active {
+    .curriculum-weekday-select.active {
       background: var(--md-coral);
       border-color: var(--md-coral);
       color: var(--md-white);
@@ -3154,7 +3154,6 @@
 
         <div id="curriculumAccessPanel" class="curriculum-builder-panel rounded-2xl p-5 mb-5">
           <h3 class="text-xl font-display font-bold mb-2" style="color: var(--md-slate);">Teacher sign-in required</h3>
-          <p class="text-sm text-gray-600 mb-4">This workspace is separate from Edit Mode and only opens for approved teacher Google accounts.</p>
           <button id="curriculumSignInBtn" class="curriculum-builder-button inline-flex items-center px-5 py-3 text-white" style="background: var(--md-coral);" onclick="signInForCurriculumBuilder()">
             Sign in with Google
           </button>
@@ -5327,16 +5326,22 @@
     function renderCurriculumLibraryLesson(lesson) {
       const title = lesson.lessonTitle || getCurriculumLearningTitle(lesson) || 'Untitled lesson';
       const isActive = lesson.id === curriculumActiveLessonId ? ' active' : '';
-      const dayButtons = lesson.subject === 'skills' ? curriculumWeekdays.map((day, index) => {
-        const selected = curriculumWeeklyPlan.skills && curriculumWeeklyPlan.skills[index] === lesson.id;
-        return `<button type="button" class="${selected ? 'active' : ''}" onclick="event.stopPropagation(); setCurriculumWeekLesson('${lesson.id}', ${index});">${day.short}</button>`;
-      }).join('') : '';
+      const selectedDayIndex = lesson.subject === 'skills'
+        ? curriculumWeekdays.findIndex((day, index) => curriculumWeeklyPlan.skills && curriculumWeeklyPlan.skills[index] === lesson.id)
+        : -1;
+      const daySelect = lesson.subject === 'skills' ? `
+        <select class="curriculum-weekday-select${selectedDayIndex >= 0 ? ' active' : ''}" aria-label="Assign lesson to weekday" onclick="event.stopPropagation();" onchange="event.stopPropagation(); setCurriculumWeekLesson('${lesson.id}', this.value);">
+          <option value="">Week</option>
+          ${curriculumWeekdays.map((day, index) => `<option value="${index}" ${selectedDayIndex === index ? 'selected' : ''}>${day.short}</option>`).join('')}
+        </select>
+      ` : '';
       return `
         <div class="curriculum-library-item${isActive}" role="button" tabindex="0" onclick="loadCurriculumLessonIntoBuilder('${lesson.id}')">
+          ${daySelect}
           <div class="text-xs font-bold uppercase tracking-wide text-gray-500">${escapeHtml(lesson.lessonNumber || 'Lesson')}</div>
           <div class="font-display font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(title)}</div>
           <div class="text-sm mt-1 text-[color:var(--md-ink)]/80">${escapeHtml(plainFamilySentence(lesson.parentSummary || lesson.iCanStatement || lesson.objective || '').slice(0, 120))}</div>
-          ${lesson.subject === 'skills' ? `<div class="curriculum-weekday-picker" aria-label="Assign lesson to weekday">${dayButtons}</div>` : '<div class="text-xs font-semibold mt-2 text-gray-500">Weekly publishing starts with Skills.</div>'}
+          ${lesson.subject === 'skills' ? '' : '<div class="text-xs font-semibold mt-2 text-gray-500">Weekly publishing starts with Skills.</div>'}
         </div>
       `;
     }
@@ -5347,15 +5352,21 @@
         setCurriculumStatus('Only Skills lessons can publish to the Skills page right now.', 'error');
         return;
       }
+      const nextDayIndex = dayIndex === '' ? -1 : Number(dayIndex);
+      if (!Number.isInteger(nextDayIndex) || nextDayIndex < -1 || nextDayIndex >= curriculumWeekdays.length) return;
       curriculumWeeklyPlan.skills = curriculumWeeklyPlan.skills || {};
       Object.keys(curriculumWeeklyPlan.skills).forEach(key => {
         if (curriculumWeeklyPlan.skills[key] === lessonId) delete curriculumWeeklyPlan.skills[key];
       });
-      curriculumWeeklyPlan.skills[dayIndex] = lessonId;
+      if (nextDayIndex >= 0) {
+        curriculumWeeklyPlan.skills[nextDayIndex] = lessonId;
+      }
       renderCurriculumLibraryList();
       renderCurriculumWeekPreview();
       await saveCurriculumWeeklyPlanDraft();
-      setCurriculumStatus(`${lesson.lessonNumber || 'Lesson'} assigned to ${curriculumWeekdays[dayIndex].title}.`);
+      setCurriculumStatus(nextDayIndex >= 0
+        ? `${lesson.lessonNumber || 'Lesson'} assigned to ${curriculumWeekdays[nextDayIndex].title}.`
+        : `${lesson.lessonNumber || 'Lesson'} removed from the weekly plan.`);
     }
 
     async function clearCurriculumWeeklyPlan() {
