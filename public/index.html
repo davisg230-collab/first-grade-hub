@@ -5045,6 +5045,11 @@
       if (guess.lessonNumber && !document.getElementById('curriculumLessonNumberInput')?.value.trim()) {
         setInputValue('curriculumLessonNumberInput', guess.lessonNumber);
       }
+      const currentTitle = document.getElementById('curriculumLessonTitleInput')?.value.trim() || '';
+      if (looksLikeCurriculumFileTitle(currentTitle)) {
+        curriculumLastPdfSuggestedTitle = '';
+        setInputValue('curriculumLessonTitleInput', '');
+      }
       if (guess.lessonTitle && !document.getElementById('curriculumLessonTitleInput')?.value.trim()) {
         curriculumLastPdfSuggestedTitle = guess.lessonTitle;
         setInputValue('curriculumLessonTitleInput', guess.lessonTitle);
@@ -5053,18 +5058,33 @@
 
     function inferCurriculumLessonDetails(fileName, text) {
       const combined = `${fileName || ''}\n${String(text || '').slice(0, 2500)}`;
-      const baseName = String(fileName || '').replace(/\.pdf$/i, '').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
       const moduleMatch = combined.match(/\b(module|unit)\s*[:#-]?\s*([0-9]+[A-Za-z]?)/i);
       const lessonMatch = combined.match(/\blesson\s*[:#-]?\s*([0-9]+[A-Za-z]?)/i);
-      const focusLine = String(text || '')
+      const focusLine = inferCurriculumFocusTitle(text) || String(text || '')
         .split(/\n+/)
         .map(line => line.replace(/\s+/g, ' ').trim())
-        .find(line => line.length >= 12 && line.length <= 90 && !/^page\s+\d+/i.test(line) && !/\b(module|unit|lesson)\s*[:#-]?\s*[0-9]/i.test(line));
+        .find(line => line.length >= 12 && line.length <= 90 && !/^page\s+\d+/i.test(line) && !/\b(module|unit|lesson)\s*[:#-]?\s*[0-9]/i.test(line) && !looksLikeCurriculumFileTitle(line));
       return {
         unitOrModule: moduleMatch ? `${capitalizeWord(moduleMatch[1])} ${moduleMatch[2]}` : '',
         lessonNumber: lessonMatch ? `Lesson ${lessonMatch[1]}` : '',
-        lessonTitle: focusLine || baseName
+        lessonTitle: focusLine || ''
       };
+    }
+
+    function inferCurriculumFocusTitle(text) {
+      const compact = String(text || '').replace(/\s+/g, ' ').trim();
+      const soundWindow = compact.match(/\b(?:sounds?|sound-spellings?|spellings?|phonemes?)\b.{0,140}/i);
+      if (!soundWindow) return '';
+      const letters = uniqueList((soundWindow[0].match(/\/[a-z]\u0304?\/|\b[a-z]\b/gi) || [])
+        .map(item => item.replace(/\//g, '').toLowerCase()))
+        .slice(0, 8);
+      return letters.length >= 2 ? `Sounds ${letters.join(', ')}` : '';
+    }
+
+    function looksLikeCurriculumFileTitle(value) {
+      const text = String(value || '').trim();
+      if (!text) return false;
+      return /_/.test(text) || /\.pdf$/i.test(text) || /\bteacher\s+guide\b/i.test(text) || /\b(?:ela|skills|unit|lesson)[_\s-]*\d/i.test(text);
     }
 
     async function analyzeCurriculumLesson() {
@@ -5099,23 +5119,25 @@
     }
 
     function collectCurriculumRequestPayload() {
+      const lessonTitle = document.getElementById('curriculumLessonTitleInput')?.value.trim() || '';
       return {
         subject: document.getElementById('curriculumSubjectInput')?.value || 'skills',
         unitOrModule: document.getElementById('curriculumUnitInput')?.value.trim() || '',
         lessonNumber: document.getElementById('curriculumLessonNumberInput')?.value.trim() || '',
-        lessonTitle: document.getElementById('curriculumLessonTitleInput')?.value.trim() || '',
+        lessonTitle: lessonTitle === curriculumLastPdfSuggestedTitle || looksLikeCurriculumFileTitle(lessonTitle) ? '' : lessonTitle,
         sourceText: document.getElementById('curriculumSourceTextInput')?.value.trim() || ''
       };
     }
 
     function applyCurriculumAnalysis(analysis) {
       const currentTitle = document.getElementById('curriculumLessonTitleInput')?.value.trim() || '';
-      const nextTitle = analysis.lessonTitle || getCurriculumLearningTitle(analysis);
+      const aiTitle = analysis.lessonTitle && !looksLikeCurriculumFileTitle(analysis.lessonTitle) ? analysis.lessonTitle : '';
+      const nextTitle = aiTitle || getCurriculumLearningTitle(analysis);
       setInputValue('curriculumSubjectInput', ['skills', 'listening', 'math'].includes(analysis.subject) ? analysis.subject : (document.getElementById('curriculumSubjectInput')?.value || 'skills'));
       setInputValue('curriculumUnitInput', analysis.unitOrModule || document.getElementById('curriculumUnitInput')?.value || '');
       setInputValue('curriculumLessonNumberInput', analysis.lessonNumber || document.getElementById('curriculumLessonNumberInput')?.value || '');
-      if (!currentTitle || currentTitle === curriculumLastPdfSuggestedTitle) {
-        setInputValue('curriculumLessonTitleInput', nextTitle || currentTitle);
+      if (!currentTitle || currentTitle === curriculumLastPdfSuggestedTitle || looksLikeCurriculumFileTitle(currentTitle)) {
+        setInputValue('curriculumLessonTitleInput', nextTitle || '');
         curriculumLastPdfSuggestedTitle = '';
       }
       setInputValue('curriculumICanOutput', analysis.iCanStatement || '');
