@@ -116,11 +116,15 @@ exports.analyzeCurriculumLesson = onCall(
 
     const responseBody = await readJsonResponse(response);
     if (!response.ok) {
+      const openAiError = responseBody && responseBody.error ? responseBody.error : {};
       logger.error("OpenAI curriculum request failed.", {
         status: response.status,
-        message: responseBody && responseBody.error && responseBody.error.message,
+        code: openAiError.code,
+        type: openAiError.type,
+        param: openAiError.param,
+        message: openAiError.message,
       });
-      throw new HttpsError("internal", "The AI analyzer returned an error. Please try again.");
+      throw new HttpsError("failed-precondition", getOpenAICurriculumFailureMessage(response.status, responseBody));
     }
 
     const outputText = extractOpenAIOutputText(responseBody);
@@ -288,6 +292,44 @@ async function readJsonResponse(response) {
   } catch (error) {
     return { raw: text };
   }
+}
+
+function getOpenAICurriculumFailureMessage(status, responseBody) {
+  const error = responseBody && responseBody.error ? responseBody.error : {};
+  const message = asText(error.message);
+  const code = asText(error.code).toLowerCase();
+  const lowerMessage = message.toLowerCase();
+
+  if (status === 401) {
+    return "OpenAI rejected the API key. Recreate the key, then update the OPENAI_API_KEY secret.";
+  }
+
+  if (status === 403 || lowerMessage.includes("permission") || lowerMessage.includes("not authorized")) {
+    return "OpenAI blocked this request. Check that the key has Responses write access and access to the selected model.";
+  }
+
+  if (status === 404 || lowerMessage.includes("model")) {
+    return "The selected OpenAI model is not available for this project yet. We need to switch the model setting.";
+  }
+
+  if (status === 429 || code.includes("quota") || lowerMessage.includes("quota") || lowerMessage.includes("billing")) {
+    return "OpenAI billing or quota is not active for this project yet. Check the OpenAI billing and limits page.";
+  }
+
+  if (status === 400) {
+    return "OpenAI did not accept the analyzer request format. I need to adjust the site code.";
+  }
+
+  if (status >= 500) {
+    return "OpenAI had a temporary service problem. Try again in a few minutes.";
+  }
+
+  if (message) {
+    const safeMessage = message.length > 220 ? `${message.slice(0, 217)}...` : message;
+    return `OpenAI could not analyze the lesson: ${safeMessage}`;
+  }
+
+  return "OpenAI could not analyze the lesson yet. Please try again.";
 }
 
 function extractOpenAIOutputText(responseBody) {
