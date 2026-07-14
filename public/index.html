@@ -11167,12 +11167,8 @@ function closeLessonDetailModal() {
 }
 
 function getLessonDetailLearningGoal(card) {
-  const objective = plainFamilySentence(card.objective || '');
   const summary = plainFamilySentence(card.summary || '');
-  if (objective && summary && objective.toLowerCase() !== summary.toLowerCase()) {
-    return `${objective} ${summary}`;
-  }
-  return objective || summary;
+  return summary || plainFamilySentence(card.objective || '');
 }
 
 function renderLessonDetailField(label, value) {
