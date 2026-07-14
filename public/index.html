@@ -2790,14 +2790,11 @@
           <!-- Content will be populated by JavaScript -->
         </div>
         
-        <!-- Upcoming Lessons subsection -->
-        <div class="mt-6 pt-6 border-t" style="border-color: color-mix(in oklab, var(--md-coral) 20%, var(--md-white) 80%);">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-display font-semibold" style="color: var(--md-coral);">Daily Plan</h3>
-            <div class="edit-only flex gap-2" style="display: none;">
+        <!-- Upcoming lesson cards -->
+        <div class="mt-4">
+            <div class="edit-only flex justify-end gap-2 mb-4" style="display: none;">
               <button id="saveListeningLessonsBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveLessonCards('listening')">💾 Save</button>
             </div>
-          </div>
           <div id="listeningLessonsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             <!-- Weekday boxes will be populated by JavaScript -->
           </div>
@@ -2838,14 +2835,11 @@
           <!-- Content will be populated by JavaScript -->
         </div>
         
-        <!-- Upcoming Lessons subsection -->
-        <div class="mt-6 pt-6 border-t" style="border-color: color-mix(in oklab, var(--md-slate) 20%, var(--md-white) 80%);">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-display font-semibold" style="color: var(--md-slate);">Daily Plan</h3>
-            <div class="edit-only flex gap-2" style="display: none;">
+        <!-- Upcoming lesson cards -->
+        <div class="mt-4">
+            <div class="edit-only flex justify-end gap-2 mb-4" style="display: none;">
               <button id="saveMathLessonsBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="saveLessonCards('math')">💾 Save</button>
             </div>
-          </div>
           <div id="mathLessonsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             <!-- Weekday boxes will be populated by JavaScript -->
           </div>
@@ -3612,9 +3606,6 @@
                   </button>
                   <button id="curriculumSaveBtn" class="curriculum-builder-button inline-flex items-center px-5 py-3 text-white" style="background: var(--md-slate);" onclick="saveCurriculumLesson()">
                     Save Lesson
-                  </button>
-                  <button class="curriculum-builder-button inline-flex items-center px-5 py-3" style="background: var(--md-pebble); color: var(--md-ink);" onclick="clearCurriculumBuilderForm()">
-                    New Blank
                   </button>
                 </div>
               </div>
