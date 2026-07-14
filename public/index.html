@@ -591,6 +591,16 @@
       color: #6b7280;
       font-size: .92rem;
     }
+    [data-roster-edit-control] {
+      display: none !important;
+    }
+    body.editing [data-roster-edit-control],
+    body.roster-editing [data-roster-edit-control] {
+      display: inline-flex !important;
+    }
+    body:not(.editing):not(.roster-editing) #rosterImportPanel {
+      display: none !important;
+    }
     .roster-import-panel {
       display: none;
       margin-bottom: 1rem;
@@ -3063,11 +3073,13 @@
             <p class="text-sm text-gray-600 mt-1">Teacher-only list for scholar names and current dismissal. Parents never see this page.</p>
           </div>
           <div class="flex flex-wrap gap-2">
-            <button class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="addMasterRosterRow()">Add Scholar</button>
-            <button class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="showRosterImportPanel()">Insert Roster</button>
-            <button id="saveMasterRosterBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveRosterField()">Save Roster</button>
-            <button class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="saveRosterImage('davis')">Save Davis Image</button>
-            <button class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="saveRosterImage('vest')">Save Vest Image</button>
+            <button class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-pebble); color: var(--md-ink);" onclick="returnToTeacherTools()">Return to Teacher Tools</button>
+            <button id="toggleRosterEditBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="toggleRosterEditMode()">Edit Roster</button>
+            <button data-roster-edit-control class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="addMasterRosterRow()">Add Scholar</button>
+            <button data-roster-edit-control class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="showRosterImportPanel()">Insert Roster</button>
+            <button data-roster-edit-control id="saveMasterRosterBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveRosterField()">Save Roster</button>
+            <button id="printActiveRosterBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="printRoster(activeRosterClassTab)">Print Mr. Davis Roster</button>
+            <button id="printCombinedRosterBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="printRoster('')">Print 1st Grade Roster</button>
           </div>
         </div>
         <div id="rosterImportPanel" class="roster-import-panel">
@@ -3512,7 +3524,6 @@
           <div class="curriculum-library-tabs" role="tablist" aria-label="Curriculum Library">
             <button id="curriculumTabUpload" type="button" class="curriculum-library-tab active" data-curriculum-tab="upload" onclick="showCurriculumLibraryTab('upload')">Upload / AI Draft</button>
             <button id="curriculumTabBrowse" type="button" class="curriculum-library-tab" data-curriculum-tab="browse" onclick="showCurriculumLibraryTab('browse')">Browse Lessons</button>
-            <button id="curriculumTabPlanner" type="button" class="curriculum-library-tab" data-curriculum-tab="planner" onclick="showCurriculumLibraryTab('planner')">Weekly Planner</button>
           </div>
           <div id="curriculumStatus" class="mb-4 text-sm font-semibold text-gray-600" aria-live="polite"></div>
           <div id="curriculumLessonFilterPanel" class="curriculum-builder-panel rounded-2xl p-4 mb-4" style="display: none;">
@@ -3633,37 +3644,12 @@
                 </div>
               </div>
             </div>
-
-            <aside id="curriculumTabPanelPlanner" class="curriculum-tab-panel curriculum-builder-panel rounded-2xl p-5" data-curriculum-panel="planner">
-              <div class="flex items-center justify-between gap-3 mb-4">
-                <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">Saved Lessons</h3>
-              </div>
-              <div class="curriculum-week-preview rounded-2xl p-4 mb-4">
-                <div class="flex items-center justify-between gap-3 mb-2">
-                  <h4 class="font-display font-bold" style="color: var(--md-coral);">Schedule Preview</h4>
-                  <button type="button" class="text-xs font-bold underline" style="color: var(--md-slate);" onclick="clearCurriculumWeeklyPlan()">Clear All</button>
-                </div>
-                <p class="text-xs text-[color:var(--md-ink)]/70 mb-3">Use the calendar button on saved lessons. Future weeks fill upcoming lessons; this week or past weeks build the spotlight.</p>
-                <div id="curriculumWeekPreview" class="grid gap-2 text-sm">
-                  <p class="text-sm text-gray-500">No lessons picked yet.</p>
-                </div>
-                <button id="curriculumPublishWeekBtn" type="button" class="curriculum-builder-button w-full mt-3 px-4 py-2 text-white" style="background: var(--md-coral);" onclick="publishCurriculumScheduleToPages()">
-                  Publish Parent Pages
-                </button>
-                <button id="curriculumPrintWeekBtn" type="button" class="curriculum-builder-button w-full mt-2 px-4 py-2 text-white" style="background: var(--md-slate);" onclick="printCurriculumUpcomingWeek()">
-                  Print Upcoming Week
-                </button>
-              </div>
-              <div id="curriculumLibraryList" class="curriculum-library-list grid gap-2">
-                <p class="text-sm text-gray-500">Sign in to load saved lessons.</p>
-              </div>
-            </aside>
           </div>
           <div id="curriculumTabPanelBrowse" class="curriculum-tab-panel curriculum-builder-panel rounded-2xl p-5 mt-4" data-curriculum-panel="browse">
             <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3 mb-4">
               <div>
                 <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">Lesson Browser</h3>
-                <p class="text-sm text-[color:var(--md-ink)]/75 mt-1">Open finished lessons, select any lessons you need, and print them together.</p>
+                <p class="text-sm text-[color:var(--md-ink)]/75 mt-1">Open finished lessons, assign dates, publish parent pages, and print what you need.</p>
               </div>
               <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
                 <span id="curriculumSelectedLessonCount" class="text-sm font-bold text-gray-500">0 selected</span>
@@ -3672,6 +3658,24 @@
                 </button>
                 <button id="curriculumClearSelectionBtn" type="button" class="curriculum-builder-button inline-flex px-4 py-2" style="background: var(--md-pebble); color: var(--md-ink);" onclick="clearSelectedCurriculumLessons()">
                   Clear
+                </button>
+              </div>
+            </div>
+            <div class="curriculum-week-preview rounded-2xl p-4 mb-4">
+              <div class="flex items-center justify-between gap-3 mb-2">
+                <h4 class="font-display font-bold" style="color: var(--md-coral);">Schedule Preview</h4>
+                <button type="button" class="text-xs font-bold underline" style="color: var(--md-slate);" onclick="clearCurriculumWeeklyPlan()">Clear All</button>
+              </div>
+              <p class="text-xs text-[color:var(--md-ink)]/70 mb-3">Use the calendar button on a lesson. Future weeks fill upcoming lessons; this week or past weeks build the spotlight.</p>
+              <div id="curriculumWeekPreview" class="grid gap-2 text-sm">
+                <p class="text-sm text-gray-500">No lessons picked yet.</p>
+              </div>
+              <div class="grid sm:grid-cols-2 gap-2 mt-3">
+                <button id="curriculumPublishWeekBtn" type="button" class="curriculum-builder-button px-4 py-2 text-white" style="background: var(--md-coral);" onclick="publishCurriculumScheduleToPages()">
+                  Publish Parent Pages
+                </button>
+                <button id="curriculumPrintWeekBtn" type="button" class="curriculum-builder-button px-4 py-2 text-white" style="background: var(--md-slate);" onclick="printCurriculumUpcomingWeek()">
+                  Print Upcoming Week
                 </button>
               </div>
             </div>
@@ -4226,7 +4230,7 @@
     
     // Tab navigation
     function showPage(pageId) {
-      if (pageId === 'roster' && !document.body.classList.contains('editing')) {
+      if (pageId === 'roster' && !document.body.classList.contains('editing') && !teacherRosterUnlocked) {
         pageId = 'home';
       }
       document.querySelectorAll('.pagePanel').forEach(panel => {
@@ -5107,6 +5111,8 @@
     let curriculumSelectedLessonIds = new Set();
     let curriculumActiveBrowserLessonId = '';
     let curriculumActiveLibraryTab = 'upload';
+    let teacherRosterUnlocked = false;
+    let rosterEditMode = false;
     let activeRosterClassTab = 'davis';
     let learningMobileActiveDays = { skills: 0, listening: 0, math: 0 };
     let learningLessonDataCache = { skills: null, listening: null, math: null };
@@ -5383,10 +5389,8 @@
         const user = await ensureCurriculumTeacherUser();
         if (!user) return;
         curriculumToolView = 'shelf';
-        const entered = document.body.classList.contains('editing')
-          ? true
-          : await enterEditMode({ skipSignIn: true, authenticatedUser: user });
-        if (!entered) return;
+        teacherRosterUnlocked = true;
+        setRosterEditMode(false);
         showPage('roster');
       } catch (error) {
         console.error('Roster tool failed:', error);
@@ -5434,6 +5438,8 @@
       curriculumSelectedLessonIds = new Set();
       curriculumActiveBrowserLessonId = '';
       curriculumActiveLibraryTab = 'upload';
+      teacherRosterUnlocked = false;
+      setRosterEditMode(false);
       curriculumWeeklyPlan = getEmptyCurriculumWeeklyPlan();
       curriculumToolView = 'shelf';
       showCurriculumWorkspace(false);
@@ -5451,6 +5457,7 @@
       if (browserList) browserList.innerHTML = '<p class="text-sm text-gray-500">Sign in to browse saved lessons.</p>';
       if (browserDetail) browserDetail.innerHTML = '<p class="text-sm text-gray-500">Choose a lesson to view the full saved details.</p>';
       if (preview) preview.innerHTML = '<p class="text-sm text-gray-500">No lessons picked yet.</p>';
+      if (document.querySelector('[data-page-panel="roster"].active')) showPage('home');
     }
 
     async function ensureCurriculumTeacherUser() {
@@ -5515,7 +5522,7 @@
     }
 
     function showCurriculumLibraryTab(tabId = 'upload') {
-      const validTabs = ['upload', 'browse', 'planner'];
+      const validTabs = ['upload', 'browse'];
       const activeTab = validTabs.includes(tabId) ? tabId : 'upload';
       curriculumActiveLibraryTab = activeTab;
       document.querySelectorAll('[data-curriculum-tab]').forEach(button => {
@@ -5529,8 +5536,6 @@
       const filterPanel = document.getElementById('curriculumLessonFilterPanel');
       if (filterPanel) filterPanel.style.display = activeTab === 'upload' ? 'none' : 'block';
       if (activeTab === 'browse') {
-        renderCurriculumLessonBrowser();
-      } else if (activeTab === 'planner') {
         renderCurriculumLibraryList();
         renderCurriculumWeekPreview();
       }
@@ -6132,23 +6137,25 @@
     function renderCurriculumLibraryList() {
       const list = document.getElementById('curriculumLibraryList');
       const count = document.getElementById('curriculumLibraryCount');
-      if (!list) return;
       const filtered = getFilteredCurriculumLessons();
       if (count) count.textContent = String(filtered.length);
       if (!filtered.length) {
-        list.innerHTML = '<p class="text-sm text-gray-500">No saved lessons yet.</p>';
+        if (list) list.innerHTML = '<p class="text-sm text-gray-500">No saved lessons yet.</p>';
         renderCurriculumLessonBrowser(filtered);
+        renderCurriculumWeekPreview();
         return;
       }
       const groups = groupCurriculumLessonsByModule(filtered);
-      list.innerHTML = groups.map(group => `
-        <details class="curriculum-library-group" open>
-          <summary>${escapeHtml(group.label)} <span class="text-xs text-gray-500">(${group.lessons.length})</span></summary>
-          <div class="curriculum-library-folder-body">
-            ${group.lessons.map(lesson => renderCurriculumLibraryLesson(lesson)).join('')}
-          </div>
-        </details>
-      `).join('');
+      if (list) {
+        list.innerHTML = groups.map(group => `
+          <details class="curriculum-library-group">
+            <summary>${escapeHtml(group.label)} <span class="text-xs text-gray-500">(${group.lessons.length})</span></summary>
+            <div class="curriculum-library-folder-body">
+              ${group.lessons.map(lesson => renderCurriculumLibraryLesson(lesson)).join('')}
+            </div>
+          </details>
+        `).join('');
+      }
       renderCurriculumLessonBrowser(filtered);
       renderCurriculumWeekPreview();
     }
@@ -6235,7 +6242,7 @@
       }
       const groups = groupCurriculumLessonsByModule(lessons);
       list.innerHTML = groups.map(group => `
-        <details class="curriculum-library-group" open>
+        <details class="curriculum-library-group">
           <summary>${escapeHtml(group.label)} <span class="text-xs text-gray-500">(${group.lessons.length})</span></summary>
           <div class="curriculum-library-folder-body">
             ${group.lessons.map(lesson => renderCurriculumBrowserLesson(lesson)).join('')}
@@ -6249,6 +6256,9 @@
       const title = getCurriculumCardTitle(lesson);
       const isSelected = curriculumSelectedLessonIds.has(lesson.id);
       const isActive = lesson.id === curriculumActiveBrowserLessonId ? ' active' : '';
+      const scheduledDate = getCurriculumPrimaryScheduleDate(lesson);
+      const scheduleLabel = scheduledDate ? formatCurriculumDateLabel(scheduledDate) : 'Calendar';
+      const scheduleTitle = scheduledDate ? `Scheduled for ${formatCurriculumDateLabel(scheduledDate)}` : 'Schedule lesson';
       return `
         <div class="curriculum-library-item curriculum-browser-item${isSelected ? ' selected' : ''}${isActive}" role="button" tabindex="0" onclick="viewCurriculumLessonDetail('${lesson.id}')">
           <input class="curriculum-browser-check" type="checkbox" ${isSelected ? 'checked' : ''} aria-label="Select lesson" onclick="event.stopPropagation(); toggleCurriculumLessonSelection('${lesson.id}', this.checked)">
@@ -6258,7 +6268,8 @@
             <div class="text-sm mt-1 text-[color:var(--md-ink)]/80">${escapeHtml(plainFamilySentence(lesson.iCanStatement || lesson.objective || lesson.parentSummary || '').slice(0, 150))}</div>
             <div class="curriculum-browser-actions">
               <button type="button" style="background: var(--md-slate); color: var(--md-white);" onclick="event.stopPropagation(); viewCurriculumLessonDetail('${lesson.id}')">View</button>
-              <button type="button" style="background: var(--md-coral); color: var(--md-white);" onclick="event.stopPropagation(); loadCurriculumLessonIntoBuilder('${lesson.id}')">Edit Draft</button>
+              <button type="button" style="background: var(--md-coral); color: var(--md-white);" onclick="event.stopPropagation(); loadCurriculumLessonIntoBuilder('${lesson.id}')">Edit</button>
+              <button type="button" title="${escapeHtml(scheduleTitle)}" style="background: var(--md-pebble); color: var(--md-ink);" onclick="event.stopPropagation(); openCurriculumSchedulePicker('${lesson.id}')">${escapeHtml(scheduleLabel)}</button>
             </div>
           </div>
         </div>
@@ -6303,12 +6314,12 @@
         ${renderCurriculumDetailText('Priority standard', lesson.priorityStandard)}
         ${renderCurriculumDetailText('I can statement', lesson.iCanStatement)}
         ${renderCurriculumDetailText('Objective', lesson.objective)}
-        ${renderCurriculumDetailText('Parent summary', getCurriculumFamilySummary(lesson))}
-        ${renderCurriculumDetailList('Family questions', lesson.familyQuestions)}
+        ${renderCurriculumDetailList('Teacher notes', lesson.teacherNotes)}
         ${renderCurriculumDetailList('Vocabulary', lesson.vocabulary)}
         ${renderCurriculumDetailList('Materials', lesson.materials)}
         ${renderCurriculumDetailVideos(lesson.videoLinks)}
-        ${renderCurriculumDetailList('Teacher notes', lesson.teacherNotes)}
+        ${renderCurriculumDetailText('Parent summary', getCurriculumFamilySummary(lesson))}
+        ${renderCurriculumDetailList('Family questions', lesson.familyQuestions)}
         ${renderCurriculumDetailList('Missing or not found', lesson.missingInformation)}
         ${renderCurriculumDetailSource(lesson.sourceText)}
       `;
@@ -6786,6 +6797,29 @@
       return { text: 'skills_text', bottomList: 'sounds_json', lessons: 'skills_lessons_json', moduleLabel: 'skills_week_module_label' };
     }
 
+    function openCurriculumPrintWindow(title, bodyHtml, successMessage) {
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        setCurriculumStatus('Your browser blocked the print window. Allow pop-ups for this site and try again.', 'error');
+        return false;
+      }
+      const printHtml = `<!doctype html><html><head><title>${escapeHtml(title)}</title><style>@page{margin:.45in;}html,body{margin:0!important;padding:0!important;}body{font-family:Arial,sans-serif;color:#1f2937;background:#fff;}.print-root{margin:0;padding:0;}h1{margin:0 0 6px;font-size:26px;}h2{margin:18px 0 8px;font-size:20px;color:#475569;border-bottom:2px solid #f4b56a;padding-bottom:6px;}h3{margin:0 0 6px;font-size:16px;color:#be5b45;}.meta{color:#64748b;font-size:13px;margin:0 0 12px;}.lesson{break-inside:avoid;page-break-inside:avoid;border:1px solid #d8c7ad;border-radius:10px;padding:12px;margin:10px 0;}section:first-of-type h2{margin-top:12px;}.day{font-weight:800;color:#475569;text-transform:uppercase;font-size:12px;letter-spacing:.04em;}.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;margin-top:8px;}.field{font-size:13px;line-height:1.4;}.field strong{display:block;color:#475569;margin-bottom:2px;}ul{margin:4px 0 0 18px;padding:0;}@media print{html,body{width:auto;height:auto;}.print-root{break-before:auto;page-break-before:auto;}}</style></head><body><main class="print-root">${bodyHtml}</main></body></html>`;
+      printWindow.document.open();
+      printWindow.document.write(printHtml);
+      printWindow.document.close();
+      const launchPrint = () => {
+        printWindow.focus();
+        printWindow.print();
+      };
+      if (printWindow.document.readyState === 'complete') {
+        setTimeout(launchPrint, 150);
+      } else {
+        printWindow.onload = () => setTimeout(launchPrint, 150);
+      }
+      setCurriculumStatus(successMessage, 'success');
+      return true;
+    }
+
     function printCurriculumUpcomingWeek() {
       const weeks = curriculumSubjects
         .map(subject => buildCurriculumWeekDraft(subject, 'upcoming'))
@@ -6794,47 +6828,9 @@
         setCurriculumStatus('Schedule at least one future-week lesson before printing.', 'error');
         return;
       }
-      const printWindow = window.open('', '_blank');
-      if (!printWindow) {
-        setCurriculumStatus('Your browser blocked the print window. Allow pop-ups for this site and try again.', 'error');
-        return;
-      }
       const title = `Upcoming Lesson Plan - ${weeks[0].weekLabel || 'Week'}`;
       const sections = weeks.map(renderCurriculumPrintSubject).join('');
-      const printHtml = `<!doctype html>
-        <html>
-          <head>
-            <title>${escapeHtml(title)}</title>
-            <style>
-              @page { margin: .45in; }
-              html, body { margin: 0; padding: 0; }
-              body { font-family: Arial, sans-serif; color: #1f2937; }
-              h1 { margin: 0 0 6px; font-size: 26px; }
-              h2 { margin: 24px 0 8px; font-size: 20px; color: #475569; border-bottom: 2px solid #f4b56a; padding-bottom: 6px; }
-              h3 { margin: 0 0 6px; font-size: 16px; color: #be5b45; }
-              .meta { color: #64748b; font-size: 13px; margin-bottom: 18px; }
-              .lesson { break-inside: avoid; border: 1px solid #d8c7ad; border-radius: 10px; padding: 12px; margin: 10px 0; }
-              section:first-of-type h2 { margin-top: 14px; }
-              .day { font-weight: 800; color: #475569; text-transform: uppercase; font-size: 12px; letter-spacing: .04em; }
-              .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; margin-top: 8px; }
-              .field { font-size: 13px; line-height: 1.4; }
-              .field strong { display: block; color: #475569; margin-bottom: 2px; }
-              ul { margin: 4px 0 0 18px; padding: 0; }
-              @media print { html, body { width: auto; height: auto; } }
-            </style>
-          </head>
-          <body>
-            <h1>${escapeHtml(title)}</h1>
-            <div class="meta">Generated from Teacher Tools</div>
-            ${sections}
-          </body>
-        </html>`;
-      printWindow.document.open();
-      printWindow.document.write(printHtml);
-      printWindow.document.close();
-      printWindow.focus();
-      setTimeout(() => printWindow.print(), 250);
-      setCurriculumStatus('Print view opened for the upcoming week.', 'success');
+      openCurriculumPrintWindow(title, `<h1>${escapeHtml(title)}</h1><div class="meta">Generated from Teacher Tools</div>${sections}`, 'Print view opened for the upcoming week.');
     }
 
     function getSelectedCurriculumLessons() {
@@ -6859,11 +6855,6 @@
         setCurriculumStatus('Select at least one lesson in the Lesson Browser before printing.', 'error');
         return;
       }
-      const printWindow = window.open('', '_blank');
-      if (!printWindow) {
-        setCurriculumStatus('Your browser blocked the print window. Allow pop-ups for this site and try again.', 'error');
-        return;
-      }
       const title = lessons.length === 1 ? 'Selected Curriculum Lesson' : `Selected Curriculum Lessons (${lessons.length})`;
       const sections = groupCurriculumLessonsByModule(lessons).map(group => `
         <section>
@@ -6871,41 +6862,7 @@
           ${group.lessons.map(renderCurriculumPrintSavedLesson).join('')}
         </section>
       `).join('');
-      const printHtml = `<!doctype html>
-        <html>
-          <head>
-            <title>${escapeHtml(title)}</title>
-            <style>
-              @page { margin: .45in; }
-              html, body { margin: 0; padding: 0; }
-              body { font-family: Arial, sans-serif; color: #1f2937; }
-              h1 { margin: 0 0 6px; font-size: 26px; }
-              h2 { margin: 24px 0 8px; font-size: 20px; color: #475569; border-bottom: 2px solid #f4b56a; padding-bottom: 6px; }
-              h3 { margin: 0 0 6px; font-size: 16px; color: #be5b45; }
-              .meta { color: #64748b; font-size: 13px; margin-bottom: 18px; }
-              .lesson { break-inside: avoid; border: 1px solid #d8c7ad; border-radius: 10px; padding: 12px; margin: 10px 0; }
-              section:first-of-type h2 { margin-top: 14px; }
-              .day { font-weight: 800; color: #475569; text-transform: uppercase; font-size: 12px; letter-spacing: .04em; }
-              .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; margin-top: 8px; }
-              .field { font-size: 13px; line-height: 1.4; }
-              .field strong { display: block; color: #475569; margin-bottom: 2px; }
-              ul { margin: 4px 0 0 18px; padding: 0; }
-              @media print { html, body { width: auto; height: auto; } }
-            </style>
-          </head>
-          <body>
-            <h1>${escapeHtml(title)}</h1>
-            <div class="meta">Generated from Teacher Tools</div>
-            ${sections}
-            ${renderCurriculumPrintSelectedVocabulary(lessons)}
-          </body>
-        </html>`;
-      printWindow.document.open();
-      printWindow.document.write(printHtml);
-      printWindow.document.close();
-      printWindow.focus();
-      setTimeout(() => printWindow.print(), 250);
-      setCurriculumStatus('Print view opened for selected lessons.', 'success');
+      openCurriculumPrintWindow(title, `<h1>${escapeHtml(title)}</h1><div class="meta">Generated from Teacher Tools</div>${sections}${renderCurriculumPrintSelectedVocabulary(lessons)}`, 'Print view opened for selected lessons.');
     }
 
     function renderCurriculumPrintSubject(week) {
@@ -7062,7 +7019,7 @@
     }
 
     function setCurriculumBusy(isBusy, message = '') {
-      ['curriculumAnalyzeBtn', 'curriculumSaveBtn', 'curriculumRefreshLibraryBtn', 'curriculumSignOutBtn', 'curriculumPdfSelectBtn', 'curriculumPdfInput', 'curriculumPublishWeekBtn', 'curriculumPrintWeekBtn', 'curriculumPrintSelectedBtn', 'curriculumClearSelectionBtn', 'curriculumBackToToolsBtn', 'curriculumTabUpload', 'curriculumTabBrowse', 'curriculumTabPlanner'].forEach(id => {
+      ['curriculumAnalyzeBtn', 'curriculumSaveBtn', 'curriculumRefreshLibraryBtn', 'curriculumSignOutBtn', 'curriculumPdfSelectBtn', 'curriculumPdfInput', 'curriculumPublishWeekBtn', 'curriculumPrintWeekBtn', 'curriculumPrintSelectedBtn', 'curriculumClearSelectionBtn', 'curriculumBackToToolsBtn', 'curriculumTabUpload', 'curriculumTabBrowse'].forEach(id => {
         const button = document.getElementById(id);
         if (button) button.disabled = isBusy;
       });
@@ -12987,25 +12944,77 @@ function renderRosterPreview() {
   renderMasterRosterManager();
 }
 
+function isRosterEditable() {
+  return rosterEditMode || document.body.classList.contains('editing');
+}
+
+function updateRosterEditControls() {
+  const canEdit = isRosterEditable();
+  const toggleBtn = document.getElementById('toggleRosterEditBtn');
+  const printActiveBtn = document.getElementById('printActiveRosterBtn');
+  const importTextarea = document.getElementById('rosterImportTextarea');
+  if (toggleBtn) toggleBtn.textContent = canEdit ? 'Done Editing Roster' : 'Edit Roster';
+  if (printActiveBtn) printActiveBtn.textContent = `Print ${getRosterClassLabel(activeRosterClassTab)} Roster`;
+  if (importTextarea) {
+    importTextarea.disabled = !canEdit;
+    importTextarea.readOnly = !canEdit;
+  }
+}
+
+function setRosterEditMode(enabled) {
+  rosterEditMode = enabled === true;
+  document.body.classList.toggle('roster-editing', rosterEditMode);
+  if (!rosterEditMode) hideRosterImportPanel();
+  updateRosterEditControls();
+}
+
+async function toggleRosterEditMode() {
+  try {
+    if (!rosterEditMode) {
+      const user = await ensureCurriculumTeacherUser();
+      if (!user) return;
+      teacherRosterUnlocked = true;
+      setRosterEditMode(true);
+    } else {
+      syncMasterRosterTextareas({ renderBirthdays: true });
+      setRosterEditMode(false);
+    }
+    renderMasterRosterRows(getMasterRosterRowData());
+  } catch (error) {
+    console.error('Roster edit toggle failed:', error);
+    alert(error.message || 'Roster edit mode could not open.');
+  }
+}
+
+function returnToTeacherTools() {
+  setRosterEditMode(false);
+  showPage('curriculum-builder');
+  showCurriculumToolShelf();
+}
+
 function getMasterRosterRowMarkup(row, index) {
   const cleanType = normalizeTransportationType(row.type);
+  const canEdit = isRosterEditable();
+  const inputState = canEdit ? '' : 'disabled readonly';
+  const selectState = canEdit ? '' : 'disabled';
+  const removeStyle = canEdit ? '' : 'display:none;';
   return `
     <div class="master-roster-row" data-roster-index="${index}">
-      <input class="master-row-name teacher-only-edit" value="${escapeBirthdayText(row.name)}" placeholder="Scholar full name" oninput="handleMasterRosterInput()">
-      <select class="master-row-class teacher-only-edit" onchange="handleMasterRosterClassChange(this)">
+      <input class="master-row-name teacher-only-edit" value="${escapeBirthdayText(row.name)}" placeholder="Scholar full name" oninput="handleMasterRosterInput()" ${inputState}>
+      <select class="master-row-class teacher-only-edit" onchange="handleMasterRosterClassChange(this)" ${selectState}>
         ${getRosterClassOptions(row.classKey)}
       </select>
-      <select class="master-row-type teacher-only-edit" onchange="handleMasterRosterTypeChange(this)">
+      <select class="master-row-type teacher-only-edit" onchange="handleMasterRosterTypeChange(this)" ${selectState}>
         <option value="bus" ${cleanType === 'bus' ? 'selected' : ''}>Bus</option>
         <option value="car" ${cleanType === 'car' ? 'selected' : ''}>Car</option>
         <option value="porch" ${cleanType === 'porch' ? 'selected' : ''}>Porch</option>
       </select>
-      <select class="master-row-duration teacher-only-edit" onchange="handleMasterRosterInput()">
+      <select class="master-row-duration teacher-only-edit" onchange="handleMasterRosterInput()" ${selectState}>
         ${getTransportationDurationOptions(row.duration)}
       </select>
-      <input class="master-row-details teacher-only-edit" value="${escapeBirthdayText(row.details || '')}" placeholder="${getTransportationDetailPlaceholder(cleanType)}" oninput="handleMasterRosterInput()">
-      <input class="master-row-guardians teacher-only-edit" value="${escapeBirthdayText(row.approvedGuardians || '')}" placeholder="Names separated by commas" oninput="handleMasterRosterInput()">
-      <button type="button" class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="removeMasterRosterRow(this)">Remove</button>
+      <input class="master-row-details teacher-only-edit" value="${escapeBirthdayText(row.details || '')}" placeholder="${getTransportationDetailPlaceholder(cleanType)}" oninput="handleMasterRosterInput()" ${inputState}>
+      <input class="master-row-guardians teacher-only-edit" value="${escapeBirthdayText(row.approvedGuardians || '')}" placeholder="Names separated by commas" oninput="handleMasterRosterInput()" ${inputState}>
+      <button type="button" class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral); ${removeStyle}" onclick="removeMasterRosterRow(this)">Remove</button>
     </div>
   `;
 }
@@ -13054,6 +13063,7 @@ function renderMasterRosterRows(rows) {
       <div class="grid gap-3 mt-3">${hiddenRows}${emptyMessage}</div>
     </div>
   `;
+  updateRosterEditControls();
 }
 
 function renderMasterRosterManager() {
@@ -13164,53 +13174,43 @@ async function saveRosterField() {
   }
 }
 
-function saveRosterImage(classKey = '') {
+function printRoster(classKey = '') {
   syncMasterRosterTextareas();
   const normalizedClass = classKey ? normalizeRosterClass(classKey) : '';
   const rosterRows = getMasterRosterRowData().filter(row => !normalizedClass || normalizeRosterClass(row.classKey) === normalizedClass);
   if (!rosterRows.length) {
-    alert(normalizedClass ? `No scholars are listed for ${getRosterClassLabel(normalizedClass)} yet.` : 'Add your roster before saving an image.');
+    alert(normalizedClass ? `No scholars are listed for ${getRosterClassLabel(normalizedClass)} yet.` : 'Add your roster before printing.');
     return;
   }
-  const colors = {
-    coral: getShareColor('--md-coral', '#E9867D'),
-    slate: getShareColor('--md-slate', '#7B8E9E'),
-    cream: getShareColor('--md-cream', '#F7EFE2'),
-    blush: getShareColor('--md-blush', '#F2C9BE'),
-    ink: getShareColor('--md-ink', '#2B2B2B'),
-    white: '#ffffff'
-  };
-  const rows = rosterRows.map(row => {
-    const details = row.details ? ` - ${row.details}` : '';
-    return `${row.name} | ${getTransportationTypeLabel(row.type)} (${getTransportationDurationLabel(row.duration)})${details}`;
-  });
-  const classLabel = normalizedClass ? getRosterClassLabel(normalizedClass) : 'First Grade';
-  const columnCount = rows.length > 22 ? 2 : 1;
-  const rowHeight = 42;
-  const columnRows = Math.ceil(rows.length / columnCount);
-  const canvasHeight = Math.max(1080, 320 + columnRows * rowHeight + 150);
-  const { canvas, ctx } = createShareCanvas(1080, canvasHeight);
-  ctx.fillStyle = colors.cream;
-  ctx.fillRect(0, 0, 1080, canvasHeight);
-  drawShareHeader(ctx, `${classLabel} Roster`, 'Teacher copy', colors);
-  ctx.fillStyle = colors.white;
-  drawShareRoundRect(ctx, 90, 260, 900, canvasHeight - 350, 36);
-  ctx.fill();
-  ctx.strokeStyle = colors.blush;
-  ctx.lineWidth = 6;
-  ctx.stroke();
-  ctx.fillStyle = colors.ink;
-  ctx.font = '700 30px Arial, sans-serif';
-  const columnWidth = columnCount === 2 ? 390 : 800;
-  rows.forEach((row, index) => {
-    const column = columnCount === 2 && index >= columnRows ? 1 : 0;
-    const rowIndex = column ? index - columnRows : index;
-    ctx.fillText(row, 140 + column * 430, 325 + rowIndex * rowHeight, columnWidth);
-  });
-  ctx.fillStyle = colors.slate;
-  ctx.font = '700 24px Arial, sans-serif';
-  ctx.fillText('Saved from the teacher roster tab', 140, canvasHeight - 145);
-  downloadShareCanvas(canvas, getShareFileName(`${classLabel} roster`));
+  const classLabel = normalizedClass ? getRosterClassLabel(normalizedClass) : '1st Grade';
+  const includeClass = !normalizedClass;
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) {
+    alert('Your browser blocked the print window. Allow pop-ups for this site and try again.');
+    return;
+  }
+  const rowsHtml = rosterRows.map(row => `
+    <tr>
+      <td>${escapeHtml(row.name)}</td>
+      ${includeClass ? `<td>${escapeHtml(getRosterClassLabel(row.classKey))}</td>` : ''}
+      <td>${escapeHtml(getTransportationTypeLabel(row.type))}</td>
+      <td>${escapeHtml(getTransportationDurationLabel(row.duration))}</td>
+      <td>${escapeHtml(row.details || '')}</td>
+      <td>${escapeHtml(row.approvedGuardians || '')}</td>
+    </tr>
+  `).join('');
+  const printHtml = `<!doctype html><html><head><title>${escapeHtml(classLabel)} Roster</title><style>@page{margin:.45in;}html,body{margin:0;padding:0;}body{font-family:Arial,sans-serif;color:#1f2937;}h1{margin:0 0 4px;font-size:26px;color:#475569;}p{margin:0 0 14px;color:#64748b;font-size:13px;}table{width:100%;border-collapse:collapse;font-size:12px;}th{background:#f7efe2;color:#475569;text-align:left;}th,td{border:1px solid #d8c7ad;padding:7px 8px;vertical-align:top;}tr{break-inside:avoid;}@media print{html,body{width:auto;height:auto;}}</style></head><body><h1>${escapeHtml(classLabel)} Roster</h1><p>Teacher copy - ${rosterRows.length} scholar${rosterRows.length === 1 ? '' : 's'}</p><table><thead><tr><th>Scholar</th>${includeClass ? '<th>Class</th>' : ''}<th>Dismissal</th><th>Status</th><th>Details</th><th>Approved guardians</th></tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`;
+  printWindow.document.open();
+  printWindow.document.write(printHtml);
+  printWindow.document.close();
+  setTimeout(() => {
+    printWindow.focus();
+    printWindow.print();
+  }, 150);
+}
+
+function saveRosterImage(classKey = '') {
+  printRoster(classKey);
 }
 
 function getBirthdayRosterNames() {
