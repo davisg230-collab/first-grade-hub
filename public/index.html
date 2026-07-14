@@ -2790,14 +2790,11 @@
           <!-- Content will be populated by JavaScript -->
         </div>
         
-        <!-- Upcoming Lessons subsection -->
-        <div class="mt-6 pt-6 border-t" style="border-color: color-mix(in oklab, var(--md-coral) 20%, var(--md-white) 80%);">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-display font-semibold" style="color: var(--md-coral);">Daily Plan</h3>
-            <div class="edit-only flex gap-2" style="display: none;">
+        <!-- Upcoming lesson cards -->
+        <div class="mt-4">
+            <div class="edit-only flex justify-end gap-2 mb-4" style="display: none;">
               <button id="saveListeningLessonsBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveLessonCards('listening')">💾 Save</button>
             </div>
-          </div>
           <div id="listeningLessonsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             <!-- Weekday boxes will be populated by JavaScript -->
           </div>
@@ -2838,14 +2835,11 @@
           <!-- Content will be populated by JavaScript -->
         </div>
         
-        <!-- Upcoming Lessons subsection -->
-        <div class="mt-6 pt-6 border-t" style="border-color: color-mix(in oklab, var(--md-slate) 20%, var(--md-white) 80%);">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-display font-semibold" style="color: var(--md-slate);">Daily Plan</h3>
-            <div class="edit-only flex gap-2" style="display: none;">
+        <!-- Upcoming lesson cards -->
+        <div class="mt-4">
+            <div class="edit-only flex justify-end gap-2 mb-4" style="display: none;">
               <button id="saveMathLessonsBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="saveLessonCards('math')">💾 Save</button>
             </div>
-          </div>
           <div id="mathLessonsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             <!-- Weekday boxes will be populated by JavaScript -->
           </div>
@@ -3612,9 +3606,6 @@
                   </button>
                   <button id="curriculumSaveBtn" class="curriculum-builder-button inline-flex items-center px-5 py-3 text-white" style="background: var(--md-slate);" onclick="saveCurriculumLesson()">
                     Save Lesson
-                  </button>
-                  <button class="curriculum-builder-button inline-flex items-center px-5 py-3" style="background: var(--md-pebble); color: var(--md-ink);" onclick="clearCurriculumBuilderForm()">
-                    New Blank
                   </button>
                 </div>
               </div>
@@ -7001,7 +6992,11 @@
           ${group.lessons.map(renderCurriculumPrintSavedLesson).join('')}
         </section>
       `).join('');
-      openCurriculumPrintWindow(title, `<h1>${escapeHtml(title)}</h1><div class="meta">Generated from Teacher Tools</div>${sections}${renderCurriculumPrintSelectedVocabulary(lessons)}`, 'Print view opened for selected lessons.');
+      const subjectContent = curriculumSubjects
+        .map(subject => renderCurriculumPrintSelectedSubjectContent(subject, lessons.filter(lesson => (lesson.subject || 'skills') === subject)))
+        .filter(Boolean)
+        .join('');
+      openCurriculumPrintWindow(title, `<h1>${escapeHtml(title)}</h1><div class="meta">Generated from Teacher Tools</div>${sections}${subjectContent}`, 'Print view opened for selected lessons.');
     }
 
     function renderCurriculumPrintSubject(week) {
@@ -7082,17 +7077,32 @@
       `;
     }
 
-    function renderCurriculumPrintSelectedVocabulary(lessons) {
-      const words = uniqueList(lessons.flatMap(lesson => lesson.vocabulary || [])).slice(0, 40);
-      if (!words.length) return '';
-      return `
-        <section>
-          <h2>Shared vocabulary</h2>
-          <div class="lesson">
-            <ul>${words.map(word => `<li>${escapeHtml(word)}</li>`).join('')}</ul>
-          </div>
-        </section>
-      `;
+    function renderCurriculumPrintSelectedSubjectContent(subject, lessons) {
+      if (!lessons.length) return '';
+      const vocabulary = uniqueList(lessons.flatMap(lesson => lesson.vocabulary || [])).slice(0, 40);
+      if (subject === 'skills') {
+        const corpus = getCurriculumObjectiveCorpus(lessons);
+        const fields = [
+          renderCurriculumPrintList('Sounds', getSkillsSoundList(corpus)),
+          renderCurriculumPrintList('Sight Words', getSkillsTrickyWords(corpus)),
+          renderCurriculumPrintList('Vocab', vocabulary)
+        ].filter(Boolean).join('');
+        if (!fields) return '';
+        return `<section><h2>Skills</h2><div class="lesson"><div class="grid">${fields}</div></div></section>`;
+      }
+      if (subject === 'math') {
+        const fields = [
+          renderCurriculumPrintList('Vocabulary', vocabulary),
+          renderCurriculumPrintList('Strategies', getMathStrategyList(lessons))
+        ].filter(Boolean).join('');
+        if (!fields) return '';
+        return `<section><h2>Math</h2><div class="lesson"><div class="grid">${fields}</div></div></section>`;
+      }
+      const questions = uniqueList(lessons.flatMap(lesson => lesson.familyQuestions || [])).slice(0, 3);
+      const questionList = questions.length
+        ? questions
+        : getCurriculumCombinedFamilyQuestions({ selectedLessons: lessons }, 'listening');
+      return `<section><h2>Listening &amp; Learning</h2><div class="lesson">${renderCurriculumPrintList('Ask Your Scholar', questionList)}</div></section>`;
     }
 
     function plainFamilySentence(value) {
