@@ -6305,7 +6305,6 @@
             <div class="font-display font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(title)}</div>
             <div class="text-sm mt-1 text-[color:var(--md-ink)]/80">${escapeHtml(plainFamilySentence(lesson.iCanStatement || lesson.objective || lesson.parentSummary || '').slice(0, 150))}</div>
             <div class="curriculum-browser-actions">
-              <button type="button" style="background: var(--md-slate); color: var(--md-white);" onclick="event.stopPropagation(); viewCurriculumLessonDetail('${lesson.id}')">View</button>
               <button type="button" style="background: var(--md-coral); color: var(--md-white);" onclick="event.stopPropagation(); loadCurriculumLessonIntoBuilder('${lesson.id}')">Edit</button>
               <button type="button" title="${escapeHtml(scheduleTitle)}" style="background: var(--md-pebble); color: var(--md-ink);" onclick="event.stopPropagation(); openCurriculumSchedulePicker('${lesson.id}')">${escapeHtml(scheduleLabel)}</button>
             </div>
