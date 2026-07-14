@@ -3661,7 +3661,15 @@
                 </button>
               </div>
             </div>
-            <div class="curriculum-week-preview rounded-2xl p-4 mb-4">
+            <div class="curriculum-browser-layout">
+              <div id="curriculumLessonBrowserList" class="curriculum-browser-list grid gap-2">
+                <p class="text-sm text-gray-500">Sign in to browse saved lessons.</p>
+              </div>
+              <div id="curriculumLessonDetailPanel" class="curriculum-lesson-detail-panel">
+                <p class="text-sm text-gray-500">Choose a lesson to view the full saved details.</p>
+              </div>
+            </div>
+            <div class="curriculum-week-preview rounded-2xl p-4 mt-4">
               <div class="flex items-center justify-between gap-3 mb-2">
                 <h4 class="font-display font-bold" style="color: var(--md-coral);">Schedule Preview</h4>
                 <button type="button" class="text-xs font-bold underline" style="color: var(--md-slate);" onclick="clearCurriculumWeeklyPlan()">Clear All</button>
@@ -3677,14 +3685,6 @@
                 <button id="curriculumPrintWeekBtn" type="button" class="curriculum-builder-button px-4 py-2 text-white" style="background: var(--md-slate);" onclick="printCurriculumUpcomingWeek()">
                   Print Upcoming Week
                 </button>
-              </div>
-            </div>
-            <div class="curriculum-browser-layout">
-              <div id="curriculumLessonBrowserList" class="curriculum-browser-list grid gap-2">
-                <p class="text-sm text-gray-500">Sign in to browse saved lessons.</p>
-              </div>
-              <div id="curriculumLessonDetailPanel" class="curriculum-lesson-detail-panel">
-                <p class="text-sm text-gray-500">Choose a lesson to view the full saved details.</p>
               </div>
             </div>
           </div>
@@ -6061,6 +6061,8 @@
     function openCurriculumSchedulePicker(lessonId) {
       const lesson = curriculumLessonsCache.find(item => item.id === lessonId);
       if (!lesson) return;
+      const scrollX = window.scrollX;
+      const scrollY = window.scrollY;
       curriculumSchedulePickerLessonId = lessonId;
       const modal = document.getElementById('curriculumScheduleModal');
       const title = document.getElementById('curriculumScheduleModalTitle');
@@ -6071,7 +6073,7 @@
       if (meta) meta.textContent = `${getCurriculumSubjectLabel(lesson.subject)} - ${lesson.lessonNumber || 'Lesson'}`;
       input.value = getCurriculumPrimaryScheduleDate(lesson) || '';
       modal.classList.add('open');
-      setTimeout(() => input.focus(), 0);
+      requestAnimationFrame(() => window.scrollTo(scrollX, scrollY));
     }
 
     async function setCurriculumScheduledLessonDateFromPicker(dateKey) {
@@ -6107,11 +6109,13 @@
     async function setCurriculumScheduledLessonDate(lessonId, dateKey) {
       const lesson = curriculumLessonsCache.find(item => item.id === lessonId);
       if (!lesson) return false;
+      const viewState = getCurriculumBrowserViewState();
       const subject = lesson.subject || 'skills';
       const subjectPlan = getCurriculumSubjectPlan(subject);
       if (dateKey && getCurriculumSchoolDayIndex(dateKey) < 0) {
         setCurriculumStatus('Choose a Monday-Friday school day for the lesson.', 'error');
         renderCurriculumLibraryList();
+        restoreCurriculumBrowserViewState(viewState);
         return false;
       }
       Object.keys(subjectPlan.dates).forEach(key => {
@@ -6121,6 +6125,7 @@
         subjectPlan.dates[dateKey] = lessonId;
       }
       renderCurriculumLibraryList();
+      restoreCurriculumBrowserViewState(viewState);
       renderCurriculumWeekPreview();
       await saveCurriculumWeeklyPlanDraft();
       if (dateKey) {
@@ -6187,7 +6192,7 @@
         const moduleName = lesson.unitOrModule || 'No module yet';
         const key = `${subject}|||${moduleName}`;
         if (!groups.has(key)) {
-          groups.set(key, { label: `${subject} - ${moduleName}`, lessons: [] });
+          groups.set(key, { key, label: `${subject} - ${moduleName}`, lessons: [] });
         }
         groups.get(key).lessons.push(lesson);
       });
@@ -6195,6 +6200,34 @@
         ...group,
         lessons: group.lessons.sort(compareCurriculumLessons)
       }));
+    }
+
+    function getCurriculumGroupDomKey(group) {
+      return encodeURIComponent(group.key || group.label || 'group');
+    }
+
+    function getOpenCurriculumBrowserGroups() {
+      return new Set(Array.from(document.querySelectorAll('#curriculumLessonBrowserList .curriculum-library-group[open]'))
+        .map(group => group.dataset.curriculumGroupKey)
+        .filter(Boolean));
+    }
+
+    function getCurriculumBrowserViewState() {
+      const list = document.getElementById('curriculumLessonBrowserList');
+      return {
+        scrollX: window.scrollX,
+        scrollY: window.scrollY,
+        listScrollTop: list ? list.scrollTop : 0
+      };
+    }
+
+    function restoreCurriculumBrowserViewState(state) {
+      if (!state) return;
+      requestAnimationFrame(() => {
+        const list = document.getElementById('curriculumLessonBrowserList');
+        if (list) list.scrollTop = state.listScrollTop || 0;
+        window.scrollTo(state.scrollX || 0, state.scrollY || 0);
+      });
     }
 
     function compareCurriculumLessons(a, b) {
@@ -6240,15 +6273,20 @@
         renderCurriculumLessonDetail();
         return;
       }
+      const openGroups = getOpenCurriculumBrowserGroups();
       const groups = groupCurriculumLessonsByModule(lessons);
-      list.innerHTML = groups.map(group => `
-        <details class="curriculum-library-group">
-          <summary>${escapeHtml(group.label)} <span class="text-xs text-gray-500">(${group.lessons.length})</span></summary>
-          <div class="curriculum-library-folder-body">
-            ${group.lessons.map(lesson => renderCurriculumBrowserLesson(lesson)).join('')}
-          </div>
-        </details>
-      `).join('');
+      list.innerHTML = groups.map(group => {
+        const groupKey = getCurriculumGroupDomKey(group);
+        const isOpen = openGroups.has(groupKey);
+        return `
+          <details class="curriculum-library-group" data-curriculum-group-key="${groupKey}" ${isOpen ? 'open' : ''}>
+            <summary>${escapeHtml(group.label)} <span class="text-xs text-gray-500">(${group.lessons.length})</span></summary>
+            <div class="curriculum-library-folder-body">
+              ${group.lessons.map(lesson => renderCurriculumBrowserLesson(lesson)).join('')}
+            </div>
+          </details>
+        `;
+      }).join('');
       renderCurriculumLessonDetail();
     }
 
@@ -6885,7 +6923,6 @@
             ${renderCurriculumPrintField('I can statement', lesson.iCanStatement)}
             ${renderCurriculumPrintField('Objective and description', getCurriculumPrintFocus(lesson))}
             ${renderCurriculumPrintList('Family questions', lesson.familyQuestions)}
-            ${renderCurriculumPrintList('Video links', (lesson.videoLinks || []).map(link => link && link.url ? `${link.title || 'Video'} - ${link.url}` : '').filter(Boolean))}
             ${renderCurriculumPrintList('Materials', lesson.materials)}
             ${renderCurriculumPrintList('Teacher notes', lesson.teacherNotes)}
           </div>
@@ -6906,7 +6943,6 @@
             ${renderCurriculumPrintField('Priority standard', lesson.priorityStandard)}
             ${renderCurriculumPrintField('Focus', getCurriculumPrintFocus(lesson))}
             ${renderCurriculumPrintList('Materials', lesson.materials)}
-            ${renderCurriculumPrintList('Video links', (lesson.videoLinks || []).map(link => link && link.url ? `${link.title || 'Video'} - ${link.url}` : '').filter(Boolean))}
             ${renderCurriculumPrintList('Teacher notes', lesson.teacherNotes)}
           </div>
         </div>
