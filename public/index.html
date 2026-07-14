@@ -537,6 +537,60 @@
       color: color-mix(in oklab, var(--md-ink) 66%, var(--md-white) 34%);
       background: color-mix(in oklab, var(--md-slate) 10%, var(--md-white) 90%);
     }
+    .master-roster-class-section {
+      border: 1px solid color-mix(in oklab, var(--md-slate) 18%, var(--md-white) 82%);
+      border-radius: 1rem;
+      background: color-mix(in oklab, var(--md-white) 90%, var(--md-cream) 10%);
+      padding: 1rem;
+    }
+    .master-roster-class-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+      margin-bottom: .85rem;
+    }
+    .master-roster-class-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 2rem;
+      height: 2rem;
+      border-radius: 999px;
+      background: var(--md-pebble);
+      color: var(--md-ink);
+      font-weight: 900;
+      font-size: .85rem;
+    }
+    .master-roster-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin: 1rem 0;
+    }
+    .master-roster-tab {
+      border-radius: 999px;
+      padding: .7rem 1rem;
+      font-weight: 900;
+      color: var(--md-slate);
+      background: color-mix(in oklab, var(--md-white) 80%, var(--md-pebble));
+      border: 1px solid color-mix(in oklab, var(--md-slate) 24%, var(--md-white) 76%);
+    }
+    .master-roster-tab.active {
+      background: var(--md-coral);
+      color: var(--md-white);
+      border-color: var(--md-coral);
+      box-shadow: 0 8px 16px rgba(43,43,43,.12);
+    }
+    .master-roster-empty {
+      border: 1px dashed color-mix(in oklab, var(--md-slate) 25%, var(--md-white) 75%);
+      border-radius: .9rem;
+      padding: 1rem;
+      background: var(--md-white);
+      color: #6b7280;
+      font-size: .92rem;
+    }
     .roster-import-panel {
       display: none;
       margin-bottom: 1rem;
@@ -1822,6 +1876,36 @@
       min-height: 4.2rem;
       resize: vertical;
     }
+    .curriculum-library-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .55rem;
+      margin-bottom: 1rem;
+    }
+    .curriculum-library-tab {
+      border: 1px solid color-mix(in oklab, var(--md-slate) 22%, var(--md-white));
+      border-radius: 999px;
+      background: color-mix(in oklab, var(--md-white) 86%, var(--md-pebble));
+      color: var(--md-slate);
+      font-weight: 900;
+      padding: .75rem 1rem;
+      box-shadow: 0 8px 16px rgba(43,43,43,.07);
+    }
+    .curriculum-library-tab.active {
+      background: var(--md-coral);
+      border-color: var(--md-coral);
+      color: var(--md-white);
+      box-shadow: inset 0 -2px 0 rgba(0,0,0,.14), 0 10px 18px rgba(43,43,43,.12);
+    }
+    .curriculum-tab-panel {
+      display: none;
+    }
+    .curriculum-tab-panel.active {
+      display: block;
+    }
+    .curriculum-tab-shell > .curriculum-tab-panel.active {
+      grid-column: 1 / -1;
+    }
     .teacher-tool-shelf {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
@@ -1920,6 +2004,71 @@
       display: grid;
       gap: .55rem;
       padding: 0 .75rem .75rem;
+    }
+    .curriculum-browser-layout {
+      display: grid;
+      grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+      gap: 1rem;
+      align-items: start;
+    }
+    .curriculum-browser-list {
+      max-height: 34rem;
+      overflow-y: auto;
+      min-width: 0;
+    }
+    .curriculum-browser-item {
+      cursor: pointer;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: .65rem;
+      align-items: start;
+    }
+    .curriculum-browser-item.selected {
+      border-color: var(--md-slate);
+      background: color-mix(in oklab, var(--md-white) 86%, var(--md-mustard));
+    }
+    .curriculum-browser-check {
+      width: 1.15rem;
+      height: 1.15rem;
+      margin-top: .2rem;
+      accent-color: var(--md-coral);
+    }
+    .curriculum-browser-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .45rem;
+      margin-top: .7rem;
+    }
+    .curriculum-browser-actions button {
+      border-radius: .65rem;
+      padding: .38rem .65rem;
+      font-size: .74rem;
+      font-weight: 900;
+    }
+    .curriculum-lesson-detail-panel {
+      min-width: 0;
+      max-height: 34rem;
+      overflow-y: auto;
+      border: 1px solid color-mix(in oklab, var(--md-slate) 18%, var(--md-white));
+      border-radius: .9rem;
+      background: color-mix(in oklab, var(--md-white) 94%, var(--md-pebble));
+      padding: 1rem;
+    }
+    .curriculum-detail-section {
+      border-top: 1px solid color-mix(in oklab, var(--md-slate) 14%, var(--md-white));
+      margin-top: .85rem;
+      padding-top: .85rem;
+    }
+    .curriculum-detail-section h4 {
+      color: var(--md-slate);
+      font-weight: 900;
+      font-size: .82rem;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      margin-bottom: .25rem;
+    }
+    .curriculum-detail-section ul {
+      margin: .25rem 0 0 1.1rem;
     }
     .curriculum-weekday-select {
       grid-column: 2;
@@ -2048,6 +2197,12 @@
       .curriculum-builder-shell {
         grid-template-columns: 1fr;
       }
+      .curriculum-browser-layout {
+        grid-template-columns: 1fr;
+      }
+      .curriculum-lesson-detail-panel {
+        max-height: none;
+      }
     }
     @media (max-width: 767px) {
       .learning-day-picker {
@@ -2153,10 +2308,6 @@
       <button class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white"
               data-page="extras" data-tooltip="Classroom Updates&#10;Announcements&#10;Extra Reminders" style="background:#6b7280;">
         <span>📰</span><span>Extra News</span>
-      </button>
-      <button id="rosterPageBtn" class="pageTab edit-only inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white"
-              data-page="roster" data-tooltip="Teacher Roster&#10;Birthday Dropdowns&#10;Transportation Names" style="background: var(--md-slate);">
-        <span>&#128203;</span><span>Roster</span>
       </button>
     </nav>
     <!-- HOME TAB -->
@@ -2944,15 +3095,6 @@
             <button class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="hideRosterImportPanel()">Cancel</button>
           </div>
         </div>
-        <div class="master-roster-row master-roster-heading">
-          <div>Scholar name</div>
-          <div>Class</div>
-          <div>Dismissal</div>
-          <div>Status</div>
-          <div>Details</div>
-          <div>Approved guardians</div>
-          <div></div>
-        </div>
         <div id="masterRosterRows" class="space-y-3 mt-3"></div>
         <textarea id="masterRosterTextarea" class="teacher-only-edit" style="display:none;"></textarea>
       </div>
@@ -3335,9 +3477,9 @@
               <h3 id="teacherEditWebsiteTitle" class="font-display font-bold">Edit Website</h3>
               <p id="teacherEditWebsiteDesc">Unlock the public site editor for photos, text, tabs, calendars, and classroom updates.</p>
             </button>
-            <button type="button" class="teacher-tool-book" style="background: linear-gradient(90deg, #be5b45 0 .55rem, var(--md-coral) .55rem);" disabled>
+            <button id="teacherRosterTool" type="button" class="teacher-tool-book" style="background: linear-gradient(90deg, #be5b45 0 .55rem, var(--md-coral) .55rem);" onclick="openTeacherRosterTool()">
               <h3 class="font-display font-bold">Roster Tools</h3>
-              <p>Coming later for scholar lists, guardians, and classroom records.</p>
+              <p>Manage scholars, dismissal, approved guardians, birthdays, and classroom records.</p>
             </button>
             <button type="button" class="teacher-tool-book" style="background: linear-gradient(90deg, #b45309 0 .55rem, var(--md-mustard) .55rem); color: var(--md-ink);" disabled>
               <h3 class="font-display font-bold">Printables</h3>
@@ -3367,8 +3509,32 @@
         </div>
 
         <div id="curriculumWorkspace" style="display: none;">
-          <div class="curriculum-builder-shell">
-            <div class="space-y-4">
+          <div class="curriculum-library-tabs" role="tablist" aria-label="Curriculum Library">
+            <button id="curriculumTabUpload" type="button" class="curriculum-library-tab active" data-curriculum-tab="upload" onclick="showCurriculumLibraryTab('upload')">Upload / AI Draft</button>
+            <button id="curriculumTabBrowse" type="button" class="curriculum-library-tab" data-curriculum-tab="browse" onclick="showCurriculumLibraryTab('browse')">Browse Lessons</button>
+            <button id="curriculumTabPlanner" type="button" class="curriculum-library-tab" data-curriculum-tab="planner" onclick="showCurriculumLibraryTab('planner')">Weekly Planner</button>
+          </div>
+          <div id="curriculumStatus" class="mb-4 text-sm font-semibold text-gray-600" aria-live="polite"></div>
+          <div id="curriculumLessonFilterPanel" class="curriculum-builder-panel rounded-2xl p-4 mb-4" style="display: none;">
+            <div class="grid md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)_auto] gap-3 md:items-end">
+              <div>
+                <label class="curriculum-builder-label" for="curriculumLibrarySubjectFilter">Subject</label>
+                <select id="curriculumLibrarySubjectFilter" class="curriculum-builder-field" onchange="renderCurriculumLibraryList()">
+                  <option value="all">All subjects</option>
+                  <option value="skills">Skills</option>
+                  <option value="listening">Listening & Learning</option>
+                  <option value="math">Math</option>
+                </select>
+              </div>
+              <div>
+                <label class="curriculum-builder-label" for="curriculumLibrarySearchInput">Search</label>
+                <input id="curriculumLibrarySearchInput" class="curriculum-builder-field" type="search" placeholder="Search lessons..." oninput="renderCurriculumLibraryList()">
+              </div>
+              <span id="curriculumLibraryCount" class="text-sm font-bold text-gray-500 pb-3">0</span>
+            </div>
+          </div>
+          <div class="curriculum-builder-shell curriculum-tab-shell">
+            <div id="curriculumTabPanelUpload" class="curriculum-tab-panel active space-y-4" data-curriculum-panel="upload">
               <div class="curriculum-builder-panel rounded-2xl p-5">
                 <div class="grid sm:grid-cols-3 gap-3 mb-4">
                   <div>
@@ -3417,7 +3583,6 @@
                     New Blank
                   </button>
                 </div>
-                <div id="curriculumStatus" class="mt-3 text-sm font-semibold text-gray-600" aria-live="polite"></div>
               </div>
 
               <div class="curriculum-builder-panel rounded-2xl p-5">
@@ -3469,10 +3634,9 @@
               </div>
             </div>
 
-            <aside class="curriculum-builder-panel rounded-2xl p-5">
+            <aside id="curriculumTabPanelPlanner" class="curriculum-tab-panel curriculum-builder-panel rounded-2xl p-5" data-curriculum-panel="planner">
               <div class="flex items-center justify-between gap-3 mb-4">
                 <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">Saved Lessons</h3>
-                <span id="curriculumLibraryCount" class="text-sm font-bold text-gray-500">0</span>
               </div>
               <div class="curriculum-week-preview rounded-2xl p-4 mb-4">
                 <div class="flex items-center justify-between gap-3 mb-2">
@@ -3490,19 +3654,35 @@
                   Print Upcoming Week
                 </button>
               </div>
-              <div class="grid gap-3 mb-4">
-                <select id="curriculumLibrarySubjectFilter" class="curriculum-builder-field" onchange="renderCurriculumLibraryList()">
-                  <option value="all">All subjects</option>
-                  <option value="skills">Skills</option>
-                  <option value="listening">Listening & Learning</option>
-                  <option value="math">Math</option>
-                </select>
-                <input id="curriculumLibrarySearchInput" class="curriculum-builder-field" type="search" placeholder="Search lessons..." oninput="renderCurriculumLibraryList()">
-              </div>
               <div id="curriculumLibraryList" class="curriculum-library-list grid gap-2">
                 <p class="text-sm text-gray-500">Sign in to load saved lessons.</p>
               </div>
             </aside>
+          </div>
+          <div id="curriculumTabPanelBrowse" class="curriculum-tab-panel curriculum-builder-panel rounded-2xl p-5 mt-4" data-curriculum-panel="browse">
+            <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3 mb-4">
+              <div>
+                <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">Lesson Browser</h3>
+                <p class="text-sm text-[color:var(--md-ink)]/75 mt-1">Open finished lessons, select any lessons you need, and print them together.</p>
+              </div>
+              <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+                <span id="curriculumSelectedLessonCount" class="text-sm font-bold text-gray-500">0 selected</span>
+                <button id="curriculumPrintSelectedBtn" type="button" class="curriculum-builder-button inline-flex px-4 py-2 text-white" style="background: var(--md-slate);" onclick="printSelectedCurriculumLessons()">
+                  Print Selected
+                </button>
+                <button id="curriculumClearSelectionBtn" type="button" class="curriculum-builder-button inline-flex px-4 py-2" style="background: var(--md-pebble); color: var(--md-ink);" onclick="clearSelectedCurriculumLessons()">
+                  Clear
+                </button>
+              </div>
+            </div>
+            <div class="curriculum-browser-layout">
+              <div id="curriculumLessonBrowserList" class="curriculum-browser-list grid gap-2">
+                <p class="text-sm text-gray-500">Sign in to browse saved lessons.</p>
+              </div>
+              <div id="curriculumLessonDetailPanel" class="curriculum-lesson-detail-panel">
+                <p class="text-sm text-gray-500">Choose a lesson to view the full saved details.</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -4924,6 +5104,10 @@
     let curriculumPdfJsLoadPromise = null;
     let curriculumToolView = 'shelf';
     let curriculumSchedulePickerLessonId = '';
+    let curriculumSelectedLessonIds = new Set();
+    let curriculumActiveBrowserLessonId = '';
+    let curriculumActiveLibraryTab = 'upload';
+    let activeRosterClassTab = 'davis';
     let learningMobileActiveDays = { skills: 0, listening: 0, math: 0 };
     let learningLessonDataCache = { skills: null, listening: null, math: null };
 
@@ -5194,6 +5378,22 @@
       setCurriculumStatus('Enter your edit PIN to unlock the website editor.', 'info');
     }
 
+    async function openTeacherRosterTool() {
+      try {
+        const user = await ensureCurriculumTeacherUser();
+        if (!user) return;
+        curriculumToolView = 'shelf';
+        const entered = document.body.classList.contains('editing')
+          ? true
+          : await enterEditMode({ skipSignIn: true, authenticatedUser: user });
+        if (!entered) return;
+        showPage('roster');
+      } catch (error) {
+        console.error('Roster tool failed:', error);
+        setCurriculumStatus(error.message || 'Roster tool could not open.', 'error');
+      }
+    }
+
     async function openCurriculumTool(toolId) {
       if (toolId !== 'curriculum') return;
       const user = await ensureCurriculumTeacherUser();
@@ -5206,6 +5406,7 @@
         renderCurriculumLibraryList();
         renderCurriculumWeekPreview();
       }
+      showCurriculumLibraryTab(curriculumActiveLibraryTab);
     }
 
     async function signInForCurriculumBuilder() {
@@ -5230,16 +5431,25 @@
       }
       curriculumLessonsCache = [];
       curriculumActiveLessonId = '';
+      curriculumSelectedLessonIds = new Set();
+      curriculumActiveBrowserLessonId = '';
+      curriculumActiveLibraryTab = 'upload';
       curriculumWeeklyPlan = getEmptyCurriculumWeeklyPlan();
       curriculumToolView = 'shelf';
       showCurriculumWorkspace(false);
       setCurriculumPdfStatus('');
       setCurriculumStatus('');
       const list = document.getElementById('curriculumLibraryList');
+      const browserList = document.getElementById('curriculumLessonBrowserList');
+      const browserDetail = document.getElementById('curriculumLessonDetailPanel');
+      const selectedCount = document.getElementById('curriculumSelectedLessonCount');
       const count = document.getElementById('curriculumLibraryCount');
       const preview = document.getElementById('curriculumWeekPreview');
       if (count) count.textContent = '0';
+      if (selectedCount) selectedCount.textContent = '0 selected';
       if (list) list.innerHTML = '<p class="text-sm text-gray-500">Sign in to load saved lessons.</p>';
+      if (browserList) browserList.innerHTML = '<p class="text-sm text-gray-500">Sign in to browse saved lessons.</p>';
+      if (browserDetail) browserDetail.innerHTML = '<p class="text-sm text-gray-500">Choose a lesson to view the full saved details.</p>';
       if (preview) preview.innerHTML = '<p class="text-sm text-gray-500">No lessons picked yet.</p>';
     }
 
@@ -5297,8 +5507,33 @@
       if (workspace) workspace.style.display = show && curriculumToolView === 'curriculum' ? 'block' : 'none';
       if (backBtn) backBtn.style.display = show && curriculumToolView === 'curriculum' ? 'inline-flex' : 'none';
       if (refreshBtn) refreshBtn.style.display = show && curriculumToolView === 'curriculum' ? 'inline-flex' : 'none';
+      if (show && curriculumToolView === 'curriculum') {
+        showCurriculumLibraryTab(curriculumActiveLibraryTab);
+      }
       updateCurriculumToolHeader();
       updateTeacherEditToolState();
+    }
+
+    function showCurriculumLibraryTab(tabId = 'upload') {
+      const validTabs = ['upload', 'browse', 'planner'];
+      const activeTab = validTabs.includes(tabId) ? tabId : 'upload';
+      curriculumActiveLibraryTab = activeTab;
+      document.querySelectorAll('[data-curriculum-tab]').forEach(button => {
+        const isActive = button.dataset.curriculumTab === activeTab;
+        button.classList.toggle('active', isActive);
+        button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+      document.querySelectorAll('[data-curriculum-panel]').forEach(panel => {
+        panel.classList.toggle('active', panel.dataset.curriculumPanel === activeTab);
+      });
+      const filterPanel = document.getElementById('curriculumLessonFilterPanel');
+      if (filterPanel) filterPanel.style.display = activeTab === 'upload' ? 'none' : 'block';
+      if (activeTab === 'browse') {
+        renderCurriculumLessonBrowser();
+      } else if (activeTab === 'planner') {
+        renderCurriculumLibraryList();
+        renderCurriculumWeekPreview();
+      }
     }
 
     function updateCurriculumToolHeader() {
@@ -5307,7 +5542,7 @@
       if (!title || !description) return;
       if (curriculumToolView === 'curriculum') {
         title.textContent = 'Curriculum Library';
-        description.textContent = 'Load lesson PDFs, save approved lesson details, schedule parent pages, and print your weekly plan.';
+        description.textContent = 'Use the tabs to upload AI lesson drafts, browse saved lessons, or plan the week for parent pages.';
       } else {
         title.textContent = 'Teacher Tools';
         description.textContent = 'Choose a tool from your private teacher shelf.';
@@ -5672,6 +5907,11 @@
         showCurriculumWorkspace(true);
         const snapshot = await db.collection('curriculumLessons').orderBy('updatedAt', 'desc').limit(500).get();
         curriculumLessonsCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const lessonIds = new Set(curriculumLessonsCache.map(lesson => lesson.id));
+        curriculumSelectedLessonIds = new Set(Array.from(curriculumSelectedLessonIds).filter(id => lessonIds.has(id)));
+        if (curriculumActiveBrowserLessonId && !lessonIds.has(curriculumActiveBrowserLessonId)) {
+          curriculumActiveBrowserLessonId = '';
+        }
         await loadCurriculumWeeklyPlan();
         renderCurriculumLibraryList();
         renderCurriculumWeekPreview();
@@ -5893,16 +6133,11 @@
       const list = document.getElementById('curriculumLibraryList');
       const count = document.getElementById('curriculumLibraryCount');
       if (!list) return;
-      const subjectFilter = document.getElementById('curriculumLibrarySubjectFilter')?.value || 'all';
-      const search = (document.getElementById('curriculumLibrarySearchInput')?.value || '').toLowerCase().trim();
-      const filtered = curriculumLessonsCache.filter(lesson => {
-        const subjectMatches = subjectFilter === 'all' || lesson.subject === subjectFilter;
-        const haystack = [lesson.subject, lesson.unitOrModule, lesson.lessonNumber, lesson.lessonTitle, lesson.iCanStatement, lesson.objective].join(' ').toLowerCase();
-        return subjectMatches && (!search || haystack.includes(search));
-      });
+      const filtered = getFilteredCurriculumLessons();
       if (count) count.textContent = String(filtered.length);
       if (!filtered.length) {
         list.innerHTML = '<p class="text-sm text-gray-500">No saved lessons yet.</p>';
+        renderCurriculumLessonBrowser(filtered);
         return;
       }
       const groups = groupCurriculumLessonsByModule(filtered);
@@ -5914,7 +6149,28 @@
           </div>
         </details>
       `).join('');
+      renderCurriculumLessonBrowser(filtered);
       renderCurriculumWeekPreview();
+    }
+
+    function getFilteredCurriculumLessons() {
+      const subjectFilter = document.getElementById('curriculumLibrarySubjectFilter')?.value || 'all';
+      const search = (document.getElementById('curriculumLibrarySearchInput')?.value || '').toLowerCase().trim();
+      return curriculumLessonsCache.filter(lesson => {
+        const subjectMatches = subjectFilter === 'all' || lesson.subject === subjectFilter;
+        const haystack = [
+          lesson.subject,
+          lesson.unitOrModule,
+          lesson.lessonNumber,
+          lesson.lessonTitle,
+          lesson.iCanStatement,
+          lesson.objective,
+          lesson.priorityStandard,
+          lesson.parentSummary,
+          Array.isArray(lesson.vocabulary) ? lesson.vocabulary.join(' ') : ''
+        ].join(' ').toLowerCase();
+        return subjectMatches && (!search || haystack.includes(search));
+      });
     }
 
     function groupCurriculumLessonsByModule(lessons) {
@@ -5928,7 +6184,7 @@
         }
         groups.get(key).lessons.push(lesson);
       });
-      return Array.from(groups.values()).map(group => ({
+      return Array.from(groups.values()).sort((a, b) => a.label.localeCompare(b.label)).map(group => ({
         ...group,
         lessons: group.lessons.sort(compareCurriculumLessons)
       }));
@@ -5959,6 +6215,140 @@
           <div class="font-display font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(title)}</div>
           <div class="text-sm mt-1 text-[color:var(--md-ink)]/80">${escapeHtml(plainFamilySentence(lesson.iCanStatement || lesson.parentSummary || lesson.objective || '').slice(0, 140))}</div>
         </div>
+      `;
+    }
+
+    function renderCurriculumLessonBrowser(lessons = getFilteredCurriculumLessons()) {
+      const list = document.getElementById('curriculumLessonBrowserList');
+      const count = document.getElementById('curriculumSelectedLessonCount');
+      if (!list) return;
+      const visibleIds = new Set(curriculumLessonsCache.map(lesson => lesson.id));
+      curriculumSelectedLessonIds = new Set(Array.from(curriculumSelectedLessonIds).filter(id => visibleIds.has(id)));
+      if (count) {
+        const selectedCount = curriculumSelectedLessonIds.size;
+        count.textContent = `${selectedCount} selected`;
+      }
+      if (!lessons.length) {
+        list.innerHTML = '<p class="text-sm text-gray-500">No saved lessons match this filter.</p>';
+        renderCurriculumLessonDetail();
+        return;
+      }
+      const groups = groupCurriculumLessonsByModule(lessons);
+      list.innerHTML = groups.map(group => `
+        <details class="curriculum-library-group" open>
+          <summary>${escapeHtml(group.label)} <span class="text-xs text-gray-500">(${group.lessons.length})</span></summary>
+          <div class="curriculum-library-folder-body">
+            ${group.lessons.map(lesson => renderCurriculumBrowserLesson(lesson)).join('')}
+          </div>
+        </details>
+      `).join('');
+      renderCurriculumLessonDetail();
+    }
+
+    function renderCurriculumBrowserLesson(lesson) {
+      const title = getCurriculumCardTitle(lesson);
+      const isSelected = curriculumSelectedLessonIds.has(lesson.id);
+      const isActive = lesson.id === curriculumActiveBrowserLessonId ? ' active' : '';
+      return `
+        <div class="curriculum-library-item curriculum-browser-item${isSelected ? ' selected' : ''}${isActive}" role="button" tabindex="0" onclick="viewCurriculumLessonDetail('${lesson.id}')">
+          <input class="curriculum-browser-check" type="checkbox" ${isSelected ? 'checked' : ''} aria-label="Select lesson" onclick="event.stopPropagation(); toggleCurriculumLessonSelection('${lesson.id}', this.checked)">
+          <div>
+            <div class="text-xs font-bold uppercase tracking-wide text-gray-500">${escapeHtml([lesson.lessonNumber || 'Lesson', getCurriculumSubjectLabel(lesson.subject)].filter(Boolean).join(' - '))}</div>
+            <div class="font-display font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(title)}</div>
+            <div class="text-sm mt-1 text-[color:var(--md-ink)]/80">${escapeHtml(plainFamilySentence(lesson.iCanStatement || lesson.objective || lesson.parentSummary || '').slice(0, 150))}</div>
+            <div class="curriculum-browser-actions">
+              <button type="button" style="background: var(--md-slate); color: var(--md-white);" onclick="event.stopPropagation(); viewCurriculumLessonDetail('${lesson.id}')">View</button>
+              <button type="button" style="background: var(--md-coral); color: var(--md-white);" onclick="event.stopPropagation(); loadCurriculumLessonIntoBuilder('${lesson.id}')">Edit Draft</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function toggleCurriculumLessonSelection(lessonId, isSelected) {
+      if (isSelected) {
+        curriculumSelectedLessonIds.add(lessonId);
+      } else {
+        curriculumSelectedLessonIds.delete(lessonId);
+      }
+      renderCurriculumLessonBrowser();
+    }
+
+    function clearSelectedCurriculumLessons() {
+      curriculumSelectedLessonIds = new Set();
+      renderCurriculumLessonBrowser();
+      setCurriculumStatus('Lesson selection cleared.');
+    }
+
+    function viewCurriculumLessonDetail(lessonId) {
+      curriculumActiveBrowserLessonId = lessonId;
+      renderCurriculumLessonBrowser();
+    }
+
+    function renderCurriculumLessonDetail() {
+      const panel = document.getElementById('curriculumLessonDetailPanel');
+      if (!panel) return;
+      const lesson = curriculumLessonsCache.find(item => item.id === curriculumActiveBrowserLessonId);
+      if (!lesson) {
+        panel.innerHTML = '<p class="text-sm text-gray-500">Choose a lesson to view the full saved details.</p>';
+        return;
+      }
+      const title = getCurriculumCardTitle(lesson);
+      panel.innerHTML = `
+        <div>
+          <div class="text-xs font-bold uppercase tracking-wide text-gray-500">${escapeHtml(getCurriculumSubjectLabel(lesson.subject))} - ${escapeHtml(lesson.unitOrModule || 'No module yet')}</div>
+          <h3 class="text-2xl font-display font-bold mt-1" style="color: var(--md-coral);">${escapeHtml(title)}</h3>
+          <p class="text-sm font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(lesson.lessonNumber || 'Lesson')}</p>
+        </div>
+        ${renderCurriculumDetailText('Priority standard', lesson.priorityStandard)}
+        ${renderCurriculumDetailText('I can statement', lesson.iCanStatement)}
+        ${renderCurriculumDetailText('Objective', lesson.objective)}
+        ${renderCurriculumDetailText('Parent summary', getCurriculumFamilySummary(lesson))}
+        ${renderCurriculumDetailList('Family questions', lesson.familyQuestions)}
+        ${renderCurriculumDetailList('Vocabulary', lesson.vocabulary)}
+        ${renderCurriculumDetailList('Materials', lesson.materials)}
+        ${renderCurriculumDetailVideos(lesson.videoLinks)}
+        ${renderCurriculumDetailList('Teacher notes', lesson.teacherNotes)}
+        ${renderCurriculumDetailList('Missing or not found', lesson.missingInformation)}
+        ${renderCurriculumDetailSource(lesson.sourceText)}
+      `;
+    }
+
+    function renderCurriculumDetailText(label, value) {
+      const text = String(value || '').trim();
+      if (!text) return '';
+      return `<section class="curriculum-detail-section"><h4>${escapeHtml(label)}</h4><p>${escapeHtml(text)}</p></section>`;
+    }
+
+    function renderCurriculumDetailList(label, values) {
+      const items = Array.isArray(values) ? values.filter(Boolean) : [];
+      if (!items.length) return '';
+      return `<section class="curriculum-detail-section"><h4>${escapeHtml(label)}</h4><ul>${items.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section>`;
+    }
+
+    function renderCurriculumDetailVideos(videoLinks) {
+      const links = Array.isArray(videoLinks) ? videoLinks.filter(link => link && link.url) : [];
+      if (!links.length) return '';
+      return `
+        <section class="curriculum-detail-section">
+          <h4>Video links</h4>
+          <ul>
+            ${links.map(link => `<li><a href="${escapeHtml(link.url)}" target="_blank" rel="noopener" class="font-bold underline" style="color: var(--md-coral);">${escapeHtml(link.title || 'Video')}</a>${link.note ? ` - ${escapeHtml(link.note)}` : ''}</li>`).join('')}
+          </ul>
+        </section>
+      `;
+    }
+
+    function renderCurriculumDetailSource(sourceText) {
+      const text = String(sourceText || '').trim();
+      if (!text) return '';
+      return `
+        <section class="curriculum-detail-section">
+          <details>
+            <summary class="font-bold cursor-pointer" style="color: var(--md-slate);">Source text</summary>
+            <pre class="mt-3 whitespace-pre-wrap text-xs leading-relaxed" style="font-family: inherit;">${escapeHtml(text.slice(0, 5000))}${text.length > 5000 ? '\n\nSource text shortened for viewing.' : ''}</pre>
+          </details>
+        </section>
       `;
     }
 
@@ -6447,6 +6837,77 @@
       setCurriculumStatus('Print view opened for the upcoming week.', 'success');
     }
 
+    function getSelectedCurriculumLessons() {
+      const selectedIds = new Set(curriculumSelectedLessonIds);
+      return curriculumLessonsCache
+        .filter(lesson => selectedIds.has(lesson.id))
+        .sort(compareCurriculumLessonsForPrint);
+    }
+
+    function compareCurriculumLessonsForPrint(a, b) {
+      const aSubject = curriculumSubjects.indexOf(a.subject || 'skills');
+      const bSubject = curriculumSubjects.indexOf(b.subject || 'skills');
+      if (aSubject !== bSubject) return aSubject - bSubject;
+      const moduleCompare = String(a.unitOrModule || '').localeCompare(String(b.unitOrModule || ''), undefined, { numeric: true, sensitivity: 'base' });
+      if (moduleCompare) return moduleCompare;
+      return compareCurriculumLessons(a, b);
+    }
+
+    function printSelectedCurriculumLessons() {
+      const lessons = getSelectedCurriculumLessons();
+      if (!lessons.length) {
+        setCurriculumStatus('Select at least one lesson in the Lesson Browser before printing.', 'error');
+        return;
+      }
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        setCurriculumStatus('Your browser blocked the print window. Allow pop-ups for this site and try again.', 'error');
+        return;
+      }
+      const title = lessons.length === 1 ? 'Selected Curriculum Lesson' : `Selected Curriculum Lessons (${lessons.length})`;
+      const sections = groupCurriculumLessonsByModule(lessons).map(group => `
+        <section>
+          <h2>${escapeHtml(group.label)} <span style="font-weight:400;">${group.lessons.length} lesson${group.lessons.length === 1 ? '' : 's'}</span></h2>
+          ${group.lessons.map(renderCurriculumPrintSavedLesson).join('')}
+        </section>
+      `).join('');
+      const printHtml = `<!doctype html>
+        <html>
+          <head>
+            <title>${escapeHtml(title)}</title>
+            <style>
+              @page { margin: .45in; }
+              html, body { margin: 0; padding: 0; }
+              body { font-family: Arial, sans-serif; color: #1f2937; }
+              h1 { margin: 0 0 6px; font-size: 26px; }
+              h2 { margin: 24px 0 8px; font-size: 20px; color: #475569; border-bottom: 2px solid #f4b56a; padding-bottom: 6px; }
+              h3 { margin: 0 0 6px; font-size: 16px; color: #be5b45; }
+              .meta { color: #64748b; font-size: 13px; margin-bottom: 18px; }
+              .lesson { break-inside: avoid; border: 1px solid #d8c7ad; border-radius: 10px; padding: 12px; margin: 10px 0; }
+              section:first-of-type h2 { margin-top: 14px; }
+              .day { font-weight: 800; color: #475569; text-transform: uppercase; font-size: 12px; letter-spacing: .04em; }
+              .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; margin-top: 8px; }
+              .field { font-size: 13px; line-height: 1.4; }
+              .field strong { display: block; color: #475569; margin-bottom: 2px; }
+              ul { margin: 4px 0 0 18px; padding: 0; }
+              @media print { html, body { width: auto; height: auto; } }
+            </style>
+          </head>
+          <body>
+            <h1>${escapeHtml(title)}</h1>
+            <div class="meta">Generated from Teacher Tools</div>
+            ${sections}
+            ${renderCurriculumPrintSelectedVocabulary(lessons)}
+          </body>
+        </html>`;
+      printWindow.document.open();
+      printWindow.document.write(printHtml);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => printWindow.print(), 250);
+      setCurriculumStatus('Print view opened for selected lessons.', 'success');
+    }
+
     function renderCurriculumPrintSubject(week) {
       return `
         <section>
@@ -6454,6 +6915,24 @@
           ${curriculumWeekdays.map((day, index) => renderCurriculumPrintLesson(day.title, week.lessonsByDay[index])).join('')}
           ${renderCurriculumPrintSharedVocabulary(week)}
         </section>
+      `;
+    }
+
+    function renderCurriculumPrintSavedLesson(lesson) {
+      return `
+        <div class="lesson">
+          <div class="day">${escapeHtml([lesson.lessonNumber || 'Lesson', lesson.unitOrModule || ''].filter(Boolean).join(' - '))}</div>
+          <h3>${escapeHtml(getCurriculumCardTitle(lesson))}</h3>
+          <div class="grid">
+            ${renderCurriculumPrintField('Priority standard', lesson.priorityStandard)}
+            ${renderCurriculumPrintField('I can statement', lesson.iCanStatement)}
+            ${renderCurriculumPrintField('Objective and description', getCurriculumPrintFocus(lesson))}
+            ${renderCurriculumPrintList('Family questions', lesson.familyQuestions)}
+            ${renderCurriculumPrintList('Video links', (lesson.videoLinks || []).map(link => link && link.url ? `${link.title || 'Video'} - ${link.url}` : '').filter(Boolean))}
+            ${renderCurriculumPrintList('Materials', lesson.materials)}
+            ${renderCurriculumPrintList('Teacher notes', lesson.teacherNotes)}
+          </div>
+        </div>
       `;
     }
 
@@ -6509,6 +6988,19 @@
       `;
     }
 
+    function renderCurriculumPrintSelectedVocabulary(lessons) {
+      const words = uniqueList(lessons.flatMap(lesson => lesson.vocabulary || [])).slice(0, 40);
+      if (!words.length) return '';
+      return `
+        <section>
+          <h2>Shared vocabulary</h2>
+          <div class="lesson">
+            <ul>${words.map(word => `<li>${escapeHtml(word)}</li>`).join('')}</ul>
+          </div>
+        </section>
+      `;
+    }
+
     function plainFamilySentence(value) {
       let text = String(value || '').replace(/\s+/g, ' ').trim();
       text = text.replace(/^objective\s*:\s*/i, '');
@@ -6542,6 +7034,7 @@
       setInputValue('curriculumSourceTextInput', lesson.sourceText || '');
       applyCurriculumAnalysis(lesson);
       renderCurriculumLibraryList();
+      showCurriculumLibraryTab('upload');
       setCurriculumStatus('Saved lesson loaded. You can edit and save it again.', 'success');
     }
 
@@ -6569,7 +7062,7 @@
     }
 
     function setCurriculumBusy(isBusy, message = '') {
-      ['curriculumAnalyzeBtn', 'curriculumSaveBtn', 'curriculumRefreshLibraryBtn', 'curriculumSignOutBtn', 'curriculumPdfSelectBtn', 'curriculumPdfInput', 'curriculumPublishWeekBtn', 'curriculumPrintWeekBtn', 'curriculumBackToToolsBtn'].forEach(id => {
+      ['curriculumAnalyzeBtn', 'curriculumSaveBtn', 'curriculumRefreshLibraryBtn', 'curriculumSignOutBtn', 'curriculumPdfSelectBtn', 'curriculumPdfInput', 'curriculumPublishWeekBtn', 'curriculumPrintWeekBtn', 'curriculumPrintSelectedBtn', 'curriculumClearSelectionBtn', 'curriculumBackToToolsBtn', 'curriculumTabUpload', 'curriculumTabBrowse', 'curriculumTabPlanner'].forEach(id => {
         const button = document.getElementById(id);
         if (button) button.disabled = isBusy;
       });
@@ -12499,7 +12992,7 @@ function getMasterRosterRowMarkup(row, index) {
   return `
     <div class="master-roster-row" data-roster-index="${index}">
       <input class="master-row-name teacher-only-edit" value="${escapeBirthdayText(row.name)}" placeholder="Scholar full name" oninput="handleMasterRosterInput()">
-      <select class="master-row-class teacher-only-edit" onchange="handleMasterRosterInput()">
+      <select class="master-row-class teacher-only-edit" onchange="handleMasterRosterClassChange(this)">
         ${getRosterClassOptions(row.classKey)}
       </select>
       <select class="master-row-type teacher-only-edit" onchange="handleMasterRosterTypeChange(this)">
@@ -12520,11 +13013,47 @@ function getMasterRosterRowMarkup(row, index) {
 function renderMasterRosterRows(rows) {
   const container = document.getElementById('masterRosterRows');
   if (!container) return;
-  if (!rows.length) {
-    container.innerHTML = '<div class="rounded-xl p-4 bg-white text-gray-600">Click Add Scholar to start your roster.</div>';
-    return;
-  }
-  container.innerHTML = rows.map(getMasterRosterRowMarkup).join('');
+  const normalizedRows = rows.map(row => ({
+    ...row,
+    classKey: normalizeRosterClass(row.classKey || 'davis')
+  }));
+  const counts = {
+    davis: normalizedRows.filter(row => row.classKey === 'davis').length,
+    vest: normalizedRows.filter(row => row.classKey === 'vest').length
+  };
+  const activeClass = normalizeRosterClass(activeRosterClassTab || 'davis');
+  const indexedRows = normalizedRows.map((row, index) => ({ row, index }));
+  const activeRows = indexedRows.filter(item => item.row.classKey === activeClass);
+  const tabs = ['davis', 'vest'].map(classKey => `
+    <button type="button" class="master-roster-tab ${activeClass === classKey ? 'active' : ''}" onclick="setMasterRosterClassTab('${classKey}')">
+      ${escapeHtml(getRosterClassLabel(classKey))} <span class="master-roster-class-count">${counts[classKey]}</span>
+    </button>
+  `).join('');
+  const hiddenRows = indexedRows
+    .map(item => `<div style="${item.row.classKey === activeClass ? '' : 'display:none;'}">${getMasterRosterRowMarkup(item.row, item.index)}</div>`)
+    .join('');
+  const emptyMessage = activeRows.length
+    ? ''
+    : `<div class="master-roster-empty">No scholars are listed for ${escapeHtml(getRosterClassLabel(activeClass))} yet. Use Add Scholar or Insert Roster to add this class.</div>`;
+  container.innerHTML = `
+    <div class="master-roster-tabs">${tabs}</div>
+    <div class="master-roster-class-section">
+      <div class="master-roster-class-header">
+        <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">${escapeHtml(getRosterClassLabel(activeClass))} Roster</h3>
+        <span class="text-sm font-bold text-gray-500">${counts[activeClass]} scholars</span>
+      </div>
+      <div class="master-roster-row master-roster-heading">
+        <div>Scholar name</div>
+        <div>Class</div>
+        <div>Dismissal</div>
+        <div>Status</div>
+        <div>Details</div>
+        <div>Approved guardians</div>
+        <div></div>
+      </div>
+      <div class="grid gap-3 mt-3">${hiddenRows}${emptyMessage}</div>
+    </div>
+  `;
 }
 
 function renderMasterRosterManager() {
@@ -12533,16 +13062,23 @@ function renderMasterRosterManager() {
 
 function addMasterRosterRow() {
   const rows = getMasterRosterRowData();
-  rows.push({ name: '', classKey: 'davis', type: 'bus', duration: 'permanent', details: '', approvedGuardians: '' });
+  const classKey = normalizeRosterClass(activeRosterClassTab || 'davis');
+  rows.push({ name: '', classKey, type: 'bus', duration: 'permanent', details: '', approvedGuardians: '' });
   const container = document.getElementById('masterRosterRows');
   if (!container) return;
   renderMasterRosterRows(rows);
-  container.querySelector('.master-roster-row:last-child .master-row-name')?.focus();
+  container.querySelector(`.master-roster-row[data-roster-index="${rows.length - 1}"] .master-row-name`)?.focus();
+}
+
+function setMasterRosterClassTab(classKey) {
+  activeRosterClassTab = normalizeRosterClass(classKey);
+  renderMasterRosterRows(getMasterRosterRowData());
 }
 
 function removeMasterRosterRow(button) {
   button?.closest('.master-roster-row')?.remove();
   syncMasterRosterTextareas({ renderBirthdays: true });
+  renderMasterRosterRows(getMasterRosterRowData());
 }
 
 function handleMasterRosterTypeChange(select) {
@@ -12550,6 +13086,12 @@ function handleMasterRosterTypeChange(select) {
   const detail = row?.querySelector('.master-row-details');
   if (detail) detail.placeholder = getTransportationDetailPlaceholder(select.value);
   handleMasterRosterInput();
+}
+
+function handleMasterRosterClassChange(select) {
+  activeRosterClassTab = normalizeRosterClass(select?.value || activeRosterClassTab || 'davis');
+  syncMasterRosterTextareas();
+  renderMasterRosterRows(getMasterRosterRowData());
 }
 
 function handleMasterRosterInput() {
@@ -12583,6 +13125,7 @@ function insertRosterFromPaste() {
     rows.push({ name, classKey, type, duration: 'permanent', details: '', approvedGuardians: '' });
     existingNames.add(name.toLowerCase());
   });
+  activeRosterClassTab = classKey;
   setMasterRosterData(rows);
   renderMasterRosterRows(rows);
   syncMasterRosterTextareas({ renderBirthdays: true });
