@@ -5750,7 +5750,7 @@
       const nextTitle = aiTitle || getCurriculumObjectiveLessonTitle(analysis) || getCurriculumLearningTitle(analysis);
       setInputValue('curriculumSubjectInput', ['skills', 'listening', 'math'].includes(analysis.subject) ? analysis.subject : (document.getElementById('curriculumSubjectInput')?.value || 'skills'));
       setInputValue('curriculumUnitInput', analysis.unitOrModule || document.getElementById('curriculumUnitInput')?.value || '');
-      setInputValue('curriculumLessonNumberInput', analysis.lessonNumber || document.getElementById('curriculumLessonNumberInput')?.value || '');
+      setInputValue('curriculumLessonNumberInput', formatCurriculumLessonNumber(analysis.lessonNumber || document.getElementById('curriculumLessonNumberInput')?.value || ''));
       if (!currentTitle || currentTitle === curriculumLastPdfSuggestedTitle || looksLikeCurriculumFileTitle(currentTitle)) {
         setInputValue('curriculumLessonTitleInput', nextTitle || '');
         curriculumLastPdfSuggestedTitle = '';
@@ -5852,7 +5852,7 @@
       return {
         subject: request.subject,
         unitOrModule: request.unitOrModule,
-        lessonNumber: request.lessonNumber,
+        lessonNumber: formatCurriculumLessonNumber(request.lessonNumber),
         lessonTitle: request.lessonTitle,
         sourceText: request.sourceText,
         iCanStatement: document.getElementById('curriculumICanOutput')?.value.trim() || '',
@@ -5894,8 +5894,9 @@
         }
         await docRef.set(payload, { merge: true });
         curriculumActiveLessonId = docRef.id;
-        setCurriculumStatus('Lesson saved to the private curriculum library.', 'success');
         await loadCurriculumLessons();
+        clearCurriculumBuilderForm();
+        setCurriculumStatus('Lesson saved to the private curriculum library. The form is ready for the next lesson.', 'success');
       } catch (error) {
         console.error('Saving curriculum lesson failed:', error);
         setCurriculumStatus(error.message || 'Lesson save failed.', 'error');
@@ -6070,7 +6071,7 @@
       const input = document.getElementById('curriculumScheduleModalDate');
       if (!modal || !input) return;
       if (title) title.textContent = getCurriculumCardTitle(lesson);
-      if (meta) meta.textContent = `${getCurriculumSubjectLabel(lesson.subject)} - ${lesson.lessonNumber || 'Lesson'}`;
+      if (meta) meta.textContent = `${getCurriculumSubjectLabel(lesson.subject)} - ${formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson'}`;
       input.value = getCurriculumPrimaryScheduleDate(lesson) || '';
       modal.classList.add('open');
       requestAnimationFrame(() => window.scrollTo(scrollX, scrollY));
@@ -6132,9 +6133,9 @@
         const dateWeek = getCurriculumWeekStartKeyFromDateKey(dateKey);
         const currentWeek = formatCurriculumDateKey(getCurrentCurriculumWeekStartDate());
         const destination = dateWeek > currentWeek ? 'upcoming lessons' : 'this week spotlight';
-        setCurriculumStatus(`${lesson.lessonNumber || 'Lesson'} scheduled for ${formatCurriculumDateLabel(dateKey)} and will feed ${destination}.`, 'success');
+        setCurriculumStatus(`${formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson'} scheduled for ${formatCurriculumDateLabel(dateKey)} and will feed ${destination}.`, 'success');
       } else {
-        setCurriculumStatus(`${lesson.lessonNumber || 'Lesson'} removed from the schedule.`);
+        setCurriculumStatus(`${formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson'} removed from the schedule.`);
       }
       return true;
     }
@@ -6242,6 +6243,13 @@
       return match ? Number(match[0]) : 9999;
     }
 
+    function formatCurriculumLessonNumber(value) {
+      const text = String(value || '').trim();
+      if (!text) return '';
+      const number = text.replace(/^lesson\s*#?\s*/i, '').trim();
+      return number ? `Lesson ${number}` : 'Lesson';
+    }
+
     function renderCurriculumLibraryLesson(lesson) {
       const title = lesson.lessonTitle || getCurriculumLearningTitle(lesson) || 'Untitled lesson';
       const isActive = lesson.id === curriculumActiveLessonId ? ' active' : '';
@@ -6251,7 +6259,7 @@
       return `
         <div class="curriculum-library-item${isActive} has-schedule-control" role="button" tabindex="0" onclick="loadCurriculumLessonIntoBuilder('${lesson.id}')">
           <button type="button" class="curriculum-schedule-button${scheduledDate ? ' active' : ''}" title="${escapeHtml(scheduleTitle)}" aria-label="${escapeHtml(scheduleTitle)}" onclick="event.stopPropagation(); openCurriculumSchedulePicker('${lesson.id}')">${scheduleLabel}</button>
-          <div class="text-xs font-bold uppercase tracking-wide text-gray-500">${escapeHtml(lesson.lessonNumber || 'Lesson')}</div>
+          <div class="text-xs font-bold uppercase tracking-wide text-gray-500">${escapeHtml(formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson')}</div>
           <div class="font-display font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(title)}</div>
           <div class="text-sm mt-1 text-[color:var(--md-ink)]/80">${escapeHtml(plainFamilySentence(lesson.iCanStatement || lesson.parentSummary || lesson.objective || '').slice(0, 140))}</div>
         </div>
@@ -6301,7 +6309,7 @@
         <div class="curriculum-library-item curriculum-browser-item${isSelected ? ' selected' : ''}${isActive}" role="button" tabindex="0" onclick="viewCurriculumLessonDetail('${lesson.id}')">
           <input class="curriculum-browser-check" type="checkbox" ${isSelected ? 'checked' : ''} aria-label="Select lesson" onclick="event.stopPropagation(); toggleCurriculumLessonSelection('${lesson.id}', this.checked)">
           <div>
-            <div class="text-xs font-bold uppercase tracking-wide text-gray-500">${escapeHtml([lesson.lessonNumber || 'Lesson', getCurriculumSubjectLabel(lesson.subject)].filter(Boolean).join(' - '))}</div>
+            <div class="text-xs font-bold uppercase tracking-wide text-gray-500">${escapeHtml([formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson', getCurriculumSubjectLabel(lesson.subject)].filter(Boolean).join(' - '))}</div>
             <div class="font-display font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(title)}</div>
             <div class="text-sm mt-1 text-[color:var(--md-ink)]/80">${escapeHtml(plainFamilySentence(lesson.iCanStatement || lesson.objective || lesson.parentSummary || '').slice(0, 150))}</div>
             <div class="curriculum-browser-actions">
@@ -6346,7 +6354,7 @@
         <div>
           <div class="text-xs font-bold uppercase tracking-wide text-gray-500">${escapeHtml(getCurriculumSubjectLabel(lesson.subject))} - ${escapeHtml(lesson.unitOrModule || 'No module yet')}</div>
           <h3 class="text-2xl font-display font-bold mt-1" style="color: var(--md-coral);">${escapeHtml(title)}</h3>
-          <p class="text-sm font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(lesson.lessonNumber || 'Lesson')}</p>
+          <p class="text-sm font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson')}</p>
         </div>
         ${renderCurriculumDetailText('Priority standard', lesson.priorityStandard)}
         ${renderCurriculumDetailText('I can statement', lesson.iCanStatement)}
@@ -6604,7 +6612,7 @@
       return {
         dayIndex,
         lessonId: lesson.id,
-        number: lesson.lessonNumber || '',
+        number: formatCurriculumLessonNumber(lesson.lessonNumber),
         title: getCurriculumCardTitle(lesson),
         summary: getCurriculumFamilySummary(lesson),
         iCanStatement: plainFamilySentence(lesson.iCanStatement || ''),
@@ -6619,7 +6627,7 @@
     }
 
     function getCurriculumCardTitle(lesson) {
-      return lesson.lessonTitle || getCurriculumLearningTitle(lesson) || lesson.lessonNumber || 'Lesson';
+      return lesson.lessonTitle || getCurriculumLearningTitle(lesson) || formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson';
     }
 
     function getCurriculumFamilySummary(lesson) {
@@ -6915,7 +6923,7 @@
     function renderCurriculumPrintSavedLesson(lesson) {
       return `
         <div class="lesson">
-          <div class="day">${escapeHtml([lesson.lessonNumber || 'Lesson', lesson.unitOrModule || ''].filter(Boolean).join(' - '))}</div>
+          <div class="day">${escapeHtml([formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson', lesson.unitOrModule || ''].filter(Boolean).join(' - '))}</div>
           <h3>${escapeHtml(getCurriculumCardTitle(lesson))}</h3>
           <div class="grid">
             ${renderCurriculumPrintField('Priority standard', lesson.priorityStandard)}
@@ -6936,7 +6944,7 @@
       return `
         <div class="lesson">
           <div class="day">${escapeHtml(dayTitle)}</div>
-          <h3>${escapeHtml([lesson.lessonNumber, getCurriculumCardTitle(lesson)].filter(Boolean).join(': '))}</h3>
+          <h3>${escapeHtml([formatCurriculumLessonNumber(lesson.lessonNumber), getCurriculumCardTitle(lesson)].filter(Boolean).join(': '))}</h3>
           <div class="grid">
             ${renderCurriculumPrintField('I can statement', lesson.iCanStatement)}
             ${renderCurriculumPrintField('Priority standard', lesson.priorityStandard)}
@@ -7021,7 +7029,7 @@
       curriculumActiveLessonId = lesson.id;
       setInputValue('curriculumSubjectInput', lesson.subject || 'skills');
       setInputValue('curriculumUnitInput', lesson.unitOrModule || '');
-      setInputValue('curriculumLessonNumberInput', lesson.lessonNumber || '');
+      setInputValue('curriculumLessonNumberInput', formatCurriculumLessonNumber(lesson.lessonNumber || ''));
       setInputValue('curriculumLessonTitleInput', lesson.lessonTitle || '');
       setInputValue('curriculumSourceTextInput', lesson.sourceText || '');
       applyCurriculumAnalysis(lesson);
