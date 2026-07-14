@@ -2745,12 +2745,27 @@
           <button onclick="showPage('skills-units')" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);">View by Unit</button>
         </div>
         <div class="rounded-xl p-4" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-coral) 30%); border: 1px solid color-mix(in oklab, var(--md-coral) 60%, var(--md-white) 40%);">
-          <ul class="text-sm list-disc pl-5" data-edit="teacher" contenteditable="false">
-            <li>Short vowel sounds</li>
-            <li>Words: the, and, is, to</li>
-            <li>Family vocabulary</li>
-            <li>Action words</li>
-          </ul>
+          <div class="grid gap-5 sm:grid-cols-3">
+            <div>
+              <h4 class="font-display font-bold mb-2" style="color: var(--md-coral);">Sounds</h4>
+              <ul id="skillsSoundsList" class="text-sm list-disc pl-5" data-edit="teacher" contenteditable="false">
+                <li>Short vowel sounds</li>
+              </ul>
+            </div>
+            <div>
+              <h4 class="font-display font-bold mb-2" style="color: var(--md-coral);">Sight Words</h4>
+              <ul id="skillsSightWordsList" class="text-sm list-disc pl-5" data-edit="teacher" contenteditable="false">
+                <li>the, and, is, to</li>
+              </ul>
+            </div>
+            <div>
+              <h4 class="font-display font-bold mb-2" style="color: var(--md-coral);">Vocab</h4>
+              <ul id="skillsVocabularyList" class="text-sm list-disc pl-5" data-edit="teacher" contenteditable="false">
+                <li>Family vocabulary</li>
+                <li>Action words</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -2796,10 +2811,8 @@
           <button onclick="showPage('listening-units')" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);">📚 View by Unit</button>
         </div>
         <div class="rounded-xl p-4" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-coral) 30%); border: 1px solid color-mix(in oklab, var(--md-coral) 60%, var(--md-white) 40%);">
-          <ul class="text-sm list-disc pl-5" data-edit="teacher" contenteditable="false">
-            <li>What happened in today's story?</li>
-            <li>Who was your favorite character?</li>
-            <li>What do you think happens next?</li>
+          <ul id="listeningAskQuestionsList" class="text-sm list-disc pl-5" aria-live="polite">
+            <li>Questions from this week's learning will appear here.</li>
           </ul>
         </div>
       </div>
@@ -2846,12 +2859,22 @@
           <button onclick="showPage('math-modules')" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);">📐 View by Module</button>
         </div>
         <div class="rounded-xl p-4" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-blush) 30%); border: 1px solid color-mix(in oklab, var(--md-blush) 60%, var(--md-white) 40%);">
-          <ul class="text-sm list-disc pl-5" data-edit="teacher" contenteditable="false">
-            <li>Addition, sum, plus</li>
-            <li>Count on strategy</li>
-            <li>Number line</li>
-            <li>Ten frames</li>
-          </ul>
+          <div class="grid gap-5 sm:grid-cols-2">
+            <div>
+              <h4 class="font-display font-bold mb-2" style="color: var(--md-slate);">Vocabulary</h4>
+              <ul id="mathVocabularyList" class="text-sm list-disc pl-5" data-edit="teacher" contenteditable="false">
+                <li>Addition, sum, plus</li>
+              </ul>
+            </div>
+            <div>
+              <h4 class="font-display font-bold mb-2" style="color: var(--md-slate);">Strategies</h4>
+              <ul id="mathStrategiesList" class="text-sm list-disc pl-5" data-edit="teacher" contenteditable="false">
+                <li>Count on strategy</li>
+                <li>Number line</li>
+                <li>Ten frames</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -3531,10 +3554,10 @@
               <div>
                 <label class="curriculum-builder-label" for="curriculumLibrarySubjectFilter">Subject</label>
                 <select id="curriculumLibrarySubjectFilter" class="curriculum-builder-field" onchange="renderCurriculumLibraryList()">
-                  <option value="all">All subjects</option>
                   <option value="skills">Skills</option>
                   <option value="listening">Listening & Learning</option>
                   <option value="math">Math</option>
+                  <option value="all">All subjects</option>
                 </select>
               </div>
               <div>
@@ -5750,7 +5773,7 @@
       const nextTitle = aiTitle || getCurriculumObjectiveLessonTitle(analysis) || getCurriculumLearningTitle(analysis);
       setInputValue('curriculumSubjectInput', ['skills', 'listening', 'math'].includes(analysis.subject) ? analysis.subject : (document.getElementById('curriculumSubjectInput')?.value || 'skills'));
       setInputValue('curriculumUnitInput', analysis.unitOrModule || document.getElementById('curriculumUnitInput')?.value || '');
-      setInputValue('curriculumLessonNumberInput', analysis.lessonNumber || document.getElementById('curriculumLessonNumberInput')?.value || '');
+      setInputValue('curriculumLessonNumberInput', formatCurriculumLessonNumber(analysis.lessonNumber || document.getElementById('curriculumLessonNumberInput')?.value || ''));
       if (!currentTitle || currentTitle === curriculumLastPdfSuggestedTitle || looksLikeCurriculumFileTitle(currentTitle)) {
         setInputValue('curriculumLessonTitleInput', nextTitle || '');
         curriculumLastPdfSuggestedTitle = '';
@@ -5852,7 +5875,7 @@
       return {
         subject: request.subject,
         unitOrModule: request.unitOrModule,
-        lessonNumber: request.lessonNumber,
+        lessonNumber: formatCurriculumLessonNumber(request.lessonNumber),
         lessonTitle: request.lessonTitle,
         sourceText: request.sourceText,
         iCanStatement: document.getElementById('curriculumICanOutput')?.value.trim() || '',
@@ -5894,8 +5917,9 @@
         }
         await docRef.set(payload, { merge: true });
         curriculumActiveLessonId = docRef.id;
-        setCurriculumStatus('Lesson saved to the private curriculum library.', 'success');
         await loadCurriculumLessons();
+        clearCurriculumBuilderForm();
+        setCurriculumStatus('Lesson saved to the private curriculum library. The form is ready for the next lesson.', 'success');
       } catch (error) {
         console.error('Saving curriculum lesson failed:', error);
         setCurriculumStatus(error.message || 'Lesson save failed.', 'error');
@@ -6070,7 +6094,7 @@
       const input = document.getElementById('curriculumScheduleModalDate');
       if (!modal || !input) return;
       if (title) title.textContent = getCurriculumCardTitle(lesson);
-      if (meta) meta.textContent = `${getCurriculumSubjectLabel(lesson.subject)} - ${lesson.lessonNumber || 'Lesson'}`;
+      if (meta) meta.textContent = `${getCurriculumSubjectLabel(lesson.subject)} - ${formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson'}`;
       input.value = getCurriculumPrimaryScheduleDate(lesson) || '';
       modal.classList.add('open');
       requestAnimationFrame(() => window.scrollTo(scrollX, scrollY));
@@ -6132,9 +6156,9 @@
         const dateWeek = getCurriculumWeekStartKeyFromDateKey(dateKey);
         const currentWeek = formatCurriculumDateKey(getCurrentCurriculumWeekStartDate());
         const destination = dateWeek > currentWeek ? 'upcoming lessons' : 'this week spotlight';
-        setCurriculumStatus(`${lesson.lessonNumber || 'Lesson'} scheduled for ${formatCurriculumDateLabel(dateKey)} and will feed ${destination}.`, 'success');
+        setCurriculumStatus(`${formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson'} scheduled for ${formatCurriculumDateLabel(dateKey)} and will feed ${destination}.`, 'success');
       } else {
-        setCurriculumStatus(`${lesson.lessonNumber || 'Lesson'} removed from the schedule.`);
+        setCurriculumStatus(`${formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson'} removed from the schedule.`);
       }
       return true;
     }
@@ -6242,6 +6266,13 @@
       return match ? Number(match[0]) : 9999;
     }
 
+    function formatCurriculumLessonNumber(value) {
+      const text = String(value || '').trim();
+      if (!text) return '';
+      const number = text.replace(/^lesson\s*#?\s*/i, '').trim();
+      return number ? `Lesson ${number}` : 'Lesson';
+    }
+
     function renderCurriculumLibraryLesson(lesson) {
       const title = lesson.lessonTitle || getCurriculumLearningTitle(lesson) || 'Untitled lesson';
       const isActive = lesson.id === curriculumActiveLessonId ? ' active' : '';
@@ -6251,7 +6282,7 @@
       return `
         <div class="curriculum-library-item${isActive} has-schedule-control" role="button" tabindex="0" onclick="loadCurriculumLessonIntoBuilder('${lesson.id}')">
           <button type="button" class="curriculum-schedule-button${scheduledDate ? ' active' : ''}" title="${escapeHtml(scheduleTitle)}" aria-label="${escapeHtml(scheduleTitle)}" onclick="event.stopPropagation(); openCurriculumSchedulePicker('${lesson.id}')">${scheduleLabel}</button>
-          <div class="text-xs font-bold uppercase tracking-wide text-gray-500">${escapeHtml(lesson.lessonNumber || 'Lesson')}</div>
+          <div class="text-xs font-bold uppercase tracking-wide text-gray-500">${escapeHtml(formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson')}</div>
           <div class="font-display font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(title)}</div>
           <div class="text-sm mt-1 text-[color:var(--md-ink)]/80">${escapeHtml(plainFamilySentence(lesson.iCanStatement || lesson.parentSummary || lesson.objective || '').slice(0, 140))}</div>
         </div>
@@ -6301,7 +6332,7 @@
         <div class="curriculum-library-item curriculum-browser-item${isSelected ? ' selected' : ''}${isActive}" role="button" tabindex="0" onclick="viewCurriculumLessonDetail('${lesson.id}')">
           <input class="curriculum-browser-check" type="checkbox" ${isSelected ? 'checked' : ''} aria-label="Select lesson" onclick="event.stopPropagation(); toggleCurriculumLessonSelection('${lesson.id}', this.checked)">
           <div>
-            <div class="text-xs font-bold uppercase tracking-wide text-gray-500">${escapeHtml([lesson.lessonNumber || 'Lesson', getCurriculumSubjectLabel(lesson.subject)].filter(Boolean).join(' - '))}</div>
+            <div class="text-xs font-bold uppercase tracking-wide text-gray-500">${escapeHtml([formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson', getCurriculumSubjectLabel(lesson.subject)].filter(Boolean).join(' - '))}</div>
             <div class="font-display font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(title)}</div>
             <div class="text-sm mt-1 text-[color:var(--md-ink)]/80">${escapeHtml(plainFamilySentence(lesson.iCanStatement || lesson.objective || lesson.parentSummary || '').slice(0, 150))}</div>
             <div class="curriculum-browser-actions">
@@ -6346,7 +6377,7 @@
         <div>
           <div class="text-xs font-bold uppercase tracking-wide text-gray-500">${escapeHtml(getCurriculumSubjectLabel(lesson.subject))} - ${escapeHtml(lesson.unitOrModule || 'No module yet')}</div>
           <h3 class="text-2xl font-display font-bold mt-1" style="color: var(--md-coral);">${escapeHtml(title)}</h3>
-          <p class="text-sm font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(lesson.lessonNumber || 'Lesson')}</p>
+          <p class="text-sm font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson')}</p>
         </div>
         ${renderCurriculumDetailText('Priority standard', lesson.priorityStandard)}
         ${renderCurriculumDetailText('I can statement', lesson.iCanStatement)}
@@ -6481,28 +6512,35 @@
           const spotlight = buildCurriculumWeekDraft(subject, 'spotlight');
           const upcoming = buildCurriculumWeekDraft(subject, 'upcoming');
           if (!spotlight.selectedLessons.length && !upcoming.selectedLessons.length) continue;
+          let spotlightQuestions = [];
           if (spotlight.selectedLessons.length) {
-            const aiSpotlight = await generateCurriculumSpotlightText(subject, spotlight);
+            const aiSpotlightResult = await generateCurriculumSpotlightText(subject, spotlight);
+            const aiSpotlight = aiSpotlightResult.spotlight;
+            spotlightQuestions = aiSpotlightResult.familyQuestions;
             if (!aiSpotlight) usedSpotlightFallback = true;
             payload[fields.text] = aiSpotlight || spotlight.spotlight;
             if (fields.moduleLabel) payload[fields.moduleLabel] = spotlight.moduleLabel;
+            if (subject === 'listening' && fields.bottomList) {
+              payload[fields.bottomList] = JSON.stringify(spotlightQuestions.length
+                ? spotlightQuestions
+                : getCurriculumCombinedFamilyQuestions(spotlight, subject));
+            }
+          }
+          if (fields.bottomList && subject !== 'listening') {
+            payload[fields.bottomList] = JSON.stringify(spotlight.selectedLessons.length
+              ? getCurriculumSubjectBottomList(subject, spotlight)
+              : []);
           }
           if (upcoming.selectedLessons.length) {
             payload[fields.lessons] = JSON.stringify({
               weekdays: upcoming.weekdays,
               cards: upcoming.cards
             });
-            if (fields.bottomList) {
-              payload[fields.bottomList] = JSON.stringify(getCurriculumSubjectBottomList(subject, upcoming));
-            }
           } else {
             payload[fields.lessons] = JSON.stringify({
               weekdays: upcoming.weekdays,
               cards: []
             });
-            if (fields.bottomList) {
-              payload[fields.bottomList] = JSON.stringify([]);
-            }
           }
           updatedSubjects.push(getCurriculumSubjectLabel(subject));
         }
@@ -6535,7 +6573,7 @@
     }
 
     async function generateCurriculumSpotlightText(subject, week) {
-      if (!cloudFunctions || !week || !week.selectedLessons.length) return '';
+      if (!cloudFunctions || !week || !week.selectedLessons.length) return { spotlight: '', familyQuestions: [] };
       try {
         setCurriculumStatus(`Writing ${getCurriculumSubjectLabel(subject)} spotlight with AI...`);
         const writeSpotlight = cloudFunctions.httpsCallable('generateCurriculumSpotlight');
@@ -6554,11 +6592,16 @@
             vocabulary: Array.isArray(lesson.vocabulary) ? lesson.vocabulary : []
           }) : null).filter(Boolean)
         });
-        const text = result && result.data && result.data.spotlight ? String(result.data.spotlight).trim() : '';
-        return text;
+        const data = result && result.data ? result.data : {};
+        return {
+          spotlight: data.spotlight ? String(data.spotlight).trim() : '',
+          familyQuestions: Array.isArray(data.familyQuestions)
+            ? data.familyQuestions.map(item => String(item || '').trim()).filter(Boolean).slice(0, 3)
+            : []
+        };
       } catch (error) {
         console.warn('AI weekly spotlight failed, using backup summary:', error);
-        return '';
+        return { spotlight: '', familyQuestions: [] };
       }
     }
 
@@ -6604,7 +6647,7 @@
       return {
         dayIndex,
         lessonId: lesson.id,
-        number: lesson.lessonNumber || '',
+        number: formatCurriculumLessonNumber(lesson.lessonNumber),
         title: getCurriculumCardTitle(lesson),
         summary: getCurriculumFamilySummary(lesson),
         iCanStatement: plainFamilySentence(lesson.iCanStatement || ''),
@@ -6619,7 +6662,7 @@
     }
 
     function getCurriculumCardTitle(lesson) {
-      return lesson.lessonTitle || getCurriculumLearningTitle(lesson) || lesson.lessonNumber || 'Lesson';
+      return lesson.lessonTitle || getCurriculumLearningTitle(lesson) || formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson';
     }
 
     function getCurriculumFamilySummary(lesson) {
@@ -6719,7 +6762,7 @@
     function getSkillsTrickyWords(corpus) {
       const words = [];
       const stopWords = new Set(['blend', 'segment', 'identify', 'read', 'write', 'review', 'print', 'form', 'use', 'build', 'change', 'orally', 'nouns', 'words']);
-      String(corpus || '').replace(/\bTricky Words?\s+([^.;]+)/gi, (match, listText) => {
+      String(corpus || '').replace(/\b(?:Tricky|Sight|High[-\s]?Frequency) Words?\s*:?\s*([^.;]+)/gi, (match, listText) => {
         const rawWords = String(listText || '')
           .replace(/\b(?:and|or)\b/gi, ',')
           .split(/[,\s]+/)
@@ -6732,6 +6775,29 @@
         return match;
       });
       return uniqueList(words);
+    }
+
+    function getMathStrategyList(lessons) {
+      const corpus = lessons.map(lesson => [
+        lesson.objective,
+        lesson.iCanStatement,
+        lesson.parentSummary,
+        ...(Array.isArray(lesson.teacherNotes) ? lesson.teacherNotes : [])
+      ].filter(Boolean).join(' ')).join(' ').toLowerCase();
+      const strategies = [
+        [/count\s+on/, 'Count on'],
+        [/count\s+back/, 'Count back'],
+        [/number\s+line/, 'Number line'],
+        [/ten\s+frames?/, 'Ten frames'],
+        [/part[-\s]part[-\s]whole/, 'Part-part-whole'],
+        [/make\s+(?:a\s+)?ten/, 'Make a ten'],
+        [/break\s+apart|decompos/, 'Break apart numbers'],
+        [/manipulatives?/, 'Use manipulatives'],
+        [/draw\s+(?:a\s+)?(?:model|picture)/, 'Draw a model'],
+        [/skip[-\s]?count/, 'Skip-count'],
+        [/compare/, 'Compare quantities']
+      ];
+      return uniqueList(strategies.filter(([pattern]) => pattern.test(corpus)).map(([, label]) => label));
     }
 
     function getSkillsSpotlightSummary(lessons) {
@@ -6766,8 +6832,8 @@
 
       if (!mainSkills.length && !extras.length) return getCurriculumDefaultSpotlight('skills');
       let summary = mainSkills.length
-        ? `This week, students practiced ${joinNaturalList(mainSkills.slice(0, 3))}.`
-        : 'This week, students practiced important reading and word work skills.';
+        ? `This week, scholars practiced ${joinNaturalList(mainSkills.slice(0, 3))}.`
+        : 'This week, scholars practiced important reading and word work skills.';
       if (extras.length) {
         summary += ` They also worked on ${joinNaturalList(extras.slice(0, 3))}.`;
       }
@@ -6799,7 +6865,7 @@
         .filter(Boolean))
         .slice(0, 3);
       if (!phrases.length) return getCurriculumDefaultSpotlight(subject);
-      return `This week, students worked on ${joinNaturalList(phrases)}.`;
+      return `This week, scholars worked on ${joinNaturalList(phrases)}.`;
     }
 
     function getCurriculumWeekSpotlight(lessons, moduleLabel, subject = 'skills') {
@@ -6820,8 +6886,44 @@
     }
 
     function getCurriculumSubjectBottomList(subject, week) {
-      if (subject === 'listening') return week.familyQuestions.length ? week.familyQuestions : ['What did you learn from the story?', 'What was your favorite part?'];
+      if (subject === 'listening') return getCurriculumCombinedFamilyQuestions(week, subject);
+      if (subject === 'skills') {
+        const corpus = getCurriculumObjectiveCorpus(week.selectedLessons);
+        return {
+          sounds: getSkillsSoundList(corpus),
+          sightWords: getSkillsTrickyWords(corpus),
+          vocabulary: week.vocabulary
+        };
+      }
+      if (subject === 'math') {
+        return {
+          vocabulary: week.vocabulary,
+          strategies: getMathStrategyList(week.selectedLessons)
+        };
+      }
       return week.vocabulary;
+    }
+
+    function getCurriculumCombinedFamilyQuestions(week, subject = 'listening') {
+      if (subject === 'math') {
+        return [
+          'What is one math idea or strategy you remember from this week?',
+          'Can you show me or explain one way you solved a math problem?',
+          'What part of this week\'s math learning made you think or wonder?'
+        ];
+      }
+      if (subject === 'skills') {
+        return [
+          'What is one reading or spelling skill you remember from this week?',
+          'Can you show me one sound, word, or reading strategy you practiced?',
+          'What part of this week\'s learning made you think or wonder?'
+        ];
+      }
+      return [
+        'What is one important idea you remember from this week\'s stories and learning?',
+        'Can you explain something you learned from our stories and discussions?',
+        'What part of this week\'s learning made you think or wonder?'
+      ];
     }
 
     function getCurriculumSubjectFields(subject) {
@@ -6915,7 +7017,7 @@
     function renderCurriculumPrintSavedLesson(lesson) {
       return `
         <div class="lesson">
-          <div class="day">${escapeHtml([lesson.lessonNumber || 'Lesson', lesson.unitOrModule || ''].filter(Boolean).join(' - '))}</div>
+          <div class="day">${escapeHtml([formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson', lesson.unitOrModule || ''].filter(Boolean).join(' - '))}</div>
           <h3>${escapeHtml(getCurriculumCardTitle(lesson))}</h3>
           <div class="grid">
             ${renderCurriculumPrintField('Priority standard', lesson.priorityStandard)}
@@ -6936,7 +7038,7 @@
       return `
         <div class="lesson">
           <div class="day">${escapeHtml(dayTitle)}</div>
-          <h3>${escapeHtml([lesson.lessonNumber, getCurriculumCardTitle(lesson)].filter(Boolean).join(': '))}</h3>
+          <h3>${escapeHtml([formatCurriculumLessonNumber(lesson.lessonNumber), getCurriculumCardTitle(lesson)].filter(Boolean).join(': '))}</h3>
           <div class="grid">
             ${renderCurriculumPrintField('I can statement', lesson.iCanStatement)}
             ${renderCurriculumPrintField('Priority standard', lesson.priorityStandard)}
@@ -7021,7 +7123,7 @@
       curriculumActiveLessonId = lesson.id;
       setInputValue('curriculumSubjectInput', lesson.subject || 'skills');
       setInputValue('curriculumUnitInput', lesson.unitOrModule || '');
-      setInputValue('curriculumLessonNumberInput', lesson.lessonNumber || '');
+      setInputValue('curriculumLessonNumberInput', formatCurriculumLessonNumber(lesson.lessonNumber || ''));
       setInputValue('curriculumLessonTitleInput', lesson.lessonTitle || '');
       setInputValue('curriculumSourceTextInput', lesson.sourceText || '');
       applyCurriculumAnalysis(lesson);
@@ -7869,10 +7971,19 @@
       const skillsModuleEl = document.getElementById('skillsWeekModuleLabel');
       if (skillsModuleEl) data.skills_week_module_label = skillsModuleEl.textContent || '';
       
-      const skillsUl = document.querySelector('[data-page-panel="skills"] ul[data-edit="teacher"]');
-      if (skillsUl) {
-        const sounds = Array.from(skillsUl.querySelectorAll('li')).map(li => li.textContent);
-        data.sounds_json = JSON.stringify(sounds);
+      const readTeacherList = id => Array.from(document.getElementById(id)?.querySelectorAll('li') || [])
+        .map(li => li.textContent.trim())
+        .filter(Boolean);
+      const skillsSoundsList = document.getElementById('skillsSoundsList');
+      const skillsSightWordsList = document.getElementById('skillsSightWordsList');
+      const skillsVocabularyList = document.getElementById('skillsVocabularyList');
+      const legacySkillsList = document.querySelector('[data-page-panel="skills"] ul[data-edit="teacher"]');
+      if (skillsSoundsList || skillsSightWordsList || skillsVocabularyList || legacySkillsList) {
+        data.sounds_json = JSON.stringify({
+          sounds: readTeacherList('skillsSoundsList'),
+          sightWords: readTeacherList('skillsSightWordsList'),
+          vocabulary: readTeacherList('skillsVocabularyList')
+        });
       }
       
       // Listening section
@@ -7893,10 +8004,14 @@
       const mathModuleEl = document.getElementById('mathWeekModuleLabel');
       if (mathModuleEl) data.math_week_module_label = mathModuleEl.textContent || '';
       
-      const mathUl = document.querySelector('[data-page-panel="math"] ul[data-edit="teacher"]');
-      if (mathUl) {
-        const vocab = Array.from(mathUl.querySelectorAll('li')).map(li => li.textContent);
-        data.math_vocab_json = JSON.stringify(vocab);
+      const mathVocabularyList = document.getElementById('mathVocabularyList');
+      const mathStrategiesList = document.getElementById('mathStrategiesList');
+      const legacyMathList = document.querySelector('[data-page-panel="math"] ul[data-edit="teacher"]');
+      if (mathVocabularyList || mathStrategiesList || legacyMathList) {
+        data.math_vocab_json = JSON.stringify({
+          vocabulary: readTeacherList('mathVocabularyList'),
+          strategies: readTeacherList('mathStrategiesList')
+        });
       }
       
       // Calendar URL - read from input field, fallback to link href
@@ -10717,52 +10832,59 @@ async function saveClassSkillMeter() {
     }, 2000);
   }
 }
+function renderTeacherList(list, values) {
+  if (!list) return;
+  list.innerHTML = '';
+  const items = Array.isArray(values) ? values.filter(Boolean) : [];
+  if (!items.length) {
+    const li = document.createElement('li');
+    li.textContent = 'Nothing listed yet.';
+    list.appendChild(li);
+    return;
+  }
+  items.forEach(item => {
+    const li = document.createElement('li');
+    li.textContent = item;
+    list.appendChild(li);
+  });
+}
+
 function updateSkillsSection(skills_text, sounds_json, moduleLabel = '') {
   const descEl = document.querySelector('[data-page-panel="skills"] p[data-edit="teacher"]');
-  const vocabUl = document.querySelector('[data-page-panel="skills"] ul[data-edit="teacher"]');
+  const legacyList = document.querySelector('[data-page-panel="skills"] ul[data-edit="teacher"]');
   const moduleEl = document.getElementById('skillsWeekModuleLabel');
   if (descEl && skills_text) descEl.textContent = skills_text;
   if (moduleEl && moduleLabel !== undefined) moduleEl.textContent = moduleLabel || 'Skills week';
-  if (vocabUl && sounds_json) {
-    const arr = parseArray(sounds_json);
-    vocabUl.innerHTML = '';
-    arr.forEach(item => {
-      const li = document.createElement('li');
-      li.textContent = item;
-      vocabUl.appendChild(li);
-    });
+  if (sounds_json) {
+    const parsed = parseArray(sounds_json);
+    const groups = Array.isArray(parsed) ? { sounds: parsed, sightWords: [], vocabulary: [] } : (parsed || {});
+    renderTeacherList(document.getElementById('skillsSoundsList') || legacyList, groups.sounds || []);
+    renderTeacherList(document.getElementById('skillsSightWordsList'), groups.sightWords || groups.sightwords || []);
+    renderTeacherList(document.getElementById('skillsVocabularyList'), groups.vocabulary || groups.vocab || []);
   }
 }
 function updateListeningSection(listening_text, ask_json, moduleLabel = '') {
   const descEl = document.querySelector('[data-page-panel="listening"] p[data-edit="teacher"]');
-  const ul = document.querySelector('[data-page-panel="listening"] ul[data-edit="teacher"]');
+  const ul = document.getElementById('listeningAskQuestionsList') || document.querySelector('[data-page-panel="listening"] ul[data-edit="teacher"]');
   const moduleEl = document.getElementById('listeningWeekModuleLabel');
   if (descEl && listening_text) descEl.textContent = listening_text;
   if (moduleEl && moduleLabel !== undefined) moduleEl.textContent = moduleLabel || 'Listening week';
   if (ul && ask_json) {
     const arr = parseArray(ask_json);
-    ul.innerHTML = '';
-    arr.forEach(item => {
-      const li = document.createElement('li');
-      li.textContent = item;
-      ul.appendChild(li);
-    });
+    renderTeacherList(ul, arr);
   }
 }
 function updateMathSection(math_text, math_vocab_json, moduleLabel = '') {
   const descEl = document.querySelector('[data-page-panel="math"] p[data-edit="teacher"]');
-  const ul = document.querySelector('[data-page-panel="math"] ul[data-edit="teacher"]');
+  const legacyList = document.querySelector('[data-page-panel="math"] ul[data-edit="teacher"]');
   const moduleEl = document.getElementById('mathWeekModuleLabel');
   if (descEl && math_text) descEl.textContent = math_text;
   if (moduleEl && moduleLabel !== undefined) moduleEl.textContent = moduleLabel || 'Math week';
-  if (ul && math_vocab_json) {
-    const arr = parseArray(math_vocab_json);
-    ul.innerHTML = '';
-    arr.forEach(item => {
-      const li = document.createElement('li');
-      li.textContent = item;
-      ul.appendChild(li);
-    });
+  if (math_vocab_json) {
+    const parsed = parseArray(math_vocab_json);
+    const groups = Array.isArray(parsed) ? { vocabulary: parsed, strategies: [] } : (parsed || {});
+    renderTeacherList(document.getElementById('mathVocabularyList') || legacyList, groups.vocabulary || groups.vocab || []);
+    renderTeacherList(document.getElementById('mathStrategiesList'), groups.strategies || []);
   }
 }
 function linkifyText(text) {
@@ -18423,13 +18545,13 @@ function getDefaultFallbackData() {
     class_skill_meter_history: JSON.stringify([]),
     skills_text: "This week we focused on phonics and reading skills.",
     skills_week_module_label: "Skills week",
-    sounds_json: JSON.stringify(["ch", "sh", "th", "wh"]),
+    sounds_json: JSON.stringify({ sounds: ["ch", "sh", "th", "wh"], sightWords: ["the", "and", "is", "to"], vocabulary: ["Family vocabulary", "Action words"] }),
     listening_text: "We practiced active listening and following directions.",
     listening_week_module_label: "Listening week",
     ask_json: JSON.stringify(["What is the main idea?", "How do you know?", "What evidence supports this?"]),
     math_text: "We explored numbers and counting patterns.",
     math_week_module_label: "Math week",
-    math_vocab_json: JSON.stringify(["add", "subtract", "count", "pattern"]),
+    math_vocab_json: JSON.stringify({ vocabulary: ["add", "subtract", "count", "pattern"], strategies: ["Count on", "Number line", "Ten frames"] }),
     extras_json: JSON.stringify([]),
     skills_lessons_json: JSON.stringify([]),
     math_lessons_json: JSON.stringify([]),

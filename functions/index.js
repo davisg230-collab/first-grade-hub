@@ -202,6 +202,8 @@ exports.generateCurriculumSpotlight = onCall(
             "Do not mention upcoming lessons, the teacher, standards codes, lesson numbers, module numbers, or AI.",
             "Do not add a separate vocabulary sentence. Vocabulary is shown elsewhere on the page.",
             "Always refer to the children in the class as scholars. Never use student, students, child, children, kid, or kids; use scholar or scholars instead.",
+            "Also create 2 or 3 short Ask your scholar questions based on the combined main learning targets from the selected current or previous week lessons.",
+            "Do not create one question for each individual story. Make the questions connect the week's overall learning, and never use upcoming lessons as the source.",
           ].join(" "),
           input: prompt,
           max_output_tokens: 450,
@@ -249,6 +251,10 @@ exports.generateCurriculumSpotlight = onCall(
 
     return {
       spotlight: normalizeSpotlightText(result.spotlight),
+      familyQuestions: normalizeStringArray(result.familyQuestions)
+        .map(normalizeScholarLanguage)
+        .filter(Boolean)
+        .slice(0, 3),
       sourceConfidence: ["high", "medium", "low"].includes(result.sourceConfidence) ? result.sourceConfidence : "medium",
       generatedAt: new Date().toISOString(),
       model,
@@ -312,9 +318,10 @@ const CURRICULUM_SPOTLIGHT_SCHEMA = {
   additionalProperties: false,
   properties: {
     spotlight: { type: "string" },
+    familyQuestions: { type: "array", items: { type: "string" } },
     sourceConfidence: { type: "string", enum: ["high", "medium", "low"] },
   },
-  required: ["spotlight", "sourceConfidence"],
+  required: ["spotlight", "familyQuestions", "sourceConfidence"],
 };
 
 function buildActivityEmail(activity, activityId) {
@@ -433,6 +440,9 @@ function buildCurriculumSpotlightPrompt(data) {
     "- Prefer plain language like \"worked with letter sounds\" over curriculum-heavy language like \"phonemes\" unless the word is necessary.",
     "- For Skills, it is okay to mention the main sounds/letters if provided, but do not list so many details that the sentence feels crowded.",
     "- Do not include a separate vocabulary sentence.",
+    "- Also write 2 or 3 short family questions based on the combined main learning targets from these current or previous week lessons.",
+    "- The family questions should connect the week's overall learning instead of asking one question about each individual story or lesson.",
+    "- Do not use upcoming lessons when writing the spotlight or family questions.",
     "",
     "Selected current/previous week lessons:",
     lessonLines,
