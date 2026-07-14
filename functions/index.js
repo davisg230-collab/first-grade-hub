@@ -98,6 +98,7 @@ exports.analyzeCurriculumLesson = onCall(
             "Do not mark a field missing only because the lesson did not label it explicitly.",
             "Only add missingInformation when the source is too incomplete to make a responsible teacher draft, except do not mark missing video links.",
             "Write parent-facing language clearly and warmly for families.",
+            "Always refer to the children in the class as scholars. Never use student, students, child, children, kid, or kids in any generated field; use scholar or scholars instead.",
           ].join(" "),
           input: prompt,
           max_output_tokens: 2200,
@@ -200,6 +201,7 @@ exports.generateCurriculumSpotlight = onCall(
             "Write for families who may not know curriculum language.",
             "Do not mention upcoming lessons, the teacher, standards codes, lesson numbers, module numbers, or AI.",
             "Do not add a separate vocabulary sentence. Vocabulary is shown elsewhere on the page.",
+            "Always refer to the children in the class as scholars. Never use student, students, child, children, kid, or kids; use scholar or scholars instead.",
           ].join(" "),
           input: prompt,
           max_output_tokens: 450,
@@ -389,10 +391,10 @@ function buildCurriculumAnalysisPrompt(data) {
     `Lesson title selected by teacher: ${data.lessonTitle || "not provided"}`,
     "",
     "Return the exact structured fields requested by the schema.",
-    "For lessonTitle, look first at the objective or main learning goal and create a short 3-7 word lesson name that says what students are learning. Use the printed lesson title only if it is already clear and specific. Never use file names, guide names, internal labels, or generic titles like \"Lesson 1\". Good examples: \"Sounds p, k, g, n, a\", \"Counting On to Add\", \"Retelling Key Story Events\".",
+    "For lessonTitle, look first at the objective or main learning goal and create a short 3-7 word lesson name that says what scholars are learning. Use the printed lesson title only if it is already clear and specific. Never use file names, guide names, internal labels, or generic titles like \"Lesson 1\". Good examples: \"Sounds p, k, g, n, a\", \"Counting On to Add\", \"Retelling Key Story Events\".",
     "For priorityStandard, identify the one main standard focus for the lesson, or two if the lesson genuinely has two equal main goals. Prefer standards listed in the source, choosing the one or two that best match the lesson's main teaching point. If the source provides no standard codes, write the main standard skill in plain language instead of inventing a code.",
-    "For the I can statement, create one student-friendly sentence starting with \"I can\" by turning the lesson objective or main teaching goal into kid language. It does not need to appear word-for-word in the source.",
-    "For vocabulary, choose lesson words, teaching terms, or curriculum words that students or families may need explained, even if the lesson does not provide a labeled vocabulary list.",
+    "For the I can statement, create one scholar-friendly sentence starting with \"I can\" by turning the lesson objective or main teaching goal into kid-friendly language. It does not need to appear word-for-word in the source.",
+    "For vocabulary, choose lesson words, teaching terms, or curriculum words that scholars or families may need explained, even if the lesson does not provide a labeled vocabulary list.",
     "For parentSummary, explain the lesson in 1-2 short family-friendly sentences without curriculum jargon.",
     "For familyQuestions, create 2-3 simple questions families could ask at home based on the lesson, even if the source does not include family questions.",
     "For teacherNotes, include practical teaching notes or watch-fors that are directly grounded in the lesson.",
@@ -424,7 +426,7 @@ function buildCurriculumSpotlightPrompt(data) {
     `Module/lesson label shown separately on the page: ${data.moduleLabel || "not provided"}`,
     "",
     "Important:",
-    "- This spotlight is for what students learned in the current or previous week.",
+    "- This spotlight is for what scholars learned in the current or previous week.",
     "- Do not write about upcoming lessons.",
     "- Read all objectives and combine the big ideas.",
     "- Use 1-2 short sentences, about 35-70 words total.",
@@ -452,7 +454,7 @@ function normalizeSpotlightLessons(value) {
 }
 
 function normalizeSpotlightText(value) {
-  let text = asText(value).replace(/\s+/g, " ");
+  let text = normalizeScholarLanguage(value).replace(/\s+/g, " ");
   if (!text) return "";
   text = text.replace(/\b(upcoming|next week)\b/gi, "this week");
   text = text.replace(/\s+We will also use words like .+$/i, "");
@@ -543,19 +545,19 @@ function extractOpenAIOutputText(responseBody) {
 function normalizeCurriculumAnalysis(analysis) {
   const normalized = {
     subject: ["skills", "listening", "math", "other"].includes(analysis.subject) ? analysis.subject : "other",
-    unitOrModule: asText(analysis.unitOrModule),
-    lessonNumber: asText(analysis.lessonNumber),
-    lessonTitle: asText(analysis.lessonTitle),
-    iCanStatement: asText(analysis.iCanStatement),
-    priorityStandard: asText(analysis.priorityStandard),
-    objective: asText(analysis.objective),
-    vocabulary: normalizeStringArray(analysis.vocabulary),
-    materials: normalizeStringArray(analysis.materials),
+    unitOrModule: normalizeScholarLanguage(analysis.unitOrModule),
+    lessonNumber: normalizeScholarLanguage(analysis.lessonNumber),
+    lessonTitle: normalizeScholarLanguage(analysis.lessonTitle),
+    iCanStatement: normalizeScholarLanguage(analysis.iCanStatement),
+    priorityStandard: normalizeScholarLanguage(analysis.priorityStandard),
+    objective: normalizeScholarLanguage(analysis.objective),
+    vocabulary: normalizeScholarLanguageArray(analysis.vocabulary),
+    materials: normalizeScholarLanguageArray(analysis.materials),
     videoLinks: normalizeVideoLinks(analysis.videoLinks),
-    parentSummary: asText(analysis.parentSummary),
-    familyQuestions: normalizeStringArray(analysis.familyQuestions),
-    teacherNotes: normalizeStringArray(analysis.teacherNotes),
-    missingInformation: normalizeStringArray(analysis.missingInformation),
+    parentSummary: normalizeScholarLanguage(analysis.parentSummary),
+    familyQuestions: normalizeScholarLanguageArray(analysis.familyQuestions),
+    teacherNotes: normalizeScholarLanguageArray(analysis.teacherNotes),
+    missingInformation: normalizeScholarLanguageArray(analysis.missingInformation),
     sourceConfidence: ["high", "medium", "low"].includes(analysis.sourceConfidence) ? analysis.sourceConfidence : "medium",
   };
   normalized.missingInformation = normalizeCurriculumMissingInformation(normalized);
@@ -567,10 +569,21 @@ function normalizeStringArray(value) {
   return value.map((item) => asText(item)).filter(Boolean);
 }
 
+function normalizeScholarLanguage(value) {
+  return asText(value).replace(/\b(student|students|child|children|kid|kids)\b/gi, (match) => {
+    const replacement = /^(student|child|kid)$/i.test(match) ? "scholar" : "scholars";
+    return /^[A-Z]/.test(match) ? replacement[0].toUpperCase() + replacement.slice(1) : replacement;
+  });
+}
+
+function normalizeScholarLanguageArray(value) {
+  return normalizeStringArray(value).map(normalizeScholarLanguage);
+}
+
 function normalizeCurriculumMissingInformation(analysis) {
   return normalizeStringArray(analysis.missingInformation).filter((item) => {
     const text = item.toLowerCase();
-    if (analysis.iCanStatement && (text.includes("i can") || text.includes("student-facing"))) return false;
+    if (analysis.iCanStatement && (text.includes("i can") || text.includes("student-facing") || text.includes("scholar-facing"))) return false;
     if (analysis.priorityStandard && text.includes("priority standard") && (text.includes("single") || text.includes("identify"))) return false;
     if (analysis.vocabulary.length && (text.includes("vocabulary") || text.includes("vocab"))) return false;
     if (analysis.familyQuestions.length && (text.includes("family") || text.includes("discussion question"))) return false;
@@ -581,9 +594,9 @@ function normalizeCurriculumMissingInformation(analysis) {
 function normalizeVideoLinks(value) {
   if (!Array.isArray(value)) return [];
   return value.map((item) => ({
-    title: asText(item && item.title) || "Video",
+    title: normalizeScholarLanguage(item && item.title) || "Video",
     url: asText(item && item.url),
-    note: asText(item && item.note),
+    note: normalizeScholarLanguage(item && item.note),
   })).filter((item) => item.title || item.url || item.note);
 }
 
