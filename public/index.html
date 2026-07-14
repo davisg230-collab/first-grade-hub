@@ -6526,22 +6526,21 @@
                 : getCurriculumCombinedFamilyQuestions(spotlight, subject));
             }
           }
+          if (fields.bottomList && subject !== 'listening') {
+            payload[fields.bottomList] = JSON.stringify(spotlight.selectedLessons.length
+              ? getCurriculumSubjectBottomList(subject, spotlight)
+              : []);
+          }
           if (upcoming.selectedLessons.length) {
             payload[fields.lessons] = JSON.stringify({
               weekdays: upcoming.weekdays,
               cards: upcoming.cards
             });
-            if (fields.bottomList && subject !== 'listening') {
-              payload[fields.bottomList] = JSON.stringify(getCurriculumSubjectBottomList(subject, upcoming));
-            }
           } else {
             payload[fields.lessons] = JSON.stringify({
               weekdays: upcoming.weekdays,
               cards: []
             });
-            if (fields.bottomList && subject !== 'listening') {
-              payload[fields.bottomList] = JSON.stringify([]);
-            }
           }
           updatedSubjects.push(getCurriculumSubjectLabel(subject));
         }
