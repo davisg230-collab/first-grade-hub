@@ -7479,6 +7479,7 @@
       
       // Enable drag-and-drop for website cards
       setupWebsiteDragAndDrop();
+      setupWebsiteDeleteButtons();
       
       // Enable drag-and-drop for event cards
       setupEventDragAndDrop();
@@ -15865,6 +15866,37 @@ function setupWebsiteDragAndDrop() {
     card.addEventListener('dragend', handleDragEnd);
     card.addEventListener('dragleave', handleDragLeave);
   });
+}
+
+function setupWebsiteDeleteButtons() {
+  document.querySelectorAll('.website-card').forEach(card => {
+    if (card.querySelector('.website-delete-btn')) return;
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.className = 'website-delete-btn edit-only mt-3 px-3 py-1 rounded-lg text-xs font-semibold';
+    deleteButton.style.background = 'color-mix(in oklab, var(--md-coral) 18%, var(--md-white) 82%)';
+    deleteButton.style.color = 'var(--md-ink)';
+    deleteButton.textContent = 'Delete';
+    deleteButton.setAttribute('aria-label', `Delete ${card.querySelector('.website-title')?.textContent.trim() || 'practice website'}`);
+    deleteButton.onclick = event => {
+      event.stopPropagation();
+      removeWebsiteCard(deleteButton);
+    };
+    card.appendChild(deleteButton);
+  });
+}
+
+function removeWebsiteCard(button) {
+  const card = button?.closest('.website-card');
+  if (!card) return;
+  const title = card.querySelector('.website-title')?.textContent.trim() || 'this practice website';
+  if (!window.confirm(`Remove ${title} from Practice Websites?`)) return;
+  card.remove();
+  document.querySelectorAll('#websitesGrid .website-card').forEach((remainingCard, index) => {
+    remainingCard.setAttribute('data-order', index);
+  });
+  const saveBtn = document.getElementById('saveWebsitesBtn');
+  if (saveBtn) saveBtn.style.display = 'inline-block';
 }
 
 function disableWebsiteDragAndDrop() {
