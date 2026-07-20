@@ -15230,6 +15230,21 @@ function updateWebsiteCards(websitesJson) {
       }
     });
     
+    // Remove original cards that are absent from the saved list.
+    // This keeps deleted Practice Website cards deleted after refresh.
+    const savedWebsiteIds = new Set(
+      websites.map(website => website.id).filter(Boolean)
+    );
+    if (savedWebsiteIds.size > 0) {
+      websiteCards.forEach(card => {
+        const websiteId = card.getAttribute('data-website-id');
+        if (websiteId && !savedWebsiteIds.has(websiteId)) {
+          card.remove();
+          cardMap.delete(websiteId);
+        }
+      });
+    }
+
     // Reorder cards based on saved order
     websites.forEach((website, index) => {
       const card = cardMap.get(website.id);
