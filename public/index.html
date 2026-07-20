@@ -5054,6 +5054,17 @@
             }
             return;
           }
+          if (btn.dataset.page === 'curriculum-builder') {
+            const activePanel = document.querySelector('.pagePanel.active');
+            const activePageId = activePanel?.dataset.pagePanel || '';
+            if (activePageId && activePageId !== 'curriculum-builder') {
+              try {
+                sessionStorage.setItem(EDIT_MODE_RETURN_PAGE_KEY, activePageId);
+              } catch (error) {
+                console.warn('Could not remember the page being edited:', error);
+              }
+            }
+          }
           showPage(btn.dataset.page);
         });
       });
@@ -5106,6 +5117,7 @@
     // Track original values for change detection
     let originalValues = {};
     const EDIT_MODE_REDIRECT_KEY = 'firstGradeHub.pendingEditModeRedirect';
+    const EDIT_MODE_RETURN_PAGE_KEY = 'firstGradeHub.editModeReturnPage';
     const CURRICULUM_BUILDER_REDIRECT_KEY = 'firstGradeHub.pendingCurriculumBuilderRedirect';
     const TEACHER_DEVICE_KEY = 'firstGradeHub.knownTeacherEmail';
     const EDIT_MODE_REDIRECT_MAX_AGE_MS = 10 * 60 * 1000;
@@ -5397,7 +5409,8 @@
       const user = await ensureCurriculumTeacherUser();
       if (!user) return;
       if (document.body.classList.contains('editing')) {
-        exitEditMode();
+        const exited = await exitEditMode();
+        if (!exited) return;
         showCurriculumToolShelf();
         setCurriculumStatus('Website editor closed.', 'success');
         return;
@@ -7580,9 +7593,26 @@
       loadTeacherActivityPanel();
       syncMobileHomeNewsCards();
       updateTeacherEditToolState();
+
+      try {
+        const returnPageId = sessionStorage.getItem(EDIT_MODE_RETURN_PAGE_KEY) || '';
+        const returnPanel = returnPageId
+          ? document.querySelector('[data-page-panel="' + returnPageId + '"]')
+          : null;
+        if (returnPanel && returnPageId !== 'curriculum-builder') {
+          showPage(returnPageId);
+        }
+        sessionStorage.removeItem(EDIT_MODE_RETURN_PAGE_KEY);
+      } catch (error) {
+        console.warn('Could not return to the page being edited:', error);
+      }
       return true;
     }
-    function exitEditMode(){
+    async function exitEditMode(){
+      if (hasChanges()) {
+        const saved = await saveChangesToFirestore();
+        if (!saved) return false;
+      }
       isOwner = false; // Reset owner status when exiting edit mode
       document.body.classList.remove('editing');
       syncMobileHomeNewsCards();
@@ -7775,6 +7805,7 @@
       renderSkillsUnits();
       renderMathModules();
       renderListeningUnits();
+      return true;
     }
     
     // Sanitize HTML to allow only safe formatting tags
@@ -8301,6 +8332,7 @@
           }
         }, 1000);
         
+        return true;
       } catch (error) {
         console.error('Failed to save changes:', error);
         saveBtn.textContent = '❌ Save Failed';
@@ -8339,6 +8371,7 @@
           saveBtn.disabled = false;
           isSaving = false;
         }, 2000);
+        return false;
       }
     }
     
