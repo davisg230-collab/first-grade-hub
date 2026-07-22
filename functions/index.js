@@ -152,6 +152,107 @@ exports.analyzeCurriculumLesson = onCall(
   }
 );
 
+exports.analyzeCurriculumUnit = onCall(
+  {
+    secrets: [OPENAI_API_KEY],
+    timeoutSeconds: 120,
+    memory: "512MiB",
+  },
+  async (request) => {
+    const email = asText(request.auth && request.auth.token && request.auth.token.email).toLowerCase();
+    if (!APPROVED_EDITOR_EMAILS.has(email)) {
+      throw new HttpsError("permission-denied", "Teacher sign-in is required to analyze curriculum units.");
+    }
+
+    const data = request.data || {};
+    const subject = normalizeCurriculumSubject(data.subject);
+    const unitTitle = asText(data.unitTitle);
+    const sourceText = asText(data.sourceText);
+    if (sourceText.length < 40) {
+      throw new HttpsError("invalid-argument", "Upload one complete unit or module PDF before running the AI analyzer.");
+    }
+    if (sourceText.length > 60000) {
+      throw new HttpsError("invalid-argument", "That unit PDF is very long. Use one unit or module at a time, or trim the extracted text before analyzing.");
+    }
+
+    const apiKey = OPENAI_API_KEY.value();
+    if (!apiKey) {
+      throw new HttpsError("failed-precondition", "The OpenAI API key is not configured yet.");
+    }
+
+    const model = process.env.OPENAI_MODEL || "gpt-5.6-luna";
+    const prompt = buildCurriculumUnitPrompt({ subject, unitTitle, sourceText });
+
+    let response;
+    try {
+      response = await fetch("https://api.openai.com/v1/responses", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          instructions: [
+            "You are a careful first grade curriculum assistant creating a teacher-reviewed unit overview.",
+            "Use the complete unit source as evidence, but write concise parent-friendly fields that can be shown on a View by Unit page.",
+            "Do not invent official standard codes, lesson details, materials, or topics that are not supported by the source.",
+            "Infer the main priority standard and create one short scholar-friendly I can statement from the unit's main learning goal.",
+            "Use plain language for families and always refer to the children in the class as scholars. Never use student, students, child, children, kid, or kids; use scholar or scholars instead.",
+            "Return empty arrays for categories that do not fit the selected subject.",
+          ].join(" "),
+          input: prompt,
+          max_output_tokens: 1800,
+          text: {
+            format: {
+              type: "json_schema",
+              name: "curriculum_unit_analysis",
+              strict: true,
+              schema: CURRICULUM_UNIT_SCHEMA,
+            },
+          },
+        }),
+      });
+    } catch (error) {
+      logger.error("OpenAI curriculum unit request failed before response.", { message: error.message });
+      throw new HttpsError("unavailable", "The AI unit analyzer could not be reached. Please try again.");
+    }
+
+    const responseBody = await readJsonResponse(response);
+    if (!response.ok) {
+      const openAiError = responseBody && responseBody.error ? responseBody.error : {};
+      logger.error("OpenAI curriculum unit request failed.", {
+        status: response.status,
+        code: openAiError.code,
+        type: openAiError.type,
+        param: openAiError.param,
+        message: openAiError.message,
+      });
+      throw new HttpsError("failed-precondition", getOpenAICurriculumFailureMessage(response.status, responseBody));
+    }
+
+    const outputText = extractOpenAIOutputText(responseBody);
+    if (!outputText) {
+      logger.error("OpenAI curriculum unit response had no output text.", { responseId: responseBody && responseBody.id });
+      throw new HttpsError("internal", "The AI unit analyzer did not return a usable draft.");
+    }
+
+    let analysis;
+    try {
+      analysis = JSON.parse(outputText);
+    } catch (error) {
+      logger.error("OpenAI curriculum unit response was not valid JSON.", { message: error.message });
+      throw new HttpsError("internal", "The AI unit analyzer returned a draft in the wrong format.");
+    }
+
+    return {
+      analysis: normalizeCurriculumUnitAnalysis(analysis),
+      analyzedAt: new Date().toISOString(),
+      model,
+    };
+  }
+);
+
 exports.generateCurriculumSpotlight = onCall(
   {
     secrets: [OPENAI_API_KEY],
@@ -315,6 +416,33 @@ const CURRICULUM_LESSON_SCHEMA = {
   ],
 };
 
+const CURRICULUM_UNIT_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    unitTitle: { type: "string" },
+    priorityStandard: { type: "string" },
+    iCanStatement: { type: "string" },
+    description: { type: "string" },
+    soundSpellings: { type: "array", items: { type: "string" } },
+    sightWords: { type: "array", items: { type: "string" } },
+    vocabulary: { type: "array", items: { type: "string" } },
+    strategies: { type: "array", items: { type: "string" } },
+    sourceConfidence: { type: "string", enum: ["high", "medium", "low"] },
+  },
+  required: [
+    "unitTitle",
+    "priorityStandard",
+    "iCanStatement",
+    "description",
+    "soundSpellings",
+    "sightWords",
+    "vocabulary",
+    "strategies",
+    "sourceConfidence",
+  ],
+};
+
 const CURRICULUM_SPOTLIGHT_SCHEMA = {
   type: "object",
   additionalProperties: false,
@@ -412,6 +540,32 @@ function buildCurriculumAnalysisPrompt(data) {
     "For missingInformation, do not list missing I can statements, missing priority labels, missing vocabulary lists, or missing family questions just because those labels are not printed in the source. Only list information that is truly needed but unavailable, such as a missing lesson objective, unreadable lesson text, or a missing standards list when no standard focus can be responsibly identified.",
     "",
     "Lesson source:",
+    data.sourceText,
+  ].join("\n");
+}
+
+function buildCurriculumUnitPrompt(data) {
+  const subjectLabel = labelForCurriculumSubject(data.subject);
+  const subjectGuidance = {
+    skills: "For Skills, pull out the taught sounds and spellings, sight words, and family-friendly vocabulary. Leave strategies empty unless the source clearly uses them.",
+    listening: "For Listening & Learning, pull out family-friendly vocabulary from the stories and ideas. Leave sounds, sight words, and math strategies empty.",
+    math: "For Math, pull out family-friendly vocabulary and the main strategies or models scholars use. Leave sounds and sight words empty.",
+    other: "Use the source to choose the most useful family-facing vocabulary and learning strategies, leaving unrelated categories empty.",
+  }[data.subject] || "Use the source to choose the most useful family-facing fields.";
+
+  return [
+    `Analyze this complete first grade ${subjectLabel} unit or module for the View by Unit page.`,
+    `Unit title currently shown on the site: ${data.unitTitle || "not provided"}`,
+    "",
+    "Return the exact structured fields requested by the schema.",
+    "For unitTitle, keep the existing title when it is useful; otherwise create a short clear title based on the unit's main learning focus.",
+    "For priorityStandard, identify the one main standard focus for the whole unit, or two only when there are genuinely equal main goals. If the source provides no code, use plain-language standard wording instead of inventing a code.",
+    "For iCanStatement, write one short sentence beginning with \"I can\" that summarizes the main unit goal in language a scholar can understand.",
+    "For description, combine the unit's major learning goals into 2-3 simple sentences for families. Do not list every lesson or story separately.",
+    subjectGuidance,
+    "Keep each list focused and remove duplicates. Use empty arrays when the source does not support a category.",
+    "",
+    "Unit source:",
     data.sourceText,
   ].join("\n");
 }
@@ -576,6 +730,20 @@ function normalizeCurriculumAnalysis(analysis) {
   };
   normalized.missingInformation = normalizeCurriculumMissingInformation(normalized);
   return normalized;
+}
+
+function normalizeCurriculumUnitAnalysis(analysis) {
+  return {
+    unitTitle: normalizeScholarLanguage(analysis.unitTitle),
+    priorityStandard: normalizeScholarLanguage(analysis.priorityStandard),
+    iCanStatement: normalizeScholarLanguage(analysis.iCanStatement),
+    description: normalizeScholarLanguage(analysis.description),
+    soundSpellings: normalizeScholarLanguageArray(analysis.soundSpellings).slice(0, 20),
+    sightWords: normalizeScholarLanguageArray(analysis.sightWords).slice(0, 20),
+    vocabulary: normalizeScholarLanguageArray(analysis.vocabulary).slice(0, 20),
+    strategies: normalizeScholarLanguageArray(analysis.strategies).slice(0, 20),
+    sourceConfidence: ["high", "medium", "low"].includes(analysis.sourceConfidence) ? analysis.sourceConfidence : "medium",
+  };
 }
 
 function normalizeStringArray(value) {

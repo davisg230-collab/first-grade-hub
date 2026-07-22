@@ -5144,6 +5144,11 @@
     let curriculumWeeklyPlan = getEmptyCurriculumWeeklyPlan();
     let curriculumLastPdfSuggestedTitle = '';
     let curriculumPdfJsLoadPromise = null;
+    const curriculumUnitPdfDrafts = {
+      skills: {},
+      listening: {},
+      math: {}
+    };
     let curriculumToolView = 'shelf';
     let curriculumSchedulePickerLessonId = '';
     let curriculumSelectedLessonIds = new Set();
@@ -5480,6 +5485,7 @@
       teacherRosterUnlocked = false;
       setRosterEditMode(false);
       curriculumWeeklyPlan = getEmptyCurriculumWeeklyPlan();
+      Object.keys(curriculumUnitPdfDrafts).forEach(subject => { curriculumUnitPdfDrafts[subject] = {}; });
       curriculumToolView = 'shelf';
       showCurriculumWorkspace(false);
       setCurriculumPdfStatus('');
@@ -5629,42 +5635,47 @@
       return curriculumPdfJsLoadPromise;
     }
 
+    async function readCurriculumPdfText(file) {
+      if (!file) throw new Error('Choose a PDF first.');
+      if (file.size > 25 * 1024 * 1024) {
+        throw new Error('Choose a smaller PDF.');
+      }
+      const pdfjsLib = await loadCurriculumPdfLibrary();
+      const data = new Uint8Array(await file.arrayBuffer());
+      const pdf = await pdfjsLib.getDocument({ data }).promise;
+      const pages = [];
+
+      for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+        const page = await pdf.getPage(pageNumber);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items
+          .map(item => item && item.str ? item.str : '')
+          .join(' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+        if (pageText) pages.push(`Page ${pageNumber}\n${pageText}`);
+      }
+
+      const text = pages.join('\n\n').trim();
+      if (!text) {
+        throw new Error('I could not find readable text in that PDF. It may be a scanned image.');
+      }
+      return { text, pageCount: pdf.numPages };
+    }
+
     async function extractCurriculumPdfText(event) {
       const input = event && event.target ? event.target : document.getElementById('curriculumPdfInput');
       const file = input && input.files && input.files[0];
       if (!file) return;
 
       try {
-        if (file.size > 25 * 1024 * 1024) {
-          throw new Error('Choose a smaller PDF for one lesson at a time.');
-        }
         setCurriculumBusy(true, 'Reading PDF...');
         setCurriculumPdfStatus('Reading PDF...');
-        const pdfjsLib = await loadCurriculumPdfLibrary();
-        const data = new Uint8Array(await file.arrayBuffer());
-        const pdf = await pdfjsLib.getDocument({ data }).promise;
-        const pages = [];
-
-        for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-          const page = await pdf.getPage(pageNumber);
-          const textContent = await page.getTextContent();
-          const pageText = textContent.items
-            .map(item => item && item.str ? item.str : '')
-            .join(' ')
-            .replace(/\s+/g, ' ')
-            .trim();
-          if (pageText) pages.push(`Page ${pageNumber}\n${pageText}`);
-        }
-
-        const text = pages.join('\n\n').trim();
-        if (!text) {
-          throw new Error('I could not find readable text in that PDF. It may be a scanned image.');
-        }
-
-        setInputValue('curriculumSourceTextInput', text);
-        applyCurriculumPdfGuesses(file.name, text);
-        setCurriculumPdfStatus(`${pdf.numPages} page PDF loaded.`, 'success');
-        setCurriculumStatus(text.length > 20000 ? 'PDF text loaded. It is long, so trim it to one lesson before analyzing.' : 'PDF text loaded. Review it, then analyze the lesson.', 'success');
+        const result = await readCurriculumPdfText(file);
+        setInputValue('curriculumSourceTextInput', result.text);
+        applyCurriculumPdfGuesses(file.name, result.text);
+        setCurriculumPdfStatus(`${result.pageCount} page PDF loaded.`, 'success');
+        setCurriculumStatus(result.text.length > 20000 ? 'PDF text loaded. It is long, so trim it to one lesson before analyzing.' : 'PDF text loaded. Review it, then analyze the lesson.', 'success');
       } catch (error) {
         console.error('PDF lesson text extraction failed:', error);
         setCurriculumPdfStatus('PDF not loaded.', 'error');
@@ -5805,6 +5816,122 @@
       setInputValue('curriculumFamilyQuestionsOutput', listToLines(analysis.familyQuestions));
       setInputValue('curriculumTeacherNotesOutput', listToLines(analysis.teacherNotes));
       setInputValue('curriculumMissingOutput', listToLines(analysis.missingInformation));
+    }
+
+    function getCurriculumUnitData(subject, unitIndex) {
+      const units = subject === 'skills' ? skillsUnitsData : (subject === 'math' ? mathModulesData : listeningUnitsData);
+      return Array.isArray(units) ? units[unitIndex] : null;
+    }
+
+    function getCurriculumUnitSectionIndex(unit, keywords, fallbackIndex) {
+      const sections = Array.isArray(unit && unit.sections) ? unit.sections : [];
+      const matchIndex = sections.findIndex(section => keywords.some(keyword => String(section.title || '').toLowerCase().includes(keyword)));
+      return matchIndex >= 0 ? matchIndex : Math.min(fallbackIndex, Math.max(0, sections.length - 1));
+    }
+
+    function setCurriculumUnitSectionValues(subject, unit, sectionIndex, values) {
+      if (!unit || !Array.isArray(unit.sections) || !unit.sections[sectionIndex] || !Array.isArray(values) || !values.length) return;
+      const section = unit.sections[sectionIndex];
+      if (subject === 'math') {
+        section.bulletPoints = uniqueList(values);
+      } else {
+        section.bullets = uniqueList(values);
+      }
+    }
+
+    function applyCurriculumUnitAnalysis(subject, unitIndex, analysis) {
+      const unit = getCurriculumUnitData(subject, unitIndex);
+      if (!unit || !analysis) return;
+      const nextTitle = String(analysis.unitTitle || '').trim();
+      if (nextTitle && !/^(unit|module)\s*\d+[a-z]?$/i.test(nextTitle)) unit.title = nextTitle;
+      unit.priorityStandard = analysis.priorityStandard || unit.priorityStandard || '';
+      unit.iCanStatement = analysis.iCanStatement || unit.iCanStatement || '';
+      unit.description = analysis.description || unit.description || '';
+
+      if (subject === 'skills') {
+        setCurriculumUnitSectionValues(subject, unit, getCurriculumUnitSectionIndex(unit, ['sound', 'spell', 'phonics'], 0), analysis.soundSpellings);
+        setCurriculumUnitSectionValues(subject, unit, getCurriculumUnitSectionIndex(unit, ['sight', 'tricky', 'heart'], 1), analysis.sightWords);
+        setCurriculumUnitSectionValues(subject, unit, getCurriculumUnitSectionIndex(unit, ['vocab', 'word'], 2), analysis.vocabulary);
+        renderSkillsUnits();
+      } else if (subject === 'math') {
+        setCurriculumUnitSectionValues(subject, unit, getCurriculumUnitSectionIndex(unit, ['vocab', 'word'], 0), analysis.vocabulary);
+        setCurriculumUnitSectionValues(subject, unit, getCurriculumUnitSectionIndex(unit, ['strateg', 'model', 'method'], 1), analysis.strategies);
+        renderMathModules();
+      } else {
+        setCurriculumUnitSectionValues(subject, unit, getCurriculumUnitSectionIndex(unit, ['vocab', 'word'], 0), analysis.vocabulary);
+        renderListeningUnits();
+      }
+    }
+
+    function setCurriculumUnitAiStatus(subject, unitIndex, message, type = 'info') {
+      const status = document.getElementById(`curriculum-unit-ai-status-${subject}-${unitIndex}`);
+      if (!status) return;
+      status.textContent = message || '';
+      status.style.color = type === 'error' ? '#dc2626' : (type === 'success' ? '#15803d' : '#4b5563');
+    }
+
+    function setCurriculumUnitAiBusy(subject, unitIndex, isBusy) {
+      document.querySelectorAll(`[data-curriculum-unit-ai-action="${subject}-${unitIndex}"]`).forEach(button => {
+        button.disabled = isBusy;
+      });
+    }
+
+    async function handleCurriculumUnitPdfSelection(event, subject, unitIndex) {
+      const input = event && event.target ? event.target : null;
+      const file = input && input.files && input.files[0];
+      if (!file) return;
+      try {
+        setCurriculumUnitAiBusy(subject, unitIndex, true);
+        setCurriculumUnitAiStatus(subject, unitIndex, 'Reading unit PDF...');
+        const result = await readCurriculumPdfText(file);
+        if (result.text.length > 60000) {
+          throw new Error('That PDF has too much text for one AI request. Use one unit or module at a time, or choose a shorter PDF.');
+        }
+        curriculumUnitPdfDrafts[subject][unitIndex] = {
+          fileName: file.name,
+          pageCount: result.pageCount,
+          text: result.text
+        };
+        setCurriculumUnitAiStatus(subject, unitIndex, `${result.pageCount} page PDF loaded. Click Analyze Unit PDF.`, 'success');
+      } catch (error) {
+        console.error('PDF unit text extraction failed:', error);
+        delete curriculumUnitPdfDrafts[subject][unitIndex];
+        setCurriculumUnitAiStatus(subject, unitIndex, error.message || 'The unit PDF could not be read.', 'error');
+      } finally {
+        if (input) input.value = '';
+        setCurriculumUnitAiBusy(subject, unitIndex, false);
+      }
+    }
+
+    async function analyzeCurriculumUnitPdf(subject, unitIndex) {
+      const draft = curriculumUnitPdfDrafts[subject] && curriculumUnitPdfDrafts[subject][unitIndex];
+      if (!draft || !draft.text) {
+        setCurriculumUnitAiStatus(subject, unitIndex, 'Choose a unit PDF first.', 'error');
+        return;
+      }
+      try {
+        const user = await ensureCurriculumTeacherUser();
+        if (!user) return;
+        if (!cloudFunctions) throw new Error('The AI connection is not available. Please refresh and try again.');
+        setCurriculumUnitAiBusy(subject, unitIndex, true);
+        setCurriculumUnitAiStatus(subject, unitIndex, 'Analyzing the unit PDF...');
+        const analyzeUnit = cloudFunctions.httpsCallable('analyzeCurriculumUnit');
+        const result = await analyzeUnit({
+          subject,
+          unitTitle: getCurriculumUnitData(subject, unitIndex)?.title || '',
+          sourceText: draft.text
+        });
+        const analysis = result && result.data ? result.data.analysis : null;
+        if (!analysis) throw new Error('The AI did not return a unit draft.');
+        applyCurriculumUnitAnalysis(subject, unitIndex, analysis);
+        setCurriculumUnitAiStatus(subject, unitIndex, 'AI draft applied. Review the unit, then use Save All Changes.', 'success');
+        setCurriculumStatus('Unit AI draft applied. Review it, then save the subject units.', 'success');
+      } catch (error) {
+        console.error('Curriculum unit analysis failed:', error);
+        setCurriculumUnitAiStatus(subject, unitIndex, error.message || 'Unit analysis failed.', 'error');
+      } finally {
+        setCurriculumUnitAiBusy(subject, unitIndex, false);
+      }
     }
 
     function setInputValue(id, value) {
@@ -16983,6 +17110,66 @@ function updateCurrentModuleData(jsonString) {
 // SKILLS UNITS FUNCTIONS
 // ============================================
 
+function createCurriculumUnitAiControls(subject, unitIndex, isEditMode, accentColor) {
+  if (!isEditMode) return null;
+  const panel = document.createElement('div');
+  panel.className = 'curriculum-unit-ai-panel mt-4 p-3 rounded-lg';
+  panel.style.background = 'color-mix(in oklab, var(--md-white) 72%, var(--md-mustard) 28%)';
+  panel.style.border = '1px dashed color-mix(in oklab, var(--md-slate) 40%, var(--md-white) 60%)';
+  panel.addEventListener('click', event => event.stopPropagation());
+
+  const label = document.createElement('div');
+  label.className = 'text-sm font-semibold mb-2';
+  label.style.color = accentColor;
+  label.textContent = 'AI Unit Helper';
+  panel.appendChild(label);
+
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'application/pdf,.pdf';
+  input.id = `curriculum-unit-pdf-${subject}-${unitIndex}`;
+  input.style.display = 'none';
+  input.setAttribute('data-curriculum-unit-ai-action', `${subject}-${unitIndex}`);
+  input.addEventListener('change', event => handleCurriculumUnitPdfSelection(event, subject, unitIndex));
+  panel.appendChild(input);
+
+  const actions = document.createElement('div');
+  actions.className = 'flex flex-wrap items-center gap-2';
+
+  const chooseButton = document.createElement('button');
+  chooseButton.type = 'button';
+  chooseButton.className = 'px-3 py-2 rounded-lg text-white text-sm font-semibold';
+  chooseButton.style.background = 'var(--md-slate)';
+  chooseButton.textContent = 'Choose Unit PDF';
+  chooseButton.setAttribute('data-curriculum-unit-ai-action', `${subject}-${unitIndex}`);
+  chooseButton.onclick = event => {
+    event.stopPropagation();
+    input.click();
+  };
+  actions.appendChild(chooseButton);
+
+  const analyzeButton = document.createElement('button');
+  analyzeButton.type = 'button';
+  analyzeButton.className = 'px-3 py-2 rounded-lg text-white text-sm font-semibold';
+  analyzeButton.style.background = accentColor;
+  analyzeButton.textContent = 'Analyze Unit PDF';
+  analyzeButton.setAttribute('data-curriculum-unit-ai-action', `${subject}-${unitIndex}`);
+  analyzeButton.onclick = event => {
+    event.stopPropagation();
+    analyzeCurriculumUnitPdf(subject, unitIndex);
+  };
+  actions.appendChild(analyzeButton);
+  panel.appendChild(actions);
+
+  const status = document.createElement('span');
+  status.id = `curriculum-unit-ai-status-${subject}-${unitIndex}`;
+  status.className = 'block text-xs mt-2';
+  const draft = curriculumUnitPdfDrafts[subject] && curriculumUnitPdfDrafts[subject][unitIndex];
+  status.textContent = draft ? `${draft.pageCount} page PDF ready to analyze.` : 'Upload the unit or module PDF, then review the draft before saving.';
+  panel.appendChild(status);
+  return panel;
+}
+
 // Initialize skills units with default structure
 function initializeSkillsUnits() {
   if (!skillsUnitsData || skillsUnitsData.length === 0) {
@@ -16991,6 +17178,7 @@ function initializeSkillsUnits() {
       skillsUnitsData.push({
         title: `Unit ${i}`,
         priorityStandard: '',
+        iCanStatement: '',
         description: '',
         sections: [
           { title: 'Section 1', bullets: [] },
@@ -17004,6 +17192,9 @@ function initializeSkillsUnits() {
     skillsUnitsData.forEach(unit => {
       if (!('priorityStandard' in unit)) {
         unit.priorityStandard = '';
+      }
+      if (!('iCanStatement' in unit)) {
+        unit.iCanStatement = '';
       }
       if (!('description' in unit)) {
         unit.description = '';
@@ -17026,6 +17217,8 @@ function renderSkillsUnits() {
     const unitDiv = document.createElement('div');
     unitDiv.className = 'rounded-2xl shadow-soft p-6 bg-white relative';
     unitDiv.setAttribute('data-unit-index', unitIndex);
+    const aiControls = createCurriculumUnitAiControls('skills', unitIndex, isEditMode, 'var(--md-slate)');
+    if (aiControls) unitDiv.appendChild(aiControls);
     
     // Make units draggable in edit mode
     if (isEditMode) {
@@ -17124,9 +17317,47 @@ function renderSkillsUnits() {
       priorityDiv.appendChild(priorityStandardLabel);
       priorityDiv.appendChild(priorityStandardInput);
       editFieldsContainer.appendChild(priorityDiv);
+
+      const iCanLabel = document.createElement('label');
+      iCanLabel.className = 'block text-sm font-semibold mb-1';
+      iCanLabel.style.color = 'var(--md-slate)';
+      iCanLabel.textContent = 'I can statement:';
+
+      const iCanInput = document.createElement('input');
+      iCanInput.type = 'text';
+      iCanInput.className = 'w-full p-2 border-2 rounded-lg';
+      iCanInput.style.borderColor = 'color-mix(in oklab, var(--md-slate) 40%, var(--md-white) 60%)';
+      iCanInput.value = unit.iCanStatement || '';
+      iCanInput.placeholder = 'I can...';
+      iCanInput.addEventListener('input', event => {
+        skillsUnitsData[unitIndex].iCanStatement = event.target.value;
+        updateSkillsICanDisplay(unitIndex, event.target.value);
+      });
+      iCanInput.onclick = event => event.stopPropagation();
+
+      const iCanDiv = document.createElement('div');
+      iCanDiv.appendChild(iCanLabel);
+      iCanDiv.appendChild(iCanInput);
+      editFieldsContainer.appendChild(iCanDiv);
       
       unitDiv.appendChild(editFieldsContainer);
     }
+
+    const iCanContainer = document.createElement('div');
+    iCanContainer.className = 'mb-4';
+    iCanContainer.style.display = 'none';
+    iCanContainer.setAttribute('data-ican-container', unitIndex);
+    const iCanLabel = document.createElement('div');
+    iCanLabel.className = 'text-sm font-semibold mb-1';
+    iCanLabel.style.color = 'var(--md-slate)';
+    iCanLabel.textContent = 'I can:';
+    const iCanText = document.createElement('p');
+    iCanText.className = 'text-sm';
+    iCanText.setAttribute('data-ican-display', unitIndex);
+    iCanText.textContent = unit.iCanStatement || '';
+    iCanContainer.appendChild(iCanLabel);
+    iCanContainer.appendChild(iCanText);
+    unitDiv.appendChild(iCanContainer);
     
     // Description box (visible to all users when dropdown is open)
     const descriptionContainer = document.createElement('div');
@@ -17190,6 +17421,7 @@ function toggleSkillsUnit(unitIndex) {
   const allIcons = document.querySelectorAll('[data-toggle-icon]');
   const allEditFields = document.querySelectorAll('[data-edit-fields]');
   const allPriorityDisplays = document.querySelectorAll('[data-priority-display]');
+  const allICanContainers = document.querySelectorAll('[data-ican-container]');
   const allDescriptionContainers = document.querySelectorAll('[data-description-container]');
   
   // Create a map of icons by their data attribute for efficient lookup
@@ -17212,6 +17444,12 @@ function toggleSkillsUnit(unitIndex) {
     const index = display.getAttribute('data-priority-display');
     if (index !== null) priorityDisplayMap.set(index, display);
   });
+
+  const iCanContainerMap = new Map();
+  allICanContainers.forEach(container => {
+    const index = container.getAttribute('data-ican-container');
+    if (index !== null) iCanContainerMap.set(index, container);
+  });
   
   // Create a map for description containers
   const descriptionContainerMap = new Map();
@@ -17225,6 +17463,7 @@ function toggleSkillsUnit(unitIndex) {
     const icon = iconMap.get(containerIndex);
     const editFields = editFieldsMap.get(containerIndex);
     const priorityDisplay = priorityDisplayMap.get(containerIndex);
+    const iCanContainer = iCanContainerMap.get(containerIndex);
     const descriptionContainer = descriptionContainerMap.get(containerIndex);
     
     if (containerIndex === unitIndex.toString()) {
@@ -17233,15 +17472,22 @@ function toggleSkillsUnit(unitIndex) {
       if (icon) icon.textContent = isHidden ? '▼' : '▶';
       if (editFields) editFields.style.display = isHidden ? 'block' : 'none';
       if (priorityDisplay) priorityDisplay.style.display = isHidden ? 'none' : 'block';
+      if (iCanContainer) iCanContainer.style.display = isHidden ? 'block' : 'none';
       if (descriptionContainer) descriptionContainer.style.display = isHidden ? 'block' : 'none';
     } else {
       container.style.display = 'none';
       if (icon) icon.textContent = '▶';
       if (editFields) editFields.style.display = 'none';
       if (priorityDisplay) priorityDisplay.style.display = 'block';
+      if (iCanContainer) iCanContainer.style.display = 'none';
       if (descriptionContainer) descriptionContainer.style.display = 'none';
     }
   });
+}
+
+function updateSkillsICanDisplay(unitIndex, value) {
+  const display = document.querySelector(`[data-ican-display="${unitIndex}"]`);
+  if (display) display.textContent = value || '';
 }
 
 // Helper function to update priority display for a skills unit
@@ -17621,6 +17867,7 @@ function initializeMathModules() {
       mathModulesData.push({
         title: `Module ${i}`,
         priorityStandard: '',
+        iCanStatement: '',
         description: '',
         sections: [
           { title: 'Section 1', bulletPoints: [] },
@@ -17633,6 +17880,9 @@ function initializeMathModules() {
     mathModulesData.forEach(module => {
       if (!('priorityStandard' in module)) {
         module.priorityStandard = '';
+      }
+      if (!('iCanStatement' in module)) {
+        module.iCanStatement = '';
       }
       if (!('description' in module)) {
         module.description = '';
@@ -17655,6 +17905,8 @@ function renderMathModules() {
     const moduleDiv = document.createElement('div');
     moduleDiv.className = 'rounded-2xl shadow-soft p-6 bg-white relative';
     moduleDiv.setAttribute('data-module-index', moduleIndex);
+    const aiControls = createCurriculumUnitAiControls('math', moduleIndex, isEditMode, 'var(--md-slate)');
+    if (aiControls) moduleDiv.appendChild(aiControls);
     
     // Make modules draggable in edit mode
     if (isEditMode) {
@@ -17753,9 +18005,47 @@ function renderMathModules() {
       priorityDiv.appendChild(priorityStandardLabel);
       priorityDiv.appendChild(priorityStandardInput);
       editFieldsContainer.appendChild(priorityDiv);
+
+      const iCanLabel = document.createElement('label');
+      iCanLabel.className = 'block text-sm font-semibold mb-1';
+      iCanLabel.style.color = 'var(--md-slate)';
+      iCanLabel.textContent = 'I can statement:';
+
+      const iCanInput = document.createElement('input');
+      iCanInput.type = 'text';
+      iCanInput.className = 'w-full p-2 border-2 rounded-lg';
+      iCanInput.style.borderColor = 'color-mix(in oklab, var(--md-slate) 40%, var(--md-white) 60%)';
+      iCanInput.value = module.iCanStatement || '';
+      iCanInput.placeholder = 'I can...';
+      iCanInput.addEventListener('input', event => {
+        mathModulesData[moduleIndex].iCanStatement = event.target.value;
+        updateMathICanDisplay(moduleIndex, event.target.value);
+      });
+      iCanInput.onclick = event => event.stopPropagation();
+
+      const iCanDiv = document.createElement('div');
+      iCanDiv.appendChild(iCanLabel);
+      iCanDiv.appendChild(iCanInput);
+      editFieldsContainer.appendChild(iCanDiv);
       
       moduleDiv.appendChild(editFieldsContainer);
     }
+
+    const iCanContainer = document.createElement('div');
+    iCanContainer.className = 'mb-4';
+    iCanContainer.style.display = 'none';
+    iCanContainer.setAttribute('data-math-ican-container', moduleIndex);
+    const iCanLabel = document.createElement('div');
+    iCanLabel.className = 'text-sm font-semibold mb-1';
+    iCanLabel.style.color = 'var(--md-slate)';
+    iCanLabel.textContent = 'I can:';
+    const iCanText = document.createElement('p');
+    iCanText.className = 'text-sm';
+    iCanText.setAttribute('data-math-ican-display', moduleIndex);
+    iCanText.textContent = module.iCanStatement || '';
+    iCanContainer.appendChild(iCanLabel);
+    iCanContainer.appendChild(iCanText);
+    moduleDiv.appendChild(iCanContainer);
     
     // Description box (visible to all users when dropdown is open)
     const descriptionContainer = document.createElement('div');
@@ -17838,6 +18128,8 @@ function renderListeningUnits() {
     const unitDiv = document.createElement('div');
     unitDiv.className = 'rounded-2xl shadow-soft p-6 bg-white relative';
     unitDiv.setAttribute('data-listening-unit-index', unitIndex);
+    const aiControls = createCurriculumUnitAiControls('listening', unitIndex, isEditMode, 'var(--md-coral)');
+    if (aiControls) unitDiv.appendChild(aiControls);
     
     // Make units draggable in edit mode
     if (isEditMode) {
@@ -17900,6 +18192,72 @@ function renderListeningUnits() {
     sectionsContainer.className = 'space-y-4';
     sectionsContainer.style.display = 'none';
     sectionsContainer.setAttribute('data-listening-sections-container', unitIndex);
+
+    const overview = document.createElement('div');
+    overview.className = 'p-4 rounded-lg';
+    overview.style.background = 'color-mix(in oklab, var(--md-white) 70%, var(--md-coral) 30%)';
+    overview.style.border = '1px solid color-mix(in oklab, var(--md-coral) 40%, var(--md-white) 60%)';
+
+    const priorityLabel = document.createElement('div');
+    priorityLabel.className = 'text-sm font-semibold mb-1';
+    priorityLabel.style.color = 'var(--md-coral)';
+    priorityLabel.textContent = 'Priority standard:';
+    overview.appendChild(priorityLabel);
+
+    const priorityText = document.createElement(isEditMode ? 'input' : 'p');
+    priorityText.className = isEditMode ? 'w-full p-2 border-2 rounded-lg text-sm mb-3' : 'text-sm mb-3';
+    if (isEditMode) {
+      priorityText.type = 'text';
+      priorityText.value = unit.priorityStandard || '';
+      priorityText.placeholder = 'Enter priority standard...';
+      priorityText.style.borderColor = 'color-mix(in oklab, var(--md-coral) 40%, var(--md-white) 60%)';
+      priorityText.addEventListener('input', event => { listeningUnitsData[unitIndex].priorityStandard = event.target.value; });
+      priorityText.addEventListener('click', event => event.stopPropagation());
+    } else {
+      priorityText.textContent = unit.priorityStandard || '';
+    }
+    overview.appendChild(priorityText);
+
+    const iCanLabel = document.createElement('div');
+    iCanLabel.className = 'text-sm font-semibold mb-1';
+    iCanLabel.style.color = 'var(--md-coral)';
+    iCanLabel.textContent = 'I can:';
+    overview.appendChild(iCanLabel);
+
+    const iCanText = document.createElement(isEditMode ? 'input' : 'p');
+    iCanText.className = isEditMode ? 'w-full p-2 border-2 rounded-lg text-sm mb-3' : 'text-sm mb-3';
+    if (isEditMode) {
+      iCanText.type = 'text';
+      iCanText.value = unit.iCanStatement || '';
+      iCanText.placeholder = 'I can...';
+      iCanText.style.borderColor = 'color-mix(in oklab, var(--md-coral) 40%, var(--md-white) 60%)';
+      iCanText.addEventListener('input', event => { listeningUnitsData[unitIndex].iCanStatement = event.target.value; });
+      iCanText.addEventListener('click', event => event.stopPropagation());
+    } else {
+      iCanText.textContent = unit.iCanStatement || '';
+    }
+    overview.appendChild(iCanText);
+
+    const descriptionLabel = document.createElement('div');
+    descriptionLabel.className = 'text-sm font-semibold mb-1';
+    descriptionLabel.style.color = 'var(--md-coral)';
+    descriptionLabel.textContent = 'Description:';
+    overview.appendChild(descriptionLabel);
+
+    const descriptionText = document.createElement(isEditMode ? 'textarea' : 'p');
+    descriptionText.className = isEditMode ? 'w-full p-2 border-2 rounded-lg text-sm' : 'text-sm';
+    if (isEditMode) {
+      descriptionText.value = unit.description || '';
+      descriptionText.placeholder = 'Describe the main learning in this unit...';
+      descriptionText.style.borderColor = 'color-mix(in oklab, var(--md-coral) 40%, var(--md-white) 60%)';
+      descriptionText.style.minHeight = '80px';
+      descriptionText.addEventListener('input', event => { listeningUnitsData[unitIndex].description = event.target.value; });
+      descriptionText.addEventListener('click', event => event.stopPropagation());
+    } else {
+      descriptionText.textContent = unit.description || '';
+    }
+    overview.appendChild(descriptionText);
+    sectionsContainer.appendChild(overview);
     
     unit.sections.forEach((section, sectionIndex) => {
       const sectionDiv = document.createElement('div');
@@ -18088,6 +18446,7 @@ function toggleMathModule(moduleIndex) {
   const allIcons = document.querySelectorAll('[data-math-toggle-icon]');
   const allEditFields = document.querySelectorAll('[data-math-edit-fields]');
   const allPriorityDisplays = document.querySelectorAll('[data-math-priority-display]');
+  const allICanContainers = document.querySelectorAll('[data-math-ican-container]');
   const allDescriptionContainers = document.querySelectorAll('[data-math-description-container]');
   
   // Create a map of icons by their data attribute for efficient lookup
@@ -18110,6 +18469,12 @@ function toggleMathModule(moduleIndex) {
     const index = display.getAttribute('data-math-priority-display');
     if (index !== null) priorityDisplayMap.set(index, display);
   });
+
+  const iCanContainerMap = new Map();
+  allICanContainers.forEach(container => {
+    const index = container.getAttribute('data-math-ican-container');
+    if (index !== null) iCanContainerMap.set(index, container);
+  });
   
   // Create a map for description containers
   const descriptionContainerMap = new Map();
@@ -18123,6 +18488,7 @@ function toggleMathModule(moduleIndex) {
     const icon = iconMap.get(containerIndex);
     const editFields = editFieldsMap.get(containerIndex);
     const priorityDisplay = priorityDisplayMap.get(containerIndex);
+    const iCanContainer = iCanContainerMap.get(containerIndex);
     const descriptionContainer = descriptionContainerMap.get(containerIndex);
     
     if (containerIndex === moduleIndex.toString()) {
@@ -18131,15 +18497,22 @@ function toggleMathModule(moduleIndex) {
       if (icon) icon.textContent = isHidden ? '▼' : '▶';
       if (editFields) editFields.style.display = isHidden ? 'block' : 'none';
       if (priorityDisplay) priorityDisplay.style.display = isHidden ? 'none' : 'block';
+      if (iCanContainer) iCanContainer.style.display = isHidden ? 'block' : 'none';
       if (descriptionContainer) descriptionContainer.style.display = isHidden ? 'block' : 'none';
     } else {
       container.style.display = 'none';
       if (icon) icon.textContent = '▶';
       if (editFields) editFields.style.display = 'none';
       if (priorityDisplay) priorityDisplay.style.display = 'block';
+      if (iCanContainer) iCanContainer.style.display = 'none';
       if (descriptionContainer) descriptionContainer.style.display = 'none';
     }
   });
+}
+
+function updateMathICanDisplay(moduleIndex, value) {
+  const display = document.querySelector(`[data-math-ican-display="${moduleIndex}"]`);
+  if (display) display.textContent = value || '';
 }
 
 // Helper function to update priority display for a math module
@@ -18553,6 +18926,9 @@ function normalizeListeningVocabularyUnit(unit) {
   ].filter(text => text && text !== 'Click to edit...' && text !== 'Migrated content'));
   return {
     ...unit,
+    priorityStandard: unit.priorityStandard || '',
+    iCanStatement: unit.iCanStatement || '',
+    description: unit.description || '',
     sections: [{ title: 'Vocabulary', bullets: vocabulary }]
   };
 }
@@ -18569,6 +18945,9 @@ function updateListeningUnitsData(unitsJson) {
       while (listeningUnitsData.length < 11) {
         listeningUnitsData.push({
           title: `Unit ${listeningUnitsData.length + 1}`,
+          priorityStandard: '',
+          iCanStatement: '',
+          description: '',
           sections: [{ title: 'Vocabulary', bullets: [] }]
         });
       }
@@ -18585,6 +18964,9 @@ function initializeListeningUnits() {
   for (let i = 1; i <= 11; i++) {
     listeningUnitsData.push({
       title: `Unit ${i}`,
+      priorityStandard: '',
+      iCanStatement: '',
+      description: '',
       sections: [{ title: 'Vocabulary', bullets: [] }]
     });
   }
