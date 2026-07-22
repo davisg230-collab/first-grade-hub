@@ -564,6 +564,7 @@ function buildCurriculumUnitPrompt(data) {
     "For description, combine the unit's major learning goals into 2-3 simple sentences for families. Do not list every lesson or story separately.",
     "For sightWords, use only words that the source explicitly labels under Tricky Words, Sight Words, or High-Frequency Words. Do not infer sight words from general prose, story excerpts, decodable word lists, example words, vocabulary, place names, countries, or names of people. If there is no explicitly labeled list, return an empty array.",
     "This curriculum may distinguish Tricky Words from sight words. The website column is named Sight Words, but when the source provides Tricky Words, place those exact labeled Tricky Words in that column. Never put ordinary example words such as raft, taxi, or veterinarian there just because they appear in the PDF.",
+    "For vocabulary, choose useful teaching or family-facing terms such as segment, blend, decode, punctuation, or sentence, and give each one a short plain-language definition in the same string (for example, \"Segment: break a word into its individual sounds.\"). Do not copy a source's story-word or decodable-word list into this field just because it is labeled Vocabulary.",
     subjectGuidance,
     "Keep each list focused and remove duplicates. Use empty arrays when the source does not support a category.",
     "",
@@ -776,22 +777,8 @@ function extractExplicitCurriculumSightWords(sourceText) {
   });
 }
 
-function extractExplicitCurriculumVocabulary(sourceText) {
-  const text = asText(sourceText).replace(/\s+/g, " ");
-  if (!/\bInformation\s+for\s+the\s+View\s+by\s+Unit\s+analyzer\b/i.test(text)) return [];
-  const vocabularyMatch = text.match(/\bVocabulary\s*:?[\s]+(.*?)(?=\bNote\b|\bCKLA\s+Grade\b|$)/i);
-  if (!vocabularyMatch) return [];
-
-  return vocabularyMatch[1]
-    .split(/\s*,\s*/)
-    .map(item => item.trim().replace(/[“”‘’]/g, "").replace(/[;]+$/, ""))
-    .filter(item => /^[A-Za-z][A-Za-z.'-]*(?:\s+[A-Za-z][A-Za-z.'-]*)*$/.test(item))
-    .filter(item => item.toLowerCase() !== "vocabulary");
-}
-
 function normalizeCurriculumUnitAnalysis(analysis, sourceText = "") {
   const explicitSightWords = extractExplicitCurriculumSightWords(sourceText);
-  const explicitVocabulary = extractExplicitCurriculumVocabulary(sourceText);
   return {
     unitTitle: normalizeScholarLanguage(analysis.unitTitle),
     priorityStandard: normalizeScholarLanguage(analysis.priorityStandard),
@@ -799,7 +786,7 @@ function normalizeCurriculumUnitAnalysis(analysis, sourceText = "") {
     description: normalizeScholarLanguage(analysis.description),
     soundSpellings: normalizeScholarLanguageArray(analysis.soundSpellings).slice(0, 20),
     sightWords: (explicitSightWords.length ? explicitSightWords : normalizeScholarLanguageArray(analysis.sightWords)).slice(0, 40),
-    vocabulary: (explicitVocabulary.length ? explicitVocabulary : normalizeScholarLanguageArray(analysis.vocabulary)).slice(0, 20),
+    vocabulary: normalizeScholarLanguageArray(analysis.vocabulary).slice(0, 20),
     strategies: normalizeScholarLanguageArray(analysis.strategies).slice(0, 20),
     sourceConfidence: ["high", "medium", "low"].includes(analysis.sourceConfidence) ? analysis.sourceConfidence : "medium",
   };
