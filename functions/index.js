@@ -776,8 +776,22 @@ function extractExplicitCurriculumSightWords(sourceText) {
   });
 }
 
+function extractExplicitCurriculumVocabulary(sourceText) {
+  const text = asText(sourceText).replace(/\s+/g, " ");
+  if (!/\bInformation\s+for\s+the\s+View\s+by\s+Unit\s+analyzer\b/i.test(text)) return [];
+  const vocabularyMatch = text.match(/\bVocabulary\s*:?[\s]+(.*?)(?=\bNote\b|\bCKLA\s+Grade\b|$)/i);
+  if (!vocabularyMatch) return [];
+
+  return vocabularyMatch[1]
+    .split(/\s*,\s*/)
+    .map(item => item.trim().replace(/[“”‘’]/g, "").replace(/[;]+$/, ""))
+    .filter(item => /^[A-Za-z][A-Za-z.'-]*(?:\s+[A-Za-z][A-Za-z.'-]*)*$/.test(item))
+    .filter(item => item.toLowerCase() !== "vocabulary");
+}
+
 function normalizeCurriculumUnitAnalysis(analysis, sourceText = "") {
   const explicitSightWords = extractExplicitCurriculumSightWords(sourceText);
+  const explicitVocabulary = extractExplicitCurriculumVocabulary(sourceText);
   return {
     unitTitle: normalizeScholarLanguage(analysis.unitTitle),
     priorityStandard: normalizeScholarLanguage(analysis.priorityStandard),
@@ -785,7 +799,7 @@ function normalizeCurriculumUnitAnalysis(analysis, sourceText = "") {
     description: normalizeScholarLanguage(analysis.description),
     soundSpellings: normalizeScholarLanguageArray(analysis.soundSpellings).slice(0, 20),
     sightWords: (explicitSightWords.length ? explicitSightWords : normalizeScholarLanguageArray(analysis.sightWords)).slice(0, 40),
-    vocabulary: normalizeScholarLanguageArray(analysis.vocabulary).slice(0, 20),
+    vocabulary: (explicitVocabulary.length ? explicitVocabulary : normalizeScholarLanguageArray(analysis.vocabulary)).slice(0, 20),
     strategies: normalizeScholarLanguageArray(analysis.strategies).slice(0, 20),
     sourceConfidence: ["high", "medium", "low"].includes(analysis.sourceConfidence) ? analysis.sourceConfidence : "medium",
   };
