@@ -5829,6 +5829,29 @@
       return matchIndex >= 0 ? matchIndex : Math.min(fallbackIndex, Math.max(0, sections.length - 1));
     }
 
+    function extractCurriculumSourceTrickyWords(sourceText) {
+      const text = String(sourceText || '').replace(/\s+/g, ' ');
+      const combinedHeadingMatch = text.match(/\bSight\s+Words?\s*\/\s*Tricky\s+Words?\s*:?\s*(.*?)(?=\b(?:Sounds(?:\s+and\s+Spellings)?|Vocabulary|Unit\s+Description|Note)\b|\bCKLA\s+Grade\b|$)/i);
+      const introductionMatch = text.match(/\bfollowing\s+Tricky\s+Words?\s*:\s*([^\.]{1,700})/i);
+      const listText = combinedHeadingMatch ? combinedHeadingMatch[1] : (introductionMatch ? introductionMatch[1] : '');
+      if (!listText) return [];
+
+      const seen = new Set();
+      return listText
+        .replace(/\s+and\s+/gi, ',')
+        .split(/\s*,\s*/)
+        .map(item => item.trim().replace(/^[^A-Za-z]+|[^A-Za-z'’-]+$/g, ''))
+        .filter(item => /^[A-Za-z]+(?:['’-][A-Za-z]+)?$/.test(item))
+        .filter(item => !seen.has(item.toLowerCase()) && seen.add(item.toLowerCase()));
+    }
+
+    function applyCurriculumUnitSourceGuards(subject, analysis, sourceText) {
+      if (subject !== 'skills' || !analysis) return analysis;
+      const explicitSightWords = extractCurriculumSourceTrickyWords(sourceText);
+      if (!explicitSightWords.length) return analysis;
+      return { ...analysis, sightWords: explicitSightWords };
+    }
+
     function setCurriculumUnitSectionValues(subject, unit, sectionIndex, values) {
       if (!unit || !Array.isArray(unit.sections) || !unit.sections[sectionIndex] || !Array.isArray(values) || !values.length) return;
       const section = unit.sections[sectionIndex];
@@ -5923,7 +5946,7 @@
         });
         const analysis = result && result.data ? result.data.analysis : null;
         if (!analysis) throw new Error('The AI did not return a unit draft.');
-        applyCurriculumUnitAnalysis(subject, unitIndex, analysis);
+        applyCurriculumUnitAnalysis(subject, unitIndex, applyCurriculumUnitSourceGuards(subject, analysis, draft.text));
         setCurriculumUnitAiStatus(subject, unitIndex, 'AI draft applied. Review the unit, then use Save All Changes.', 'success');
         setCurriculumStatus('Unit AI draft applied. Review it, then save the subject units.', 'success');
       } catch (error) {
