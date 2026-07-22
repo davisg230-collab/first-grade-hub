@@ -246,7 +246,7 @@ exports.analyzeCurriculumUnit = onCall(
     }
 
     return {
-      analysis: normalizeCurriculumUnitAnalysis(analysis),
+      analysis: normalizeCurriculumUnitAnalysis(analysis, sourceText),
       analyzedAt: new Date().toISOString(),
       model,
     };
@@ -547,7 +547,7 @@ function buildCurriculumAnalysisPrompt(data) {
 function buildCurriculumUnitPrompt(data) {
   const subjectLabel = labelForCurriculumSubject(data.subject);
   const subjectGuidance = {
-    skills: "For Skills, pull out the taught sounds and spellings, sight words, and family-friendly vocabulary. Leave strategies empty unless the source clearly uses them.",
+    skills: "For Skills, pull out the taught sounds and spellings, the exact words from an explicitly labeled Tricky Words or Sight Words list, and family-friendly vocabulary. Leave strategies empty unless the source clearly uses them.",
     listening: "For Listening & Learning, pull out family-friendly vocabulary from the stories and ideas. Leave sounds, sight words, and math strategies empty.",
     math: "For Math, pull out family-friendly vocabulary and the main strategies or models scholars use. Leave sounds and sight words empty.",
     other: "Use the source to choose the most useful family-facing vocabulary and learning strategies, leaving unrelated categories empty.",
@@ -562,6 +562,8 @@ function buildCurriculumUnitPrompt(data) {
     "For priorityStandard, identify the one main standard focus for the whole unit, or two only when there are genuinely equal main goals. If the source provides no code, use plain-language standard wording instead of inventing a code.",
     "For iCanStatement, write one short sentence beginning with \"I can\" that summarizes the main unit goal in language a scholar can understand.",
     "For description, combine the unit's major learning goals into 2-3 simple sentences for families. Do not list every lesson or story separately.",
+    "For sightWords, use only words that the source explicitly labels under Tricky Words, Sight Words, or High-Frequency Words. Do not infer sight words from general prose, story excerpts, decodable word lists, example words, vocabulary, place names, countries, or names of people. If there is no explicitly labeled list, return an empty array.",
+    "This curriculum may distinguish Tricky Words from sight words. The website column is named Sight Words, but when the source provides Tricky Words, place those exact labeled Tricky Words in that column. Never put ordinary example words such as raft, taxi, or veterinarian there just because they appear in the PDF.",
     subjectGuidance,
     "Keep each list focused and remove duplicates. Use empty arrays when the source does not support a category.",
     "",
@@ -732,14 +734,54 @@ function normalizeCurriculumAnalysis(analysis) {
   return normalized;
 }
 
-function normalizeCurriculumUnitAnalysis(analysis) {
+function extractExplicitCurriculumSightWords(sourceText) {
+  const text = asText(sourceText).replace(/\s+/g, " ");
+  const segments = [];
+  const introductionMatch = text.match(/\bfollowing\s+Tricky\s+Words?\s*:\s*([^\.]{1,700})/i);
+  let match;
+  if (introductionMatch) {
+    segments.push(introductionMatch[1]);
+  } else {
+    const labeledPattern = /\b(?:Tricky|Sight|High[-\s]?Frequency)\s+Words?\s*:\s*([^\.]{1,300})/gi;
+    while ((match = labeledPattern.exec(text)) !== null) segments.push(match[1]);
+
+    const singleTrickyWordPattern = /\bTricky\s+Word\s*:\s*([A-Za-z]+(?:['’-][A-Za-z]+)?)/gi;
+    while ((match = singleTrickyWordPattern.exec(text)) !== null) segments.push(match[1]);
+  }
+
+  const ignoredLabels = new Set(["tricky", "sight", "high", "frequency", "cards", "card", "practice", "review"]);
+  const words = [];
+  segments.forEach(segment => {
+    const listText = String(segment || "")
+      .split(/\s*;\s*(?:grammar|sounds?|spellings?|objectives?|materials?)\s*:/i)[0]
+      .replace(/[“”‘’]/g, "")
+      .replace(/\s+and\s+/gi, ",");
+    listText.split(/\s*,\s*/).forEach(candidate => {
+      const word = candidate.trim().replace(/^[^A-Za-z]+|[^A-Za-z'’-]+$/g, "");
+      if (!word || !/^[A-Za-z]+(?:['’-][A-Za-z]+)?$/.test(word)) return;
+      if (ignoredLabels.has(word.toLowerCase())) return;
+      words.push(word);
+    });
+  });
+
+  const seen = new Set();
+  return words.filter(word => {
+    const key = word.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function normalizeCurriculumUnitAnalysis(analysis, sourceText = "") {
+  const explicitSightWords = extractExplicitCurriculumSightWords(sourceText);
   return {
     unitTitle: normalizeScholarLanguage(analysis.unitTitle),
     priorityStandard: normalizeScholarLanguage(analysis.priorityStandard),
     iCanStatement: normalizeScholarLanguage(analysis.iCanStatement),
     description: normalizeScholarLanguage(analysis.description),
     soundSpellings: normalizeScholarLanguageArray(analysis.soundSpellings).slice(0, 20),
-    sightWords: normalizeScholarLanguageArray(analysis.sightWords).slice(0, 20),
+    sightWords: (explicitSightWords.length ? explicitSightWords : normalizeScholarLanguageArray(analysis.sightWords)).slice(0, 40),
     vocabulary: normalizeScholarLanguageArray(analysis.vocabulary).slice(0, 20),
     strategies: normalizeScholarLanguageArray(analysis.strategies).slice(0, 20),
     sourceConfidence: ["high", "medium", "low"].includes(analysis.sourceConfidence) ? analysis.sourceConfidence : "medium",
