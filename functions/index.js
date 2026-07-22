@@ -737,9 +737,12 @@ function normalizeCurriculumAnalysis(analysis) {
 function extractExplicitCurriculumSightWords(sourceText) {
   const text = asText(sourceText).replace(/\s+/g, " ");
   const segments = [];
+  const combinedHeadingMatch = text.match(/\bSight\s+Words?\s*\/\s*Tricky\s+Words?\s*:?\s*(.*?)(?=\b(?:Sounds(?:\s+and\s+Spellings)?|Vocabulary|Unit\s+Description|Note)\b|\bCKLA\s+Grade\b|$)/i);
   const introductionMatch = text.match(/\bfollowing\s+Tricky\s+Words?\s*:\s*([^\.]{1,700})/i);
   let match;
-  if (introductionMatch) {
+  if (combinedHeadingMatch) {
+    segments.push(combinedHeadingMatch[1]);
+  } else if (introductionMatch) {
     segments.push(introductionMatch[1]);
   } else {
     const labeledPattern = /\b(?:Tricky|Sight|High[-\s]?Frequency)\s+Words?\s*:\s*([^\.]{1,300})/gi;
