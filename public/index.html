@@ -3637,10 +3637,14 @@
                     <label class="curriculum-builder-label" for="curriculumTeacherNotesOutput">Teacher notes</label>
                     <textarea id="curriculumTeacherNotesOutput" class="curriculum-builder-field curriculum-builder-output" rows="3" placeholder="One per line"></textarea>
                   </div>
-                  <div class="grid md:grid-cols-2 gap-3">
+                  <div class="space-y-3">
                     <div>
                       <label class="curriculum-builder-label" for="curriculumVocabularyOutput">Vocabulary</label>
                       <textarea id="curriculumVocabularyOutput" class="curriculum-builder-field curriculum-builder-output" rows="4" placeholder="One per line"></textarea>
+                    </div>
+                    <div>
+                      <label class="curriculum-builder-label" for="curriculumSoundSpellingsOutput">Sounds / Spellings</label>
+                      <textarea id="curriculumSoundSpellingsOutput" class="curriculum-builder-field curriculum-builder-output" rows="4" placeholder="One per line"></textarea>
                     </div>
                     <div>
                       <label class="curriculum-builder-label" for="curriculumMaterialsOutput">Materials</label>
@@ -5795,6 +5799,7 @@
       setInputValue('curriculumObjectiveOutput', analysis.objective || '');
       setInputValue('curriculumParentSummaryOutput', analysis.parentSummary || '');
       setInputValue('curriculumVocabularyOutput', listToLines(analysis.vocabulary));
+      setInputValue('curriculumSoundSpellingsOutput', listToLines(analysis.soundSpellings));
       setInputValue('curriculumMaterialsOutput', listToLines(analysis.materials));
       setInputValue('curriculumVideoLinksOutput', videoLinksToLines(analysis.videoLinks));
       setInputValue('curriculumFamilyQuestionsOutput', listToLines(analysis.familyQuestions));
@@ -5895,6 +5900,7 @@
         objective: document.getElementById('curriculumObjectiveOutput')?.value.trim() || '',
         parentSummary: document.getElementById('curriculumParentSummaryOutput')?.value.trim() || '',
         vocabulary: linesToList(document.getElementById('curriculumVocabularyOutput')?.value || ''),
+        soundSpellings: linesToList(document.getElementById('curriculumSoundSpellingsOutput')?.value || ''),
         materials: linesToList(document.getElementById('curriculumMaterialsOutput')?.value || ''),
         videoLinks: linesToVideoLinks(document.getElementById('curriculumVideoLinksOutput')?.value || ''),
         familyQuestions: linesToList(document.getElementById('curriculumFamilyQuestionsOutput')?.value || ''),
@@ -7184,6 +7190,7 @@
         'curriculumObjectiveOutput',
         'curriculumParentSummaryOutput',
         'curriculumVocabularyOutput',
+        'curriculumSoundSpellingsOutput',
         'curriculumMaterialsOutput',
         'curriculumVideoLinksOutput',
         'curriculumFamilyQuestionsOutput',
