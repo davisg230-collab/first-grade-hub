@@ -6356,6 +6356,7 @@
             <div class="curriculum-browser-actions">
               <button type="button" style="background: var(--md-coral); color: var(--md-white);" onclick="event.stopPropagation(); loadCurriculumLessonIntoBuilder('${lesson.id}')">Edit</button>
               <button type="button" title="${escapeHtml(scheduleTitle)}" style="background: var(--md-pebble); color: var(--md-ink);" onclick="event.stopPropagation(); openCurriculumSchedulePicker('${lesson.id}')">${escapeHtml(scheduleLabel)}</button>
+              <button type="button" title="Delete lesson" style="background: #dc2626; color: var(--md-white);" onclick="event.stopPropagation(); deleteCurriculumLesson('${lesson.id}')">Delete</button>
             </div>
           </div>
         </div>
@@ -6473,6 +6474,46 @@
         }, { merge: true });
       } catch (error) {
         console.warn('Weekly curriculum plan draft could not be saved:', error);
+      }
+    }
+
+    function removeCurriculumLessonFromWeeklyPlan(lessonId) {
+      curriculumSubjects.forEach(subject => {
+        const subjectPlan = getCurriculumSubjectPlan(subject);
+        Object.keys(subjectPlan.dates || {}).forEach(dateKey => {
+          if (subjectPlan.dates[dateKey] === lessonId) delete subjectPlan.dates[dateKey];
+        });
+      });
+    }
+
+    async function deleteCurriculumLesson(lessonId) {
+      const lesson = curriculumLessonsCache.find(item => item.id === lessonId);
+      if (!lesson) return;
+      const title = getCurriculumCardTitle(lesson);
+      const scheduledDates = getCurriculumLessonScheduleDates(lesson);
+      const scheduleMessage = scheduledDates.length ? ' Any dates assigned to it will also be cleared.' : '';
+      if (!window.confirm(`Delete ${title}?${scheduleMessage}`)) return;
+
+      const wasActiveBuilderLesson = curriculumActiveLessonId === lessonId;
+      try {
+        const user = await ensureCurriculumTeacherUser();
+        if (!user) return;
+        if (!db) throw new Error('The lesson library is not available. Please refresh and try again.');
+        setCurriculumBusy(true, 'Deleting lesson...');
+        await db.collection('curriculumLessons').doc(lessonId).delete();
+        curriculumSelectedLessonIds.delete(lessonId);
+        if (curriculumActiveBrowserLessonId === lessonId) curriculumActiveBrowserLessonId = '';
+        if (curriculumSchedulePickerLessonId === lessonId) closeCurriculumScheduleModal();
+        removeCurriculumLessonFromWeeklyPlan(lessonId);
+        await saveCurriculumWeeklyPlanDraft();
+        await loadCurriculumLessons();
+        if (wasActiveBuilderLesson) clearCurriculumBuilderForm();
+        setCurriculumStatus(`${title} was deleted from the curriculum library.`, 'success');
+      } catch (error) {
+        console.error('Deleting curriculum lesson failed:', error);
+        setCurriculumStatus(error.message || 'Lesson deletion failed.', 'error');
+      } finally {
+        setCurriculumBusy(false);
       }
     }
 
