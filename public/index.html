@@ -17589,6 +17589,38 @@ function updatePriorityDisplay(unitIndex, value) {
   }
 }
 
+function parseCurriculumSectionItems(value, splitCommaList = false) {
+  const text = String(value || '').replace(/\r/g, '');
+  let lines = text.split('\n');
+  if (splitCommaList && lines.length === 1 && lines[0].includes(',')) {
+    lines = lines[0].split(',');
+  }
+  return lines
+    .map(line => line.trim().replace(/^(?:[•�●▪◦*-]|\d+[.)])\s*/, ''))
+    .filter(Boolean);
+}
+
+function createCurriculumSectionListEditor(values, onChange, accentColor, splitCommaList = false) {
+  const editor = document.createElement('textarea');
+  editor.className = 'w-full text-sm p-3 rounded-lg border-2 resize-y';
+  editor.style.borderColor = 'color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%)';
+  editor.style.minHeight = '150px';
+  editor.style.background = 'var(--md-white)';
+  editor.style.color = 'var(--md-slate)';
+  editor.value = Array.isArray(values) ? values.join('\n') : '';
+  editor.setAttribute('aria-label', 'Edit section items, one item per line');
+  editor.addEventListener('input', () => {
+    onChange(parseCurriculumSectionItems(editor.value, splitCommaList));
+  });
+  editor.addEventListener('focus', () => {
+    editor.style.borderColor = accentColor;
+  });
+  editor.addEventListener('blur', () => {
+    editor.style.borderColor = 'color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%)';
+  });
+  return editor;
+}
+
 // Create a single section element (column) for skills unit
 function createSkillsUnitSection(section, unitIndex, sectionIndex, isEditMode) {
   const sectionDiv = document.createElement('div');
@@ -17608,32 +17640,28 @@ function createSkillsUnitSection(section, unitIndex, sectionIndex, isEditMode) {
   
   sectionDiv.appendChild(titleEl);
   
-  // Bullets container
-  const bulletsContainer = document.createElement('div');
-  bulletsContainer.className = 'space-y-2';
-  bulletsContainer.setAttribute('data-bullets-container', `${unitIndex}-${sectionIndex}`);
-  
-  if (section.bullets && section.bullets.length > 0) {
-    section.bullets.forEach((bullet, bulletIndex) => {
-      bulletsContainer.appendChild(createBulletElement(bullet, unitIndex, sectionIndex, bulletIndex, isEditMode));
-    });
-  } else if (!isEditMode) {
-    const emptyMsg = document.createElement('div');
-    emptyMsg.className = 'text-gray-400 text-sm italic px-2';
-    emptyMsg.textContent = 'No items yet';
-    bulletsContainer.appendChild(emptyMsg);
-  }
-  
-  sectionDiv.appendChild(bulletsContainer);
-  
-  // Add bullet button (edit mode only)
   if (isEditMode) {
-    const addBtn = document.createElement('button');
-    addBtn.className = 'mt-3 px-3 py-1 rounded-lg text-white text-sm font-semibold';
-    addBtn.style.background = 'var(--md-slate)';
-    addBtn.textContent = '+ Add Item';
-    addBtn.onclick = () => addSkillsBulletPoint(unitIndex, sectionIndex);
-    sectionDiv.appendChild(addBtn);
+    sectionDiv.appendChild(createCurriculumSectionListEditor(
+      section.bullets || [],
+      values => { skillsUnitsData[unitIndex].sections[sectionIndex].bullets = values; },
+      'var(--md-slate)',
+      /sight|tricky/i.test(section.title || '')
+    ));
+  } else {
+    const bulletsContainer = document.createElement('div');
+    bulletsContainer.className = 'space-y-2';
+    bulletsContainer.setAttribute('data-bullets-container', `${unitIndex}-${sectionIndex}`);
+    if (section.bullets && section.bullets.length > 0) {
+      section.bullets.forEach((bullet, bulletIndex) => {
+        bulletsContainer.appendChild(createBulletElement(bullet, unitIndex, sectionIndex, bulletIndex, false));
+      });
+    } else {
+      const emptyMsg = document.createElement('div');
+      emptyMsg.className = 'text-gray-400 text-sm italic px-2';
+      emptyMsg.textContent = 'No items yet';
+      bulletsContainer.appendChild(emptyMsg);
+    }
+    sectionDiv.appendChild(bulletsContainer);
   }
   
   return sectionDiv;
@@ -18350,41 +18378,29 @@ function renderListeningUnits() {
       });
       sectionDiv.appendChild(sectionTitle);
       
-      const bulletsList = document.createElement('ul');
-      bulletsList.className = 'list-disc pl-5 space-y-1';
-      
-      if (section.bullets.length === 0) {
-        const emptyMessage = document.createElement('li');
-        emptyMessage.className = 'text-gray-400 text-sm';
-        emptyMessage.textContent = 'No content yet';
-        bulletsList.appendChild(emptyMessage);
-      } else {
-        section.bullets.forEach((bullet, bulletIndex) => {
-          const bulletLi = document.createElement('li');
-          bulletLi.className = 'text-sm';
-          bulletLi.contentEditable = isEditMode;
-          bulletLi.textContent = bullet;
-          bulletLi.addEventListener('blur', () => {
-            listeningUnitsData[unitIndex].sections[sectionIndex].bullets[bulletIndex] = bulletLi.textContent;
-          });
-          bulletsList.appendChild(bulletLi);
-        });
-      }
-      
-      sectionDiv.appendChild(bulletsList);
-      
       if (isEditMode) {
-        const addBulletBtn = document.createElement('button');
-        addBulletBtn.className = 'mt-2 px-3 py-1 text-xs rounded';
-        addBulletBtn.style.background = 'var(--md-coral)';
-        addBulletBtn.style.color = 'white';
-        addBulletBtn.textContent = '+ Add Bullet';
-        addBulletBtn.onclick = (e) => {
-          e.stopPropagation();
-          listeningUnitsData[unitIndex].sections[sectionIndex].bullets.push('New bullet point');
-          renderListeningUnits();
-        };
-        sectionDiv.appendChild(addBulletBtn);
+        sectionDiv.appendChild(createCurriculumSectionListEditor(
+          section.bullets || [],
+          values => { listeningUnitsData[unitIndex].sections[sectionIndex].bullets = values; },
+          'var(--md-coral)'
+        ));
+      } else {
+        const bulletsList = document.createElement('ul');
+        bulletsList.className = 'list-disc pl-5 space-y-1';
+        if (section.bullets.length === 0) {
+          const emptyMessage = document.createElement('li');
+          emptyMessage.className = 'text-gray-400 text-sm';
+          emptyMessage.textContent = 'No content yet';
+          bulletsList.appendChild(emptyMessage);
+        } else {
+          section.bullets.forEach(bullet => {
+            const bulletLi = document.createElement('li');
+            bulletLi.className = 'text-sm';
+            bulletLi.textContent = bullet;
+            bulletsList.appendChild(bulletLi);
+          });
+        }
+        sectionDiv.appendChild(bulletsList);
       }
       
       sectionsContainer.appendChild(sectionDiv);
@@ -18632,34 +18648,27 @@ function createMathModuleSection(section, moduleIndex, sectionIndex, isEditMode)
   });
   sectionDiv.appendChild(titleEl);
   
-  // Bullet points container
-  const bulletsContainer = document.createElement('div');
-  bulletsContainer.className = 'space-y-2';
-  bulletsContainer.setAttribute('data-section-bullets', `${moduleIndex}-${sectionIndex}`);
-  
-  // Render existing bullet points
-  if (section.bulletPoints && section.bulletPoints.length > 0) {
-    section.bulletPoints.forEach((bullet, bulletIndex) => {
-      const bulletDiv = createBulletPointElement(bullet, moduleIndex, sectionIndex, bulletIndex, isEditMode);
-      bulletsContainer.appendChild(bulletDiv);
-    });
-  } else if (!isEditMode) {
-    const emptyMsg = document.createElement('div');
-    emptyMsg.className = 'text-gray-400 text-sm italic py-2';
-    emptyMsg.textContent = 'No items yet';
-    bulletsContainer.appendChild(emptyMsg);
-  }
-  
-  sectionDiv.appendChild(bulletsContainer);
-  
-  // Add button (edit mode only)
   if (isEditMode) {
-    const addBtn = document.createElement('button');
-    addBtn.className = 'mt-3 px-3 py-1 rounded-lg text-white text-sm font-semibold';
-    addBtn.style.background = 'var(--md-slate)';
-    addBtn.textContent = '+ Add Item';
-    addBtn.onclick = () => addMathBulletPoint(moduleIndex, sectionIndex);
-    sectionDiv.appendChild(addBtn);
+    sectionDiv.appendChild(createCurriculumSectionListEditor(
+      section.bulletPoints || [],
+      values => { mathModulesData[moduleIndex].sections[sectionIndex].bulletPoints = values; },
+      'var(--md-slate)'
+    ));
+  } else {
+    const bulletsContainer = document.createElement('div');
+    bulletsContainer.className = 'space-y-2';
+    bulletsContainer.setAttribute('data-section-bullets', `${moduleIndex}-${sectionIndex}`);
+    if (section.bulletPoints && section.bulletPoints.length > 0) {
+      section.bulletPoints.forEach((bullet, bulletIndex) => {
+        bulletsContainer.appendChild(createBulletPointElement(bullet, moduleIndex, sectionIndex, bulletIndex, false));
+      });
+    } else {
+      const emptyMsg = document.createElement('div');
+      emptyMsg.className = 'text-gray-400 text-sm italic py-2';
+      emptyMsg.textContent = 'No items yet';
+      bulletsContainer.appendChild(emptyMsg);
+    }
+    sectionDiv.appendChild(bulletsContainer);
   }
   
   return sectionDiv;
