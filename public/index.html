@@ -17505,28 +17505,96 @@ function parseCurriculumSectionItems(value, splitCommaList = false) {
   if (splitCommaList && lines.length === 1 && lines[0].includes(',')) {
     lines = lines[0].split(',');
   }
+  lines = lines.map(line => line.replace(/^\s*\u2022\s*/, ''));
   return lines
     .map(line => line.trim().replace(/^(?:[•�●▪◦*-]|\d+[.)])\s*/, ''))
     .filter(Boolean);
 }
 
 function createCurriculumSectionListEditor(values, onChange, accentColor, splitCommaList = false) {
-  const editor = document.createElement('textarea');
-  editor.className = 'w-full text-sm p-3 rounded-lg border-2 resize-y';
+  const editor = document.createElement('ul');
+  editor.className = 'curriculum-section-list-editor w-full border-2 rounded-lg list-disc pl-5 space-y-2';
+  editor.contentEditable = 'true';
+  editor.spellcheck = true;
   editor.style.borderColor = 'color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%)';
-  editor.style.minHeight = '150px';
+  editor.style.minHeight = '2.75rem';
+  editor.style.paddingTop = '.65rem';
+  editor.style.paddingBottom = '.65rem';
+  editor.style.paddingRight = '.75rem';
+  editor.style.overflow = 'visible';
+  editor.style.resize = 'none';
   editor.style.background = 'var(--md-white)';
   editor.style.color = 'var(--md-slate)';
-  editor.value = Array.isArray(values) ? values.join('\n') : '';
-  editor.setAttribute('aria-label', 'Edit section items, one item per line');
-  editor.addEventListener('input', () => {
-    onChange(parseCurriculumSectionItems(editor.value, splitCommaList));
+  editor.setAttribute('aria-label', 'Edit section items, one bullet per item');
+
+  const addItems = (items, beforeNode = null) => {
+    items.forEach(item => {
+      const listItem = document.createElement('li');
+      listItem.className = 'text-sm';
+      listItem.textContent = item;
+      editor.insertBefore(listItem, beforeNode);
+    });
+  };
+
+  addItems(Array.isArray(values) ? values : []);
+
+  const syncItems = () => {
+    const items = Array.from(editor.children)
+      .filter(child => child.tagName === 'LI')
+      .map(child => child.textContent.trim())
+      .filter(Boolean);
+    onChange(items);
+  };
+
+  editor.addEventListener('input', syncItems);
+  editor.addEventListener('paste', event => {
+    const pastedText = event.clipboardData?.getData('text/plain') || '';
+    if (!pastedText.trim()) return;
+    event.preventDefault();
+
+    const pastedItems = parseCurriculumSectionItems(pastedText, splitCommaList);
+    if (!pastedItems.length) return;
+
+    const selection = window.getSelection();
+    const anchor = selection && selection.anchorNode ? selection.anchorNode : null;
+    const anchorElement = anchor && (anchor.nodeType === Node.ELEMENT_NODE ? anchor : anchor.parentElement);
+    const activeItem = anchorElement ? anchorElement.closest('li') : null;
+    const insertionPoint = activeItem ? activeItem.nextSibling : null;
+    if (activeItem && !activeItem.textContent.trim()) activeItem.remove();
+    addItems(pastedItems, insertionPoint);
+    syncItems();
+
+    const lastItem = editor.lastElementChild;
+    if (lastItem && selection) {
+      const range = document.createRange();
+      range.selectNodeContents(lastItem);
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
   });
+
   editor.addEventListener('focus', () => {
     editor.style.borderColor = accentColor;
+    if (!editor.children.length) {
+      const firstItem = document.createElement('li');
+      firstItem.className = 'text-sm';
+      editor.appendChild(firstItem);
+      const range = document.createRange();
+      range.selectNodeContents(firstItem);
+      range.collapse(true);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+  });
+  editor.addEventListener('focus', () => {
+    editor.style.outline = '2px solid color-mix(in oklab, var(--md-slate) 35%, transparent)';
+    editor.style.outlineOffset = '2px';
   });
   editor.addEventListener('blur', () => {
     editor.style.borderColor = 'color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%)';
+    editor.style.outline = 'none';
   });
   return editor;
 }
