@@ -5144,11 +5144,6 @@
     let curriculumWeeklyPlan = getEmptyCurriculumWeeklyPlan();
     let curriculumLastPdfSuggestedTitle = '';
     let curriculumPdfJsLoadPromise = null;
-    const curriculumUnitPdfDrafts = {
-      skills: {},
-      listening: {},
-      math: {}
-    };
     let curriculumToolView = 'shelf';
     let curriculumSchedulePickerLessonId = '';
     let curriculumSelectedLessonIds = new Set();
@@ -5485,7 +5480,6 @@
       teacherRosterUnlocked = false;
       setRosterEditMode(false);
       curriculumWeeklyPlan = getEmptyCurriculumWeeklyPlan();
-      Object.keys(curriculumUnitPdfDrafts).forEach(subject => { curriculumUnitPdfDrafts[subject] = {}; });
       curriculumToolView = 'shelf';
       showCurriculumWorkspace(false);
       setCurriculumPdfStatus('');
@@ -5818,17 +5812,7 @@
       setInputValue('curriculumMissingOutput', listToLines(analysis.missingInformation));
     }
 
-    function getCurriculumUnitData(subject, unitIndex) {
-      const units = subject === 'skills' ? skillsUnitsData : (subject === 'math' ? mathModulesData : listeningUnitsData);
-      return Array.isArray(units) ? units[unitIndex] : null;
-    }
-
-    function getCurriculumUnitSectionIndex(unit, keywords, fallbackIndex) {
-      const sections = Array.isArray(unit && unit.sections) ? unit.sections : [];
-      const matchIndex = sections.findIndex(section => keywords.some(keyword => String(section.title || '').toLowerCase().includes(keyword)));
-      return matchIndex >= 0 ? matchIndex : Math.min(fallbackIndex, Math.max(0, sections.length - 1));
-    }
-
+    if (false) {
     function extractCurriculumSourceTrickyWords(sourceText) {
       const text = String(sourceText || '').replace(/\s+/g, ' ');
       const markedListMatch = text.match(/\bSIGHT_WORDS_BEGIN\b\s*(.*?)\s*\bSIGHT_WORDS_END\b/i);
@@ -5994,6 +5978,7 @@
       } finally {
         setCurriculumUnitAiBusy(subject, unitIndex, false);
       }
+    }
     }
 
     function setInputValue(id, value) {
@@ -17172,79 +17157,6 @@ function updateCurrentModuleData(jsonString) {
 // SKILLS UNITS FUNCTIONS
 // ============================================
 
-function createCurriculumUnitAiControls(subject, unitIndex, isEditMode, accentColor) {
-  if (!isEditMode) return null;
-  const panel = document.createElement('div');
-  panel.className = 'curriculum-unit-ai-panel mt-4 p-3 rounded-lg';
-  panel.style.background = 'color-mix(in oklab, var(--md-white) 72%, var(--md-mustard) 28%)';
-  panel.style.border = '1px dashed color-mix(in oklab, var(--md-slate) 40%, var(--md-white) 60%)';
-  panel.addEventListener('click', event => event.stopPropagation());
-
-  const label = document.createElement('div');
-  label.className = 'text-sm font-semibold mb-2';
-  label.style.color = accentColor;
-  label.textContent = 'AI Unit Helper';
-  panel.appendChild(label);
-
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'application/pdf,.pdf';
-  input.id = `curriculum-unit-pdf-${subject}-${unitIndex}`;
-  input.style.display = 'none';
-  input.setAttribute('data-curriculum-unit-ai-action', `${subject}-${unitIndex}`);
-  input.addEventListener('change', event => handleCurriculumUnitPdfSelection(event, subject, unitIndex));
-  panel.appendChild(input);
-
-  const actions = document.createElement('div');
-  actions.className = 'flex flex-wrap items-center gap-2';
-
-  const chooseButton = document.createElement('button');
-  chooseButton.type = 'button';
-  chooseButton.className = 'px-3 py-2 rounded-lg text-white text-sm font-semibold';
-  chooseButton.style.background = 'var(--md-slate)';
-  chooseButton.textContent = 'Choose Unit PDF';
-  chooseButton.setAttribute('data-curriculum-unit-ai-action', `${subject}-${unitIndex}`);
-  chooseButton.onclick = event => {
-    event.stopPropagation();
-    input.click();
-  };
-  actions.appendChild(chooseButton);
-
-  const analyzeButton = document.createElement('button');
-  analyzeButton.type = 'button';
-  analyzeButton.className = 'px-3 py-2 rounded-lg text-white text-sm font-semibold';
-  analyzeButton.style.background = accentColor;
-  analyzeButton.textContent = 'Analyze Unit PDF';
-  analyzeButton.setAttribute('data-curriculum-unit-ai-action', `${subject}-${unitIndex}`);
-  analyzeButton.onclick = event => {
-    event.stopPropagation();
-    analyzeCurriculumUnitPdf(subject, unitIndex);
-  };
-  actions.appendChild(analyzeButton);
-
-  const applySourceButton = document.createElement('button');
-  applySourceButton.type = 'button';
-  applySourceButton.className = 'px-3 py-2 rounded-lg text-sm font-semibold';
-  applySourceButton.style.background = 'var(--md-pebble)';
-  applySourceButton.style.color = 'var(--md-slate)';
-  applySourceButton.textContent = 'Apply Marked Sections (No AI)';
-  applySourceButton.setAttribute('data-curriculum-unit-ai-action', `${subject}-${unitIndex}`);
-  applySourceButton.onclick = event => {
-    event.stopPropagation();
-    applyCurriculumUnitMarkedSections(subject, unitIndex);
-  };
-  actions.appendChild(applySourceButton);
-  panel.appendChild(actions);
-
-  const status = document.createElement('span');
-  status.id = `curriculum-unit-ai-status-${subject}-${unitIndex}`;
-  status.className = 'block text-xs mt-2';
-  const draft = curriculumUnitPdfDrafts[subject] && curriculumUnitPdfDrafts[subject][unitIndex];
-  status.textContent = draft ? `${draft.pageCount} page PDF ready to analyze.` : 'Upload the unit or module PDF, then review the draft before saving.';
-  panel.appendChild(status);
-  return panel;
-}
-
 // Initialize skills units with default structure
 function initializeSkillsUnits() {
   if (!skillsUnitsData || skillsUnitsData.length === 0) {
@@ -17292,8 +17204,6 @@ function renderSkillsUnits() {
     const unitDiv = document.createElement('div');
     unitDiv.className = 'rounded-2xl shadow-soft p-6 bg-white relative';
     unitDiv.setAttribute('data-unit-index', unitIndex);
-    const aiControls = createCurriculumUnitAiControls('skills', unitIndex, isEditMode, 'var(--md-slate)');
-    if (aiControls) unitDiv.appendChild(aiControls);
     
     // Make units draggable in edit mode
     if (isEditMode) {
@@ -18008,8 +17918,6 @@ function renderMathModules() {
     const moduleDiv = document.createElement('div');
     moduleDiv.className = 'rounded-2xl shadow-soft p-6 bg-white relative';
     moduleDiv.setAttribute('data-module-index', moduleIndex);
-    const aiControls = createCurriculumUnitAiControls('math', moduleIndex, isEditMode, 'var(--md-slate)');
-    if (aiControls) moduleDiv.appendChild(aiControls);
     
     // Make modules draggable in edit mode
     if (isEditMode) {
@@ -18231,8 +18139,6 @@ function renderListeningUnits() {
     const unitDiv = document.createElement('div');
     unitDiv.className = 'rounded-2xl shadow-soft p-6 bg-white relative';
     unitDiv.setAttribute('data-listening-unit-index', unitIndex);
-    const aiControls = createCurriculumUnitAiControls('listening', unitIndex, isEditMode, 'var(--md-coral)');
-    if (aiControls) unitDiv.appendChild(aiControls);
     
     // Make units draggable in edit mode
     if (isEditMode) {
