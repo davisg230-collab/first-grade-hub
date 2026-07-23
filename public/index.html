@@ -5853,6 +5853,44 @@
       return { ...analysis, sightWords: explicitSightWords };
     }
 
+    function extractCurriculumMarkedSectionItems(sourceText, marker) {
+      const text = String(sourceText || '').replace(/\s+/g, ' ');
+      const sectionMatch = text.match(new RegExp(`\\b${marker}_BEGIN\\b\\s*(.*?)\\s*\\b${marker}_END\\b`, 'i'));
+      if (!sectionMatch) return [];
+      const raw = sectionMatch[1].trim();
+      const items = marker === 'SIGHT_WORDS'
+        ? raw.replace(/\s+and\s+/gi, ',').split(/\s*,\s*/)
+        : raw.split(/\s*[•�]\s*/);
+      return items.map(item => item.trim()).filter(Boolean);
+    }
+
+    function applyCurriculumUnitMarkedSections(subject, unitIndex) {
+      const draft = curriculumUnitPdfDrafts[subject] && curriculumUnitPdfDrafts[subject][unitIndex];
+      if (!draft || !draft.text) {
+        setCurriculumUnitAiStatus(subject, unitIndex, 'Choose the marked source PDF first.', 'error');
+        return;
+      }
+
+      const analysis = {
+        unitTitle: '',
+        priorityStandard: '',
+        iCanStatement: '',
+        description: '',
+        soundSpellings: extractCurriculumMarkedSectionItems(draft.text, 'SOUNDS_AND_SPELLINGS'),
+        sightWords: extractCurriculumSourceTrickyWords(draft.text),
+        vocabulary: extractCurriculumMarkedSectionItems(draft.text, 'VOCABULARY'),
+        strategies: []
+      };
+      if (!analysis.soundSpellings.length && !analysis.sightWords.length && !analysis.vocabulary.length) {
+        setCurriculumUnitAiStatus(subject, unitIndex, 'This PDF does not contain the marked source sections.', 'error');
+        return;
+      }
+
+      applyCurriculumUnitAnalysis(subject, unitIndex, analysis);
+      setCurriculumUnitAiStatus(subject, unitIndex, 'Marked sections applied without using AI. Use Save All Changes.', 'success');
+      setCurriculumStatus('Marked unit sections applied without using AI. Save the subject units when ready.', 'success');
+    }
+
     function setCurriculumUnitSectionValues(subject, unit, sectionIndex, values) {
       if (!unit || !Array.isArray(unit.sections) || !unit.sections[sectionIndex] || !Array.isArray(values) || !values.length) return;
       const section = unit.sections[sectionIndex];
@@ -17183,6 +17221,19 @@ function createCurriculumUnitAiControls(subject, unitIndex, isEditMode, accentCo
     analyzeCurriculumUnitPdf(subject, unitIndex);
   };
   actions.appendChild(analyzeButton);
+
+  const applySourceButton = document.createElement('button');
+  applySourceButton.type = 'button';
+  applySourceButton.className = 'px-3 py-2 rounded-lg text-sm font-semibold';
+  applySourceButton.style.background = 'var(--md-pebble)';
+  applySourceButton.style.color = 'var(--md-slate)';
+  applySourceButton.textContent = 'Apply Marked Sections (No AI)';
+  applySourceButton.setAttribute('data-curriculum-unit-ai-action', `${subject}-${unitIndex}`);
+  applySourceButton.onclick = event => {
+    event.stopPropagation();
+    applyCurriculumUnitMarkedSections(subject, unitIndex);
+  };
+  actions.appendChild(applySourceButton);
   panel.appendChild(actions);
 
   const status = document.createElement('span');
