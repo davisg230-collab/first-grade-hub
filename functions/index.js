@@ -564,6 +564,7 @@ function buildCurriculumUnitPrompt(data) {
     "For description, combine the unit's major learning goals into 2-3 simple sentences for families. Do not list every lesson or story separately.",
     "For sightWords, use only words that the source explicitly labels under Tricky Words, Sight Words, or High-Frequency Words. Do not infer sight words from general prose, story excerpts, decodable word lists, example words, vocabulary, place names, countries, or names of people. If there is no explicitly labeled list, return an empty array.",
     "This curriculum may distinguish Tricky Words from sight words. The website column is named Sight Words, but when the source provides Tricky Words, place those exact labeled Tricky Words in that column. Never put ordinary example words such as raft, taxi, or veterinarian there just because they appear in the PDF.",
+    "If the source contains SIGHT_WORDS_BEGIN and SIGHT_WORDS_END markers, copy only the comma-separated words between those markers into sightWords. Do not copy any content from VOCABULARY_BEGIN/VOCABULARY_END into sightWords.",
     "For vocabulary, choose useful teaching or family-facing terms such as segment, blend, decode, punctuation, or sentence, and give each one a short plain-language definition in the same string (for example, \"Segment: break a word into its individual sounds.\"). Do not copy a source's story-word or decodable-word list into this field just because it is labeled Vocabulary.",
     subjectGuidance,
     "Keep each list focused and remove duplicates. Use empty arrays when the source does not support a category.",
@@ -738,10 +739,13 @@ function normalizeCurriculumAnalysis(analysis) {
 function extractExplicitCurriculumSightWords(sourceText) {
   const text = asText(sourceText).replace(/\s+/g, " ");
   const segments = [];
+  const markedListMatch = text.match(/\bSIGHT_WORDS_BEGIN\b\s*(.*?)\s*\bSIGHT_WORDS_END\b/i);
   const combinedHeadingMatch = text.match(/\bSight\s+Words?\s*\/\s*Tricky\s+Words?\s*:?\s*(.*?)(?=\b(?:Sounds(?:\s+and\s+Spellings)?|Vocabulary|Unit\s+Description|Note)\b|\bCKLA\s+Grade\b|$)/i);
   const introductionMatch = text.match(/\bfollowing\s+Tricky\s+Words?\s*:\s*([^\.]{1,700})/i);
   let match;
-  if (combinedHeadingMatch) {
+  if (markedListMatch) {
+    segments.push(markedListMatch[1]);
+  } else if (combinedHeadingMatch) {
     segments.push(combinedHeadingMatch[1]);
   } else if (introductionMatch) {
     segments.push(introductionMatch[1]);

@@ -5831,9 +5831,10 @@
 
     function extractCurriculumSourceTrickyWords(sourceText) {
       const text = String(sourceText || '').replace(/\s+/g, ' ');
+      const markedListMatch = text.match(/\bSIGHT_WORDS_BEGIN\b\s*(.*?)\s*\bSIGHT_WORDS_END\b/i);
       const combinedHeadingMatch = text.match(/\bSight\s+Words?\s*\/\s*Tricky\s+Words?\s*:?\s*(.*?)(?=\b(?:Sounds(?:\s+and\s+Spellings)?|Vocabulary|Unit\s+Description|Note)\b|\bCKLA\s+Grade\b|$)/i);
       const introductionMatch = text.match(/\bfollowing\s+Tricky\s+Words?\s*:\s*([^\.]{1,700})/i);
-      const listText = combinedHeadingMatch ? combinedHeadingMatch[1] : (introductionMatch ? introductionMatch[1] : '');
+      const listText = markedListMatch ? markedListMatch[1] : (combinedHeadingMatch ? combinedHeadingMatch[1] : (introductionMatch ? introductionMatch[1] : ''));
       if (!listText) return [];
 
       const seen = new Set();
