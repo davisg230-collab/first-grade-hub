@@ -19296,10 +19296,40 @@ function updateListeningUnitsData(unitsJson) {
 
 // Initialize listening units with default structure
 function initializeListeningUnits() {
-  listeningUnitsData = [];
-  for (let i = 1; i <= 11; i++) {
+  if (!Array.isArray(listeningUnitsData) || listeningUnitsData.length === 0) {
+    listeningUnitsData = [];
+    for (let i = 1; i <= 11; i++) {
+      listeningUnitsData.push({
+        title: `Unit ${i}`,
+        priorityStandard: '',
+        iCanStatement: '',
+        description: '',
+        sections: [{ title: 'Vocabulary', bullets: [] }]
+      });
+    }
+    return;
+  }
+
+  // Rendering must not replace saved sections or added columns.
+  listeningUnitsData.forEach(unit => {
+    if (!('priorityStandard' in unit)) unit.priorityStandard = '';
+    if (!('iCanStatement' in unit)) unit.iCanStatement = '';
+    if (!('description' in unit)) unit.description = '';
+    if (!Array.isArray(unit.sections) || unit.sections.length === 0) {
+      unit.sections = [{ title: 'Vocabulary', bullets: [] }];
+    }
+    unit.sections = unit.sections.map((section, sectionIndex) => ({
+      ...section,
+      title: section.title || `Section ${sectionIndex + 1}`,
+      bullets: Array.isArray(section.bullets)
+        ? section.bullets
+        : (Array.isArray(section.bulletPoints) ? section.bulletPoints : [])
+    }));
+  });
+
+  while (listeningUnitsData.length < 11) {
     listeningUnitsData.push({
-      title: `Unit ${i}`,
+      title: `Unit ${listeningUnitsData.length + 1}`,
       priorityStandard: '',
       iCanStatement: '',
       description: '',
