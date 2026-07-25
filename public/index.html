@@ -18384,6 +18384,9 @@ function renderListeningUnits() {
         e.stopPropagation();
       }
     };
+    titleEl.addEventListener('input', () => {
+      listeningUnitsData[unitIndex].title = titleEl.textContent;
+    });
     titleEl.addEventListener('blur', () => {
       listeningUnitsData[unitIndex].title = titleEl.textContent;
     });
@@ -18391,130 +18394,129 @@ function renderListeningUnits() {
     titleRow.appendChild(toggleIcon);
     titleRow.appendChild(titleEl);
     titleContainer.appendChild(titleRow);
+
+    // Keep Listening & Learning's collapsed summary aligned with Skills and Math.
+    if (unit.priorityStandard && unit.priorityStandard.trim()) {
+      const priorityDisplay = document.createElement('div');
+      priorityDisplay.className = 'text-sm text-gray-600 ml-8';
+      priorityDisplay.style.fontStyle = 'italic';
+      priorityDisplay.textContent = unit.priorityStandard;
+      priorityDisplay.setAttribute('data-listening-priority-display', unitIndex);
+      titleContainer.appendChild(priorityDisplay);
+    }
+
     headerDiv.appendChild(titleContainer);
     unitDiv.appendChild(headerDiv);
-    
-    // Sections container
+
+    // Use the same expandable edit fields as Skills and Math.
+    if (isEditMode) {
+      const editFieldsContainer = document.createElement('div');
+      editFieldsContainer.className = 'mb-4 space-y-3';
+      editFieldsContainer.style.display = 'none';
+      editFieldsContainer.setAttribute('data-listening-edit-fields', unitIndex);
+
+      const priorityStandardLabel = document.createElement('label');
+      priorityStandardLabel.className = 'block text-sm font-semibold mb-1';
+      priorityStandardLabel.style.color = 'var(--md-coral)';
+      priorityStandardLabel.textContent = 'Priority Standard:';
+
+      const priorityStandardInput = document.createElement('input');
+      priorityStandardInput.type = 'text';
+      priorityStandardInput.className = 'w-full p-2 border-2 rounded-lg';
+      priorityStandardInput.style.borderColor = 'color-mix(in oklab, var(--md-coral) 40%, var(--md-white) 60%)';
+      priorityStandardInput.value = unit.priorityStandard || '';
+      priorityStandardInput.placeholder = 'Enter priority standard...';
+      priorityStandardInput.addEventListener('input', event => {
+        listeningUnitsData[unitIndex].priorityStandard = event.target.value;
+        updateListeningPriorityDisplay(unitIndex, event.target.value);
+      });
+      priorityStandardInput.onclick = event => event.stopPropagation();
+
+      const priorityDiv = document.createElement('div');
+      priorityDiv.appendChild(priorityStandardLabel);
+      priorityDiv.appendChild(priorityStandardInput);
+      editFieldsContainer.appendChild(priorityDiv);
+
+      const iCanLabel = document.createElement('label');
+      iCanLabel.className = 'block text-sm font-semibold mb-1';
+      iCanLabel.style.color = 'var(--md-coral)';
+      iCanLabel.textContent = 'I can statement:';
+
+      const iCanInput = document.createElement('input');
+      iCanInput.type = 'text';
+      iCanInput.className = 'w-full p-2 border-2 rounded-lg';
+      iCanInput.style.borderColor = 'color-mix(in oklab, var(--md-coral) 40%, var(--md-white) 60%)';
+      iCanInput.value = unit.iCanStatement || '';
+      iCanInput.placeholder = 'I can...';
+      iCanInput.addEventListener('input', event => {
+        listeningUnitsData[unitIndex].iCanStatement = event.target.value;
+        updateListeningICanDisplay(unitIndex, event.target.value);
+      });
+      iCanInput.onclick = event => event.stopPropagation();
+
+      const iCanDiv = document.createElement('div');
+      iCanDiv.appendChild(iCanLabel);
+      iCanDiv.appendChild(iCanInput);
+      editFieldsContainer.appendChild(iCanDiv);
+      unitDiv.appendChild(editFieldsContainer);
+    }
+
+    const iCanContainer = document.createElement('div');
+    iCanContainer.className = 'mb-4';
+    iCanContainer.style.display = 'none';
+    iCanContainer.setAttribute('data-listening-ican-container', unitIndex);
+    const iCanLabel = document.createElement('div');
+    iCanLabel.className = 'text-sm font-semibold mb-1';
+    iCanLabel.style.color = 'var(--md-coral)';
+    iCanLabel.textContent = 'I can:';
+    const iCanText = document.createElement('p');
+    iCanText.className = 'text-sm';
+    iCanText.setAttribute('data-listening-ican-display', unitIndex);
+    iCanText.textContent = unit.iCanStatement || '';
+    iCanContainer.appendChild(iCanLabel);
+    iCanContainer.appendChild(iCanText);
+    unitDiv.appendChild(iCanContainer);
+
+    const descriptionContainer = document.createElement('div');
+    descriptionContainer.className = 'mb-4';
+    descriptionContainer.style.display = 'none';
+    descriptionContainer.setAttribute('data-listening-description-container', unitIndex);
+
+    const descriptionLabel = document.createElement('label');
+    descriptionLabel.className = 'block text-sm font-semibold mb-1';
+    descriptionLabel.style.color = 'var(--md-coral)';
+    descriptionLabel.textContent = 'Description:';
+
+    const descriptionInput = document.createElement('textarea');
+    descriptionInput.className = 'w-full p-2 border-2 rounded-lg';
+    descriptionInput.style.borderColor = 'color-mix(in oklab, var(--md-coral) 40%, var(--md-white) 60%)';
+    descriptionInput.style.minHeight = '80px';
+    descriptionInput.value = unit.description || '';
+    descriptionInput.placeholder = isEditMode ? 'Enter description...' : '';
+    if (isEditMode) {
+      descriptionInput.removeAttribute('readonly');
+      descriptionInput.addEventListener('input', event => {
+        listeningUnitsData[unitIndex].description = event.target.value;
+      });
+      descriptionInput.onclick = event => event.stopPropagation();
+    } else {
+      descriptionInput.setAttribute('readonly', 'true');
+      descriptionInput.style.backgroundColor = '#f9fafb';
+      descriptionInput.style.cursor = 'default';
+    }
+    descriptionContainer.appendChild(descriptionLabel);
+    descriptionContainer.appendChild(descriptionInput);
+    unitDiv.appendChild(descriptionContainer);
+
     const sectionsContainer = document.createElement('div');
-    sectionsContainer.className = 'grid gap-4';
+    sectionsContainer.className = 'grid';
     sectionsContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(250px, 1fr))';
     sectionsContainer.style.gap = '1rem';
     sectionsContainer.style.transition = 'all 0.3s ease';
     sectionsContainer.style.display = 'none';
     sectionsContainer.setAttribute('data-listening-sections-container', unitIndex);
-
-    const overview = document.createElement('div');
-    overview.className = 'p-4 rounded-lg';
-    overview.style.gridColumn = '1 / -1';
-    overview.style.background = 'color-mix(in oklab, var(--md-white) 70%, var(--md-coral) 30%)';
-    overview.style.border = '1px solid color-mix(in oklab, var(--md-coral) 40%, var(--md-white) 60%)';
-
-    const priorityLabel = document.createElement('div');
-    priorityLabel.className = 'text-sm font-semibold mb-1';
-    priorityLabel.style.color = 'var(--md-coral)';
-    priorityLabel.textContent = 'Priority standard:';
-    overview.appendChild(priorityLabel);
-
-    const priorityText = document.createElement(isEditMode ? 'input' : 'p');
-    priorityText.className = isEditMode ? 'w-full p-2 border-2 rounded-lg text-sm mb-3' : 'text-sm mb-3';
-    if (isEditMode) {
-      priorityText.type = 'text';
-      priorityText.value = unit.priorityStandard || '';
-      priorityText.placeholder = 'Enter priority standard...';
-      priorityText.style.borderColor = 'color-mix(in oklab, var(--md-coral) 40%, var(--md-white) 60%)';
-      priorityText.addEventListener('input', event => { listeningUnitsData[unitIndex].priorityStandard = event.target.value; });
-      priorityText.addEventListener('click', event => event.stopPropagation());
-    } else {
-      priorityText.textContent = unit.priorityStandard || '';
-    }
-    overview.appendChild(priorityText);
-
-    const iCanLabel = document.createElement('div');
-    iCanLabel.className = 'text-sm font-semibold mb-1';
-    iCanLabel.style.color = 'var(--md-coral)';
-    iCanLabel.textContent = 'I can:';
-    overview.appendChild(iCanLabel);
-
-    const iCanText = document.createElement(isEditMode ? 'input' : 'p');
-    iCanText.className = isEditMode ? 'w-full p-2 border-2 rounded-lg text-sm mb-3' : 'text-sm mb-3';
-    if (isEditMode) {
-      iCanText.type = 'text';
-      iCanText.value = unit.iCanStatement || '';
-      iCanText.placeholder = 'I can...';
-      iCanText.style.borderColor = 'color-mix(in oklab, var(--md-coral) 40%, var(--md-white) 60%)';
-      iCanText.addEventListener('input', event => { listeningUnitsData[unitIndex].iCanStatement = event.target.value; });
-      iCanText.addEventListener('click', event => event.stopPropagation());
-    } else {
-      iCanText.textContent = unit.iCanStatement || '';
-    }
-    overview.appendChild(iCanText);
-
-    const descriptionLabel = document.createElement('div');
-    descriptionLabel.className = 'text-sm font-semibold mb-1';
-    descriptionLabel.style.color = 'var(--md-coral)';
-    descriptionLabel.textContent = 'Description:';
-    overview.appendChild(descriptionLabel);
-
-    const descriptionText = document.createElement(isEditMode ? 'textarea' : 'p');
-    descriptionText.className = isEditMode ? 'w-full p-2 border-2 rounded-lg text-sm' : 'text-sm';
-    if (isEditMode) {
-      descriptionText.value = unit.description || '';
-      descriptionText.placeholder = 'Describe the main learning in this unit...';
-      descriptionText.style.borderColor = 'color-mix(in oklab, var(--md-coral) 40%, var(--md-white) 60%)';
-      descriptionText.style.minHeight = '80px';
-      descriptionText.addEventListener('input', event => { listeningUnitsData[unitIndex].description = event.target.value; });
-      descriptionText.addEventListener('click', event => event.stopPropagation());
-    } else {
-      descriptionText.textContent = unit.description || '';
-    }
-    overview.appendChild(descriptionText);
-    sectionsContainer.appendChild(overview);
-    
-    unit.sections.forEach((section, sectionIndex) => {
-      const sectionDiv = document.createElement('div');
-      sectionDiv.className = 'p-4 rounded-lg';
-      sectionDiv.style.background = 'color-mix(in oklab, var(--md-white) 70%, var(--md-coral) 30%)';
-      sectionDiv.style.border = '1px solid color-mix(in oklab, var(--md-coral) 40%, var(--md-white) 60%)';
-      
-      const sectionTitle = document.createElement('h4');
-      sectionTitle.className = 'font-semibold mb-2';
-      sectionTitle.style.color = 'var(--md-coral)';
-      sectionTitle.contentEditable = isEditMode;
-      sectionTitle.textContent = section.title;
-      sectionTitle.addEventListener('input', () => {
-        listeningUnitsData[unitIndex].sections[sectionIndex].title = sectionTitle.textContent;
-      });
-      sectionTitle.addEventListener('blur', () => {
-        listeningUnitsData[unitIndex].sections[sectionIndex].title = sectionTitle.textContent;
-      });
-      sectionDiv.appendChild(createCurriculumSectionHeading(sectionTitle, 'listening', unitIndex, sectionIndex, isEditMode, 'var(--md-coral)'));
-      
-      if (isEditMode) {
-        sectionDiv.appendChild(createCurriculumSectionListEditor(
-          section.bullets || [],
-          values => { listeningUnitsData[unitIndex].sections[sectionIndex].bullets = values; },
-          'var(--md-coral)'
-        ));
-      } else {
-        const bulletsList = document.createElement('ul');
-        bulletsList.className = 'list-disc pl-5 space-y-1';
-        if (section.bullets.length === 0) {
-          const emptyMessage = document.createElement('li');
-          emptyMessage.className = 'text-gray-400 text-sm';
-          emptyMessage.textContent = 'No content yet';
-          bulletsList.appendChild(emptyMessage);
-        } else {
-          section.bullets.forEach(bullet => {
-            const bulletLi = document.createElement('li');
-            bulletLi.className = 'text-sm';
-            bulletLi.textContent = bullet;
-            bulletsList.appendChild(bulletLi);
-          });
-        }
-        sectionDiv.appendChild(bulletsList);
-      }
-      
-      sectionsContainer.appendChild(sectionDiv);
+    (Array.isArray(unit.sections) ? unit.sections : []).forEach((section, sectionIndex) => {
+      sectionsContainer.appendChild(createListeningUnitSection(section, unitIndex, sectionIndex, isEditMode));
     });
     
     unitDiv.appendChild(sectionsContainer);
@@ -18525,6 +18527,63 @@ function renderListeningUnits() {
     }
     container.appendChild(unitDiv);
   });
+}
+
+function createListeningUnitSection(section, unitIndex, sectionIndex, isEditMode) {
+  const sectionDiv = document.createElement('div');
+  sectionDiv.className = 'p-4 rounded-xl shadow-sm';
+  sectionDiv.style.border = '2px solid color-mix(in oklab, var(--md-coral) 40%, var(--md-white) 60%)';
+  sectionDiv.style.background = 'var(--md-white)';
+
+  const titleEl = document.createElement('h4');
+  titleEl.className = 'text-lg font-semibold mb-3';
+  titleEl.style.color = 'var(--md-coral)';
+  titleEl.contentEditable = isEditMode;
+  titleEl.textContent = section.title;
+  titleEl.addEventListener('input', () => {
+    listeningUnitsData[unitIndex].sections[sectionIndex].title = titleEl.textContent;
+  });
+  titleEl.addEventListener('blur', () => {
+    listeningUnitsData[unitIndex].sections[sectionIndex].title = titleEl.textContent;
+  });
+  sectionDiv.appendChild(createCurriculumSectionHeading(titleEl, 'listening', unitIndex, sectionIndex, isEditMode, 'var(--md-coral)'));
+
+  if (isEditMode) {
+    sectionDiv.appendChild(createCurriculumSectionListEditor(
+      section.bullets || [],
+      values => { listeningUnitsData[unitIndex].sections[sectionIndex].bullets = values; },
+      'var(--md-coral)'
+    ));
+  } else {
+    const bulletsContainer = document.createElement('div');
+    bulletsContainer.className = 'space-y-2';
+    if (section.bullets && section.bullets.length > 0) {
+      section.bullets.forEach(bullet => {
+        const bulletDiv = document.createElement('div');
+        bulletDiv.className = 'flex items-start gap-2';
+        const marker = document.createElement('span');
+        marker.className = 'text-gray-600 mt-1';
+        marker.textContent = 'â€¢';
+        marker.style.fontSize = '1rem';
+        marker.textContent = String.fromCharCode(8226);
+        const textDiv = document.createElement('div');
+        textDiv.className = 'flex-1 text-sm';
+        textDiv.textContent = bullet;
+        textDiv.style.minHeight = '1.5rem';
+        bulletDiv.appendChild(marker);
+        bulletDiv.appendChild(textDiv);
+        bulletsContainer.appendChild(bulletDiv);
+      });
+    } else {
+      const emptyMsg = document.createElement('div');
+      emptyMsg.className = 'text-gray-400 text-sm italic px-2';
+      emptyMsg.textContent = 'No items yet';
+      bulletsContainer.appendChild(emptyMsg);
+    }
+    sectionDiv.appendChild(bulletsContainer);
+  }
+
+  return sectionDiv;
 }
 
 // Drag and drop handlers for listening units reordering
@@ -18628,26 +18687,66 @@ async function handleListeningUnitDrop(e) {
 // Toggle listening unit expansion
 function toggleListeningUnit(unitIndex) {
   const allContainers = document.querySelectorAll('[data-listening-sections-container]');
-  const allIcons = document.querySelectorAll('[data-listening-toggle-icon]');
-  const allSectionActions = document.querySelectorAll('[data-listening-section-actions]');
-  
-  const container = document.querySelector(`[data-listening-sections-container="${unitIndex}"]`);
-  const icon = document.querySelector(`[data-listening-toggle-icon="${unitIndex}"]`);
-  const sectionActions = document.querySelector(`[data-listening-section-actions="${unitIndex}"]`);
-  
-  const isCurrentlyExpanded = container.style.display !== 'none';
-  
-  // Collapse all
-  allContainers.forEach(c => c.style.display = 'none');
-  allSectionActions.forEach(actions => actions.style.display = 'none');
-  allIcons.forEach(i => i.textContent = '▶');
-  
-  // Expand clicked if it was collapsed
-  if (!isCurrentlyExpanded) {
-    if (sectionActions) sectionActions.style.display = 'flex';
-    container.style.display = 'grid';
-    icon.textContent = '▼';
+  const allEditFields = document.querySelectorAll('[data-listening-edit-fields]');
+  const allPriorityDisplays = document.querySelectorAll('[data-listening-priority-display]');
+  const allICanContainers = document.querySelectorAll('[data-listening-ican-container]');
+  const allDescriptionContainers = document.querySelectorAll('[data-listening-description-container]');
+
+  const editFieldsMap = new Map();
+  allEditFields.forEach(field => editFieldsMap.set(field.getAttribute('data-listening-edit-fields'), field));
+  const priorityDisplayMap = new Map();
+  allPriorityDisplays.forEach(display => priorityDisplayMap.set(display.getAttribute('data-listening-priority-display'), display));
+  const iCanContainerMap = new Map();
+  allICanContainers.forEach(container => iCanContainerMap.set(container.getAttribute('data-listening-ican-container'), container));
+  const descriptionContainerMap = new Map();
+  allDescriptionContainers.forEach(container => descriptionContainerMap.set(container.getAttribute('data-listening-description-container'), container));
+
+  allContainers.forEach(currentContainer => {
+    const containerIndex = currentContainer.getAttribute('data-listening-sections-container');
+    const currentIcon = document.querySelector(`[data-listening-toggle-icon="${containerIndex}"]`);
+    const currentEditFields = editFieldsMap.get(containerIndex);
+    const currentPriorityDisplay = priorityDisplayMap.get(containerIndex);
+    const currentICanContainer = iCanContainerMap.get(containerIndex);
+    const currentDescriptionContainer = descriptionContainerMap.get(containerIndex);
+    const currentSectionActions = document.querySelector(`[data-listening-section-actions="${containerIndex}"]`);
+    const isTarget = containerIndex === unitIndex.toString();
+    const isHidden = currentContainer.style.display === 'none';
+    const shouldOpen = isTarget && isHidden;
+
+    currentContainer.style.display = shouldOpen ? 'grid' : 'none';
+    if (currentIcon) currentIcon.textContent = shouldOpen ? '▼' : '▶';
+    if (currentEditFields) currentEditFields.style.display = shouldOpen ? 'block' : 'none';
+    if (currentPriorityDisplay) currentPriorityDisplay.style.display = shouldOpen ? 'none' : 'block';
+    if (currentICanContainer) currentICanContainer.style.display = shouldOpen ? 'block' : 'none';
+    if (currentDescriptionContainer) currentDescriptionContainer.style.display = shouldOpen ? 'block' : 'none';
+    if (currentSectionActions) currentSectionActions.style.display = shouldOpen ? 'flex' : 'none';
+  });
+}
+
+function updateListeningPriorityDisplay(unitIndex, value) {
+  const display = document.querySelector(`[data-listening-priority-display="${unitIndex}"]`);
+  const unitDiv = document.querySelector(`[data-listening-unit-index="${unitIndex}"]`);
+  const titleContainer = unitDiv?.querySelector('.flex.flex-col');
+
+  if (value && value.trim()) {
+    if (display) {
+      display.textContent = value;
+    } else if (titleContainer) {
+      const newDisplay = document.createElement('div');
+      newDisplay.className = 'text-sm text-gray-600 ml-8';
+      newDisplay.style.fontStyle = 'italic';
+      newDisplay.textContent = value;
+      newDisplay.setAttribute('data-listening-priority-display', unitIndex);
+      titleContainer.appendChild(newDisplay);
+    }
+  } else if (display) {
+    display.remove();
   }
+}
+
+function updateListeningICanDisplay(unitIndex, value) {
+  const display = document.querySelector(`[data-listening-ican-display="${unitIndex}"]`);
+  if (display) display.textContent = value || '';
 }
 
 
