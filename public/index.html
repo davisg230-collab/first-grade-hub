@@ -7445,6 +7445,12 @@
           originalValues[key] = el.textContent || el.innerText || '';
         }
       });
+
+      // Unit/module editors do not use the page's contenteditable fields.
+      // Snapshot their data too so Exit Edit Mode saves those changes.
+      originalValues.curriculum_skills_units_json = JSON.stringify(skillsUnitsData);
+      originalValues.curriculum_math_modules_json = JSON.stringify(mathModulesData);
+      originalValues.curriculum_listening_units_json = JSON.stringify(listeningUnitsData);
     }
     
     function hasChanges() {
@@ -7464,6 +7470,18 @@
           hasChanges = true;
         }
       });
+
+      const curriculumSnapshots = [
+        ['curriculum_skills_units_json', skillsUnitsData],
+        ['curriculum_math_modules_json', mathModulesData],
+        ['curriculum_listening_units_json', listeningUnitsData]
+      ];
+      curriculumSnapshots.forEach(([key, value]) => {
+        if ((originalValues[key] || '') !== JSON.stringify(value)) {
+          hasChanges = true;
+        }
+      });
+
       return hasChanges;
     }
     
@@ -8474,6 +8492,12 @@
       
       // Watch Me links
       data.watch_me_json = JSON.stringify(watchMeData);
+
+      // Curriculum unit/module pages are edited outside the main page fields.
+      // Include them here so the main Save button and local draft protection cannot drop them.
+      data.skills_units_json = JSON.stringify(skillsUnitsData);
+      data.math_modules_json = JSON.stringify(mathModulesData);
+      data.listening_units_json = JSON.stringify(listeningUnitsData);
       
       // Volunteer data
       const volunteerDataCollected = collectVolunteerData();
@@ -17396,6 +17420,11 @@ function renderSkillsUnits() {
     }
     
     unitDiv.appendChild(sectionsContainer);
+    const sectionActions = createCurriculumAddColumnControl('skills', unitIndex, isEditMode, 'var(--md-slate)');
+    if (sectionActions) {
+      sectionActions.style.display = 'none';
+      unitDiv.appendChild(sectionActions);
+    }
     container.appendChild(unitDiv);
   });
 }
@@ -17450,6 +17479,7 @@ function toggleSkillsUnit(unitIndex) {
     const priorityDisplay = priorityDisplayMap.get(containerIndex);
     const iCanContainer = iCanContainerMap.get(containerIndex);
     const descriptionContainer = descriptionContainerMap.get(containerIndex);
+    const sectionActions = document.querySelector(`[data-skills-section-actions="${containerIndex}"]`);
     
     if (containerIndex === unitIndex.toString()) {
       const isHidden = container.style.display === 'none';
@@ -17459,6 +17489,7 @@ function toggleSkillsUnit(unitIndex) {
       if (priorityDisplay) priorityDisplay.style.display = isHidden ? 'none' : 'block';
       if (iCanContainer) iCanContainer.style.display = isHidden ? 'block' : 'none';
       if (descriptionContainer) descriptionContainer.style.display = isHidden ? 'block' : 'none';
+      if (sectionActions) sectionActions.style.display = isHidden ? 'flex' : 'none';
     } else {
       container.style.display = 'none';
       if (icon) icon.textContent = '▶';
@@ -17466,6 +17497,7 @@ function toggleSkillsUnit(unitIndex) {
       if (priorityDisplay) priorityDisplay.style.display = 'block';
       if (iCanContainer) iCanContainer.style.display = 'none';
       if (descriptionContainer) descriptionContainer.style.display = 'none';
+      if (sectionActions) sectionActions.style.display = 'none';
     }
   });
 }
@@ -17599,6 +17631,96 @@ function createCurriculumSectionListEditor(values, onChange, accentColor, splitC
   return editor;
 }
 
+function getCurriculumSections(subject, parentIndex) {
+  const collection = subject === 'skills'
+    ? skillsUnitsData
+    : (subject === 'math' ? mathModulesData : listeningUnitsData);
+  const parent = Array.isArray(collection) ? collection[parentIndex] : null;
+  return parent && Array.isArray(parent.sections) ? parent.sections : null;
+}
+
+function refreshCurriculumSubjectAfterSectionChange(subject, parentIndex) {
+  if (subject === 'skills') {
+    renderSkillsUnits();
+    toggleSkillsUnit(parentIndex);
+  } else if (subject === 'math') {
+    renderMathModules();
+    toggleMathModule(parentIndex);
+  } else {
+    renderListeningUnits();
+    toggleListeningUnit(parentIndex);
+  }
+}
+
+function addCurriculumColumn(subject, parentIndex) {
+  const sections = getCurriculumSections(subject, parentIndex);
+  if (!sections) return;
+  const newSection = { title: `Section ${sections.length + 1}` };
+  if (subject === 'math') {
+    newSection.bulletPoints = [];
+  } else {
+    newSection.bullets = [];
+  }
+  sections.push(newSection);
+  refreshCurriculumSubjectAfterSectionChange(subject, parentIndex);
+}
+
+function removeCurriculumColumn(subject, parentIndex, sectionIndex) {
+  const sections = getCurriculumSections(subject, parentIndex);
+  if (!sections || sectionIndex < 0 || sectionIndex >= sections.length) return;
+  if (sections.length <= 1) {
+    alert('Each unit must keep at least one column.');
+    return;
+  }
+  sections.splice(sectionIndex, 1);
+  refreshCurriculumSubjectAfterSectionChange(subject, parentIndex);
+}
+
+function createCurriculumSectionHeading(titleElement, subject, parentIndex, sectionIndex, isEditMode, accentColor) {
+  const heading = document.createElement('div');
+  heading.className = 'flex items-start justify-between gap-2 mb-3';
+  titleElement.style.marginBottom = '0';
+  heading.appendChild(titleElement);
+
+  if (isEditMode) {
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.className = 'shrink-0 px-2 py-1 rounded text-xs font-semibold';
+    deleteButton.style.color = accentColor;
+    deleteButton.style.border = `1px solid ${accentColor}`;
+    deleteButton.textContent = 'Delete';
+    deleteButton.title = 'Delete this column';
+    deleteButton.setAttribute('aria-label', 'Delete this column');
+    deleteButton.onclick = event => {
+      event.preventDefault();
+      event.stopPropagation();
+      removeCurriculumColumn(subject, parentIndex, sectionIndex);
+    };
+    heading.appendChild(deleteButton);
+  }
+  return heading;
+}
+
+function createCurriculumAddColumnControl(subject, parentIndex, isEditMode, accentColor) {
+  if (!isEditMode) return null;
+  const actions = document.createElement('div');
+  actions.className = 'mt-4 flex justify-end';
+  actions.setAttribute(`data-${subject}-section-actions`, parentIndex);
+  const addButton = document.createElement('button');
+  addButton.type = 'button';
+  addButton.className = 'px-3 py-2 rounded-lg text-sm font-semibold';
+  addButton.style.color = accentColor;
+  addButton.style.border = `1px solid ${accentColor}`;
+  addButton.textContent = '+ Add column';
+  addButton.onclick = event => {
+    event.preventDefault();
+    event.stopPropagation();
+    addCurriculumColumn(subject, parentIndex);
+  };
+  actions.appendChild(addButton);
+  return actions;
+}
+
 // Create a single section element (column) for skills unit
 function createSkillsUnitSection(section, unitIndex, sectionIndex, isEditMode) {
   const sectionDiv = document.createElement('div');
@@ -17612,11 +17734,14 @@ function createSkillsUnitSection(section, unitIndex, sectionIndex, isEditMode) {
   titleEl.style.color = 'var(--md-slate)';
   titleEl.contentEditable = isEditMode;
   titleEl.textContent = section.title;
+  titleEl.addEventListener('input', () => {
+    skillsUnitsData[unitIndex].sections[sectionIndex].title = titleEl.textContent;
+  });
   titleEl.addEventListener('blur', () => {
     skillsUnitsData[unitIndex].sections[sectionIndex].title = titleEl.textContent;
   });
   
-  sectionDiv.appendChild(titleEl);
+  sectionDiv.appendChild(createCurriculumSectionHeading(titleEl, 'skills', unitIndex, sectionIndex, isEditMode, 'var(--md-slate)'));
   
   if (isEditMode) {
     sectionDiv.appendChild(createCurriculumSectionListEditor(
@@ -18171,7 +18296,7 @@ function renderMathModules() {
     sectionsContainer.style.transition = 'all 0.3s ease';
     sectionsContainer.setAttribute('data-math-sections-container', moduleIndex);
     
-    // Ensure module has 2 sections
+    // Ensure the module has the starter sections it needs without trimming added columns.
     if (!module.sections || module.sections.length === 0) {
       module.sections = [
         { title: 'Section 1', bulletPoints: [] },
@@ -18179,13 +18304,18 @@ function renderMathModules() {
       ];
     }
     
-    // Create two sections
+    // Create every saved section.
     module.sections.forEach((section, sectionIndex) => {
       const sectionDiv = createMathModuleSection(section, moduleIndex, sectionIndex, isEditMode);
       sectionsContainer.appendChild(sectionDiv);
     });
     
     moduleDiv.appendChild(sectionsContainer);
+    const sectionActions = createCurriculumAddColumnControl('math', moduleIndex, isEditMode, 'var(--md-slate)');
+    if (sectionActions) {
+      sectionActions.style.display = 'none';
+      moduleDiv.appendChild(sectionActions);
+    }
     container.appendChild(moduleDiv);
   });
 }
@@ -18266,12 +18396,16 @@ function renderListeningUnits() {
     
     // Sections container
     const sectionsContainer = document.createElement('div');
-    sectionsContainer.className = 'space-y-4';
+    sectionsContainer.className = 'grid gap-4';
+    sectionsContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(250px, 1fr))';
+    sectionsContainer.style.gap = '1rem';
+    sectionsContainer.style.transition = 'all 0.3s ease';
     sectionsContainer.style.display = 'none';
     sectionsContainer.setAttribute('data-listening-sections-container', unitIndex);
 
     const overview = document.createElement('div');
     overview.className = 'p-4 rounded-lg';
+    overview.style.gridColumn = '1 / -1';
     overview.style.background = 'color-mix(in oklab, var(--md-white) 70%, var(--md-coral) 30%)';
     overview.style.border = '1px solid color-mix(in oklab, var(--md-coral) 40%, var(--md-white) 60%)';
 
@@ -18347,10 +18481,13 @@ function renderListeningUnits() {
       sectionTitle.style.color = 'var(--md-coral)';
       sectionTitle.contentEditable = isEditMode;
       sectionTitle.textContent = section.title;
+      sectionTitle.addEventListener('input', () => {
+        listeningUnitsData[unitIndex].sections[sectionIndex].title = sectionTitle.textContent;
+      });
       sectionTitle.addEventListener('blur', () => {
         listeningUnitsData[unitIndex].sections[sectionIndex].title = sectionTitle.textContent;
       });
-      sectionDiv.appendChild(sectionTitle);
+      sectionDiv.appendChild(createCurriculumSectionHeading(sectionTitle, 'listening', unitIndex, sectionIndex, isEditMode, 'var(--md-coral)'));
       
       if (isEditMode) {
         sectionDiv.appendChild(createCurriculumSectionListEditor(
@@ -18381,6 +18518,11 @@ function renderListeningUnits() {
     });
     
     unitDiv.appendChild(sectionsContainer);
+    const sectionActions = createCurriculumAddColumnControl('listening', unitIndex, isEditMode, 'var(--md-coral)');
+    if (sectionActions) {
+      sectionActions.style.display = 'none';
+      unitDiv.appendChild(sectionActions);
+    }
     container.appendChild(unitDiv);
   });
 }
@@ -18487,19 +18629,23 @@ async function handleListeningUnitDrop(e) {
 function toggleListeningUnit(unitIndex) {
   const allContainers = document.querySelectorAll('[data-listening-sections-container]');
   const allIcons = document.querySelectorAll('[data-listening-toggle-icon]');
+  const allSectionActions = document.querySelectorAll('[data-listening-section-actions]');
   
   const container = document.querySelector(`[data-listening-sections-container="${unitIndex}"]`);
   const icon = document.querySelector(`[data-listening-toggle-icon="${unitIndex}"]`);
+  const sectionActions = document.querySelector(`[data-listening-section-actions="${unitIndex}"]`);
   
   const isCurrentlyExpanded = container.style.display !== 'none';
   
   // Collapse all
   allContainers.forEach(c => c.style.display = 'none');
+  allSectionActions.forEach(actions => actions.style.display = 'none');
   allIcons.forEach(i => i.textContent = '▶');
   
   // Expand clicked if it was collapsed
   if (!isCurrentlyExpanded) {
-    container.style.display = 'block';
+    if (sectionActions) sectionActions.style.display = 'flex';
+    container.style.display = 'grid';
     icon.textContent = '▼';
   }
 }
@@ -18555,6 +18701,7 @@ function toggleMathModule(moduleIndex) {
     const priorityDisplay = priorityDisplayMap.get(containerIndex);
     const iCanContainer = iCanContainerMap.get(containerIndex);
     const descriptionContainer = descriptionContainerMap.get(containerIndex);
+    const sectionActions = document.querySelector(`[data-math-section-actions="${containerIndex}"]`);
     
     if (containerIndex === moduleIndex.toString()) {
       const isHidden = container.style.display === 'none';
@@ -18564,6 +18711,7 @@ function toggleMathModule(moduleIndex) {
       if (priorityDisplay) priorityDisplay.style.display = isHidden ? 'none' : 'block';
       if (iCanContainer) iCanContainer.style.display = isHidden ? 'block' : 'none';
       if (descriptionContainer) descriptionContainer.style.display = isHidden ? 'block' : 'none';
+      if (sectionActions) sectionActions.style.display = isHidden ? 'flex' : 'none';
     } else {
       container.style.display = 'none';
       if (icon) icon.textContent = '▶';
@@ -18571,6 +18719,7 @@ function toggleMathModule(moduleIndex) {
       if (priorityDisplay) priorityDisplay.style.display = 'block';
       if (iCanContainer) iCanContainer.style.display = 'none';
       if (descriptionContainer) descriptionContainer.style.display = 'none';
+      if (sectionActions) sectionActions.style.display = 'none';
     }
   });
 }
@@ -18617,10 +18766,13 @@ function createMathModuleSection(section, moduleIndex, sectionIndex, isEditMode)
   titleEl.style.color = 'var(--md-slate)';
   titleEl.contentEditable = isEditMode;
   titleEl.textContent = section.title;
+  titleEl.addEventListener('input', () => {
+    mathModulesData[moduleIndex].sections[sectionIndex].title = titleEl.textContent;
+  });
   titleEl.addEventListener('blur', () => {
     mathModulesData[moduleIndex].sections[sectionIndex].title = titleEl.textContent;
   });
-  sectionDiv.appendChild(titleEl);
+  sectionDiv.appendChild(createCurriculumSectionHeading(titleEl, 'math', moduleIndex, sectionIndex, isEditMode, 'var(--md-slate)'));
   
   if (isEditMode) {
     sectionDiv.appendChild(createCurriculumSectionListEditor(
@@ -18901,15 +19053,17 @@ function updateMathModulesData(modulesJson) {
             ]
           };
         }
-        // Migrate from 3 sections to 2 sections if needed
-        if (module.sections && module.sections.length > 2) {
-          // Keep only the first 2 sections
-          return {
-            title: module.title,
-            sections: module.sections.slice(0, 2)
-          };
-        }
-        return module;
+        const sections = Array.isArray(module.sections) ? module.sections : [];
+        return {
+          ...module,
+          sections: sections.map((section, sectionIndex) => ({
+            ...section,
+            title: section.title || `Section ${sectionIndex + 1}`,
+            bulletPoints: Array.isArray(section.bulletPoints)
+              ? section.bulletPoints
+              : (Array.isArray(section.bullets) ? section.bullets : [])
+          }))
+        };
       });
       
       // Ensure we have 6 modules
@@ -18923,16 +19077,14 @@ function updateMathModulesData(modulesJson) {
         });
       }
       
-      // Ensure each module has 2 sections
+      // Ensure each module has at least 2 starter sections while preserving added columns.
       mathModulesData.forEach(module => {
         if (!module.sections || module.sections.length < 2) {
-          module.sections = [
-            { title: 'Section 1', bulletPoints: [] },
-            { title: 'Section 2', bulletPoints: [] }
-          ];
-        } else if (module.sections.length > 2) {
-          // Trim to 2 sections if more exist
-          module.sections = module.sections.slice(0, 2);
+          const sections = module.sections || [];
+          while (sections.length < 2) {
+            sections.push({ title: `Section ${sections.length + 1}`, bulletPoints: [] });
+          }
+          module.sections = sections;
         }
       });
     } catch (e) {
@@ -18982,12 +19134,31 @@ function normalizeListeningVocabularyUnit(unit) {
     ...sectionBullets,
     ...cardBullets
   ].filter(text => text && text !== 'Click to edit...' && text !== 'Migrated content'));
+  const savedSections = Array.isArray(unit.sections)
+    ? unit.sections.map((section, sectionIndex) => ({
+        ...section,
+        title: section.title || `Section ${sectionIndex + 1}`,
+        bullets: uniqueList(
+          (Array.isArray(section.bullets) ? section.bullets : (section.bulletPoints || []))
+            .filter(text => text && text !== 'Click to edit...' && text !== 'Migrated content')
+        )
+      }))
+    : [];
+  const sections = savedSections.length
+    ? savedSections
+    : [{ title: 'Vocabulary', bullets: vocabulary }];
+  const savedItems = new Set(sections.flatMap(section => section.bullets || []));
+  const legacyItems = vocabulary.filter(item => !savedItems.has(item));
+  if (legacyItems.length) {
+    sections[0].bullets = uniqueList([...(sections[0].bullets || []), ...legacyItems]);
+  }
+
   return {
     ...unit,
     priorityStandard: unit.priorityStandard || '',
     iCanStatement: unit.iCanStatement || '',
     description: unit.description || '',
-    sections: [{ title: 'Vocabulary', bullets: vocabulary }]
+    sections
   };
 }
 
