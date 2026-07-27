@@ -5828,9 +5828,10 @@
       const currentTitle = document.getElementById('curriculumLessonTitleInput')?.value.trim() || '';
       const selectedSubject = ['skills', 'listening', 'math'].includes(analysis.subject) ? analysis.subject : (document.getElementById('curriculumSubjectInput')?.value || 'skills');
       const isMath = selectedSubject === 'math';
-      const candidateTitle = isMath ? (analysis.officialLessonTitle || analysis.lessonTitle) : analysis.lessonTitle;
+      const rawCandidateTitle = isMath ? (analysis.officialLessonTitle || analysis.lessonTitle) : analysis.lessonTitle;
+      const candidateTitle = looksLikeCurriculumStandardTitle(rawCandidateTitle, analysis) ? '' : rawCandidateTitle;
       const aiTitle = candidateTitle && !looksLikeCurriculumFileTitle(candidateTitle) && (isMath || !looksLikeUnhelpfulCurriculumTitle(candidateTitle)) ? candidateTitle : '';
-      const nextTitle = aiTitle || (isMath ? '' : getCurriculumObjectiveLessonTitle(analysis) || getCurriculumLearningTitle(analysis));
+      const nextTitle = aiTitle || getCurriculumObjectiveLessonTitle(analysis) || getCurriculumLearningTitle(analysis);
       const currentTitleIsStandard = looksLikeCurriculumStandardTitle(currentTitle, analysis);
       setInputValue('curriculumSubjectInput', selectedSubject);
       setInputValue('curriculumUnitInput', analysis.unitOrModule || document.getElementById('curriculumUnitInput')?.value || '');
@@ -6957,7 +6958,9 @@
     }
 
     function getCurriculumCardTitle(lesson) {
-      return lesson.officialLessonTitle || lesson.lessonTitle || getCurriculumLearningTitle(lesson) || formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson';
+      const explicitTitle = lesson.officialLessonTitle || lesson.lessonTitle || '';
+      const usableTitle = looksLikeCurriculumStandardTitle(explicitTitle, lesson) ? '' : explicitTitle;
+      return usableTitle || getCurriculumObjectiveLessonTitle(lesson) || getCurriculumLearningTitle(lesson) || formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson';
     }
 
     function getCurriculumFamilySummary(lesson) {
