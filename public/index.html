@@ -5772,6 +5772,16 @@
         || text.length > 80;
     }
 
+    function looksLikeCurriculumStandardTitle(value, analysis = {}) {
+      const text = String(value || '').replace(/\s+/g, ' ').trim();
+      if (!text) return false;
+      const code = String(analysis.priorityStandardCode || analysis.priorityStandardNumber || '').trim();
+      return /^(?:K|\d+)\.[A-Z]+\.[A-Z]\.\d+\s*[-:]/i.test(text)
+        || (code && text.toLowerCase().startsWith(`${code.toLowerCase()} -`))
+        || (code && text.toLowerCase().startsWith(`${code.toLowerCase()}:`))
+        || text === String(analysis.priorityStandard || '').trim();
+    }
+
     async function analyzeCurriculumLesson() {
       try {
         const user = await ensureCurriculumTeacherUser();
@@ -5821,10 +5831,11 @@
       const candidateTitle = isMath ? (analysis.officialLessonTitle || analysis.lessonTitle) : analysis.lessonTitle;
       const aiTitle = candidateTitle && !looksLikeCurriculumFileTitle(candidateTitle) && (isMath || !looksLikeUnhelpfulCurriculumTitle(candidateTitle)) ? candidateTitle : '';
       const nextTitle = aiTitle || (isMath ? '' : getCurriculumObjectiveLessonTitle(analysis) || getCurriculumLearningTitle(analysis));
+      const currentTitleIsStandard = looksLikeCurriculumStandardTitle(currentTitle, analysis);
       setInputValue('curriculumSubjectInput', selectedSubject);
       setInputValue('curriculumUnitInput', analysis.unitOrModule || document.getElementById('curriculumUnitInput')?.value || '');
       setInputValue('curriculumLessonNumberInput', formatCurriculumLessonNumber(analysis.lessonNumber || document.getElementById('curriculumLessonNumberInput')?.value || ''));
-      if (!currentTitle || currentTitle === curriculumLastPdfSuggestedTitle || looksLikeCurriculumFileTitle(currentTitle)) {
+      if (!currentTitle || currentTitle === curriculumLastPdfSuggestedTitle || looksLikeCurriculumFileTitle(currentTitle) || currentTitleIsStandard) {
         setInputValue('curriculumLessonTitleInput', nextTitle || '');
         curriculumLastPdfSuggestedTitle = '';
       }
@@ -6026,7 +6037,7 @@
     }
 
     function getCurriculumLearningTitle(analysis) {
-      const source = analysis.priorityStandard || analysis.objective || analysis.iCanStatement || '';
+      const source = analysis.objective || analysis.iCanStatement || analysis.parentSummary || analysis.officialLessonTitle || analysis.lessonTitle || '';
       return plainFamilySentence(source)
         .replace(/^Your child will\s+/i, '')
         .replace(/^i can\s+/i, '')
@@ -6102,6 +6113,7 @@
         unitOrModule: request.unitOrModule,
         lessonNumber: formatCurriculumLessonNumber(request.lessonNumber),
         lessonTitle: request.lessonTitle,
+        officialLessonTitle: request.lessonTitle,
         sourceText: request.sourceText,
         iCanStatement: document.getElementById('curriculumICanOutput')?.value.trim() || '',
         priorityStandard: document.getElementById('curriculumStandardOutput')?.value.trim() || '',
@@ -6506,7 +6518,7 @@
     }
 
     function renderCurriculumLibraryLesson(lesson) {
-      const title = lesson.lessonTitle || getCurriculumLearningTitle(lesson) || 'Untitled lesson';
+      const title = getCurriculumCardTitle(lesson);
       const isActive = lesson.id === curriculumActiveLessonId ? ' active' : '';
       const scheduledDate = getCurriculumPrimaryScheduleDate(lesson);
       const scheduleLabel = scheduledDate ? formatCurriculumDateLabel(scheduledDate) : '&#128197;';
@@ -6945,7 +6957,7 @@
     }
 
     function getCurriculumCardTitle(lesson) {
-      return lesson.lessonTitle || getCurriculumLearningTitle(lesson) || formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson';
+      return lesson.officialLessonTitle || lesson.lessonTitle || getCurriculumLearningTitle(lesson) || formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson';
     }
 
     function getCurriculumFamilySummary(lesson) {
@@ -7442,7 +7454,7 @@
       setInputValue('curriculumSubjectInput', lesson.subject || 'skills');
       setInputValue('curriculumUnitInput', lesson.unitOrModule || '');
       setInputValue('curriculumLessonNumberInput', formatCurriculumLessonNumber(lesson.lessonNumber || ''));
-      setInputValue('curriculumLessonTitleInput', lesson.lessonTitle || '');
+      setInputValue('curriculumLessonTitleInput', lesson.officialLessonTitle || lesson.lessonTitle || '');
       setInputValue('curriculumSourceTextInput', lesson.sourceText || '');
       applyCurriculumAnalysis(lesson);
       renderCurriculumLibraryList();
