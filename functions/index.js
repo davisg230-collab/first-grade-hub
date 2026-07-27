@@ -687,6 +687,7 @@ function buildCurriculumAnalysisPrompt(data) {
     `Lesson title selected by teacher: ${data.lessonTitle || "not provided"}`,
     "",
     "Return the exact structured fields requested by the schema.",
+    "Use full unit labels in unitOrModule: write Module 1 instead of M1, Mod 1, or module-1, and write Unit 1 instead of U1 when the source uses unit shorthand.",
     ...titleAndStandardGuidance,
     ...(mathStandardsContext ? ["", mathStandardsContext] : []),
     "For the I can statement, create one scholar-friendly sentence starting with \"I can\" by turning the lesson objective or main teaching goal into kid-friendly language. It does not need to appear word-for-word in the source.",
@@ -1172,7 +1173,7 @@ function normalizeCurriculumAnalysis(analysis, sourceText = "") {
 
   const normalized = {
     subject,
-    unitOrModule: normalizeScholarLanguage(analysis.unitOrModule),
+    unitOrModule: normalizeCurriculumUnitOrModule(analysis.unitOrModule),
     lessonNumber: normalizeScholarLanguage(analysis.lessonNumber),
     lessonTitle: isMath ? officialLessonTitle : normalizeScholarLanguage(analysis.lessonTitle),
     officialLessonTitle,
@@ -1263,6 +1264,14 @@ function normalizeScholarLanguage(value) {
     const replacement = /^(student|child|kid)$/i.test(match) ? "scholar" : "scholars";
     return /^[A-Z]/.test(match) ? replacement[0].toUpperCase() + replacement.slice(1) : replacement;
   });
+}
+
+function normalizeCurriculumUnitOrModule(value) {
+  return asText(value)
+    .replace(/\s+/g, " ")
+    .replace(/\b(?:m|mod|module)\s*[:#-]?\s*([0-9]+[A-Za-z]?)\b/gi, "Module $1")
+    .replace(/\b(?:u|unit)\s*[:#-]?\s*([0-9]+[A-Za-z]?)\b/gi, "Unit $1")
+    .trim();
 }
 
 function normalizeScholarLanguageArray(value) {
