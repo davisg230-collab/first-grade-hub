@@ -98,7 +98,7 @@ exports.analyzeCurriculumLesson = onCall(
             "Do not mark a field missing only because the lesson did not label it explicitly.",
             "Only add missingInformation when the source is too incomplete to make a responsible teacher draft, except do not mark missing video links.",
             "Write parent-facing language clearly and warmly for families.",
-            "Always refer to the children in the class as scholars. Never use student, students, child, children, kid, or kids in any generated field; use scholar or scholars instead.",
+            "Always refer to the children in the class as scholars in newly written explanatory fields. Preserve official curriculum titles and official standard wording exactly as sourced, even when that source wording uses student, child, or another term.",
           ].join(" "),
           input: prompt,
           max_output_tokens: 2200,
@@ -371,8 +371,13 @@ const CURRICULUM_LESSON_SCHEMA = {
     unitOrModule: { type: "string" },
     lessonNumber: { type: "string" },
     lessonTitle: { type: "string" },
+    officialLessonTitle: { type: "string" },
     iCanStatement: { type: "string" },
+    priorityStandardNumber: { type: "string" },
+    priorityStandardWording: { type: "string" },
     priorityStandard: { type: "string" },
+    supportingStandards: { type: "array", items: { type: "string" } },
+    standardNotes: { type: "string" },
     objective: { type: "string" },
     vocabulary: { type: "array", items: { type: "string" } },
     soundSpellings: { type: "array", items: { type: "string" } },
@@ -401,8 +406,13 @@ const CURRICULUM_LESSON_SCHEMA = {
     "unitOrModule",
     "lessonNumber",
     "lessonTitle",
+    "officialLessonTitle",
     "iCanStatement",
+    "priorityStandardNumber",
+    "priorityStandardWording",
     "priorityStandard",
+    "supportingStandards",
+    "standardNotes",
     "objective",
     "vocabulary",
     "soundSpellings",
@@ -519,6 +529,23 @@ function labelForType(type) {
 }
 
 function buildCurriculumAnalysisPrompt(data) {
+  const isMath = String(data.subject || "").trim().toLowerCase() === "math";
+  const titleAndStandardGuidance = isMath
+    ? [
+      "This is a MATH lesson. officialLessonTitle is an extraction field, not a generation field. If the source contains an official lesson title, copy it exactly into both lessonTitle and officialLessonTitle, including its wording, numbering, punctuation, and capitalization. Do not shorten, summarize, paraphrase, or replace it with a title based on the objective. If no official title is available, leave both title fields empty rather than inventing a title.",
+      "For priorityStandardNumber, copy the official standard code exactly as written in the source, such as 1.MD.C.4. Never invent, infer, or silently omit a code that is present.",
+      "For priorityStandardWording, copy the official wording of the selected standard from the source. Do not rewrite the objective, achievement descriptor, or skill summary as though it were the official standard wording.",
+      "Choose the one standard most directly assessed by this lesson as the priority standard. If the lesson is foundational and only references an earlier-grade standard, preserve that earlier-grade code and wording and explain that it is foundational or prerequisite in standardNotes.",
+      "If multiple standards are listed, put only the main directly assessed standard in priorityStandardNumber and priorityStandardWording. Put each supporting or prerequisite standard separately in supportingStandards; do not combine multiple standards into a new standard.",
+      "Set priorityStandard to the teacher-facing display value: the exact code followed by the exact official wording when both are available. If the source has no official code, leave priorityStandardNumber empty and use only source-supported wording in priorityStandard; never create a code.",
+      "For non-math-only fields officialLessonTitle, priorityStandardNumber, priorityStandardWording, supportingStandards, and standardNotes, return empty values when they do not apply.",
+    ]
+    : [
+      "For non-math lessons, look first at the objective or main learning goal and create a short 3-7 word lesson name that says what scholars are learning. Use the printed lesson title only if it is already clear and specific. Never use file names, guide names, internal labels, or generic titles like \"Lesson 1\".",
+      "For non-math lessons, set officialLessonTitle, priorityStandardNumber, priorityStandardWording, supportingStandards, and standardNotes to empty values unless the source clearly supplies those separate fields.",
+      "For priorityStandard, identify the one main standard focus for the lesson, or two if the lesson genuinely has two equal main goals. Prefer standards listed in the source, choosing the one or two that best match the lesson's main teaching point. If the source provides no standard codes, write the main standard skill in plain language instead of inventing a code.",
+    ];
+
   return [
     "Analyze this first grade curriculum lesson for a teacher-facing lesson library.",
     "",
@@ -528,8 +555,7 @@ function buildCurriculumAnalysisPrompt(data) {
     `Lesson title selected by teacher: ${data.lessonTitle || "not provided"}`,
     "",
     "Return the exact structured fields requested by the schema.",
-    "For lessonTitle, look first at the objective or main learning goal and create a short 3-7 word lesson name that says what scholars are learning. Use the printed lesson title only if it is already clear and specific. Never use file names, guide names, internal labels, or generic titles like \"Lesson 1\". Good examples: \"Sounds p, k, g, n, a\", \"Counting On to Add\", \"Retelling Key Story Events\".",
-    "For priorityStandard, identify the one main standard focus for the lesson, or two if the lesson genuinely has two equal main goals. Prefer standards listed in the source, choosing the one or two that best match the lesson's main teaching point. If the source provides no standard codes, write the main standard skill in plain language instead of inventing a code.",
+    ...titleAndStandardGuidance,
     "For the I can statement, create one scholar-friendly sentence starting with \"I can\" by turning the lesson objective or main teaching goal into kid-friendly language. It does not need to appear word-for-word in the source.",
     "For vocabulary, choose lesson words, teaching terms, or curriculum words that scholars or families may need explained, even if the lesson does not provide a labeled vocabulary list.",
     "For soundSpellings, list the letter sounds, spellings, letter pairs, and letter teams explicitly taught or practiced in the lesson. Include entries such as /m/, /sh/, ch, ai, or other grapheme-sound correspondences when the lesson supports them. Keep this separate from vocabulary and return an empty array when the lesson has no sound or spelling focus.",
@@ -714,13 +740,32 @@ function extractOpenAIOutputText(responseBody) {
 }
 
 function normalizeCurriculumAnalysis(analysis) {
+  const subject = ["skills", "listening", "math", "other"].includes(analysis.subject) ? analysis.subject : "other";
+  const isMath = subject === "math";
+  const officialLessonTitle = isMath
+    ? normalizeOfficialCurriculumText(analysis.officialLessonTitle || analysis.lessonTitle)
+    : "";
+  const priorityStandardNumber = isMath ? normalizeOfficialCurriculumText(analysis.priorityStandardNumber) : "";
+  const priorityStandardWording = isMath ? normalizeOfficialCurriculumText(analysis.priorityStandardWording) : "";
+  const rawPriorityStandard = isMath
+    ? normalizeOfficialCurriculumText(analysis.priorityStandard)
+    : normalizeScholarLanguage(analysis.priorityStandard);
+  const priorityStandard = isMath
+    ? [priorityStandardNumber, priorityStandardWording].filter(Boolean).join(" - ") || rawPriorityStandard
+    : rawPriorityStandard;
+
   const normalized = {
-    subject: ["skills", "listening", "math", "other"].includes(analysis.subject) ? analysis.subject : "other",
+    subject,
     unitOrModule: normalizeScholarLanguage(analysis.unitOrModule),
     lessonNumber: normalizeScholarLanguage(analysis.lessonNumber),
-    lessonTitle: normalizeScholarLanguage(analysis.lessonTitle),
+    lessonTitle: isMath ? officialLessonTitle : normalizeScholarLanguage(analysis.lessonTitle),
+    officialLessonTitle,
     iCanStatement: normalizeScholarLanguage(analysis.iCanStatement),
-    priorityStandard: normalizeScholarLanguage(analysis.priorityStandard),
+    priorityStandardNumber,
+    priorityStandardWording,
+    priorityStandard,
+    supportingStandards: isMath ? normalizeOfficialCurriculumArray(analysis.supportingStandards) : [],
+    standardNotes: isMath ? normalizeOfficialCurriculumText(analysis.standardNotes) : "",
     objective: normalizeScholarLanguage(analysis.objective),
     vocabulary: normalizeScholarLanguageArray(analysis.vocabulary),
     soundSpellings: normalizeScholarLanguageArray(analysis.soundSpellings),
@@ -810,6 +855,14 @@ function normalizeScholarLanguage(value) {
 
 function normalizeScholarLanguageArray(value) {
   return normalizeStringArray(value).map(normalizeScholarLanguage);
+}
+
+function normalizeOfficialCurriculumText(value) {
+  return asText(value).replace(/\s+/g, " ").trim();
+}
+
+function normalizeOfficialCurriculumArray(value) {
+  return normalizeStringArray(value).map(normalizeOfficialCurriculumText).filter(Boolean);
 }
 
 function normalizeCurriculumMissingInformation(analysis) {

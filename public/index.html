@@ -3632,6 +3632,14 @@
                     <textarea id="curriculumStandardOutput" class="curriculum-builder-field curriculum-builder-output" rows="2"></textarea>
                   </div>
                   <div>
+                    <label class="curriculum-builder-label" for="curriculumSupportingStandardsOutput">Supporting / prerequisite standards</label>
+                    <textarea id="curriculumSupportingStandardsOutput" class="curriculum-builder-field curriculum-builder-output" rows="3" placeholder="One per line"></textarea>
+                  </div>
+                  <div>
+                    <label class="curriculum-builder-label" for="curriculumStandardNotesOutput">Standard notes</label>
+                    <textarea id="curriculumStandardNotesOutput" class="curriculum-builder-field curriculum-builder-output" rows="2" placeholder="For example: foundational prerequisite standard"></textarea>
+                  </div>
+                  <div>
                     <label class="curriculum-builder-label" for="curriculumICanOutput">I can statement</label>
                     <textarea id="curriculumICanOutput" class="curriculum-builder-field curriculum-builder-output" rows="2"></textarea>
                   </div>
@@ -5796,9 +5804,12 @@
 
     function applyCurriculumAnalysis(analysis) {
       const currentTitle = document.getElementById('curriculumLessonTitleInput')?.value.trim() || '';
-      const aiTitle = analysis.lessonTitle && !looksLikeCurriculumFileTitle(analysis.lessonTitle) && !looksLikeUnhelpfulCurriculumTitle(analysis.lessonTitle) ? analysis.lessonTitle : '';
-      const nextTitle = aiTitle || getCurriculumObjectiveLessonTitle(analysis) || getCurriculumLearningTitle(analysis);
-      setInputValue('curriculumSubjectInput', ['skills', 'listening', 'math'].includes(analysis.subject) ? analysis.subject : (document.getElementById('curriculumSubjectInput')?.value || 'skills'));
+      const selectedSubject = ['skills', 'listening', 'math'].includes(analysis.subject) ? analysis.subject : (document.getElementById('curriculumSubjectInput')?.value || 'skills');
+      const isMath = selectedSubject === 'math';
+      const candidateTitle = isMath ? (analysis.officialLessonTitle || analysis.lessonTitle) : analysis.lessonTitle;
+      const aiTitle = candidateTitle && !looksLikeCurriculumFileTitle(candidateTitle) && (isMath || !looksLikeUnhelpfulCurriculumTitle(candidateTitle)) ? candidateTitle : '';
+      const nextTitle = aiTitle || (isMath ? '' : getCurriculumObjectiveLessonTitle(analysis) || getCurriculumLearningTitle(analysis));
+      setInputValue('curriculumSubjectInput', selectedSubject);
       setInputValue('curriculumUnitInput', analysis.unitOrModule || document.getElementById('curriculumUnitInput')?.value || '');
       setInputValue('curriculumLessonNumberInput', formatCurriculumLessonNumber(analysis.lessonNumber || document.getElementById('curriculumLessonNumberInput')?.value || ''));
       if (!currentTitle || currentTitle === curriculumLastPdfSuggestedTitle || looksLikeCurriculumFileTitle(currentTitle)) {
@@ -5807,6 +5818,8 @@
       }
       setInputValue('curriculumICanOutput', analysis.iCanStatement || '');
       setInputValue('curriculumStandardOutput', analysis.priorityStandard || '');
+      setInputValue('curriculumSupportingStandardsOutput', listToLines(analysis.supportingStandards));
+      setInputValue('curriculumStandardNotesOutput', analysis.standardNotes || '');
       setInputValue('curriculumObjectiveOutput', analysis.objective || '');
       setInputValue('curriculumParentSummaryOutput', analysis.parentSummary || '');
       setInputValue('curriculumVocabularyOutput', listToLines(analysis.vocabulary));
@@ -6077,6 +6090,8 @@
         sourceText: request.sourceText,
         iCanStatement: document.getElementById('curriculumICanOutput')?.value.trim() || '',
         priorityStandard: document.getElementById('curriculumStandardOutput')?.value.trim() || '',
+        supportingStandards: linesToList(document.getElementById('curriculumSupportingStandardsOutput')?.value || ''),
+        standardNotes: document.getElementById('curriculumStandardNotesOutput')?.value.trim() || '',
         objective: document.getElementById('curriculumObjectiveOutput')?.value.trim() || '',
         parentSummary: document.getElementById('curriculumParentSummaryOutput')?.value.trim() || '',
         vocabulary: linesToList(document.getElementById('curriculumVocabularyOutput')?.value || ''),
@@ -6579,6 +6594,8 @@
           <p class="text-sm font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson')}</p>
         </div>
         ${renderCurriculumDetailText('Priority standard', lesson.priorityStandard)}
+        ${renderCurriculumDetailList('Supporting / prerequisite standards', lesson.supportingStandards)}
+        ${renderCurriculumDetailText('Standard notes', lesson.standardNotes)}
         ${renderCurriculumDetailText('I can statement', lesson.iCanStatement)}
         ${renderCurriculumDetailText('Objective', lesson.objective)}
         ${renderCurriculumDetailList('Teacher notes', lesson.teacherNotes)}
@@ -7269,6 +7286,8 @@
           <h3>${escapeHtml(getCurriculumCardTitle(lesson))}</h3>
           <div class="grid">
             ${renderCurriculumPrintField('Priority standard', lesson.priorityStandard)}
+            ${renderCurriculumPrintList('Supporting / prerequisite standards', lesson.supportingStandards)}
+            ${renderCurriculumPrintField('Standard notes', lesson.standardNotes)}
             ${renderCurriculumPrintField('I can statement', lesson.iCanStatement)}
             ${renderCurriculumPrintField('Objective and description', getCurriculumPrintFocus(lesson))}
             ${renderCurriculumPrintList('Sounds / Spellings', lesson.soundSpellings)}
@@ -7291,6 +7310,8 @@
           <div class="grid">
             ${renderCurriculumPrintField('I can statement', lesson.iCanStatement)}
             ${renderCurriculumPrintField('Priority standard', lesson.priorityStandard)}
+            ${renderCurriculumPrintList('Supporting / prerequisite standards', lesson.supportingStandards)}
+            ${renderCurriculumPrintField('Standard notes', lesson.standardNotes)}
             ${renderCurriculumPrintField('Focus', getCurriculumPrintFocus(lesson))}
             ${renderCurriculumPrintList('Sounds / Spellings', lesson.soundSpellings)}
             ${renderCurriculumPrintList('Materials', lesson.materials)}
@@ -7410,6 +7431,8 @@
         'curriculumSourceTextInput',
         'curriculumICanOutput',
         'curriculumStandardOutput',
+        'curriculumSupportingStandardsOutput',
+        'curriculumStandardNotesOutput',
         'curriculumObjectiveOutput',
         'curriculumParentSummaryOutput',
         'curriculumVocabularyOutput',
