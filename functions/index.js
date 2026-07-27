@@ -107,7 +107,7 @@ exports.analyzeCurriculumLesson = onCall(
             "Keep generated sections concise so the structured response stays complete: at most 5 teacher notes, 3 family questions, 12 vocabulary items, and 12 materials. Keep standard notes to one short line per cited standard, and do not repeat the full official standard wording there.",
           ].join(" "),
           input: prompt,
-          max_output_tokens: subject === "math" ? 3200 : 2200,
+          max_output_tokens: subject === "math" ? 6000 : 2200,
           text: {
             format: {
               type: "json_schema",
@@ -132,13 +132,29 @@ exports.analyzeCurriculumLesson = onCall(
         type: openAiError.type,
         param: openAiError.param,
         message: openAiError.message,
+        ...buildCurriculumResponseDiagnostics(responseBody, extractOpenAIOutputText(responseBody)),
       });
       throw new HttpsError("failed-precondition", getOpenAICurriculumFailureMessage(response.status, responseBody));
     }
 
     const outputText = extractOpenAIOutputText(responseBody);
+    const responseDiagnostics = buildCurriculumResponseDiagnostics(responseBody, outputText);
+    if (responseDiagnostics.truncated) {
+      const incompleteReason = asText(responseBody.incomplete_details && responseBody.incomplete_details.reason) || "unknown";
+      logger.error("OpenAI curriculum response was incomplete.", {
+        ...responseDiagnostics,
+        reason: incompleteReason,
+      });
+      throw new HttpsError(
+        "internal",
+        incompleteReason === "max_output_tokens"
+          ? "The AI draft was cut off before it finished. Please try analyzing this lesson again."
+          : "The AI returned an incomplete lesson draft. Please try analyzing this lesson again."
+      );
+    }
+
     if (!outputText) {
-      logger.error("OpenAI curriculum response had no output text.", { responseId: responseBody && responseBody.id });
+      logger.error("OpenAI curriculum response had no output text.", responseDiagnostics);
       throw new HttpsError("internal", "The AI analyzer did not return a usable draft.");
     }
 
@@ -147,14 +163,36 @@ exports.analyzeCurriculumLesson = onCall(
       analysis = parseCurriculumAnalysisOutput(outputText);
     } catch (error) {
       logger.error("OpenAI curriculum response was not valid JSON.", {
-        message: error.message,
-        outputLength: outputText.length,
-        outputPreview: outputText.slice(0, 180),
+        ...buildCurriculumResponseDiagnostics(responseBody, outputText, error),
       });
-      throw new HttpsError(
-        "internal",
-        "The AI response was incomplete or not valid JSON. Please try analyzing the lesson again."
-      );
+      if (!responseDiagnostics.truncated && !responseDiagnostics.safetyInterruption) {
+        const repairedText = await requestCurriculumJsonRepair({
+          apiKey,
+          model,
+          outputText,
+          maxOutputTokens: subject === "math" ? 6000 : 2200,
+        });
+        if (repairedText) {
+          try {
+            analysis = parseCurriculumAnalysisOutput(repairedText);
+            logger.info("OpenAI curriculum response was repaired into valid JSON.", {
+              responseId: responseBody && responseBody.id,
+              originalOutputCharacters: outputText.length,
+              repairedOutputCharacters: repairedText.length,
+            });
+          } catch (repairError) {
+            logger.error("OpenAI curriculum JSON repair was not valid JSON.", {
+              ...buildCurriculumResponseDiagnostics({}, repairedText, repairError),
+            });
+          }
+        }
+      }
+      if (!analysis) {
+        throw new HttpsError(
+          "internal",
+          "The AI response was incomplete or not valid JSON. Please try analyzing the lesson again."
+        );
+      }
     }
 
     try {
@@ -781,6 +819,109 @@ async function readJsonResponse(response) {
   }
 }
 
+function stripCurriculumJsonFences(value) {
+  return asText(value)
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim();
+}
+
+function buildCurriculumResponseDiagnostics(responseBody, outputText, parseError) {
+  const body = responseBody || {};
+  const output = asText(outputText);
+  const outputItems = Array.isArray(body.output) ? body.output : [];
+  const finishReasons = [];
+  if (body.finish_reason) finishReasons.push(asText(body.finish_reason));
+  outputItems.forEach((item) => {
+    if (item && item.finish_reason) finishReasons.push(asText(item.finish_reason));
+    if (item && item.status) finishReasons.push(`status:${asText(item.status)}`);
+  });
+  const incompleteReason = asText(body.incomplete_details && body.incomplete_details.reason);
+  const contentTypes = outputItems.flatMap((item) => Array.isArray(item && item.content)
+    ? item.content.map((content) => asText(content && content.type)).filter(Boolean)
+    : []);
+  const errorCode = asText(body.error && body.error.code).toLowerCase();
+  const errorMessage = asText(body.error && body.error.message).toLowerCase();
+  const safetyInterruption = Boolean(
+    body.refusal
+    || contentTypes.includes("refusal")
+    || /safety|content[_ -]?filter|policy|refusal/.test(incompleteReason.toLowerCase())
+    || /safety|content[_ -]?filter|policy|refusal/.test(errorCode)
+    || /safety|content[_ -]?filter|policy|refusal/.test(errorMessage)
+  );
+  const parseCandidate = stripCurriculumJsonFences(output);
+  const startsLikeJson = /^[\[{]/.test(parseCandidate);
+  const endsLikeJson = /[\]}]$/.test(parseCandidate);
+  const parseLooksTruncated = startsLikeJson && !endsLikeJson;
+  const statusTruncated = body.status === "incomplete"
+    || Boolean(body.incomplete_details)
+    || outputItems.some((item) => item && item.status === "incomplete");
+
+  return {
+    responseId: asText(body.id),
+    responseStatus: asText(body.status),
+    truncated: statusTruncated || parseLooksTruncated,
+    incompleteReason: incompleteReason || "",
+    finishReasons: Array.from(new Set(finishReasons)),
+    outputCharacters: output.length,
+    outputTokens: body.usage && body.usage.output_tokens,
+    outputTokenDetails: body.usage && body.usage.output_tokens_details,
+    containsMarkdownFences: /```(?:json)?/i.test(output),
+    safetyInterruption,
+    outputStart: output.replace(/\s+/g, " ").slice(0, 220),
+    outputEnd: output.replace(/\s+/g, " ").slice(-220),
+    jsonParseError: parseError ? asText(parseError.message) : "",
+  };
+}
+
+async function requestCurriculumJsonRepair({ apiKey, model, outputText, maxOutputTokens }) {
+  const repairPrompt = [
+    "Convert the completed response below into one valid JSON object that exactly matches the supplied curriculum lesson schema.",
+    "Preserve all information. Do not summarize, omit, explain, or add Markdown fences.",
+    "Return only the JSON object.",
+    "",
+    "Response to repair:",
+    outputText,
+  ].join("\n");
+  try {
+    const response = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        instructions: "You repair only a complete but malformed curriculum JSON response. Return schema-compliant JSON and nothing else.",
+        input: repairPrompt,
+        max_output_tokens: maxOutputTokens,
+        text: {
+          format: {
+            type: "json_schema",
+            name: "curriculum_lesson_analysis_repair",
+            strict: true,
+            schema: CURRICULUM_LESSON_SCHEMA,
+          },
+        },
+      }),
+    });
+    const responseBody = await readJsonResponse(response);
+    const repairedText = extractOpenAIOutputText(responseBody);
+    const diagnostics = buildCurriculumResponseDiagnostics(responseBody, repairedText);
+    if (!response.ok || diagnostics.truncated || diagnostics.safetyInterruption || !repairedText) {
+      logger.error("OpenAI curriculum JSON repair could not complete.", {
+        status: response.status,
+        ...diagnostics,
+      });
+      return "";
+    }
+    return repairedText;
+  } catch (error) {
+    logger.error("OpenAI curriculum JSON repair request failed.", { message: error.message });
+    return "";
+  }
+}
+
 function getOpenAICurriculumFailureMessage(status, responseBody) {
   const error = responseBody && responseBody.error ? responseBody.error : {};
   const message = asText(error.message);
@@ -840,7 +981,7 @@ function parseCurriculumAnalysisOutput(outputText) {
 
   const candidates = [
     text,
-    text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim(),
+    stripCurriculumJsonFences(text),
   ];
   for (const candidate of candidates) {
     try {
