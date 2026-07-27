@@ -5689,6 +5689,8 @@
       if (!file) return;
 
       try {
+        // A newly selected PDF represents a new lesson, not an edit to the previously loaded lesson.
+        clearCurriculumBuilderForm();
         setCurriculumBusy(true, 'Reading PDF...');
         setCurriculumPdfStatus('Reading PDF...');
         const result = await readCurriculumPdfText(file);
@@ -7467,6 +7469,7 @@
 
     function clearCurriculumBuilderForm() {
       curriculumActiveLessonId = '';
+      curriculumLastPdfSuggestedTitle = '';
       [
         'curriculumUnitInput',
         'curriculumLessonNumberInput',
