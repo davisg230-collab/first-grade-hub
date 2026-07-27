@@ -1,0 +1,372 @@
+{
+  "version": 1,
+  "curriculum": "Eureka Math?",
+  "grade": 1,
+  "sourcePublisher": "Great Minds PBC",
+  "sourceFiles": [
+    "EM2_G1_M1_TE_StandardsResource_WCAG21.pdf",
+    "EM2_G1_M2_TE_StandardsResource_WCAG21_v2.pdf",
+    "EM2_G1_M3_TE_StandardsResource_WCAG21.pdf",
+    "EM2_G1_M4_TE_StandardsResource_WCAG21.pdf",
+    "EM2_G1_M5_TE_StandardsResource_WCAG21.pdf",
+    "EM2_G1_M6_TE_StandardsResourcePart1_WCAG21.pdf",
+    "EM2_G1_M6_TE_StandardsResourcePart2_WCAG21.pdf"
+  ],
+  "standards": [
+    {
+      "code": "1.G.A.1",
+      "grade": 1,
+      "domain": "Reason with shapes and their attributes",
+      "officialWording": "Distinguish between defining attributes (e.g., triangles are closed and three-sided) versus non-defining attributes (e.g., color, orientation, overall size); build and draw shapes to possess defining attributes.",
+      "modules": [
+        6
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "1.G.A.2",
+      "grade": 1,
+      "domain": "Reason with shapes and their attributes",
+      "officialWording": "Compose two-dimensional shapes (rectangles, squares, trapezoids, triangles, half-circles, and quarter-circles) or three-dimensional shapes (cubes, right rectangular prisms, right circular cones, and right circular cylinders) to create a composite shape, and compose new shapes from the composite shape.",
+      "modules": [
+        6
+      ],
+      "footnotes": [
+        "Students do not need to learn formal names such as “right rectangular prism.”"
+      ]
+    },
+    {
+      "code": "1.G.A.3",
+      "grade": 1,
+      "domain": "Reason with shapes and their attributes",
+      "officialWording": "Partition circles and rectangles into two and four equal shares, describe the shares using the words halves, fourths, and quarters, and use the phrases half of, fourth of, and quarter of. Describe the whole as two of, or four of the shares. Understand for these examples that decomposing into more equal shares creates smaller shares.",
+      "modules": [
+        6
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "1.MD.A.1",
+      "grade": 1,
+      "domain": "Measure lengths indirectly and by iterating length units",
+      "officialWording": "Order three objects by length; compare the lengths of two objects indirectly by using a third object.",
+      "modules": [
+        4
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "1.MD.A.2",
+      "grade": 1,
+      "domain": "Measure lengths indirectly and by iterating length units",
+      "officialWording": "Express the length of an object as a whole number of length units, by laying multiple copies of a shorter object (the length unit) end to end; understand that the length measurement of an object is the number of same-size length units that span it with no gaps or overlaps. Limit to contexts where the object being measured is spanned by a whole number of length units with no gaps or overlaps.",
+      "modules": [
+        4
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "1.MD.B.3",
+      "grade": 1,
+      "domain": "Tell and write time",
+      "officialWording": "Tell and write time in hours and half-hours using analog and digital clocks.",
+      "modules": [
+        5,
+        6
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "1.MD.C.4",
+      "grade": 1,
+      "domain": "Represent and interpret data",
+      "officialWording": "Organize, represent, and interpret data with up to three categories; ask and answer questions about the total number of data points, how many in each category, and how many more or less are in one category than in another.",
+      "modules": [
+        1,
+        2
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "1.NBT.A.1",
+      "grade": 1,
+      "domain": "Extend the counting sequence",
+      "officialWording": "Count to 120, starting at any number less than 120. In this range, read and write numerals and represent a number of objects with a written numeral.",
+      "modules": [
+        3,
+        5,
+        6
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "1.NBT.B.2",
+      "grade": 1,
+      "domain": "Understand place value",
+      "officialWording": "Understand that the two digits of a two-digit number represent amounts of tens and ones. Understand the following as special cases: a. 10 can be thought of as a bundle of ten ones — called a “ten.” b. The numbers from 11 to 19 are composed of a ten and one, two, three, four, five, six, seven, eight, or nine ones. c. The numbers 10, 20, 30, 40, 50, 60, 70, 80, 90 refer to one, two, three, four, five, six, seven, eight, or nine tens (and 0 ones).",
+      "modules": [
+        1,
+        3,
+        4,
+        5
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "1.NBT.B.3",
+      "grade": 1,
+      "domain": "Understand place value",
+      "officialWording": "Compare two two-digit numbers based on meanings of the tens and ones digits, recording the results of comparisons with the symbols >, =, and <.",
+      "modules": [
+        1,
+        4,
+        5
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "1.NBT.C.4",
+      "grade": 1,
+      "domain": "Use place value understanding and properties of operations to add and subtract",
+      "officialWording": "Add within 100, including adding a two-digit number and a one-digit number, and adding a two-digit number and a multiple of 10, using concrete models or drawings and strategies based on place value, properties of operations, and/or the relationship between addition and subtraction; relate the strategy to a written method and explain the reasoning used. Understand that in adding two-digit numbers, one adds tens and tens, ones and ones; and sometimes it is necessary to compose a ten.",
+      "modules": [
+        5,
+        6
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "1.NBT.C.5",
+      "grade": 1,
+      "domain": "Use place value understanding and properties of operations to add and subtract",
+      "officialWording": "Given a two-digit number, mentally find 10 more or 10 less than the number, without having to count; explain the reasoning used.",
+      "modules": [
+        5
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "1.NBT.C.6",
+      "grade": 1,
+      "domain": "Use place value understanding and properties of operations to add and subtract",
+      "officialWording": "Subtract multiples of 10 in the range 10–90 from multiples of 10 in the range 10–90 (positive or zero differences), using concrete models or drawings and strategies based on place value, properties of operations, and/or the relationship between addition and subtraction; relate the strategy to a written method and explain the reasoning used.",
+      "modules": [
+        5
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "1.OA.A.1",
+      "grade": 1,
+      "domain": "Represent and solve problems involving addition and subtraction",
+      "officialWording": "Use addition and subtraction within 20 to solve word problems involving situations of adding to, taking from, putting together, taking apart, and comparing, with unknowns in all positions, e.g., by using objects, drawings, and equations with a symbol for the unknown number to represent the problem.",
+      "modules": [
+        2,
+        3,
+        4,
+        6
+      ],
+      "footnotes": [
+        "See [CCSSM] Glossary, Table 1."
+      ]
+    },
+    {
+      "code": "1.OA.A.2",
+      "grade": 1,
+      "domain": "Represent and solve problems involving addition and subtraction",
+      "officialWording": "Solve word problems that call for addition of three whole numbers whose sum is less than or equal to 20, e.g., by using objects, drawings, and equations with a symbol for the unknown number to represent the problem.",
+      "modules": [
+        3
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "1.OA.B.3",
+      "grade": 1,
+      "domain": "Understand and apply properties of operations and the relationship between addition and subtraction",
+      "officialWording": "Apply properties of operations as strategies to add and subtract. Examples: If 8 + 3 = 11 is known, then 3 + 8 = 11 is also known. (Commutative property of addition.) To add 2 + 6 + 4, the second two numbers can be added to make a ten, so 2 + 6 + 4 = 2 + 10 = 12. (Associative property of addition.)",
+      "modules": [
+        1,
+        3
+      ],
+      "footnotes": [
+        "Students need not use formal terms for these properties."
+      ]
+    },
+    {
+      "code": "1.OA.B.4",
+      "grade": 1,
+      "domain": "Understand and apply properties of operations and the relationship between addition and subtraction",
+      "officialWording": "Understand subtraction as an unknown-addend problem. For example, subtract 10 – 8 by finding the number that makes 10 when added to 8.",
+      "modules": [
+        2
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "1.OA.C.5",
+      "grade": 1,
+      "domain": "Add and subtract within 20",
+      "officialWording": "Relate counting to addition and subtraction (e.g., by counting on 2 to add 2).",
+      "modules": [
+        1,
+        2
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "1.OA.C.6",
+      "grade": 1,
+      "domain": "Add and subtract within 20",
+      "officialWording": "Add and subtract within 20, demonstrating fluency for addition and subtraction within 10. Use strategies such as counting on; making ten (e.g., 8 + 6 = 8 + 2 + 4 = 10 + 4 = 14); decomposing a number leading to a ten (e.g., 13 – 4 = 13 – 3 – 1 = 10 – 1 = 9); using the relationship between addition and subtraction (e.g., knowing that 8 + 4 = 12, one knows 12 – 8 = 4); and creating equivalent but easier or known sums (e.g., adding 6 + 7 by creating the known equivalent 6 + 6 + 1 = 12 + 1 = 13).",
+      "modules": [
+        1,
+        2,
+        3
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "1.OA.D.7",
+      "grade": 1,
+      "domain": "Work with addition and subtraction equations",
+      "officialWording": "Understand the meaning of the equal sign, and determine if equations involving addition and subtraction are true or false. For example, which of the following equations are true and which are false? 6 = 6, 7 = 8 – 1, 5 + 2 = 2 + 5, 4 + 1 = 5 + 2.",
+      "modules": [
+        1,
+        2,
+        5
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "1.OA.D.8",
+      "grade": 1,
+      "domain": "Work with addition and subtraction equations",
+      "officialWording": "Determine the unknown whole number in an addition or subtraction equation relating three whole numbers. For example, determine the unknown number that makes the equation true in each of the equations 8 + ? = 11, 5 = □ – 3, 6 + 6 = □.",
+      "modules": [
+        2
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "MP1",
+      "grade": 1,
+      "domain": "Standards for Mathematical Practice",
+      "officialWording": "Make sense of problems and persevere in solving them.",
+      "modules": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "MP2",
+      "grade": 1,
+      "domain": "Standards for Mathematical Practice",
+      "officialWording": "Reason abstractly and quantitatively.",
+      "modules": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "MP3",
+      "grade": 1,
+      "domain": "Standards for Mathematical Practice",
+      "officialWording": "Construct viable arguments and critique the reasoning of others.",
+      "modules": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "MP4",
+      "grade": 1,
+      "domain": "Standards for Mathematical Practice",
+      "officialWording": "Model with mathematics.",
+      "modules": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "MP5",
+      "grade": 1,
+      "domain": "Standards for Mathematical Practice",
+      "officialWording": "Use appropriate tools strategically.",
+      "modules": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "MP6",
+      "grade": 1,
+      "domain": "Standards for Mathematical Practice",
+      "officialWording": "Attend to precision.",
+      "modules": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "MP7",
+      "grade": 1,
+      "domain": "Standards for Mathematical Practice",
+      "officialWording": "Look for and make use of structure.",
+      "modules": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "MP8",
+      "grade": 1,
+      "domain": "Standards for Mathematical Practice",
+      "officialWording": "Look for and express regularity in repeated reasoning.",
+      "modules": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "footnotes": []
+    }
+  ]
+}
