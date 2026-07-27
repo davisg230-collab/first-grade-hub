@@ -1,3 +1,5 @@
+const fs = require("fs");
+const path = require("path");
 const { logger } = require("firebase-functions");
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
@@ -7,6 +9,8 @@ const admin = require("firebase-admin");
 admin.initializeApp();
 
 const OPENAI_API_KEY = defineSecret("OPENAI_API_KEY");
+const MATH_STANDARDS_REFERENCE_PATH = path.join(__dirname, "data", "math-standards-reference.json");
+let mathStandardsReferenceCache;
 const MAIL_COLLECTION = process.env.MAIL_COLLECTION || "mail";
 const APPROVED_EDITOR_EMAILS = new Set([
   "davisg230@gmail.com",
@@ -57,6 +61,7 @@ exports.analyzeCurriculumLesson = onCall(
     }
 
     const data = request.data || {};
+    const subject = normalizeCurriculumSubject(data.subject);
     const sourceText = asText(data.sourceText);
     if (sourceText.length < 40) {
       throw new HttpsError("invalid-argument", "Paste one full lesson before running the AI analyzer.");
@@ -72,7 +77,7 @@ exports.analyzeCurriculumLesson = onCall(
 
     const model = process.env.OPENAI_MODEL || "gpt-5.6-luna";
     const prompt = buildCurriculumAnalysisPrompt({
-      subject: asText(data.subject),
+      subject,
       unitOrModule: asText(data.unitOrModule),
       lessonNumber: asText(data.lessonNumber),
       lessonTitle: asText(data.lessonTitle),
@@ -145,7 +150,7 @@ exports.analyzeCurriculumLesson = onCall(
     }
 
     return {
-      analysis: normalizeCurriculumAnalysis(analysis),
+      analysis: normalizeCurriculumAnalysis(analysis, sourceText),
       analyzedAt: new Date().toISOString(),
       model,
     };
@@ -528,6 +533,62 @@ function labelForType(type) {
   }
 }
 
+function loadMathStandardsReference() {
+  if (mathStandardsReferenceCache) return mathStandardsReferenceCache;
+  try {
+    const reference = JSON.parse(fs.readFileSync(MATH_STANDARDS_REFERENCE_PATH, "utf8"));
+    if (!reference || !Array.isArray(reference.standards)) {
+      throw new Error("The math standards reference has no standards array.");
+    }
+    mathStandardsReferenceCache = reference;
+    return reference;
+  } catch (error) {
+    logger.error("Math standards reference could not be loaded.", { message: error.message });
+    throw new Error("The permanent math standards reference is unavailable.");
+  }
+}
+
+function extractMathStandardCodes(sourceText) {
+  const matches = asText(sourceText).match(/\b(?:\d+\.[A-Z]+\.[A-Z]\.\d+|MP\d+)\b/gi) || [];
+  return Array.from(new Set(matches.map((code) => code.toUpperCase())));
+}
+
+function getMathReferenceMatches(sourceText) {
+  const reference = loadMathStandardsReference();
+  const standardsByCode = new Map(reference.standards.map((standard) => [standard.code.toUpperCase(), standard]));
+  const codes = extractMathStandardCodes(sourceText);
+  return {
+    codes,
+    matches: codes.map((code) => standardsByCode.get(code) || null),
+    standardsByCode,
+  };
+}
+
+function buildMathStandardsContext(sourceText) {
+  const { codes, matches } = getMathReferenceMatches(sourceText);
+  if (!codes.length) {
+    return [
+      "Local math standards reference lookup: no standard code was found in the lesson source.",
+      "Do not invent a math standard code or official wording.",
+    ].join("\n");
+  }
+
+  const lines = [
+    `Local math standards reference lookup for cited codes: ${codes.join(", ")}`,
+    "Use this compact lookup instead of reconstructing official standard wording.",
+  ];
+  matches.forEach((standard, index) => {
+    const code = codes[index];
+    if (!standard) {
+      lines.push(`- ${code}: Official wording unavailable in the standards reference.`);
+      return;
+    }
+    const footnotes = standard.footnotes && standard.footnotes.length ? ` Footnotes: ${standard.footnotes.join(" ")}` : "";
+    lines.push(`- ${code} | ${standard.domain} | ${standard.officialWording}${footnotes}`);
+  });
+  return lines.join("\n");
+}
+
 function buildCurriculumAnalysisPrompt(data) {
   const isMath = String(data.subject || "").trim().toLowerCase() === "math";
   const titleAndStandardGuidance = isMath
@@ -535,9 +596,11 @@ function buildCurriculumAnalysisPrompt(data) {
       "This is a MATH lesson. officialLessonTitle is an extraction field, not a generation field. If the source contains an official lesson title, copy it exactly into both lessonTitle and officialLessonTitle, including its wording, numbering, punctuation, and capitalization. Do not shorten, summarize, paraphrase, or replace it with a title based on the objective. If no official title is available, leave both title fields empty rather than inventing a title.",
       "For priorityStandardNumber, copy the official standard code exactly as written in the source, such as 1.MD.C.4. Never invent, infer, or silently omit a code that is present.",
       "For priorityStandardWording, copy the official wording of the selected standard from the source. Do not rewrite the objective, achievement descriptor, or skill summary as though it were the official standard wording.",
+      "When the local math standards reference lookup provides a match, it is authoritative for priorityStandardWording and supportingStandards. If a cited code has no match, preserve the code and use exactly \"Official wording unavailable in the standards reference.\"",
       "Choose the one standard most directly assessed by this lesson as the priority standard. If the lesson is foundational and only references an earlier-grade standard, preserve that earlier-grade code and wording and explain that it is foundational or prerequisite in standardNotes.",
       "If multiple standards are listed, put only the main directly assessed standard in priorityStandardNumber and priorityStandardWording. Put each supporting or prerequisite standard separately in supportingStandards; do not combine multiple standards into a new standard.",
       "Set priorityStandard to the teacher-facing display value: the exact code followed by the exact official wording when both are available. If the source has no official code, leave priorityStandardNumber empty and use only source-supported wording in priorityStandard; never create a code.",
+      "For standardNotes, write one short line per cited code explaining how this lesson addresses that standard. Do not paraphrase or rewrite the official wording in these notes.",
       "For non-math-only fields officialLessonTitle, priorityStandardNumber, priorityStandardWording, supportingStandards, and standardNotes, return empty values when they do not apply.",
     ]
     : [
@@ -546,6 +609,7 @@ function buildCurriculumAnalysisPrompt(data) {
       "For priorityStandard, identify the one main standard focus for the lesson, or two if the lesson genuinely has two equal main goals. Prefer standards listed in the source, choosing the one or two that best match the lesson's main teaching point. If the source provides no standard codes, write the main standard skill in plain language instead of inventing a code.",
     ];
 
+  const mathStandardsContext = isMath ? buildMathStandardsContext(data.sourceText) : "";
   return [
     "Analyze this first grade curriculum lesson for a teacher-facing lesson library.",
     "",
@@ -556,6 +620,7 @@ function buildCurriculumAnalysisPrompt(data) {
     "",
     "Return the exact structured fields requested by the schema.",
     ...titleAndStandardGuidance,
+    ...(mathStandardsContext ? ["", mathStandardsContext] : []),
     "For the I can statement, create one scholar-friendly sentence starting with \"I can\" by turning the lesson objective or main teaching goal into kid-friendly language. It does not need to appear word-for-word in the source.",
     "For vocabulary, choose lesson words, teaching terms, or curriculum words that scholars or families may need explained, even if the lesson does not provide a labeled vocabulary list.",
     "For soundSpellings, list the letter sounds, spellings, letter pairs, and letter teams explicitly taught or practiced in the lesson. Include entries such as /m/, /sh/, ch, ai, or other grapheme-sound correspondences when the lesson supports them. Keep this separate from vocabulary and return an empty array when the lesson has no sound or spelling focus.",
@@ -739,20 +804,46 @@ function extractOpenAIOutputText(responseBody) {
   return parts.join("\n").trim();
 }
 
-function normalizeCurriculumAnalysis(analysis) {
+function normalizeMathStandardFields(analysis, sourceText) {
+  const { codes, standardsByCode } = getMathReferenceMatches(sourceText);
+  const modelCodes = extractMathStandardCodes([
+    analysis.priorityStandardNumber,
+    analysis.priorityStandard,
+  ].filter(Boolean).join(" "));
+  const modelPriorityCode = modelCodes.find((code) => codes.includes(code));
+  const priorityCode = modelPriorityCode || (codes.length === 1 ? codes[0] : "");
+  const unavailableWording = "Official wording unavailable in the standards reference.";
+  const getWording = (code) => {
+    const standard = standardsByCode.get(code);
+    return standard ? standard.officialWording : unavailableWording;
+  };
+  const display = (code) => `${code} - ${getWording(code)}`;
+  const supportingCodes = codes.filter((code) => code !== priorityCode);
+
+  return {
+    priorityStandardNumber: priorityCode,
+    priorityStandardWording: priorityCode ? getWording(priorityCode) : "",
+    priorityStandard: priorityCode ? display(priorityCode) : "",
+    supportingStandards: supportingCodes.map(display),
+    standardNotes: normalizeScholarLanguage(analysis.standardNotes),
+  };
+}
+
+function normalizeCurriculumAnalysis(analysis, sourceText = "") {
   const subject = ["skills", "listening", "math", "other"].includes(analysis.subject) ? analysis.subject : "other";
   const isMath = subject === "math";
+  const mathStandardFields = isMath
+    ? normalizeMathStandardFields(analysis, sourceText)
+    : {
+      priorityStandardNumber: "",
+      priorityStandardWording: "",
+      priorityStandard: normalizeScholarLanguage(analysis.priorityStandard),
+      supportingStandards: [],
+      standardNotes: "",
+    };
   const officialLessonTitle = isMath
     ? normalizeOfficialCurriculumText(analysis.officialLessonTitle || analysis.lessonTitle)
     : "";
-  const priorityStandardNumber = isMath ? normalizeOfficialCurriculumText(analysis.priorityStandardNumber) : "";
-  const priorityStandardWording = isMath ? normalizeOfficialCurriculumText(analysis.priorityStandardWording) : "";
-  const rawPriorityStandard = isMath
-    ? normalizeOfficialCurriculumText(analysis.priorityStandard)
-    : normalizeScholarLanguage(analysis.priorityStandard);
-  const priorityStandard = isMath
-    ? [priorityStandardNumber, priorityStandardWording].filter(Boolean).join(" - ") || rawPriorityStandard
-    : rawPriorityStandard;
 
   const normalized = {
     subject,
@@ -761,11 +852,7 @@ function normalizeCurriculumAnalysis(analysis) {
     lessonTitle: isMath ? officialLessonTitle : normalizeScholarLanguage(analysis.lessonTitle),
     officialLessonTitle,
     iCanStatement: normalizeScholarLanguage(analysis.iCanStatement),
-    priorityStandardNumber,
-    priorityStandardWording,
-    priorityStandard,
-    supportingStandards: isMath ? normalizeOfficialCurriculumArray(analysis.supportingStandards) : [],
-    standardNotes: isMath ? normalizeOfficialCurriculumText(analysis.standardNotes) : "",
+    ...mathStandardFields,
     objective: normalizeScholarLanguage(analysis.objective),
     vocabulary: normalizeScholarLanguageArray(analysis.vocabulary),
     soundSpellings: normalizeScholarLanguageArray(analysis.soundSpellings),
