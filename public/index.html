@@ -3631,11 +3631,11 @@
                     <label class="curriculum-builder-label" for="curriculumStandardOutput">Priority standard</label>
                     <textarea id="curriculumStandardOutput" class="curriculum-builder-field curriculum-builder-output" rows="2"></textarea>
                   </div>
-                  <div>
+                  <div hidden>
                     <label class="curriculum-builder-label" for="curriculumStandardCodeOutput">Priority standard code</label>
                     <input id="curriculumStandardCodeOutput" class="curriculum-builder-field curriculum-builder-output" type="text" placeholder="For example: 1.MD.C.4 or K.CC.C.6">
                   </div>
-                  <div>
+                  <div hidden>
                     <label class="curriculum-builder-label" for="curriculumStandardWordingOutput">Official standard wording</label>
                     <textarea id="curriculumStandardWordingOutput" class="curriculum-builder-field curriculum-builder-output" rows="3"></textarea>
                   </div>
@@ -5843,7 +5843,7 @@
         curriculumLastPdfSuggestedTitle = '';
       }
       setInputValue('curriculumICanOutput', analysis.iCanStatement || '');
-      setInputValue('curriculumStandardOutput', analysis.priorityStandard || '');
+      setInputValue('curriculumStandardOutput', getCurriculumPriorityStandardDisplay(analysis));
       setInputValue('curriculumStandardCodeOutput', analysis.priorityStandardCode || analysis.priorityStandardNumber || '');
       setInputValue('curriculumStandardWordingOutput', analysis.priorityStandardWording || '');
       setInputValue('curriculumSupportingStandardsOutput', listToLines(analysis.supportingStandards));
@@ -6627,9 +6627,7 @@
           <h3 class="text-2xl font-display font-bold mt-1" style="color: var(--md-coral);">${escapeHtml(title)}</h3>
           <p class="text-sm font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson')}</p>
         </div>
-        ${renderCurriculumDetailText('Priority standard', lesson.priorityStandard)}
-        ${renderCurriculumDetailText('Priority standard code', lesson.priorityStandardCode || lesson.priorityStandardNumber)}
-        ${renderCurriculumDetailText('Official standard wording', lesson.priorityStandardWording)}
+        ${renderCurriculumDetailText('Priority standard', getCurriculumPriorityStandardDisplay(lesson))}
         ${renderCurriculumDetailList('Supporting / prerequisite standards', lesson.supportingStandards)}
         ${renderCurriculumDetailList('Mathematical practices', lesson.mathematicalPractices)}
         ${renderCurriculumDetailText('Standard notes', lesson.standardNotes)}
@@ -6650,6 +6648,15 @@
       const text = String(value || '').trim();
       if (!text) return '';
       return `<section class="curriculum-detail-section"><h4>${escapeHtml(label)}</h4><p>${escapeHtml(text)}</p></section>`;
+    }
+
+    function getCurriculumPriorityStandardDisplay(lesson) {
+      const combined = String(lesson?.priorityStandard || '').trim();
+      const code = String(lesson?.priorityStandardCode || lesson?.priorityStandardNumber || '').trim();
+      const wording = String(lesson?.priorityStandardWording || '').trim();
+      if (code && wording) return `${code} - ${wording}`;
+      if (code && combined && combined !== code) return `${code} - ${combined}`;
+      return combined || wording || code;
     }
 
     function renderCurriculumDetailList(label, values) {
@@ -7242,7 +7249,7 @@
         setCurriculumStatus('Your browser blocked the print window. Allow pop-ups for this site and try again.', 'error');
         return false;
       }
-      const printHtml = `<!doctype html><html><head><title>${escapeHtml(title)}</title><style>@page{margin:.45in;}html,body{margin:0!important;padding:0!important;}body{font-family:Arial,sans-serif;color:#1f2937;background:#fff;}.print-root{margin:0;padding:0;}h1{margin:0 0 6px;font-size:26px;}h2{margin:18px 0 8px;font-size:20px;color:#475569;border-bottom:2px solid #f4b56a;padding-bottom:6px;}h3{margin:0 0 6px;font-size:16px;color:#be5b45;}.meta{color:#64748b;font-size:13px;margin:0 0 12px;}.lesson{break-inside:avoid;page-break-inside:avoid;border:1px solid #d8c7ad;border-radius:10px;padding:12px;margin:10px 0;}section:first-of-type h2{margin-top:12px;}.day{font-weight:800;color:#475569;text-transform:uppercase;font-size:12px;letter-spacing:.04em;}.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;margin-top:8px;}.field{font-size:13px;line-height:1.4;}.field strong{display:block;color:#475569;margin-bottom:2px;}ul{margin:4px 0 0 18px;padding:0;}@media print{html,body{width:auto;height:auto;}.print-root{break-before:auto;page-break-before:auto;}}</style></head><body><main class="print-root">${bodyHtml}</main></body></html>`;
+      const printHtml = `<!doctype html><html><head><title>${escapeHtml(title)}</title><style>@page{margin:.45in;}html,body{margin:0!important;padding:0!important;}body{font-family:Arial,sans-serif;color:#1f2937;background:#fff;}.print-root{display:block;margin:0;padding:0;}h1{margin:0 0 6px;font-size:26px;}h2{margin:18px 0 8px;font-size:20px;color:#475569;border-bottom:2px solid #f4b56a;padding-bottom:6px;}h3{margin:0 0 6px;font-size:16px;color:#be5b45;}.meta{color:#64748b;font-size:13px;margin:0 0 12px;}.lesson{break-inside:auto;page-break-inside:auto;border:1px solid #d8c7ad;border-radius:10px;padding:12px;margin:10px 0;}section:first-of-type h2{margin-top:12px;}.day{font-weight:800;color:#475569;text-transform:uppercase;font-size:12px;letter-spacing:.04em;}.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;margin-top:8px;}.field{font-size:13px;line-height:1.4;}.field strong{display:block;color:#475569;margin-bottom:2px;}ul{margin:4px 0 0 18px;padding:0;}@media print{html,body{width:auto;height:auto;}.print-root{break-before:auto;page-break-before:auto;}.lesson{break-inside:auto;page-break-inside:auto;}}</style></head><body><main class="print-root">${bodyHtml}</main></body></html>`;
       printWindow.document.open();
       printWindow.document.write(printHtml);
       printWindow.document.close();
@@ -7324,9 +7331,7 @@
           <div class="day">${escapeHtml([formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson', lesson.unitOrModule || ''].filter(Boolean).join(' - '))}</div>
           <h3>${escapeHtml(getCurriculumCardTitle(lesson))}</h3>
           <div class="grid">
-            ${renderCurriculumPrintField('Priority standard', lesson.priorityStandard)}
-            ${renderCurriculumPrintField('Priority standard code', lesson.priorityStandardCode || lesson.priorityStandardNumber)}
-            ${renderCurriculumPrintField('Official standard wording', lesson.priorityStandardWording)}
+            ${renderCurriculumPrintField('Priority standard', getCurriculumPriorityStandardDisplay(lesson))}
             ${renderCurriculumPrintList('Supporting / prerequisite standards', lesson.supportingStandards)}
             ${renderCurriculumPrintList('Mathematical practices', lesson.mathematicalPractices)}
             ${renderCurriculumPrintField('Standard notes', lesson.standardNotes)}
@@ -7351,9 +7356,7 @@
           <h3>${escapeHtml([formatCurriculumLessonNumber(lesson.lessonNumber), getCurriculumCardTitle(lesson)].filter(Boolean).join(': '))}</h3>
           <div class="grid">
             ${renderCurriculumPrintField('I can statement', lesson.iCanStatement)}
-            ${renderCurriculumPrintField('Priority standard', lesson.priorityStandard)}
-            ${renderCurriculumPrintField('Priority standard code', lesson.priorityStandardCode || lesson.priorityStandardNumber)}
-            ${renderCurriculumPrintField('Official standard wording', lesson.priorityStandardWording)}
+            ${renderCurriculumPrintField('Priority standard', getCurriculumPriorityStandardDisplay(lesson))}
             ${renderCurriculumPrintList('Supporting / prerequisite standards', lesson.supportingStandards)}
             ${renderCurriculumPrintList('Mathematical practices', lesson.mathematicalPractices)}
             ${renderCurriculumPrintField('Standard notes', lesson.standardNotes)}
