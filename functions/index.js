@@ -104,9 +104,10 @@ exports.analyzeCurriculumLesson = onCall(
             "Only add missingInformation when the source is too incomplete to make a responsible teacher draft, except do not mark missing video links.",
             "Write parent-facing language clearly and warmly for families.",
             "Always refer to the children in the class as scholars in newly written explanatory fields. Preserve official curriculum titles and official standard wording exactly as sourced, even when that source wording uses student, child, or another term.",
+            "Keep generated sections concise so the structured response stays complete: at most 5 teacher notes, 3 family questions, 12 vocabulary items, and 12 materials. Keep standard notes to one short line per cited standard, and do not repeat the full official standard wording there.",
           ].join(" "),
           input: prompt,
-          max_output_tokens: 2200,
+          max_output_tokens: subject === "math" ? 3200 : 2200,
           text: {
             format: {
               type: "json_schema",
@@ -143,10 +144,30 @@ exports.analyzeCurriculumLesson = onCall(
 
     let analysis;
     try {
-      analysis = JSON.parse(outputText);
+      analysis = parseCurriculumAnalysisOutput(outputText);
     } catch (error) {
-      logger.error("OpenAI curriculum response was not valid JSON.", { message: error.message });
-      throw new HttpsError("internal", "The AI analyzer returned a draft in the wrong format.");
+      logger.error("OpenAI curriculum response was not valid JSON.", {
+        message: error.message,
+        outputLength: outputText.length,
+        outputPreview: outputText.slice(0, 180),
+      });
+      throw new HttpsError(
+        "internal",
+        "The AI response was incomplete or not valid JSON. Please try analyzing the lesson again."
+      );
+    }
+
+    try {
+      analysis = normalizeCurriculumAnalysisShape(analysis, subject);
+    } catch (error) {
+      logger.error("OpenAI curriculum response failed shape validation.", {
+        message: error.message,
+        fieldErrors: error.fieldErrors || [],
+      });
+      throw new HttpsError(
+        "internal",
+        "The AI draft could not be normalized to the lesson format. Please try analyzing the lesson again."
+      );
     }
 
     return {
@@ -378,10 +399,12 @@ const CURRICULUM_LESSON_SCHEMA = {
     lessonTitle: { type: "string" },
     officialLessonTitle: { type: "string" },
     iCanStatement: { type: "string" },
+    priorityStandardCode: { type: "string" },
     priorityStandardNumber: { type: "string" },
     priorityStandardWording: { type: "string" },
     priorityStandard: { type: "string" },
     supportingStandards: { type: "array", items: { type: "string" } },
+    mathematicalPractices: { type: "array", items: { type: "string" } },
     standardNotes: { type: "string" },
     objective: { type: "string" },
     vocabulary: { type: "array", items: { type: "string" } },
@@ -413,10 +436,12 @@ const CURRICULUM_LESSON_SCHEMA = {
     "lessonTitle",
     "officialLessonTitle",
     "iCanStatement",
+    "priorityStandardCode",
     "priorityStandardNumber",
     "priorityStandardWording",
     "priorityStandard",
     "supportingStandards",
+    "mathematicalPractices",
     "standardNotes",
     "objective",
     "vocabulary",
@@ -549,8 +574,12 @@ function loadMathStandardsReference() {
 }
 
 function extractMathStandardCodes(sourceText) {
-  const matches = asText(sourceText).match(/\b(?:\d+\.[A-Z]+\.[A-Z]\.\d+|MP\d+)\b/gi) || [];
+  const matches = asText(sourceText).match(/\b(?:K|\d+)\.[A-Z]+\.[A-Z]\.\d+\b|\bMP\d+\b/gi) || [];
   return Array.from(new Set(matches.map((code) => code.toUpperCase())));
+}
+
+function isMathematicalPracticeCode(code) {
+  return /^MP\d+$/i.test(asText(code));
 }
 
 function getMathReferenceMatches(sourceText) {
@@ -594,18 +623,19 @@ function buildCurriculumAnalysisPrompt(data) {
   const titleAndStandardGuidance = isMath
     ? [
       "This is a MATH lesson. officialLessonTitle is an extraction field, not a generation field. If the source contains an official lesson title, copy it exactly into both lessonTitle and officialLessonTitle, including its wording, numbering, punctuation, and capitalization. Do not shorten, summarize, paraphrase, or replace it with a title based on the objective. If no official title is available, leave both title fields empty rather than inventing a title.",
-      "For priorityStandardNumber, copy the official standard code exactly as written in the source, such as 1.MD.C.4. Never invent, infer, or silently omit a code that is present.",
+      "For priorityStandardCode and priorityStandardNumber, return the same official content-standard code exactly as written in the source, such as 1.MD.C.4 or K.CC.C.6. Never invent, infer, or silently omit a code that is present.",
       "For priorityStandardWording, copy the official wording of the selected standard from the source. Do not rewrite the objective, achievement descriptor, or skill summary as though it were the official standard wording.",
-      "When the local math standards reference lookup provides a match, it is authoritative for priorityStandardWording and supportingStandards. If a cited code has no match, preserve the code and use exactly \"Official wording unavailable in the standards reference.\"",
-      "Choose the one standard most directly assessed by this lesson as the priority standard. If the lesson is foundational and only references an earlier-grade standard, preserve that earlier-grade code and wording and explain that it is foundational or prerequisite in standardNotes.",
-      "If multiple standards are listed, put only the main directly assessed standard in priorityStandardNumber and priorityStandardWording. Put each supporting or prerequisite standard separately in supportingStandards; do not combine multiple standards into a new standard.",
-      "Set priorityStandard to the teacher-facing display value: the exact code followed by the exact official wording when both are available. If the source has no official code, leave priorityStandardNumber empty and use only source-supported wording in priorityStandard; never create a code.",
+      "When the local math standards reference lookup provides a match, it is authoritative for priorityStandardWording, supportingStandards, and mathematicalPractices. If a cited code has no match, preserve the code and use exactly \"Official wording unavailable in the standards reference.\"",
+      "Choose the one content standard most directly assessed by this lesson as the priority standard. If the lesson is foundational and only references an earlier-grade content standard, preserve that earlier-grade code and wording and explain that it is foundational or prerequisite in standardNotes.",
+      "Standards beginning with MP are Standards for Mathematical Practice, not content standards. Never put an MP code in priorityStandardCode, priorityStandardNumber, priorityStandard, or supportingStandards. Put each cited MP code and its exact wording in mathematicalPractices instead.",
+      "If multiple content standards are listed, put only the main directly assessed content standard in priorityStandardCode, priorityStandardNumber, and priorityStandardWording. Put each other content standard separately in supportingStandards; do not combine multiple standards into a new standard. If the source explicitly identifies foundational standards such as K.CC.C.6 and K.CC.C.7, preserve those codes even when the local reference has no official wording for them.",
+      "Set priorityStandard to the teacher-facing display value: the exact content-standard code followed by the exact official wording when both are available. If the source has no content-standard code, leave priorityStandardCode and priorityStandardNumber empty and use only source-supported wording in priorityStandard; never create a code.",
       "For standardNotes, write one short line per cited code explaining how this lesson addresses that standard. Do not paraphrase or rewrite the official wording in these notes.",
-      "For non-math-only fields officialLessonTitle, priorityStandardNumber, priorityStandardWording, supportingStandards, and standardNotes, return empty values when they do not apply.",
+      "For non-math-only fields officialLessonTitle, priorityStandardCode, priorityStandardNumber, priorityStandardWording, supportingStandards, mathematicalPractices, and standardNotes, return empty values when they do not apply.",
     ]
     : [
       "For non-math lessons, look first at the objective or main learning goal and create a short 3-7 word lesson name that says what scholars are learning. Use the printed lesson title only if it is already clear and specific. Never use file names, guide names, internal labels, or generic titles like \"Lesson 1\".",
-      "For non-math lessons, set officialLessonTitle, priorityStandardNumber, priorityStandardWording, supportingStandards, and standardNotes to empty values unless the source clearly supplies those separate fields.",
+      "For non-math lessons, set officialLessonTitle, priorityStandardCode, priorityStandardNumber, priorityStandardWording, supportingStandards, mathematicalPractices, and standardNotes to empty values unless the source clearly supplies those separate fields.",
       "For priorityStandard, identify the one main standard focus for the lesson, or two if the lesson genuinely has two equal main goals. Prefer standards listed in the source, choosing the one or two that best match the lesson's main teaching point. If the source provides no standard codes, write the main standard skill in plain language instead of inventing a code.",
     ];
 
@@ -804,27 +834,179 @@ function extractOpenAIOutputText(responseBody) {
   return parts.join("\n").trim();
 }
 
+function parseCurriculumAnalysisOutput(outputText) {
+  const text = asText(outputText).trim();
+  if (!text) throw new Error("The response was empty.");
+
+  const candidates = [
+    text,
+    text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim(),
+  ];
+  for (const candidate of candidates) {
+    try {
+      return JSON.parse(candidate);
+    } catch (error) {
+      // Try the next safe representation before reporting a format failure.
+    }
+  }
+
+  const firstBrace = text.indexOf("{");
+  const lastBrace = text.lastIndexOf("}");
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    try {
+      return JSON.parse(text.slice(firstBrace, lastBrace + 1));
+    } catch (error) {
+      // The response may be truncated; let the caller report that clearly.
+    }
+  }
+
+  throw new Error("The response did not contain a complete JSON object.");
+}
+
+function formatCurriculumStructuredValue(value) {
+  if (typeof value === "string") return value.trim();
+  if (!value || typeof value !== "object") return asText(value);
+  const code = asText(value.code || value.standardCode || value.priorityStandardCode || value.priorityStandardNumber || value.number);
+  const wording = asText(value.wording || value.officialWording || value.standardWording || value.text || value.description);
+  if (code && wording) return `${code} - ${wording}`;
+  if (code) return code;
+  if (wording) return wording;
+  try {
+    return JSON.stringify(value);
+  } catch (error) {
+    return "";
+  }
+}
+
+function normalizeCurriculumAnalysisShape(rawAnalysis, fallbackSubject) {
+  if (!rawAnalysis || typeof rawAnalysis !== "object" || Array.isArray(rawAnalysis)) {
+    const error = new Error("The response root must be a JSON object.");
+    error.fieldErrors = ["root: expected object"];
+    throw error;
+  }
+
+  const raw = rawAnalysis;
+  const fieldErrors = [];
+  const has = (field) => Object.prototype.hasOwnProperty.call(raw, field);
+  const readString = (field, fallback = "") => {
+    if (!has(field)) {
+      fieldErrors.push(`${field}: missing; defaulted to an empty string`);
+      return fallback;
+    }
+    if (typeof raw[field] === "string") return raw[field].trim();
+    const converted = formatCurriculumStructuredValue(raw[field]);
+    fieldErrors.push(`${field}: expected string, received ${Array.isArray(raw[field]) ? "array" : typeof raw[field]}; normalized to string`);
+    return converted;
+  };
+  const readArray = (field) => {
+    if (!has(field)) {
+      fieldErrors.push(`${field}: missing; defaulted to an empty array`);
+      return [];
+    }
+    if (Array.isArray(raw[field])) {
+      return raw[field].map((item, index) => {
+        if (typeof item === "string") return item.trim();
+        fieldErrors.push(`${field}[${index}]: expected string, received ${typeof item}; normalized to text`);
+        return formatCurriculumStructuredValue(item);
+      }).filter(Boolean);
+    }
+    const converted = formatCurriculumStructuredValue(raw[field]);
+    fieldErrors.push(`${field}: expected array, received ${typeof raw[field]}; normalized to a one-item array`);
+    return converted ? [converted] : [];
+  };
+  const readNotes = () => {
+    if (!has("standardNotes")) {
+      fieldErrors.push("standardNotes: missing; defaulted to an empty string");
+      return "";
+    }
+    if (typeof raw.standardNotes === "string") return raw.standardNotes.trim();
+    if (Array.isArray(raw.standardNotes)) {
+      fieldErrors.push("standardNotes: expected string, received array; joined into lines");
+      return raw.standardNotes.map(formatCurriculumStructuredValue).filter(Boolean).join("\n");
+    }
+    const converted = formatCurriculumStructuredValue(raw.standardNotes);
+    fieldErrors.push(`standardNotes: expected string, received ${typeof raw.standardNotes}; normalized to string`);
+    return converted;
+  };
+
+  const priorityStandardCode = has("priorityStandardCode")
+    ? readString("priorityStandardCode")
+    : readString("priorityStandardNumber");
+  if (!has("priorityStandardCode") && has("priorityStandardNumber")) {
+    fieldErrors.push("priorityStandardCode: missing; copied from priorityStandardNumber");
+  }
+  const priorityStandardNumber = has("priorityStandardNumber")
+    ? readString("priorityStandardNumber")
+    : priorityStandardCode;
+  if (!has("priorityStandardNumber") && has("priorityStandardCode")) {
+    fieldErrors.push("priorityStandardNumber: missing; copied from priorityStandardCode");
+  }
+
+  const normalized = {
+    subject: readString("subject", fallbackSubject),
+    unitOrModule: readString("unitOrModule"),
+    lessonNumber: readString("lessonNumber"),
+    lessonTitle: readString("lessonTitle"),
+    officialLessonTitle: readString("officialLessonTitle"),
+    iCanStatement: readString("iCanStatement"),
+    priorityStandardCode,
+    priorityStandardNumber,
+    priorityStandardWording: readString("priorityStandardWording"),
+    priorityStandard: readString("priorityStandard"),
+    supportingStandards: readArray("supportingStandards"),
+    mathematicalPractices: readArray("mathematicalPractices"),
+    standardNotes: readNotes(),
+    objective: readString("objective"),
+    vocabulary: readArray("vocabulary"),
+    soundSpellings: readArray("soundSpellings"),
+    materials: readArray("materials"),
+    videoLinks: Array.isArray(raw.videoLinks) ? raw.videoLinks : [],
+    parentSummary: readString("parentSummary"),
+    familyQuestions: readArray("familyQuestions"),
+    teacherNotes: readArray("teacherNotes"),
+    missingInformation: readArray("missingInformation"),
+    sourceConfidence: ["high", "medium", "low"].includes(raw.sourceConfidence) ? raw.sourceConfidence : "medium",
+  };
+
+  if (!has("videoLinks")) fieldErrors.push("videoLinks: missing; defaulted to an empty array");
+  else if (!Array.isArray(raw.videoLinks)) fieldErrors.push(`videoLinks: expected array, received ${typeof raw.videoLinks}; defaulted to an empty array`);
+  if (!has("sourceConfidence")) fieldErrors.push("sourceConfidence: missing; defaulted to medium");
+  else if (!["high", "medium", "low"].includes(raw.sourceConfidence)) fieldErrors.push("sourceConfidence: invalid enum; defaulted to medium");
+
+  if (fieldErrors.length) {
+    logger.warn("OpenAI curriculum response shape was normalized.", {
+      fieldErrors: fieldErrors.slice(0, 30),
+    });
+  }
+  return normalized;
+}
+
 function normalizeMathStandardFields(analysis, sourceText) {
   const { codes, standardsByCode } = getMathReferenceMatches(sourceText);
+  const contentCodes = codes.filter((code) => !isMathematicalPracticeCode(code));
+  const practiceCodes = codes.filter(isMathematicalPracticeCode);
   const modelCodes = extractMathStandardCodes([
+    analysis.priorityStandardCode,
     analysis.priorityStandardNumber,
     analysis.priorityStandard,
   ].filter(Boolean).join(" "));
-  const modelPriorityCode = modelCodes.find((code) => codes.includes(code));
-  const priorityCode = modelPriorityCode || (codes.length === 1 ? codes[0] : "");
+  const modelPriorityCode = modelCodes.find((code) => contentCodes.includes(code));
+  const priorityCode = modelPriorityCode || contentCodes[0] || "";
   const unavailableWording = "Official wording unavailable in the standards reference.";
   const getWording = (code) => {
     const standard = standardsByCode.get(code);
     return standard ? standard.officialWording : unavailableWording;
   };
   const display = (code) => `${code} - ${getWording(code)}`;
-  const supportingCodes = codes.filter((code) => code !== priorityCode);
+  const supportingCodes = contentCodes.filter((code) => code !== priorityCode);
 
   return {
+    priorityStandardCode: priorityCode,
     priorityStandardNumber: priorityCode,
     priorityStandardWording: priorityCode ? getWording(priorityCode) : "",
     priorityStandard: priorityCode ? display(priorityCode) : "",
     supportingStandards: supportingCodes.map(display),
+    mathematicalPractices: practiceCodes.map(display),
     standardNotes: normalizeScholarLanguage(analysis.standardNotes),
   };
 }
@@ -835,10 +1017,12 @@ function normalizeCurriculumAnalysis(analysis, sourceText = "") {
   const mathStandardFields = isMath
     ? normalizeMathStandardFields(analysis, sourceText)
     : {
+      priorityStandardCode: "",
       priorityStandardNumber: "",
       priorityStandardWording: "",
       priorityStandard: normalizeScholarLanguage(analysis.priorityStandard),
       supportingStandards: [],
+      mathematicalPractices: [],
       standardNotes: "",
     };
   const officialLessonTitle = isMath

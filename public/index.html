@@ -3632,8 +3632,20 @@
                     <textarea id="curriculumStandardOutput" class="curriculum-builder-field curriculum-builder-output" rows="2"></textarea>
                   </div>
                   <div>
+                    <label class="curriculum-builder-label" for="curriculumStandardCodeOutput">Priority standard code</label>
+                    <input id="curriculumStandardCodeOutput" class="curriculum-builder-field curriculum-builder-output" type="text" placeholder="For example: 1.MD.C.4 or K.CC.C.6">
+                  </div>
+                  <div>
+                    <label class="curriculum-builder-label" for="curriculumStandardWordingOutput">Official standard wording</label>
+                    <textarea id="curriculumStandardWordingOutput" class="curriculum-builder-field curriculum-builder-output" rows="3"></textarea>
+                  </div>
+                  <div>
                     <label class="curriculum-builder-label" for="curriculumSupportingStandardsOutput">Supporting / prerequisite standards</label>
                     <textarea id="curriculumSupportingStandardsOutput" class="curriculum-builder-field curriculum-builder-output" rows="3" placeholder="One per line"></textarea>
+                  </div>
+                  <div>
+                    <label class="curriculum-builder-label" for="curriculumMathematicalPracticesOutput">Mathematical practices</label>
+                    <textarea id="curriculumMathematicalPracticesOutput" class="curriculum-builder-field curriculum-builder-output" rows="2" placeholder="MP standards, one per line"></textarea>
                   </div>
                   <div>
                     <label class="curriculum-builder-label" for="curriculumStandardNotesOutput">Standard notes</label>
@@ -5818,7 +5830,10 @@
       }
       setInputValue('curriculumICanOutput', analysis.iCanStatement || '');
       setInputValue('curriculumStandardOutput', analysis.priorityStandard || '');
+      setInputValue('curriculumStandardCodeOutput', analysis.priorityStandardCode || analysis.priorityStandardNumber || '');
+      setInputValue('curriculumStandardWordingOutput', analysis.priorityStandardWording || '');
       setInputValue('curriculumSupportingStandardsOutput', listToLines(analysis.supportingStandards));
+      setInputValue('curriculumMathematicalPracticesOutput', listToLines(analysis.mathematicalPractices));
       setInputValue('curriculumStandardNotesOutput', analysis.standardNotes || '');
       setInputValue('curriculumObjectiveOutput', analysis.objective || '');
       setInputValue('curriculumParentSummaryOutput', analysis.parentSummary || '');
@@ -6090,7 +6105,11 @@
         sourceText: request.sourceText,
         iCanStatement: document.getElementById('curriculumICanOutput')?.value.trim() || '',
         priorityStandard: document.getElementById('curriculumStandardOutput')?.value.trim() || '',
+        priorityStandardCode: document.getElementById('curriculumStandardCodeOutput')?.value.trim() || '',
+        priorityStandardNumber: document.getElementById('curriculumStandardCodeOutput')?.value.trim() || '',
+        priorityStandardWording: document.getElementById('curriculumStandardWordingOutput')?.value.trim() || '',
         supportingStandards: linesToList(document.getElementById('curriculumSupportingStandardsOutput')?.value || ''),
+        mathematicalPractices: linesToList(document.getElementById('curriculumMathematicalPracticesOutput')?.value || ''),
         standardNotes: document.getElementById('curriculumStandardNotesOutput')?.value.trim() || '',
         objective: document.getElementById('curriculumObjectiveOutput')?.value.trim() || '',
         parentSummary: document.getElementById('curriculumParentSummaryOutput')?.value.trim() || '',
@@ -6594,7 +6613,10 @@
           <p class="text-sm font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson')}</p>
         </div>
         ${renderCurriculumDetailText('Priority standard', lesson.priorityStandard)}
+        ${renderCurriculumDetailText('Priority standard code', lesson.priorityStandardCode || lesson.priorityStandardNumber)}
+        ${renderCurriculumDetailText('Official standard wording', lesson.priorityStandardWording)}
         ${renderCurriculumDetailList('Supporting / prerequisite standards', lesson.supportingStandards)}
+        ${renderCurriculumDetailList('Mathematical practices', lesson.mathematicalPractices)}
         ${renderCurriculumDetailText('Standard notes', lesson.standardNotes)}
         ${renderCurriculumDetailText('I can statement', lesson.iCanStatement)}
         ${renderCurriculumDetailText('Objective', lesson.objective)}
@@ -7286,7 +7308,10 @@
           <h3>${escapeHtml(getCurriculumCardTitle(lesson))}</h3>
           <div class="grid">
             ${renderCurriculumPrintField('Priority standard', lesson.priorityStandard)}
+            ${renderCurriculumPrintField('Priority standard code', lesson.priorityStandardCode || lesson.priorityStandardNumber)}
+            ${renderCurriculumPrintField('Official standard wording', lesson.priorityStandardWording)}
             ${renderCurriculumPrintList('Supporting / prerequisite standards', lesson.supportingStandards)}
+            ${renderCurriculumPrintList('Mathematical practices', lesson.mathematicalPractices)}
             ${renderCurriculumPrintField('Standard notes', lesson.standardNotes)}
             ${renderCurriculumPrintField('I can statement', lesson.iCanStatement)}
             ${renderCurriculumPrintField('Objective and description', getCurriculumPrintFocus(lesson))}
@@ -7310,7 +7335,10 @@
           <div class="grid">
             ${renderCurriculumPrintField('I can statement', lesson.iCanStatement)}
             ${renderCurriculumPrintField('Priority standard', lesson.priorityStandard)}
+            ${renderCurriculumPrintField('Priority standard code', lesson.priorityStandardCode || lesson.priorityStandardNumber)}
+            ${renderCurriculumPrintField('Official standard wording', lesson.priorityStandardWording)}
             ${renderCurriculumPrintList('Supporting / prerequisite standards', lesson.supportingStandards)}
+            ${renderCurriculumPrintList('Mathematical practices', lesson.mathematicalPractices)}
             ${renderCurriculumPrintField('Standard notes', lesson.standardNotes)}
             ${renderCurriculumPrintField('Focus', getCurriculumPrintFocus(lesson))}
             ${renderCurriculumPrintList('Sounds / Spellings', lesson.soundSpellings)}
@@ -7431,7 +7459,10 @@
         'curriculumSourceTextInput',
         'curriculumICanOutput',
         'curriculumStandardOutput',
+        'curriculumStandardCodeOutput',
+        'curriculumStandardWordingOutput',
         'curriculumSupportingStandardsOutput',
+        'curriculumMathematicalPracticesOutput',
         'curriculumStandardNotesOutput',
         'curriculumObjectiveOutput',
         'curriculumParentSummaryOutput',
