@@ -5711,7 +5711,7 @@
     function applyCurriculumPdfGuesses(fileName, text) {
       const guess = inferCurriculumLessonDetails(fileName, text);
       if (guess.unitOrModule && !document.getElementById('curriculumUnitInput')?.value.trim()) {
-        setInputValue('curriculumUnitInput', guess.unitOrModule);
+        setInputValue('curriculumUnitInput', formatCurriculumUnitOrModule(guess.unitOrModule));
       }
       if (guess.lessonNumber && !document.getElementById('curriculumLessonNumberInput')?.value.trim()) {
         setInputValue('curriculumLessonNumberInput', guess.lessonNumber);
@@ -5819,7 +5819,7 @@
       const lessonTitle = document.getElementById('curriculumLessonTitleInput')?.value.trim() || '';
       return {
         subject: document.getElementById('curriculumSubjectInput')?.value || 'skills',
-        unitOrModule: document.getElementById('curriculumUnitInput')?.value.trim() || '',
+        unitOrModule: formatCurriculumUnitOrModule(document.getElementById('curriculumUnitInput')?.value || ''),
         lessonNumber: document.getElementById('curriculumLessonNumberInput')?.value.trim() || '',
         lessonTitle: lessonTitle === curriculumLastPdfSuggestedTitle || looksLikeCurriculumFileTitle(lessonTitle) ? '' : lessonTitle,
         sourceText: document.getElementById('curriculumSourceTextInput')?.value.trim() || ''
@@ -5836,7 +5836,7 @@
       const nextTitle = aiTitle || getCurriculumObjectiveLessonTitle(analysis) || getCurriculumLearningTitle(analysis);
       const currentTitleIsStandard = looksLikeCurriculumStandardTitle(currentTitle, analysis);
       setInputValue('curriculumSubjectInput', selectedSubject);
-      setInputValue('curriculumUnitInput', analysis.unitOrModule || document.getElementById('curriculumUnitInput')?.value || '');
+      setInputValue('curriculumUnitInput', formatCurriculumUnitOrModule(analysis.unitOrModule || document.getElementById('curriculumUnitInput')?.value || ''));
       setInputValue('curriculumLessonNumberInput', formatCurriculumLessonNumber(analysis.lessonNumber || document.getElementById('curriculumLessonNumberInput')?.value || ''));
       if (!currentTitle || currentTitle === curriculumLastPdfSuggestedTitle || looksLikeCurriculumFileTitle(currentTitle) || currentTitleIsStandard) {
         setInputValue('curriculumLessonTitleInput', nextTitle || '');
@@ -6460,7 +6460,7 @@
       const groups = new Map();
       lessons.forEach(lesson => {
         const subject = getCurriculumSubjectLabel(lesson.subject);
-        const moduleName = lesson.unitOrModule || 'No module yet';
+        const moduleName = formatCurriculumUnitOrModule(lesson.unitOrModule) || 'No module yet';
         const key = `${subject}|||${moduleName}`;
         if (!groups.has(key)) {
           groups.set(key, { key, label: `${subject} - ${moduleName}`, lessons: [] });
@@ -6518,6 +6518,14 @@
       if (!text) return '';
       const number = text.replace(/^lesson\s*#?\s*/i, '').trim();
       return number ? `Lesson ${number}` : 'Lesson';
+    }
+
+    function formatCurriculumUnitOrModule(value) {
+      return String(value || '')
+        .replace(/\s+/g, ' ')
+        .replace(/\b(?:m|mod|module)\s*[:#-]?\s*([0-9]+[A-Za-z]?)\b/gi, 'Module $1')
+        .replace(/\b(?:u|unit)\s*[:#-]?\s*([0-9]+[A-Za-z]?)\b/gi, 'Unit $1')
+        .trim();
     }
 
     function renderCurriculumLibraryLesson(lesson) {
@@ -6623,7 +6631,7 @@
       const title = getCurriculumCardTitle(lesson);
       panel.innerHTML = `
         <div>
-          <div class="text-xs font-bold uppercase tracking-wide text-gray-500">${escapeHtml(getCurriculumSubjectLabel(lesson.subject))} - ${escapeHtml(lesson.unitOrModule || 'No module yet')}</div>
+          <div class="text-xs font-bold uppercase tracking-wide text-gray-500">${escapeHtml(getCurriculumSubjectLabel(lesson.subject))} - ${escapeHtml(formatCurriculumUnitOrModule(lesson.unitOrModule) || 'No module yet')}</div>
           <h3 class="text-2xl font-display font-bold mt-1" style="color: var(--md-coral);">${escapeHtml(title)}</h3>
           <p class="text-sm font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson')}</p>
         </div>
@@ -6978,7 +6986,7 @@
 
     function getCurriculumWeekModuleLabel(lessons, subject = 'skills') {
       if (!lessons.length) return `${getCurriculumSubjectLabel(subject)} week`;
-      const moduleNames = lessons.map(lesson => lesson.unitOrModule).filter(Boolean);
+      const moduleNames = lessons.map(lesson => formatCurriculumUnitOrModule(lesson.unitOrModule)).filter(Boolean);
       const moduleName = mostCommonValue(moduleNames) || getCurriculumSubjectLabel(subject);
       const lessonRange = getCurriculumLessonRangeLabel(lessons.map(lesson => lesson.lessonNumber).filter(Boolean));
       return lessonRange ? `${moduleName} ${lessonRange}` : moduleName;
@@ -7328,7 +7336,7 @@
     function renderCurriculumPrintSavedLesson(lesson) {
       return `
         <div class="lesson">
-          <div class="day">${escapeHtml([formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson', lesson.unitOrModule || ''].filter(Boolean).join(' - '))}</div>
+          <div class="day">${escapeHtml([formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson', formatCurriculumUnitOrModule(lesson.unitOrModule)].filter(Boolean).join(' - '))}</div>
           <h3>${escapeHtml(getCurriculumCardTitle(lesson))}</h3>
           <div class="grid">
             ${renderCurriculumPrintField('Priority standard', getCurriculumPriorityStandardDisplay(lesson))}
@@ -7460,7 +7468,7 @@
       if (!lesson) return;
       curriculumActiveLessonId = lesson.id;
       setInputValue('curriculumSubjectInput', lesson.subject || 'skills');
-      setInputValue('curriculumUnitInput', lesson.unitOrModule || '');
+      setInputValue('curriculumUnitInput', formatCurriculumUnitOrModule(lesson.unitOrModule || ''));
       setInputValue('curriculumLessonNumberInput', formatCurriculumLessonNumber(lesson.lessonNumber || ''));
       setInputValue('curriculumLessonTitleInput', lesson.officialLessonTitle || lesson.lessonTitle || '');
       setInputValue('curriculumSourceTextInput', lesson.sourceText || '');
