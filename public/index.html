@@ -1665,15 +1665,12 @@
       border-radius: 999px;
       background: color-mix(in oklab, var(--md-white) 18%, transparent);
     }
-    .home-nav-info-stack {
-      display: inline-flex;
-      flex-direction: column;
-      align-items: center;
-      gap: .35rem;
-    }
-    #topNav .home-nav-info-stack .feature-info-button {
-      min-height: 2.1rem;
-      padding: 0;
+    .home-title-info-button {
+      position: absolute;
+      top: 1.2rem;
+      left: 1.2rem;
+      z-index: 2;
+      color: var(--md-slate);
     }
     .pagePanel.active > .rounded-2xl:first-child {
       position: relative;
@@ -2528,13 +2525,10 @@
   <main class="max-w-6xl mx-auto px-6 pb-16">
     <!-- Top Navigation Bar -->
     <nav id="topNav" class="mt-6 mb-4 flex flex-wrap items-center gap-3 mobile-tab-scroll scrollbar-hide">
-      <div class="home-nav-info-stack">
-        <button id="homePageBtn" class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
-                data-page="home" data-tooltip="Weekly News&#10;Class Calendar" style="background: var(--md-coral);">
-          <span>🏠</span><span>Home</span>
-        </button>
-        <button type="button" class="feature-info-button home-nav-info-button" style="color: var(--md-slate);" onclick="openFeatureInfoModal('home')" title="What is on the Home page?" aria-label="Open Home information">i</button>
-      </div>
+      <button id="homePageBtn" class="pageTab inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
+              data-page="home" data-tooltip="Weekly News&#10;Class Calendar" style="background: var(--md-coral);">
+        <span>🏠</span><span>Home</span>
+      </button>
       <button id="aboutMeDavisBtn"
               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold hover:opacity-90"
               data-page="aboutme" data-tooltip="About Mr. Davis&#10;Contact Info&#10;Grade Portal" style="background: var(--md-coral);">
@@ -2580,7 +2574,8 @@
       </div>
       <div class="home-news-grid grid gap-6 lg:grid-cols-2 lg:items-stretch mb-8">
       <!-- What We Did - Mr. Davis -->
-      <div class="home-news-card rounded-2xl shadow-soft p-6 sm:p-8 h-full" style="background: var(--card-bg);">
+      <div class="home-news-card rounded-2xl shadow-soft p-6 sm:p-8 h-full relative" style="background: var(--card-bg);">
+        <button type="button" class="feature-info-button home-title-info-button no-print" onclick="openFeatureInfoModal('home')" title="What is on the Home page?" aria-label="Open Home information">i</button>
         <h2 id="whatWeDidDavisTitle" class="home-news-title text-2xl font-display font-bold mb-5 text-center" data-edit="teacher" contenteditable="false">What We Did This Week - Mr. Davis</h2>
         <div id="davisCollapsibleContent" class="home-news-content space-y-5">
           <!-- 2 small + 1 large photo grid -->
@@ -12317,11 +12312,6 @@ const featureInfoPageConfigs = {
         key: 'classCalendar',
         title: 'Class Calendar and Looking Ahead',
         description: 'The calendar lists classroom events, school reminders, and upcoming dates. Looking Ahead highlights the reminders families are most likely to need soon.'
-      },
-      {
-        key: 'saveNewsImages',
-        title: 'Save News Images',
-        description: 'The Save Davis News Image and Save Vest News Image buttons create shareable versions of each weekly news card for posting or sending to families.'
       },
       {
         key: 'shoutouts',
