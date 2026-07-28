@@ -2108,6 +2108,131 @@
       cursor: not-allowed;
       opacity: .42;
     }
+    .feature-info-button {
+      display: inline-grid;
+      place-items: center;
+      width: 2.1rem;
+      height: 2.1rem;
+      border: 2px solid currentColor;
+      border-radius: 50%;
+      background: var(--md-white);
+      box-shadow: 0 6px 14px rgba(43,43,43,.12);
+      cursor: pointer;
+      font-family: Georgia, serif;
+      font-size: 1.15rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .feature-info-button:hover,
+    .feature-info-button:focus-visible {
+      transform: translateY(-1px);
+      box-shadow: 0 9px 18px rgba(43,43,43,.16);
+    }
+    .feature-info-page {
+      background: var(--card-bg);
+      border: 1px solid color-mix(in oklab, var(--md-slate) 24%, var(--md-white));
+      border-radius: 1rem;
+      box-shadow: 0 12px 28px rgba(43,43,43,.08);
+      padding: 1.25rem;
+    }
+    .feature-info-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      background: rgba(0,0,0,.82);
+    }
+    .feature-info-modal.open {
+      display: flex;
+    }
+    .feature-info-modal-card {
+      width: min(68rem, 100%);
+      max-height: 90vh;
+      overflow-y: auto;
+      background: var(--card-bg);
+      border: 3px solid var(--md-slate);
+      border-radius: 1rem;
+      box-shadow: 0 18px 42px rgba(0,0,0,.28);
+      padding: 1rem;
+      position: relative;
+    }
+    .feature-info-modal-card .feature-info-page {
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      padding: .25rem;
+    }
+    .feature-info-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.35rem;
+    }
+    .feature-info-grid {
+      display: grid;
+      gap: 1rem;
+    }
+    .feature-info-card {
+      display: grid;
+      grid-template-columns: minmax(13rem, .9fr) minmax(0, 1.1fr);
+      gap: 1rem;
+      align-items: start;
+      border: 1px solid color-mix(in oklab, var(--md-slate) 16%, var(--md-white));
+      border-radius: .85rem;
+      background: color-mix(in oklab, var(--md-white) 92%, var(--md-pebble));
+      padding: 1rem;
+    }
+    .feature-info-screenshot {
+      min-height: 13rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border: 2px dashed color-mix(in oklab, var(--md-slate) 38%, var(--md-white));
+      border-radius: .75rem;
+      background: color-mix(in oklab, var(--md-white) 70%, var(--md-pebble));
+      color: color-mix(in oklab, var(--md-ink) 58%, var(--md-white));
+      cursor: pointer;
+      text-align: center;
+    }
+    .feature-info-screenshot img {
+      width: 100%;
+      height: 100%;
+      min-height: 13rem;
+      object-fit: cover;
+    }
+    .feature-info-edit-placeholder {
+      display: none;
+    }
+    body.editing .feature-info-view-placeholder {
+      display: none;
+    }
+    body.editing .feature-info-edit-placeholder {
+      display: inline;
+    }
+    .feature-info-card h3 {
+      margin: 0 0 .45rem;
+      color: var(--md-slate);
+      font-family: var(--font-display, inherit);
+      font-size: 1.25rem;
+      font-weight: 900;
+    }
+    .feature-info-description {
+      min-height: 6rem;
+      line-height: 1.55;
+    }
+    @media (max-width: 767px) {
+      .feature-info-card {
+        grid-template-columns: 1fr;
+      }
+      .feature-info-header {
+        flex-direction: column;
+      }
+    }
     .curriculum-module-info-standard {
       border: 1px solid color-mix(in oklab, var(--md-slate) 18%, var(--md-white));
       border-radius: .8rem;
@@ -2439,6 +2564,7 @@
     <!-- HOME TAB -->
     <section data-page-panel="home" class="pagePanel fade-in active">
       <div class="share-print-tools no-print justify-end gap-2 flex-wrap mb-4">
+        <button type="button" class="feature-info-button" style="color: var(--md-slate);" onclick="openFeatureInfoModal('home')" title="What is on the Home page?" aria-label="Open Home information">i</button>
         <button class="px-4 py-2 rounded-xl text-white font-semibold shadow-soft" style="background: var(--md-slate);" onclick="saveHomeNewsImage('davis')">Save Davis News Image</button>
         <button class="px-4 py-2 rounded-xl text-white font-semibold shadow-soft" style="background: var(--md-coral);" onclick="saveHomeNewsImage('williams')">Save Vest News Image</button>
       </div>
@@ -3501,95 +3627,12 @@
         </div>
       </div>
     </section>
-    <!-- WHAT IS THE LEARNING HUB? PAGE -->
+    <!-- FEATURE INFO PAGES -->
     <section data-page-panel="learning-hub-info" class="pagePanel fade-in">
-      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
-        <h2 class="text-3xl font-display font-bold mb-6 text-center" style="color: var(--md-slate);">❓ What is the Learning Hub?</h2>
-        <p class="text-center mb-8 text-gray-600">Click on any screenshot to enlarge it for a better view.</p>
-        
-        <!-- Skills Section -->
-        <div class="mb-10">
-          <div class="flex items-center gap-2 mb-4">
-            <span class="text-3xl">📖</span>
-            <h3 class="text-2xl font-display font-bold" style="color: var(--md-slate);">Skills</h3>
-          </div>
-          <div class="grid md:grid-cols-2 gap-6 items-start">
-            <div class="rounded-xl overflow-hidden border-2 cursor-pointer hover:opacity-90 transition-opacity" style="border-color: var(--md-slate);" onclick="enlargeScreenshot(this)">
-              <div id="learningHubInfoSkillsImage" class="w-full bg-gray-100 flex items-center justify-center min-h-[200px]" onclick="if(document.body.classList.contains('editing')) { event.stopPropagation(); editLearningHubScreenshot(this, 'skills'); }">
-                <span class="text-gray-400 text-sm">Click to upload screenshot</span>
-              </div>
-            </div>
-            <div>
-              <p class="leading-relaxed" id="learningHubInfoSkillsDesc" data-edit="teacher" contenteditable="false">The Skills Spotlight page shows the current reading and phonics unit we're working on. You'll find information about sight words, sounds, and vocabulary your child is learning. This page also includes a "View by Unit" option to see all units throughout the year.</p>
-              <button id="saveLearningHubInfoSkillsBtn" class="edit-only mt-4 px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate); display: none;" onclick="saveLearningHubInfoSection('skills')">💾 Save</button>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Listening & Learning Section -->
-        <div class="mb-10">
-          <div class="flex items-center gap-2 mb-4">
-            <span class="text-3xl">👂</span>
-            <h3 class="text-2xl font-display font-bold" style="color: var(--md-coral);">Listening & Learning</h3>
-          </div>
-          <div class="grid md:grid-cols-2 gap-6 items-start">
-            <div class="rounded-xl overflow-hidden border-2 cursor-pointer hover:opacity-90 transition-opacity" style="border-color: var(--md-coral);" onclick="enlargeScreenshot(this)">
-              <div id="learningHubInfoListeningImage" class="w-full bg-gray-100 flex items-center justify-center min-h-[200px]" onclick="if(document.body.classList.contains('editing')) { event.stopPropagation(); editLearningHubScreenshot(this, 'listening'); }">
-                <span class="text-gray-400 text-sm">Click to upload screenshot</span>
-              </div>
-            </div>
-            <div>
-              <p class="leading-relaxed" id="learningHubInfoListeningDesc" data-edit="teacher" contenteditable="false">The Listening & Learning page features daily read-aloud stories and discussion topics. It includes helpful questions you can ask your child about the stories we read, along with video links to watch story readings together at home.</p>
-              <button id="saveLearningHubInfoListeningBtn" class="edit-only mt-4 px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral); display: none;" onclick="saveLearningHubInfoSection('listening')">💾 Save</button>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Math Section -->
-        <div class="mb-10">
-          <div class="flex items-center gap-2 mb-4">
-            <span class="text-3xl">🧮</span>
-            <h3 class="text-2xl font-display font-bold" style="color: var(--md-blush);">Math</h3>
-          </div>
-          <div class="grid md:grid-cols-2 gap-6 items-start">
-            <div class="rounded-xl overflow-hidden border-2 cursor-pointer hover:opacity-90 transition-opacity" style="border-color: var(--md-blush);" onclick="enlargeScreenshot(this)">
-              <div id="learningHubInfoMathImage" class="w-full bg-gray-100 flex items-center justify-center min-h-[200px]" onclick="if(document.body.classList.contains('editing')) { event.stopPropagation(); editLearningHubScreenshot(this, 'math'); }">
-                <span class="text-gray-400 text-sm">Click to upload screenshot</span>
-              </div>
-            </div>
-            <div>
-              <p class="leading-relaxed" id="learningHubInfoMathDesc" data-edit="teacher" contenteditable="false">The Math page displays the current math module and concepts we're exploring. You'll find key vocabulary, practice strategies, and a "View by Module" button to see all math topics throughout the year.</p>
-              <button id="saveLearningHubInfoMathBtn" class="edit-only mt-4 px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-blush); display: none;" onclick="saveLearningHubInfoSection('math')">💾 Save</button>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Practice Websites Section -->
-        <div class="mb-10">
-          <div class="flex items-center gap-2 mb-4">
-            <span class="text-3xl">💻</span>
-            <h3 class="text-2xl font-display font-bold" style="color: var(--md-pebble);">Practice Websites</h3>
-          </div>
-          <div class="grid md:grid-cols-2 gap-6 items-start">
-            <div class="rounded-xl overflow-hidden border-2 cursor-pointer hover:opacity-90 transition-opacity" style="border-color: var(--md-pebble);" onclick="enlargeScreenshot(this)">
-              <div id="learningHubInfoPracticeImage" class="w-full bg-gray-100 flex items-center justify-center min-h-[200px]" onclick="if(document.body.classList.contains('editing')) { event.stopPropagation(); editLearningHubScreenshot(this, 'practice'); }">
-                <span class="text-gray-400 text-sm">Click to upload screenshot</span>
-              </div>
-            </div>
-            <div>
-              <p class="leading-relaxed" id="learningHubInfoPracticeDesc" data-edit="teacher" contenteditable="false">The Practice Websites page provides links to educational websites and learning platforms your child can use at home. This includes Clever for accessing learning apps, ClassDojo for class communication, and various practice sites for reading, phonics, and math skills.</p>
-              <button id="saveLearningHubInfoPracticeBtn" class="edit-only mt-4 px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-pebble); display: none;" onclick="saveLearningHubInfoSection('practice')">💾 Save</button>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Back to Learning Hub Button -->
-        <div class="text-center mt-8">
-          <button onclick="openLearningHubModal()" class="px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90 inline-flex items-center gap-2" style="background: var(--md-slate);">
-            <span>←</span><span>Back to Learning Hub</span>
-          </button>
-        </div>
-      </div>
+      <div id="featureInfoLearningHub"></div>
+    </section>
+    <section data-page-panel="student-services-info" class="pagePanel fade-in">
+      <div id="featureInfoStudentServices"></div>
     </section>
     <!-- TEACHER CURRICULUM BUILDER -->
     <section data-page-panel="curriculum-builder" class="pagePanel fade-in">
@@ -9232,25 +9275,9 @@
       data.volunteer_background_check_link = document.getElementById('backgroundCheckLink')?.value || '';
       
       // Learning Hub Info page data
-      const learningHubInfoData = {
-        skills: {
-          image: document.getElementById('learningHubInfoSkillsImage')?.getAttribute('data-screenshot-url') || '',
-          description: sanitizeHTML(document.getElementById('learningHubInfoSkillsDesc')?.innerHTML || '')
-        },
-        listening: {
-          image: document.getElementById('learningHubInfoListeningImage')?.getAttribute('data-screenshot-url') || '',
-          description: sanitizeHTML(document.getElementById('learningHubInfoListeningDesc')?.innerHTML || '')
-        },
-        math: {
-          image: document.getElementById('learningHubInfoMathImage')?.getAttribute('data-screenshot-url') || '',
-          description: sanitizeHTML(document.getElementById('learningHubInfoMathDesc')?.innerHTML || '')
-        },
-        practice: {
-          image: document.getElementById('learningHubInfoPracticeImage')?.getAttribute('data-screenshot-url') || '',
-          description: sanitizeHTML(document.getElementById('learningHubInfoPracticeDesc')?.innerHTML || '')
-        }
-      };
-      data.learning_hub_info_json = JSON.stringify(learningHubInfoData);
+      const featureInfoData = collectFeatureInfoData();
+      data.feature_info_json = JSON.stringify(featureInfoData);
+      data.learning_hub_info_json = JSON.stringify(featureInfoData.learningHub || {});
       
       return data;
     }
@@ -12583,7 +12610,9 @@ function populateDataFromSheet(data) {
   loadVolunteerData(data);
   
   // Load Learning Hub Info data
+  renderFeatureInfoPages();
   updateLearningHubInfo(data.learning_hub_info_json);
+  updateFeatureInfo(data.feature_info_json);
   
   if (data.calendar_url) {
     const cal = document.getElementById('schoolCalendarLink');
@@ -12666,6 +12695,500 @@ function updateLearningHubInfo(learningHubInfoJson) {
       practiceDesc.innerHTML = sanitizeHTML(learningHubInfo.practice.description);
     }
   }
+}
+
+const featureInfoPageConfigs = {
+  home: {
+    containerId: '',
+    title: 'Home Page Guide',
+    intro: 'Use these notes to explain what families can find on the Home page.',
+    accent: 'var(--md-slate)',
+    buttonText: 'var(--md-white)',
+    sections: [
+      {
+        key: 'weeklyNews',
+        title: 'Weekly News',
+        description: 'The weekly news cards show what each class did this week. Families can read the recap, see classroom photos, and keep up with the learning story for Mr. Davis and Ms. Vest.'
+      },
+      {
+        key: 'classPhotos',
+        title: 'Class Photos',
+        description: 'The photo spots on each weekly news card hold classroom snapshots. In edit mode, teachers can upload or replace photos before sharing the update with families.'
+      },
+      {
+        key: 'classCalendar',
+        title: 'Class Calendar and Looking Ahead',
+        description: 'The calendar lists classroom events, school reminders, and upcoming dates. Looking Ahead highlights the reminders families are most likely to need soon.'
+      },
+      {
+        key: 'saveNewsImages',
+        title: 'Save News Images',
+        description: 'The Save Davis News Image and Save Vest News Image buttons create shareable versions of each weekly news card for posting or sending to families.'
+      },
+      {
+        key: 'shoutouts',
+        title: 'Shoutout Your Scholar',
+        description: 'The shoutout button takes families to the classroom shoutout tool. Families can submit celebrations, and approved shoutouts can appear on the classroom TV display.'
+      }
+    ]
+  },
+  learningHub: {
+    containerId: 'featureInfoLearningHub',
+    title: 'Learning Hub Guide',
+    intro: 'Use these notes to explain the learning areas families can open from the Learning Hub.',
+    accent: 'var(--md-slate)',
+    buttonText: 'var(--md-white)',
+    backLabel: 'Back to Learning Hub',
+    backAction: "showPage('home'); openLearningHubModal();",
+    sections: [
+      {
+        key: 'skills',
+        title: 'Skills',
+        imageId: 'learningHubInfoSkillsImage',
+        descId: 'learningHubInfoSkillsDesc',
+        description: 'Skills shows the current reading lessons, sounds, tricky words, vocabulary, and lesson cards for the unit. Families can see what students are practicing in foundational reading.'
+      },
+      {
+        key: 'listening',
+        title: 'Listening and Learning',
+        imageId: 'learningHubInfoListeningImage',
+        descId: 'learningHubInfoListeningDesc',
+        description: 'Listening and Learning shows the current knowledge-building unit, lesson questions, vocabulary, and lesson cards. Families can preview the topics students are discussing and reading about.'
+      },
+      {
+        key: 'math',
+        title: 'Math',
+        imageId: 'learningHubInfoMathImage',
+        descId: 'learningHubInfoMathDesc',
+        description: 'Math shows the current module, lesson cards, and vocabulary. Families can see the skills students are building and the language used in class.'
+      },
+      {
+        key: 'practice',
+        title: 'Practice Websites',
+        imageId: 'learningHubInfoPracticeImage',
+        descId: 'learningHubInfoPracticeDesc',
+        description: 'Practice Websites collects helpful links, Clever access, QR tools, and practice resources families can use at home.'
+      }
+    ]
+  },
+  studentServices: {
+    containerId: 'featureInfoStudentServices',
+    title: 'Student Services Guide',
+    intro: 'Use these notes to explain the family tools and service links inside Student Services.',
+    accent: 'var(--md-coral)',
+    buttonText: 'var(--md-white)',
+    backLabel: 'Back to Student Services',
+    backAction: "showPage('home'); openFamilyHubModal();",
+    sections: [
+      {
+        key: 'classdojo',
+        title: 'ClassDojo',
+        description: 'ClassDojo is the quick link for classroom communication and updates. Families can use it to connect with the class and check posted messages.'
+      },
+      {
+        key: 'transportation',
+        title: 'Transportation',
+        description: 'Transportation lets families submit dismissal changes. The form helps teachers see the scholar, new dismissal plan, guardian name, and any extra notes in one place.'
+      },
+      {
+        key: 'birthdays',
+        title: 'Birthdays',
+        description: 'Birthdays shows the class birthday information so families and teachers can see upcoming celebrations.'
+      },
+      {
+        key: 'snacks',
+        title: 'Snack Helpers',
+        description: 'Snack Helpers lets families sign up for snack items and helps the class keep track of what has already been claimed.'
+      },
+      {
+        key: 'volunteers',
+        title: 'Volunteer Opportunities',
+        description: 'Volunteer Opportunities lists classroom events, ways families can help, and background-check information for adults who want to volunteer.'
+      }
+    ]
+  },
+  scholar: {
+    containerId: '',
+    title: 'Scholar of the Month Guide',
+    intro: 'Use these notes to explain the Scholar of the Month tools and celebration pages.',
+    accent: 'var(--md-mustard)',
+    buttonText: 'var(--md-ink)',
+    sections: [
+      {
+        key: 'davisScholar',
+        title: 'Mr. Davis Class',
+        description: 'The Mr. Davis Scholar page highlights the monthly scholar, a scholar photo, the featured skill, and a family-facing celebration note.'
+      },
+      {
+        key: 'vestScholar',
+        title: 'Ms. Vest Class',
+        description: 'The Ms. Vest Scholar page highlights the monthly scholar, a scholar photo, the featured skill, and a family-facing celebration note.'
+      },
+      {
+        key: 'skillMeter',
+        title: 'Class Skill Meter',
+        description: 'The Class Skill Meter tracks progress toward a shared class skill goal. Teachers can update the focus skill, progress, and family note.'
+      }
+    ]
+  }
+};
+
+const featureInfoPersistentPageKeys = ['learningHub', 'studentServices'];
+let featureInfoCurrentData = {};
+
+function buildDefaultFeatureInfoData() {
+  const data = {};
+  Object.entries(featureInfoPageConfigs).forEach(([pageKey, config]) => {
+    data[pageKey] = {};
+    config.sections.forEach(section => {
+      data[pageKey][section.key] = {
+        image: '',
+        description: section.description || ''
+      };
+    });
+  });
+  return data;
+}
+
+function mergeFeatureInfoData(base, incoming) {
+  const merged = base && typeof base === 'object' ? base : {};
+  if (!incoming || typeof incoming !== 'object') return merged;
+
+  Object.entries(incoming).forEach(([pageKey, pageData]) => {
+    if (!pageData || typeof pageData !== 'object') return;
+    if (!merged[pageKey]) merged[pageKey] = {};
+
+    Object.entries(pageData).forEach(([sectionKey, item]) => {
+      if (!item || typeof item !== 'object') return;
+      const existing = merged[pageKey][sectionKey] || { image: '', description: '' };
+      merged[pageKey][sectionKey] = {
+        image: typeof item.image === 'string' ? item.image : existing.image || '',
+        description: typeof item.description === 'string'
+          ? sanitizeHTML(item.description)
+          : existing.description || ''
+      };
+    });
+  });
+
+  return merged;
+}
+
+function getFeatureInfoData() {
+  return mergeFeatureInfoData(buildDefaultFeatureInfoData(), featureInfoCurrentData);
+}
+
+function getFeatureInfoSectionConfig(pageKey, sectionKey) {
+  const config = featureInfoPageConfigs[pageKey];
+  if (!config) return null;
+  return config.sections.find(section => section.key === sectionKey) || null;
+}
+
+function syncFeatureInfoDataFromDom() {
+  const nextData = getFeatureInfoData();
+
+  document.querySelectorAll('[data-feature-info-card]').forEach(card => {
+    const pageKey = card.getAttribute('data-feature-info-page');
+    const sectionKey = card.getAttribute('data-feature-info-key');
+    if (!pageKey || !sectionKey) return;
+
+    const imageEl = card.querySelector('[data-feature-info-image]');
+    const descriptionEl = card.querySelector('[data-feature-info-description]');
+    if (!nextData[pageKey]) nextData[pageKey] = {};
+
+    nextData[pageKey][sectionKey] = {
+      image: imageEl?.getAttribute('data-screenshot-url') || '',
+      description: sanitizeHTML(descriptionEl?.innerHTML || '')
+    };
+  });
+
+  featureInfoCurrentData = nextData;
+  return featureInfoCurrentData;
+}
+
+function collectFeatureInfoData() {
+  return syncFeatureInfoDataFromDom();
+}
+
+function renderFeatureInfoPages(options = {}) {
+  if (options.syncFromDom !== false) {
+    syncFeatureInfoDataFromDom();
+  }
+  featureInfoPersistentPageKeys.forEach(pageKey => {
+    const config = featureInfoPageConfigs[pageKey];
+    const container = config?.containerId ? document.getElementById(config.containerId) : null;
+    if (!container) return;
+
+    container.innerHTML = renderFeatureInfoSurface(pageKey, config, { mode: 'page' });
+    setRenderedFeatureInfoEditability(container);
+  });
+}
+
+function renderFeatureInfoSurface(pageKey, config, options = {}) {
+  const featureData = getFeatureInfoData();
+  const pageData = featureData[pageKey] || {};
+  const cards = config.sections
+    .map(section => renderFeatureInfoCard(pageKey, section, pageData[section.key] || {}))
+    .join('');
+  const backButton = options.mode === 'page' && config.backAction
+    ? `<button type="button" class="px-4 py-2 rounded-lg font-bold" style="background: ${config.accent}; color: ${config.buttonText || 'var(--md-white)'};" onclick="${config.backAction}">${escapeHtml(config.backLabel || 'Back')}</button>`
+    : '';
+
+  return `
+    <div class="feature-info-page" style="border-top: 4px solid ${config.accent};">
+      <div class="feature-info-header">
+        <div>
+          <p class="text-sm font-bold uppercase tracking-wide" style="color: ${config.accent};">Information</p>
+          <h2 class="text-3xl font-display font-bold" style="color: var(--md-slate);">${escapeHtml(config.title)}</h2>
+          <p class="mt-2 text-sm text-gray-600">${escapeHtml(config.intro || '')}</p>
+        </div>
+        ${backButton}
+      </div>
+      <div class="feature-info-grid">${cards}</div>
+    </div>
+  `;
+}
+
+function renderFeatureInfoCard(pageKey, section, item) {
+  const imageId = section.imageId || `featureInfoImage_${pageKey}_${section.key}`;
+  const descriptionId = section.descId || `featureInfoDesc_${pageKey}_${section.key}`;
+  const imageUrl = item.image || '';
+  const description = Object.prototype.hasOwnProperty.call(item, 'description')
+    ? item.description
+    : section.description || '';
+  const imageMarkup = imageUrl
+    ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(section.title)} screenshot">`
+    : '<span class="feature-info-view-placeholder text-sm px-4">Screenshot coming soon</span><span class="feature-info-edit-placeholder text-sm px-4">Click to upload screenshot</span>';
+
+  return `
+    <section class="feature-info-card" data-feature-info-card data-feature-info-page="${escapeHtml(pageKey)}" data-feature-info-key="${escapeHtml(section.key)}">
+      <div id="${escapeHtml(imageId)}"
+           class="feature-info-screenshot"
+           data-feature-info-image
+           data-feature-info-title="${escapeHtml(section.title)}"
+           data-screenshot-url="${escapeHtml(imageUrl)}"
+           onclick="handleFeatureInfoImageClick(this)">
+        ${imageMarkup}
+      </div>
+      <div>
+        <h3>${escapeHtml(section.title)}</h3>
+        <p id="${escapeHtml(descriptionId)}" class="feature-info-description text-sm text-gray-700" data-feature-info-description data-edit="teacher" contenteditable="false">${sanitizeHTML(description)}</p>
+      </div>
+    </section>
+  `;
+}
+
+function setRenderedFeatureInfoEditability(container) {
+  if (!container) return;
+  const isEditing = document.body.classList.contains('editing');
+  container.querySelectorAll('[data-edit="teacher"]').forEach(el => {
+    el.setAttribute('contenteditable', isEditing ? 'true' : 'false');
+  });
+}
+
+function updateFeatureInfo(featureInfoJson) {
+  syncFeatureInfoDataFromDom();
+
+  if (featureInfoJson) {
+    try {
+      const parsed = JSON.parse(featureInfoJson);
+      featureInfoCurrentData = mergeFeatureInfoData(getFeatureInfoData(), parsed);
+    } catch (error) {
+      console.error('Failed to parse feature info data:', error);
+    }
+  }
+
+  renderFeatureInfoPages({ syncFromDom: false });
+}
+
+function applyFeatureInfoItem(pageKey, sectionKey, item) {
+  if (!item || typeof item !== 'object') return;
+  const selector = `[data-feature-info-card][data-feature-info-page="${pageKey}"][data-feature-info-key="${sectionKey}"]`;
+  const card = document.querySelector(selector);
+  if (!card) return;
+
+  const section = getFeatureInfoSectionConfig(pageKey, sectionKey);
+  const imageEl = card.querySelector('[data-feature-info-image]');
+  const descriptionEl = card.querySelector('[data-feature-info-description]');
+
+  if (imageEl && Object.prototype.hasOwnProperty.call(item, 'image')) {
+    setFeatureInfoImageDisplay(imageEl, item.image || '', section?.title || 'Feature');
+  }
+  if (descriptionEl && Object.prototype.hasOwnProperty.call(item, 'description')) {
+    descriptionEl.innerHTML = sanitizeHTML(item.description || '');
+  }
+}
+
+function openFeatureInfoModal(pageKey) {
+  syncFeatureInfoDataFromDom();
+
+  const config = featureInfoPageConfigs[pageKey];
+  const modal = document.getElementById('featureInfoModal');
+  const card = document.getElementById('featureInfoModalCard');
+  const content = document.getElementById('featureInfoModalContent');
+  if (!config || !modal || !card || !content) return;
+
+  card.style.borderColor = config.accent;
+  const closeButton = card.querySelector('button[aria-label="Close information"]');
+  if (closeButton) {
+    closeButton.style.background = config.accent;
+    closeButton.style.color = config.buttonText || 'var(--md-white)';
+  }
+
+  content.innerHTML = renderFeatureInfoSurface(pageKey, config, { mode: 'modal' });
+  setRenderedFeatureInfoEditability(content);
+  modal.classList.add('open');
+}
+
+function closeFeatureInfoModal() {
+  syncFeatureInfoDataFromDom();
+  const modal = document.getElementById('featureInfoModal');
+  if (modal) modal.classList.remove('open');
+}
+
+function handleFeatureInfoImageClick(el) {
+  if (!el) return;
+  if (document.body.classList.contains('editing')) {
+    editFeatureInfoScreenshot(el);
+    return;
+  }
+
+  const img = el.querySelector('img');
+  if (img && img.src && typeof openImageModal === 'function') {
+    openImageModal(img.src);
+  }
+}
+
+function setFeatureInfoImageDisplay(el, url, title) {
+  if (!el) return;
+  const safeUrl = typeof url === 'string' ? url : '';
+  const safeTitle = title || el.getAttribute('data-feature-info-title') || 'Feature';
+
+  el.setAttribute('data-screenshot-url', safeUrl);
+  if (safeUrl) {
+    el.innerHTML = `<img src="${escapeHtml(safeUrl)}" alt="${escapeHtml(safeTitle)} screenshot">`;
+  } else {
+    el.innerHTML = '<span class="feature-info-view-placeholder text-sm px-4">Screenshot coming soon</span><span class="feature-info-edit-placeholder text-sm px-4">Click to upload screenshot</span>';
+  }
+
+  const card = el.closest('[data-feature-info-card]');
+  if (card) {
+    const pageKey = card.getAttribute('data-feature-info-page');
+    const sectionKey = card.getAttribute('data-feature-info-key');
+    if (pageKey && sectionKey) {
+      const data = getFeatureInfoData();
+      if (!data[pageKey]) data[pageKey] = {};
+      if (!data[pageKey][sectionKey]) data[pageKey][sectionKey] = { image: '', description: '' };
+      data[pageKey][sectionKey].image = safeUrl;
+      featureInfoCurrentData = data;
+    }
+  }
+}
+
+function markFeatureInfoChanged() {
+  syncFeatureInfoDataFromDom();
+  const saveBtn = document.getElementById('saveChangesBtn');
+  if (saveBtn) saveBtn.style.display = 'block';
+  if (typeof scheduleEditDraftSave === 'function') scheduleEditDraftSave();
+}
+
+function showFeatureInfoUploadError(message) {
+  const errorDiv = document.createElement('div');
+  errorDiv.className = 'fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg z-50';
+  errorDiv.textContent = message;
+  document.body.appendChild(errorDiv);
+  setTimeout(() => {
+    if (errorDiv.parentNode) errorDiv.parentNode.removeChild(errorDiv);
+  }, 5000);
+}
+
+function editFeatureInfoScreenshot(el) {
+  if (!document.body.classList.contains('editing')) return;
+
+  const card = el.closest('[data-feature-info-card]');
+  const pageKey = card?.getAttribute('data-feature-info-page') || 'feature';
+  const sectionKey = card?.getAttribute('data-feature-info-key') || 'section';
+  const section = getFeatureInfoSectionConfig(pageKey, sectionKey);
+  const originalUrl = el.getAttribute('data-screenshot-url') || '';
+
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/*';
+  fileInput.style.display = 'none';
+
+  fileInput.onchange = async function(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) {
+      fileInput.remove();
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File size too large. Please select an image smaller than 10MB.');
+      fileInput.remove();
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please select a valid image file.');
+      fileInput.remove();
+      return;
+    }
+
+    const maxAttempts = 3;
+    let attempt = 0;
+
+    while (attempt < maxAttempts) {
+      try {
+        isUploading = true;
+        el.innerHTML = '<div style="font-size: 12px; text-align: center; padding: 80px 0;">Uploading...</div>';
+        el.style.pointerEvents = 'none';
+
+        if (!storage) throw new Error('Firebase Storage is not available');
+
+        const storageConnected = typeof window.testStorageConnection === 'function'
+          ? await window.testStorageConnection()
+          : true;
+        if (!storageConnected) throw new Error('Firebase Storage connection failed');
+
+        const timestamp = Date.now();
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const storageRef = storage.ref(`feature-info-screenshots/${pageKey}/${sectionKey}/${timestamp}_${safeName}`);
+        const uploadTask = await storageRef.put(file);
+        const downloadURL = await uploadTask.ref.getDownloadURL();
+
+        if (typeof window.validateStorageUrl === 'function') {
+          await window.validateStorageUrl(downloadURL);
+        }
+
+        setFeatureInfoImageDisplay(el, downloadURL, section?.title || sectionKey);
+        el.style.pointerEvents = 'auto';
+        isUploading = false;
+        markFeatureInfoChanged();
+        fileInput.remove();
+        return;
+      } catch (error) {
+        attempt++;
+        console.error(`Feature info screenshot upload attempt ${attempt} failed:`, error);
+
+        if (attempt >= maxAttempts) {
+          isUploading = false;
+          el.style.pointerEvents = 'auto';
+          setFeatureInfoImageDisplay(el, originalUrl, section?.title || sectionKey);
+          const errorMessage = typeof window.handleUploadError === 'function'
+            ? window.handleUploadError(error, 'feature screenshot upload')
+            : (error.message || 'Upload failed. Please try again.');
+          showFeatureInfoUploadError(errorMessage);
+        } else {
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        }
+      }
+    }
+
+    fileInput.remove();
+  };
+
+  document.body.appendChild(fileInput);
+  fileInput.click();
 }
 
 // Function to update photo cards with saved URLs
@@ -21237,10 +21760,18 @@ document.head.appendChild(style);
     </div>
   </div>
 
+  <!-- Feature Info Modal -->
+  <div id="featureInfoModal" class="feature-info-modal" onclick="if(event.target === this) closeFeatureInfoModal()">
+    <div id="featureInfoModalCard" class="feature-info-modal-card" onclick="event.stopPropagation();">
+      <button type="button" class="w-9 h-9 rounded-full text-white font-bold absolute top-3 right-3" style="background: var(--md-slate);" onclick="closeFeatureInfoModal()" aria-label="Close information">&times;</button>
+      <div id="featureInfoModalContent"></div>
+    </div>
+  </div>
+
   <!-- Learning Hub Popup Modal -->
   <div id="learningHubModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9998; justify-content: center; align-items: center;" onclick="closeLearningHubModal()">
     <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-8 max-w-md mx-4" onclick="event.stopPropagation();" style="border: 3px solid var(--md-slate); position: relative;">
-      <button onclick="event.stopPropagation(); closeLearningHubModal(); showPage('learning-hub-info');" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-[color:var(--md-slate)] text-white font-bold hover:opacity-80 transition-opacity" style="font-size: 18px;" title="What is the Learning Hub?">?</button>
+      <button type="button" onclick="event.stopPropagation(); closeLearningHubModal(); showPage('learning-hub-info');" class="feature-info-button absolute top-4 right-4" style="color: var(--md-slate);" title="What is the Learning Hub?" aria-label="Open Learning Hub information">i</button>
       <div class="text-center">
         <div class="text-5xl mb-4">📚</div>
         <h3 class="text-2xl font-display font-bold mb-6" style="color: var(--md-slate);">Learning Hub</h3>
@@ -21271,7 +21802,8 @@ document.head.appendChild(style);
 
   <!-- Student Services Popup Modal -->
   <div id="familyHubModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9998; justify-content: center; align-items: center;" onclick="closeFamilyHubModal()">
-    <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-8 max-w-md mx-4" onclick="event.stopPropagation();" style="border: 3px solid var(--md-coral);">
+    <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-8 max-w-md mx-4" onclick="event.stopPropagation();" style="border: 3px solid var(--md-coral); position: relative;">
+      <button type="button" onclick="event.stopPropagation(); closeFamilyHubModal(); showPage('student-services-info');" class="feature-info-button absolute top-4 right-4" style="color: var(--md-coral);" title="What is Student Services?" aria-label="Open Student Services information">i</button>
       <div class="text-center">
         <div class="text-5xl mb-4">🎯</div>
         <h3 class="text-2xl font-display font-bold mb-6" style="color: var(--md-coral);">Student Services</h3>
@@ -21307,7 +21839,8 @@ document.head.appendChild(style);
 
   <!-- Scholar of the Month Popup Modal -->
   <div id="scholarModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9998; justify-content: center; align-items: center;" onclick="closeScholarModal()">
-    <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-8 max-w-md mx-4" onclick="event.stopPropagation();" style="border: 3px solid var(--md-mustard);">
+    <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-8 max-w-md mx-4" onclick="event.stopPropagation();" style="border: 3px solid var(--md-mustard); position: relative;">
+      <button type="button" onclick="event.stopPropagation(); openFeatureInfoModal('scholar')" class="feature-info-button absolute top-4 right-4" style="color: var(--md-mustard);" title="What is Scholar of the Month?" aria-label="Open Scholar of the Month information">i</button>
       <div class="text-center">
         <div class="text-5xl mb-4">⭐</div>
         <h3 class="text-2xl font-display font-bold mb-6" style="color: var(--md-mustard);">Scholar of the Month</h3>
