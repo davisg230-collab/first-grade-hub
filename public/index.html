@@ -3213,7 +3213,10 @@
       <div class="text-center mb-8">
         <!-- Large TV Display (functional TV without decorative emoji) -->
         <div class="mx-auto max-w-6xl">
-          <h2 class="text-4xl font-display font-bold mb-4" style="color: var(--md-coral); font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif;">Shoutout TV!</h2>
+          <div class="inline-flex items-center justify-center gap-3 mb-4">
+            <h2 class="text-4xl font-display font-bold" style="color: var(--md-coral); font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif;">Shoutout TV!</h2>
+            <button type="button" class="feature-info-button" style="color: var(--md-coral);" onclick="openFeatureInfoModal('shoutoutTv')" title="What is Shoutout TV?" aria-label="Open Shoutout TV information">i</button>
+          </div>
           <div class="shoutout-tv-stage mb-4">
             <!-- Enhanced TV Screen with TV-like appearance -->
             <div class="tv-container shoutout-tv-set mx-auto">
@@ -12308,7 +12311,7 @@ const featureInfoPageConfigs = {
       {
         key: 'classPhotos',
         title: 'Class Photos',
-        description: 'The photo spots on each weekly news card hold classroom snapshots. In edit mode, teachers can upload or replace photos before sharing the update with families.'
+        description: 'The photo spots on each weekly news card hold classroom snapshots so families can see moments from the week.'
       },
       {
         key: 'classCalendar',
@@ -12383,12 +12386,12 @@ const featureInfoPageConfigs = {
       {
         key: 'transportation',
         title: 'Transportation',
-        description: 'Transportation lets families submit dismissal changes. The form helps teachers see the scholar, new dismissal plan, guardian name, and any extra notes in one place.'
+        description: 'Transportation lets families submit dismissal changes with the scholar name, new dismissal plan, guardian name, and any extra notes in one place.'
       },
       {
         key: 'birthdays',
         title: 'Birthdays',
-        description: 'Birthdays shows the class birthday information so families and teachers can see upcoming celebrations.'
+        description: 'Birthdays shows the class birthday information so families can see upcoming celebrations.'
       },
       {
         key: 'snacks',
@@ -12418,6 +12421,35 @@ const featureInfoPageConfigs = {
         key: 'vestScholar',
         title: 'Ms. Vest Class',
         description: 'The Ms. Vest Scholar page highlights the monthly scholar, a scholar photo, the featured skill, and a family-facing celebration note.'
+      }
+    ]
+  },
+  shoutoutTv: {
+    containerId: '',
+    title: 'Shoutout TV Guide',
+    intro: 'Use these notes to explain how families use the Shoutout TV page.',
+    accent: 'var(--md-coral)',
+    buttonText: 'var(--md-white)',
+    sections: [
+      {
+        key: 'tvDisplay',
+        title: 'Classroom TV Display',
+        description: 'The TV screen shows approved scholar shoutouts for the selected class channel. If no approved shoutouts are ready, it shows the channel welcome image or ready message.'
+      },
+      {
+        key: 'channels',
+        title: 'Class Channels',
+        description: 'The Mr. Davis and Ms. Vest channel buttons switch which class shoutouts appear on the TV. The active channel label tells families which class they are watching.'
+      },
+      {
+        key: 'shuffle',
+        title: 'Shuffle',
+        description: 'Shuffle rotates through approved shoutouts for the current class channel so families and students can see different celebrations on the TV.'
+      },
+      {
+        key: 'create',
+        title: 'Create Shoutout',
+        description: 'Create Shoutout opens the family form where someone can submit a scholar name, sender name, message, and class channel.'
       }
     ]
   }
