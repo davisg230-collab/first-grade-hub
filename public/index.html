@@ -2054,6 +2054,60 @@
       margin-top: 1rem;
       padding-top: 1rem;
     }
+    #curriculumModuleInfoModal .lesson-detail-card {
+      overflow-y: hidden;
+    }
+    .curriculum-module-info-page {
+      min-height: 24rem;
+      max-height: min(58vh, 34rem);
+      overflow-y: auto;
+      padding-right: .25rem;
+    }
+    .curriculum-module-info-page[hidden] {
+      display: none;
+    }
+    .curriculum-module-info-page-title {
+      margin: 0 0 .85rem;
+      color: var(--md-slate);
+      font-family: var(--font-display, inherit);
+      font-size: 1.05rem;
+      font-weight: 900;
+    }
+    .curriculum-module-info-pager {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+      margin-top: 1rem;
+      padding-top: .85rem;
+      border-top: 1px solid color-mix(in oklab, var(--md-slate) 14%, var(--md-white));
+    }
+    .curriculum-module-info-page-status {
+      color: color-mix(in oklab, var(--md-ink) 74%, var(--md-white));
+      font-size: .85rem;
+      font-weight: 800;
+      text-align: center;
+    }
+    .curriculum-module-info-pager-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .45rem;
+      justify-content: flex-end;
+    }
+    .curriculum-module-info-page-button {
+      border: 0;
+      border-radius: .7rem;
+      background: var(--md-slate);
+      color: var(--md-white);
+      cursor: pointer;
+      font-size: .86rem;
+      font-weight: 800;
+      padding: .45rem .7rem;
+    }
+    .curriculum-module-info-page-button:disabled {
+      cursor: not-allowed;
+      opacity: .42;
+    }
     .curriculum-module-info-standard {
       border: 1px solid color-mix(in oklab, var(--md-slate) 18%, var(--md-white));
       border-radius: .8rem;
@@ -5243,6 +5297,7 @@
     let curriculumModuleInfoCache = Object.create(null);
     let curriculumModuleInfoState = null;
     let curriculumElaStandardsReferenceCache = null;
+    let curriculumModuleInfoPageIndex = 0;
     let curriculumActiveLessonId = '';
     let curriculumWeeklyPlan = getEmptyCurriculumWeeklyPlan();
     let curriculumLastPdfSuggestedTitle = '';
@@ -6834,24 +6889,11 @@
     }
 
     function renderCurriculumModuleInfoModalBody(view) {
-      const standards = view.standards.length
-        ? view.standards.map(standard => renderCurriculumModuleInfoStandard(standard, standard.whyItMatters || '')).join('')
-        : '<p class="text-sm text-gray-500">Save lessons with priority standards to build this list.</p>';
-      const supportingStandards = view.supportingStandards.length
-        ? view.supportingStandards.map(renderCurriculumModuleInfoSupportingStandard).join('')
-        : '<p class="text-sm text-gray-500">No supporting standards are recorded yet.</p>';
-      const mathematicalPractices = view.mathematicalPractices.length
-        ? view.mathematicalPractices.map(renderCurriculumModuleInfoPractice).join('')
-        : '<p class="text-sm text-gray-500">No mathematical practice standards are recorded yet.</p>';
-      const mathematicalPracticesSection = view.subject === 'math'
-        ? `<div class="curriculum-detail-section">
-            <h4>Mathematical practice standards</h4>
-            ${mathematicalPractices}
-          </div>`
-        : '';
       const lessonCount = view.lessons.length;
-      return `
-        <div class="curriculum-module-info-edit-grid">
+      const pages = [];
+      pages.push({
+        title: 'Saved information',
+        body: `<div class="curriculum-module-info-edit-grid">
           <label class="curriculum-builder-label" for="curriculumModuleInfoStandardsInput">
             Main priority standards
             <textarea id="curriculumModuleInfoStandardsInput" class="curriculum-builder-field" rows="3" placeholder="One standard code per line">${escapeHtml(view.standardCodes.join('\n'))}</textarea>
@@ -6864,18 +6906,92 @@
             Why it matters
             <textarea id="curriculumModuleInfoWhyInput" class="curriculum-builder-field" rows="4" placeholder="Explain the module's big idea in family-friendly language.">${escapeHtml(view.whyItMatters)}</textarea>
           </label>
+        </div>`
+      });
+      if (view.standards.length) {
+        view.standards.forEach((standard, index) => {
+          pages.push({
+            title: `Main priority standard ${index + 1}`,
+            body: renderCurriculumModuleInfoStandard(standard, standard.whyItMatters || '')
+          });
+        });
+      } else {
+        pages.push({
+          title: 'Main priority standards',
+          body: '<p class="text-sm text-gray-500">Save lessons with priority standards to build this list.</p>'
+        });
+      }
+      if (view.supportingStandards.length) {
+        view.supportingStandards.forEach((standard, index) => {
+          pages.push({
+            title: `Supporting standard ${index + 1}`,
+            body: renderCurriculumModuleInfoSupportingStandard(standard)
+          });
+        });
+      } else {
+        pages.push({
+          title: 'Supporting standards',
+          body: '<p class="text-sm text-gray-500">No supporting standards are recorded yet.</p>'
+        });
+      }
+      if (view.subject === 'math') {
+        if (view.mathematicalPractices.length) {
+          view.mathematicalPractices.forEach((standard, index) => {
+            pages.push({
+              title: `Mathematical practice standard ${index + 1}`,
+              body: renderCurriculumModuleInfoPractice(standard)
+            });
+          });
+        } else {
+          pages.push({
+            title: 'Mathematical practice standards',
+            body: '<p class="text-sm text-gray-500">No mathematical practice standards are recorded yet.</p>'
+          });
+        }
+      }
+      const pageCount = pages.length;
+      return `
+        <div class="text-sm font-bold mb-3" style="color: var(--md-slate);">Automatic lesson connections (${lessonCount} saved lesson${lessonCount === 1 ? '' : 's'})</div>
+        <div class="curriculum-module-info-pages">
+          ${pages.map((page, index) => `
+            <section class="curriculum-module-info-page" data-curriculum-info-page="${index}" ${index === 0 ? '' : 'hidden'}>
+              <h4 class="curriculum-module-info-page-title">${escapeHtml(page.title)}</h4>
+              ${page.body}
+            </section>
+          `).join('')}
         </div>
-        <div class="curriculum-module-info-auto">
-          <div class="text-sm font-bold mb-3" style="color: var(--md-slate);">Automatic lesson connections (${lessonCount} saved lesson${lessonCount === 1 ? '' : 's'})</div>
-          <h4 class="font-display font-bold mb-2" style="color: var(--md-slate);">Main priority standards</h4>
-          ${standards}
-          <div class="curriculum-detail-section">
-            <h4>Supporting standards</h4>
-            ${supportingStandards}
+        <div class="curriculum-module-info-pager" data-curriculum-info-page-count="${pageCount}">
+          <div id="curriculumModuleInfoPageStatus" class="curriculum-module-info-page-status">Page 1 of ${pageCount}</div>
+          <div class="curriculum-module-info-pager-actions">
+            <button type="button" class="curriculum-module-info-page-button" data-curriculum-info-page-control="first" onclick="setCurriculumModuleInfoPage(0)">First</button>
+            <button type="button" class="curriculum-module-info-page-button" data-curriculum-info-page-control="previous" onclick="setCurriculumModuleInfoPage(curriculumModuleInfoPageIndex - 1)">Previous</button>
+            <button type="button" class="curriculum-module-info-page-button" data-curriculum-info-page-control="next" onclick="setCurriculumModuleInfoPage(curriculumModuleInfoPageIndex + 1)">Next</button>
+            <button type="button" class="curriculum-module-info-page-button" data-curriculum-info-page-control="last" onclick="setCurriculumModuleInfoPage(${pageCount - 1})">Last</button>
           </div>
-          ${mathematicalPracticesSection}
         </div>
       `;
+    }
+
+    function setCurriculumModuleInfoPage(pageIndex) {
+      const pages = Array.from(document.querySelectorAll('#curriculumModuleInfoModalBody .curriculum-module-info-page'));
+      if (!pages.length) {
+        curriculumModuleInfoPageIndex = 0;
+        return;
+      }
+      const nextIndex = Math.max(0, Math.min(Number(pageIndex) || 0, pages.length - 1));
+      curriculumModuleInfoPageIndex = nextIndex;
+      pages.forEach((page, index) => {
+        page.hidden = index !== nextIndex;
+        if (index === nextIndex) page.scrollTop = 0;
+      });
+      const status = document.getElementById('curriculumModuleInfoPageStatus');
+      if (status) status.textContent = `Page ${nextIndex + 1} of ${pages.length}`;
+      document.querySelectorAll('[data-curriculum-info-page-control="first"], [data-curriculum-info-page-control="previous"]').forEach(button => {
+        button.disabled = nextIndex === 0;
+      });
+      document.querySelectorAll('[data-curriculum-info-page-control="next"], [data-curriculum-info-page-control="last"]').forEach(button => {
+        button.disabled = nextIndex === pages.length - 1;
+      });
     }
 
     async function openCurriculumModuleInfo(subject, unitOrModule) {
@@ -6889,7 +7005,9 @@
       const view = getCurriculumModuleInfoView(curriculumModuleInfoState);
       if (title) title.textContent = view.unitOrModule || 'Module information';
       if (meta) meta.textContent = `${getCurriculumSubjectLabel(subject)} - Module information`;
+      curriculumModuleInfoPageIndex = 0;
       body.innerHTML = renderCurriculumModuleInfoModalBody(view);
+      setCurriculumModuleInfoPage(0);
       modal.classList.add('open');
     }
 
@@ -6897,6 +7015,7 @@
       const modal = document.getElementById('curriculumModuleInfoModal');
       if (modal) modal.classList.remove('open');
       curriculumModuleInfoState = null;
+      curriculumModuleInfoPageIndex = 0;
     }
 
     async function saveCurriculumModuleInfo() {
@@ -6919,9 +7038,13 @@
         await db.collection('curriculumModuleInfo').doc(docId).set(payload, { merge: true });
         curriculumModuleInfoCache[getCurriculumModuleInfoKey(state.subject, state.unitOrModule)] = { id: docId, ...normalizeCurriculumModuleInfo(payload) };
         if (state.subject !== 'math') await loadCurriculumElaStandardsReference();
+        const pageIndex = curriculumModuleInfoPageIndex;
         const view = getCurriculumModuleInfoView(state);
         const body = document.getElementById('curriculumModuleInfoModalBody');
-        if (body) body.innerHTML = renderCurriculumModuleInfoModalBody(view);
+        if (body) {
+          body.innerHTML = renderCurriculumModuleInfoModalBody(view);
+          setCurriculumModuleInfoPage(pageIndex);
+        }
         setCurriculumStatus(`${view.unitOrModule} information saved.`, 'success');
       } catch (error) {
         console.error('Saving curriculum module information failed:', error);
