@@ -6598,8 +6598,12 @@
 
     function extractCurriculumStandardCodes(value) {
       const text = String(value || '');
-      const matches = text.match(/\b(?:K|\d+)\.[A-Z]+\.[A-Z]+\.\d+\b|\bMP\d+\b/gi) || [];
-      return uniqueList(matches.map(code => code.toUpperCase()));
+      const matches = text.match(/\b(?:K|\d+)\.[A-Z]+\.[A-Z]+\.\d+[A-Za-z]?\b|\bMP\d+\b/gi) || [];
+      return uniqueList(matches.map(code => code.trim()));
+    }
+
+    function normalizeCurriculumStandardCode(value) {
+      return String(value || '').trim().toUpperCase();
     }
 
     function getCurriculumLessonPriorityCode(lesson) {
@@ -6611,7 +6615,7 @@
     function getCurriculumLessonPriorityWording(lesson) {
       return String(lesson.priorityStandardWording || '').trim()
         || String(lesson.priorityStandard || '')
-          .replace(/\b(?:K|\d+)\.[A-Z]+\.[A-Z]+\.\d+\b\s*[-:]?\s*/i, '')
+          .replace(/\b(?:K|\d+)\.[A-Z]+\.[A-Z]+\.\d+[A-Za-z]?\b\s*[-:]?\s*/i, '')
           .trim();
     }
 
@@ -6630,10 +6634,10 @@
         if (!items.some(item => item.id === lesson.id)) items.push(lesson);
       };
       const ensure = (code, wording = '') => {
-        const key = code.toUpperCase();
+        const key = normalizeCurriculumStandardCode(code);
         if (!standards.has(key)) {
           standards.set(key, {
-            code: key,
+            code: String(code || '').trim(),
             wording: wording || '',
             priorityLessons: [],
             otherLessons: []
@@ -6644,8 +6648,8 @@
         return standards.get(key);
       };
       const ensurePractice = (code, wording = '') => {
-        const key = code.toUpperCase();
-        if (!practices.has(key)) practices.set(key, { code: key, wording: wording || '', lessons: [] });
+        const key = normalizeCurriculumStandardCode(code);
+        if (!practices.has(key)) practices.set(key, { code: String(code || '').trim(), wording: wording || '', lessons: [] });
         else if (!practices.get(key).wording && wording) practices.get(key).wording = wording;
         return practices.get(key);
       };
@@ -6662,8 +6666,8 @@
         const supportingItems = Array.isArray(lesson.supportingStandards) ? lesson.supportingStandards : [lesson.supportingStandards];
         const supportingCodes = extractCurriculumStandardCodes(supportingItems.join(' '));
         supportingCodes.forEach(code => {
-          if (code === priorityCode) return;
-          const source = supportingItems.find(item => extractCurriculumStandardCodes(item).includes(code));
+          if (normalizeCurriculumStandardCode(code) === normalizeCurriculumStandardCode(priorityCode)) return;
+          const source = supportingItems.find(item => extractCurriculumStandardCodes(item).some(itemCode => normalizeCurriculumStandardCode(itemCode) === normalizeCurriculumStandardCode(code)));
           if (/^MP\d+$/i.test(code)) {
             addLesson(ensurePractice(code, getCurriculumCodedWording(source, code)).lessons, lesson);
           } else {
@@ -6672,7 +6676,7 @@
         });
         const practiceItems = Array.isArray(lesson.mathematicalPractices) ? lesson.mathematicalPractices : [lesson.mathematicalPractices];
         extractCurriculumStandardCodes(practiceItems.join(' ')).filter(code => /^MP\d+$/i.test(code)).forEach(code => {
-          const source = practiceItems.find(item => extractCurriculumStandardCodes(item).includes(code));
+          const source = practiceItems.find(item => extractCurriculumStandardCodes(item).some(itemCode => normalizeCurriculumStandardCode(itemCode) === normalizeCurriculumStandardCode(code)));
           addLesson(ensurePractice(code, getCurriculumCodedWording(source, code)).lessons, lesson);
         });
       });
@@ -6697,7 +6701,7 @@
       const codeLines = savedCodes.length ? savedCodes : computed.priority.map(standard => standard.code);
       const standards = codeLines.map((line, index) => {
         const code = extractCurriculumStandardCodes(line)[0] || String(line).trim();
-        const match = [...computed.priority, ...computed.supporting].find(standard => standard.code === code.toUpperCase());
+        const match = [...computed.priority, ...computed.supporting].find(standard => normalizeCurriculumStandardCode(standard.code) === normalizeCurriculumStandardCode(code));
         return {
           code: String(line).trim(),
           wording: savedWording[index] || match?.wording || '',
@@ -6705,6 +6709,10 @@
           otherLessons: match?.otherLessons || []
         };
       });
+      const selectedMainStandardCodes = new Set(standards.map(standard => normalizeCurriculumStandardCode(extractCurriculumStandardCodes(standard.code)[0] || standard.code)));
+      const supportingStandardsByCode = new Map();
+      [...computed.supporting, ...(savedCodes.length ? computed.priority.filter(standard => !selectedMainStandardCodes.has(normalizeCurriculumStandardCode(standard.code))) : [])]
+        .forEach(standard => supportingStandardsByCode.set(normalizeCurriculumStandardCode(standard.code), standard));
       return {
         key,
         subject: state.subject,
@@ -6713,7 +6721,7 @@
         officialStandardWording: savedWording.length ? savedWording : computed.priority.map(standard => standard.wording).filter(Boolean),
         whyItMatters: String(saved.whyItMatters || '').trim(),
         standards,
-        supportingStandards: computed.supporting,
+        supportingStandards: Array.from(supportingStandardsByCode.values()),
         mathematicalPractices: computed.practices,
         lessons: getCurriculumModuleLessons(state.subject, state.unitOrModule)
       };
@@ -6724,11 +6732,12 @@
       return `<ul>${lessons.map(lesson => `<li>${escapeHtml([formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson', getCurriculumCardTitle(lesson)].join(' - '))}</li>`).join('')}</ul>`;
     }
 
-    function renderCurriculumModuleInfoStandard(standard) {
+    function renderCurriculumModuleInfoStandard(standard, whyItMatters = '') {
       return `
         <div class="curriculum-module-info-standard">
           <h4>${escapeHtml(standard.code || 'Standard')}</h4>
           <p>${escapeHtml(standard.wording || 'Official wording has not been entered yet.')}</p>
+          ${whyItMatters ? `<div class="curriculum-detail-section"><h4>Why it matters</h4><p>${escapeHtml(whyItMatters)}</p></div>` : ''}
           <div class="curriculum-detail-section">
             <h4>Priority in</h4>
             ${renderCurriculumModuleLessonList(standard.priorityLessons)}
@@ -6746,6 +6755,7 @@
         <div class="curriculum-module-info-standard">
           <h4>${escapeHtml(standard.code || 'Standard')}</h4>
           <p>${escapeHtml(standard.wording || 'Official wording has not been entered yet.')}</p>
+          ${standard.priorityLessons?.length ? `<div class="curriculum-detail-section"><h4>Priority in</h4>${renderCurriculumModuleLessonList(standard.priorityLessons)}</div>` : ''}
           <div class="curriculum-detail-section">
             <h4>Also appears in</h4>
             ${renderCurriculumModuleLessonList(standard.otherLessons)}
@@ -6769,7 +6779,7 @@
 
     function renderCurriculumModuleInfoModalBody(view) {
       const standards = view.standards.length
-        ? view.standards.map(renderCurriculumModuleInfoStandard).join('')
+        ? view.standards.map((standard, index) => renderCurriculumModuleInfoStandard(standard, index === 0 ? view.whyItMatters : '')).join('')
         : '<p class="text-sm text-gray-500">Save lessons with priority standards to build this list.</p>';
       const supportingStandards = view.supportingStandards.length
         ? view.supportingStandards.map(renderCurriculumModuleInfoSupportingStandard).join('')
@@ -6864,6 +6874,7 @@
           <div class="lesson">
             <h3>${escapeHtml(standard.code || 'Standard')}</h3>
             ${renderCurriculumPrintField('Official wording', standard.wording || 'Official wording has not been entered yet.')}
+            ${standard === view.standards[0] ? renderCurriculumPrintField('Why it matters', view.whyItMatters || 'No explanation has been entered yet.') : ''}
             ${renderCurriculumPrintList('Priority in', standard.priorityLessons.map(lesson => [formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson', getCurriculumCardTitle(lesson)].join(' - ')))}
             ${renderCurriculumPrintList('Also appears in', standard.otherLessons.map(lesson => [formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson', getCurriculumCardTitle(lesson)].join(' - ')))}
           </div>
@@ -6874,6 +6885,7 @@
           <div class="lesson">
             <h3>${escapeHtml(standard.code || 'Supporting standard')}</h3>
             ${renderCurriculumPrintField('Official wording', standard.wording || 'Official wording has not been entered yet.')}
+            ${standard.priorityLessons?.length ? renderCurriculumPrintList('Priority in', standard.priorityLessons.map(lesson => [formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson', getCurriculumCardTitle(lesson)].join(' - '))) : ''}
             ${renderCurriculumPrintList('Also appears in', standard.otherLessons.map(lesson => [formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson', getCurriculumCardTitle(lesson)].join(' - ')))}
           </div>
         `).join('')
@@ -6894,8 +6906,6 @@
         ${supportingStandards}
         <h2>Mathematical practice standards</h2>
         ${mathematicalPractices}
-        <h2>Why it matters</h2>
-        <p>${escapeHtml(view.whyItMatters || 'No explanation has been entered yet.')}</p>
       `;
     }
 
@@ -7413,7 +7423,12 @@
     function getCurriculumCardTitle(lesson) {
       const explicitTitle = lesson.officialLessonTitle || lesson.lessonTitle || '';
       const usableTitle = looksLikeCurriculumStandardTitle(explicitTitle, lesson) ? '' : explicitTitle;
-      return usableTitle || getCurriculumObjectiveLessonTitle(lesson) || getCurriculumLearningTitle(lesson) || formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson';
+      const title = usableTitle || getCurriculumObjectiveLessonTitle(lesson) || getCurriculumLearningTitle(lesson) || formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson';
+      const lessonNumber = String(lesson.lessonNumber || '').match(/\d+/)?.[0];
+      if (!lessonNumber) return title;
+      const duplicateNumberPattern = new RegExp(`^\\s*(?:lesson\\s*)?${lessonNumber}(?!\\d)(?:\\s*[-:.)]\\s*|\\s+)`, 'i');
+      const cleanedTitle = title.replace(duplicateNumberPattern, '').replace(duplicateNumberPattern, '').trim();
+      return cleanedTitle || title;
     }
 
     function getCurriculumFamilySummary(lesson) {
