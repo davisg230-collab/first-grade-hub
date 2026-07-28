@@ -1,0 +1,202 @@
+{
+  "version": 1,
+  "curriculum": "Common Core State Standards",
+  "subject": "skills",
+  "grade": 1,
+  "unitOrModule": "Unit 1",
+  "source": "User-provided Skills Unit 1 standards",
+  "standards": [
+    {
+      "code": "RL.1.1",
+      "grade": 1,
+      "domain": "Reading Literature",
+      "officialWording": "Ask and answer questions about key details in a text.",
+      "units": [1],
+      "footnotes": []
+    },
+    {
+      "code": "RF.1.1",
+      "grade": 1,
+      "domain": "Reading Foundational Skills",
+      "officialWording": "Demonstrate understanding of the organization and basic features of print.",
+      "units": [1],
+      "footnotes": []
+    },
+    {
+      "code": "RF.1.1a",
+      "grade": 1,
+      "domain": "Reading Foundational Skills",
+      "officialWording": "Recognize the distinguishing features of a sentence (e.g., first word, capitalization, ending punctuation).",
+      "units": [1],
+      "footnotes": []
+    },
+    {
+      "code": "RF.1.2b",
+      "grade": 1,
+      "domain": "Reading Foundational Skills",
+      "officialWording": "Orally produce single-syllable words by blending sounds (phonemes), including consonant blends.",
+      "units": [1],
+      "footnotes": []
+    },
+    {
+      "code": "RF.1.2c",
+      "grade": 1,
+      "domain": "Reading Foundational Skills",
+      "officialWording": "Isolate and pronounce initial, medial vowel, and final sounds (phonemes) in spoken single-syllable words.",
+      "units": [1],
+      "footnotes": []
+    },
+    {
+      "code": "RF.1.2d",
+      "grade": 1,
+      "domain": "Reading Foundational Skills",
+      "officialWording": "Segment spoken single-syllable words into their complete sequence of individual sounds (phonemes).",
+      "units": [1],
+      "footnotes": []
+    },
+    {
+      "code": "RF.1.3",
+      "grade": 1,
+      "domain": "Reading Foundational Skills",
+      "officialWording": "Know and apply grade-level phonics and word analysis skills in decoding words.",
+      "units": [1],
+      "footnotes": []
+    },
+    {
+      "code": "RF.1.3a",
+      "grade": 1,
+      "domain": "Reading Foundational Skills",
+      "officialWording": "Know the spelling-sound correspondences for common consonant digraphs.",
+      "units": [1],
+      "footnotes": []
+    },
+    {
+      "code": "RF.1.3b",
+      "grade": 1,
+      "domain": "Reading Foundational Skills",
+      "officialWording": "Decode regularly spelled one-syllable words.",
+      "units": [1],
+      "footnotes": []
+    },
+    {
+      "code": "RF.1.3g",
+      "grade": 1,
+      "domain": "Reading Foundational Skills",
+      "officialWording": "Recognize and read grade-appropriate irregularly spelled words.",
+      "units": [1],
+      "footnotes": []
+    },
+    {
+      "code": "RF.1.4a",
+      "grade": 1,
+      "domain": "Reading Foundational Skills",
+      "officialWording": "Read grade-level text with purpose and understanding.",
+      "units": [1],
+      "footnotes": []
+    },
+    {
+      "code": "RF.1.4c",
+      "grade": 1,
+      "domain": "Reading Foundational Skills",
+      "officialWording": "Use context to confirm or self-correct word recognition and understanding, rereading as necessary.",
+      "units": [1],
+      "footnotes": []
+    },
+    {
+      "code": "SL.1.4",
+      "grade": 1,
+      "domain": "Speaking and Listening",
+      "officialWording": "Describe people, places, things, and events with relevant details, expressing ideas and feelings clearly.",
+      "units": [1],
+      "footnotes": []
+    },
+    {
+      "code": "SL.1.6",
+      "grade": 1,
+      "domain": "Speaking and Listening",
+      "officialWording": "Produce complete sentences when appropriate to task and situation.",
+      "units": [1],
+      "footnotes": []
+    },
+    {
+      "code": "L.1.1",
+      "grade": 1,
+      "domain": "Language",
+      "officialWording": "Demonstrate command of the conventions of standard English grammar and usage when writing or speaking.",
+      "units": [1],
+      "footnotes": []
+    },
+    {
+      "code": "L.1.1a",
+      "grade": 1,
+      "domain": "Language",
+      "officialWording": "Print all upper- and lowercase letters.",
+      "units": [1],
+      "footnotes": []
+    },
+    {
+      "code": "L.1.1b",
+      "grade": 1,
+      "domain": "Language",
+      "officialWording": "Use common, proper, and possessive nouns.",
+      "units": [1],
+      "footnotes": []
+    },
+    {
+      "code": "L.1.1d",
+      "grade": 1,
+      "domain": "Language",
+      "officialWording": "Use personal, possessive, and indefinite pronouns (e.g., I, me, my; they, them, their; anyone, everything).",
+      "units": [1],
+      "footnotes": []
+    },
+    {
+      "code": "L.1.1g",
+      "grade": 1,
+      "domain": "Language",
+      "officialWording": "Use frequently occurring conjunctions (e.g., and, but, or, so, because).",
+      "units": [1],
+      "footnotes": []
+    },
+    {
+      "code": "L.1.1h",
+      "grade": 1,
+      "domain": "Language",
+      "officialWording": "Use determiners (e.g., articles, demonstratives).",
+      "units": [1],
+      "footnotes": []
+    },
+    {
+      "code": "L.1.2b",
+      "grade": 1,
+      "domain": "Language",
+      "officialWording": "Use end punctuation for sentences.",
+      "units": [1],
+      "footnotes": []
+    },
+    {
+      "code": "L.1.2d",
+      "grade": 1,
+      "domain": "Language",
+      "officialWording": "Use conventional spelling for words with common spelling patterns and for frequently occurring irregular words.",
+      "units": [1],
+      "footnotes": []
+    },
+    {
+      "code": "L.1.2e",
+      "grade": 1,
+      "domain": "Language",
+      "officialWording": "Spell untaught words phonetically, drawing on phonemic awareness and spelling conventions.",
+      "units": [1],
+      "footnotes": []
+    },
+    {
+      "code": "L.1.6",
+      "grade": 1,
+      "domain": "Language",
+      "officialWording": "Use words and phrases acquired through conversations, reading and being read to, and responding to texts, including using frequently occurring conjunctions to signal simple relationships (e.g., because).",
+      "units": [1],
+      "footnotes": []
+    }
+  ]
+}

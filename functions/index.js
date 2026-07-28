@@ -10,7 +10,9 @@ admin.initializeApp();
 
 const OPENAI_API_KEY = defineSecret("OPENAI_API_KEY");
 const MATH_STANDARDS_REFERENCE_PATH = path.join(__dirname, "data", "math-standards-reference.json");
+const SKILLS_STANDARDS_REFERENCE_PATH = path.join(__dirname, "data", "skills-standards-reference.json");
 let mathStandardsReferenceCache;
+let skillsStandardsReferenceCache;
 const MAIL_COLLECTION = process.env.MAIL_COLLECTION || "mail";
 const APPROVED_EDITOR_EMAILS = new Set([
   "davisg230@gmail.com",
@@ -656,8 +658,67 @@ function buildMathStandardsContext(sourceText) {
   return lines.join("\n");
 }
 
+function loadSkillsStandardsReference() {
+  if (skillsStandardsReferenceCache) return skillsStandardsReferenceCache;
+  try {
+    const reference = JSON.parse(fs.readFileSync(SKILLS_STANDARDS_REFERENCE_PATH, "utf8"));
+    if (!reference || !Array.isArray(reference.standards)) {
+      throw new Error("The skills standards reference has no standards array.");
+    }
+    skillsStandardsReferenceCache = reference;
+    return reference;
+  } catch (error) {
+    logger.error("Skills standards reference could not be loaded.", { message: error.message });
+    throw new Error("The permanent skills standards reference is unavailable.");
+  }
+}
+
+function extractSkillsStandardCodes(sourceText) {
+  const matches = asText(sourceText).match(/\b(?:RL|RF|SL|L)\.\d+\.\d+[a-z]?\b/gi) || [];
+  return Array.from(new Set(matches.map((code) => code.trim())));
+}
+
+function getSkillsReferenceMatches(sourceText) {
+  const reference = loadSkillsStandardsReference();
+  const standardsByCode = new Map(reference.standards.map((standard) => [standard.code.toUpperCase(), standard]));
+  const codes = Array.from(new Set(extractSkillsStandardCodes(sourceText).map((code) => {
+    const standard = standardsByCode.get(code.toUpperCase());
+    return standard ? standard.code : code;
+  })));
+  return {
+    codes,
+    matches: codes.map((code) => standardsByCode.get(code.toUpperCase()) || null),
+    standardsByCode,
+  };
+}
+
+function buildSkillsStandardsContext(sourceText) {
+  const { codes, matches } = getSkillsReferenceMatches(sourceText);
+  if (!codes.length) {
+    return [
+      "Local Skills standards reference lookup: no Skills standard code was found in the lesson source.",
+      "Do not invent a Skills standard code or official wording.",
+    ].join("\n");
+  }
+
+  const lines = [
+    `Local Skills standards reference lookup for cited codes: ${codes.join(", ")}`,
+    "Use this compact lookup instead of reconstructing official standard wording.",
+  ];
+  matches.forEach((standard, index) => {
+    const code = codes[index];
+    if (!standard) {
+      lines.push(`- ${code}: Official wording unavailable in the standards reference.`);
+      return;
+    }
+    lines.push(`- ${code} | ${standard.domain} | ${standard.officialWording}`);
+  });
+  return lines.join("\n");
+}
+
 function buildCurriculumAnalysisPrompt(data) {
   const isMath = String(data.subject || "").trim().toLowerCase() === "math";
+  const isSkills = String(data.subject || "").trim().toLowerCase() === "skills";
   const titleAndStandardGuidance = isMath
     ? [
       "This is a MATH lesson. officialLessonTitle is an extraction field, not a generation field. If the source contains an official lesson title, copy it exactly into both lessonTitle and officialLessonTitle, including its wording, numbering, punctuation, and capitalization. Do not shorten, summarize, paraphrase, or replace it with a title based on the objective. If no official title is available, leave both title fields empty rather than inventing a title.",
@@ -671,13 +732,25 @@ function buildCurriculumAnalysisPrompt(data) {
       "For standardNotes, write one short line per cited code explaining how this lesson addresses that standard. Do not paraphrase or rewrite the official wording in these notes.",
       "For non-math-only fields officialLessonTitle, priorityStandardCode, priorityStandardNumber, priorityStandardWording, supportingStandards, mathematicalPractices, and standardNotes, return empty values when they do not apply.",
     ]
+    : isSkills
+      ? [
+        "This is a SKILLS lesson. When the source cites a standard code such as RF.1.2b, return the exact code in priorityStandardCode and priorityStandardNumber. Choose the content standard most directly assessed by the lesson as the priority standard and put other cited content-standard codes separately in supportingStandards.",
+        "The permanent Skills standards reference is authoritative for official wording. Return compact standard codes in the code fields; the server will fill priorityStandardWording, priorityStandard, and supportingStandards with the exact reference wording. Do not invent a code or rewrite official wording.",
+        "If a cited Skills code is not in the permanent reference, preserve the code and let the server display Official wording unavailable in the standards reference.",
+        "For standardNotes, write one short line per cited code explaining how this lesson addresses that standard. Do not repeat or rewrite the official wording in these notes.",
+        "For non-math-only fields officialLessonTitle, priorityStandardCode, priorityStandardNumber, priorityStandardWording, supportingStandards, mathematicalPractices, and standardNotes, return empty values when they do not apply.",
+      ]
     : [
       "For non-math lessons, look first at the objective or main learning goal and create a short 3-7 word lesson name that says what scholars are learning. Use the printed lesson title only if it is already clear and specific. Never use file names, guide names, internal labels, or generic titles like \"Lesson 1\".",
       "For non-math lessons, set officialLessonTitle, priorityStandardCode, priorityStandardNumber, priorityStandardWording, supportingStandards, mathematicalPractices, and standardNotes to empty values unless the source clearly supplies those separate fields.",
       "For priorityStandard, identify the one main standard focus for the lesson, or two if the lesson genuinely has two equal main goals. Prefer standards listed in the source, choosing the one or two that best match the lesson's main teaching point. If the source provides no standard codes, write the main standard skill in plain language instead of inventing a code.",
     ];
 
-  const mathStandardsContext = isMath ? buildMathStandardsContext(data.sourceText) : "";
+  const standardsContext = isMath
+    ? buildMathStandardsContext(data.sourceText)
+    : isSkills
+      ? buildSkillsStandardsContext(data.sourceText)
+      : "";
   return [
     "Analyze this first grade curriculum lesson for a teacher-facing lesson library.",
     "",
@@ -689,7 +762,7 @@ function buildCurriculumAnalysisPrompt(data) {
     "Return the exact structured fields requested by the schema.",
     "Use full unit labels in unitOrModule: write Module 1 instead of M1, Mod 1, or module-1, and write Unit 1 instead of U1 when the source uses unit shorthand.",
     ...titleAndStandardGuidance,
-    ...(mathStandardsContext ? ["", mathStandardsContext] : []),
+    ...(standardsContext ? ["", standardsContext] : []),
     "For the I can statement, create one scholar-friendly sentence starting with \"I can\" by turning the lesson objective or main teaching goal into kid-friendly language. It does not need to appear word-for-word in the source.",
     "For vocabulary, choose lesson words, teaching terms, or curriculum words that scholars or families may need explained, even if the lesson does not provide a labeled vocabulary list.",
     "For soundSpellings, list the letter sounds, spellings, letter pairs, and letter teams explicitly taught or practiced in the lesson. Include entries such as /m/, /sh/, ch, ai, or other grapheme-sound correspondences when the lesson supports them. Keep this separate from vocabulary and return an empty array when the lesson has no sound or spelling focus.",
@@ -1153,11 +1226,42 @@ function normalizeMathStandardFields(analysis, sourceText) {
   };
 }
 
+function normalizeSkillsStandardFields(analysis, sourceText) {
+  const { codes, standardsByCode } = getSkillsReferenceMatches(sourceText);
+  const modelCodes = extractSkillsStandardCodes([
+    analysis.priorityStandardCode,
+    analysis.priorityStandardNumber,
+    analysis.priorityStandard,
+  ].filter(Boolean).join(" ")).map((code) => standardsByCode.get(code.toUpperCase())?.code || code);
+  const modelPriorityCode = modelCodes.find((code) => codes.some((sourceCode) => sourceCode.toUpperCase() === code.toUpperCase()));
+  const priorityCode = modelPriorityCode || codes[0] || "";
+  const unavailableWording = "Official wording unavailable in the standards reference.";
+  const getWording = (code) => {
+    const standard = standardsByCode.get(asText(code).toUpperCase());
+    return standard ? standard.officialWording : unavailableWording;
+  };
+  const display = (code) => `${code} - ${getWording(code)}`;
+  const supportingCodes = codes.filter((code) => code.toUpperCase() !== priorityCode.toUpperCase());
+
+  return {
+    priorityStandardCode: priorityCode,
+    priorityStandardNumber: priorityCode,
+    priorityStandardWording: priorityCode ? getWording(priorityCode) : "",
+    priorityStandard: priorityCode ? display(priorityCode) : "",
+    supportingStandards: supportingCodes.map(display),
+    mathematicalPractices: [],
+    standardNotes: normalizeScholarLanguage(analysis.standardNotes),
+  };
+}
+
 function normalizeCurriculumAnalysis(analysis, sourceText = "") {
   const subject = ["skills", "listening", "math", "other"].includes(analysis.subject) ? analysis.subject : "other";
   const isMath = subject === "math";
-  const mathStandardFields = isMath
+  const isSkills = subject === "skills";
+  const standardFields = isMath
     ? normalizeMathStandardFields(analysis, sourceText)
+    : isSkills
+      ? normalizeSkillsStandardFields(analysis, sourceText)
     : {
       priorityStandardCode: "",
       priorityStandardNumber: "",
@@ -1178,7 +1282,7 @@ function normalizeCurriculumAnalysis(analysis, sourceText = "") {
     lessonTitle: isMath ? officialLessonTitle : normalizeScholarLanguage(analysis.lessonTitle),
     officialLessonTitle,
     iCanStatement: normalizeScholarLanguage(analysis.iCanStatement),
-    ...mathStandardFields,
+    ...standardFields,
     objective: normalizeScholarLanguage(analysis.objective),
     vocabulary: normalizeScholarLanguageArray(analysis.vocabulary),
     soundSpellings: normalizeScholarLanguageArray(analysis.soundSpellings),
