@@ -5854,7 +5854,7 @@
       const text = String(value || '').replace(/\s+/g, ' ').trim();
       if (!text) return false;
       const code = String(analysis.priorityStandardCode || analysis.priorityStandardNumber || '').trim();
-      return /^(?:K|\d+)\.[A-Z]+\.[A-Z]\.\d+\s*[-:]/i.test(text)
+      return /^(?:(?:K|\d+)\.[A-Z]+\.[A-Z]\.\d+[A-Za-z]?|(?:RL|RF|SL|L)\.\d+\.\d+[A-Za-z]?)\s*[-:]/i.test(text)
         || (code && text.toLowerCase().startsWith(`${code.toLowerCase()} -`))
         || (code && text.toLowerCase().startsWith(`${code.toLowerCase()}:`))
         || text === String(analysis.priorityStandard || '').trim();
@@ -6598,7 +6598,7 @@
 
     function extractCurriculumStandardCodes(value) {
       const text = String(value || '');
-      const matches = text.match(/\b(?:K|\d+)\.[A-Z]+\.[A-Z]+\.\d+[A-Za-z]?\b|\bMP\d+\b/gi) || [];
+      const matches = text.match(/\b(?:K|\d+)\.[A-Z]+\.[A-Z]+\.\d+[A-Za-z]?\b|\b(?:RL|RF|SL|L)\.\d+\.\d+[A-Za-z]?\b|\bMP\d+\b/gi) || [];
       return uniqueList(matches.map(code => code.trim()));
     }
 
@@ -6615,7 +6615,7 @@
     function getCurriculumLessonPriorityWording(lesson) {
       return String(lesson.priorityStandardWording || '').trim()
         || String(lesson.priorityStandard || '')
-          .replace(/\b(?:K|\d+)\.[A-Z]+\.[A-Z]+\.\d+[A-Za-z]?\b\s*[-:]?\s*/i, '')
+          .replace(/\b(?:(?:K|\d+)\.[A-Z]+\.[A-Z]+\.\d+[A-Za-z]?|(?:RL|RF|SL|L)\.\d+\.\d+[A-Za-z]?)\b\s*[-:]?\s*/i, '')
           .trim();
     }
 
