@@ -16,11 +16,11 @@ let skillsStandardsReferenceCache;
 const MAIL_COLLECTION = process.env.MAIL_COLLECTION || "mail";
 const APPROVED_EDITOR_EMAILS = new Set([
   "davisg230@gmail.com",
-  "lvest@crossroadsschoolskc.org",
+  "lvest1010@gmail.com",
 ]);
 const DEFAULT_TEACHER_EMAILS = [
   "dgonzalezjr@crossroadsschoolskc.org",
-  "lvest@crossroadsschoolskc.org",
+  "lvest1010@gmail.com",
 ];
 const NOTIFICATION_RECIPIENTS = uniqueRecipients([
   ...DEFAULT_TEACHER_EMAILS,
