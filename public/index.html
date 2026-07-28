@@ -5242,6 +5242,7 @@
     let curriculumLessonsCache = [];
     let curriculumModuleInfoCache = Object.create(null);
     let curriculumModuleInfoState = null;
+    let curriculumElaStandardsReferenceCache = null;
     let curriculumActiveLessonId = '';
     let curriculumWeeklyPlan = getEmptyCurriculumWeeklyPlan();
     let curriculumLastPdfSuggestedTitle = '';
@@ -6606,6 +6607,34 @@
       return String(value || '').trim().toUpperCase();
     }
 
+    async function loadCurriculumElaStandardsReference() {
+      if (curriculumElaStandardsReferenceCache) return curriculumElaStandardsReferenceCache;
+      try {
+        const response = await fetch('data/skills-standards-reference.json', { cache: 'no-store' });
+        if (!response.ok) throw new Error(`Standards reference request failed: ${response.status}`);
+        const reference = await response.json();
+        const standards = Array.isArray(reference?.standards) ? reference.standards : [];
+        curriculumElaStandardsReferenceCache = new Map(standards.map(standard => [
+          normalizeCurriculumStandardCode(standard.code),
+          String(standard.officialWording || '').trim()
+        ]));
+      } catch (error) {
+        console.warn('ELA standards reference could not be loaded:', error);
+        curriculumElaStandardsReferenceCache = new Map();
+      }
+      return curriculumElaStandardsReferenceCache;
+    }
+
+    function getCurriculumElaReferenceWording(code) {
+      const normalizedCode = normalizeCurriculumStandardCode(extractCurriculumStandardCodes(code)[0] || code);
+      return curriculumElaStandardsReferenceCache?.get(normalizedCode) || '';
+    }
+
+    function getCurriculumOfficialStandardWording(subject, code, fallbackWording = '') {
+      if (subject === 'math') return String(fallbackWording || '').trim();
+      return getCurriculumElaReferenceWording(code);
+    }
+
     function getCurriculumLessonPriorityCode(lesson) {
       return extractCurriculumStandardCodes(
         lesson.priorityStandardCode || lesson.priorityStandardNumber || lesson.priorityStandard || ''
@@ -6624,6 +6653,23 @@
       const index = text.toUpperCase().indexOf(String(code || '').toUpperCase());
       if (index < 0) return '';
       return text.slice(index + String(code).length).replace(/^\s*[-:]?\s*/, '').trim();
+    }
+
+    function getCurriculumWhyItMattersForCode(whyItMatters, code, standardCount, index) {
+      const text = String(whyItMatters || '').trim();
+      if (!text) return '';
+      const currentCode = normalizeCurriculumStandardCode(code);
+      const codeMatches = Array.from(text.matchAll(/\b(?:(?:K|\d+)\.[A-Z]+\.[A-Z]+\.\d+[A-Za-z]?|(?:RL|RF|SL|L)\.\d+\.\d+[A-Za-z]?)\b/gi));
+      if (!codeMatches.length) {
+        const lines = text.split(/\n+/).map(line => line.trim()).filter(Boolean);
+        if (lines.length === standardCount) return lines[index] || '';
+        return standardCount <= 1 || index === 0 ? text : '';
+      }
+      const matchIndex = codeMatches.findIndex(match => normalizeCurriculumStandardCode(match[0]) === currentCode);
+      if (matchIndex < 0) return '';
+      const start = codeMatches[matchIndex].index + codeMatches[matchIndex][0].length;
+      const end = matchIndex + 1 < codeMatches.length ? codeMatches[matchIndex + 1].index : text.length;
+      return text.slice(start, end).replace(/^\s*[-:\u2013\u2014]\s*/, '').trim();
     }
 
     function getCurriculumModuleStandardSummary(subject, unitOrModule) {
@@ -6696,15 +6742,19 @@
       const key = getCurriculumModuleInfoKey(state.subject, state.unitOrModule);
       const saved = curriculumModuleInfoCache[key] || {};
       const computed = getCurriculumModuleStandardSummary(state.subject, state.unitOrModule);
+      const subject = state.subject || 'skills';
+      const isMath = subject === 'math';
       const savedCodes = Array.isArray(saved.mainPriorityStandards) ? saved.mainPriorityStandards.filter(Boolean) : [];
       const savedWording = Array.isArray(saved.officialStandardWording) ? saved.officialStandardWording.filter(Boolean) : [];
       const codeLines = savedCodes.length ? savedCodes : computed.priority.map(standard => standard.code);
       const standards = codeLines.map((line, index) => {
         const code = extractCurriculumStandardCodes(line)[0] || String(line).trim();
         const match = [...computed.priority, ...computed.supporting].find(standard => normalizeCurriculumStandardCode(standard.code) === normalizeCurriculumStandardCode(code));
+        const fallbackWording = savedWording[index] || match?.wording || '';
         return {
           code: String(line).trim(),
-          wording: savedWording[index] || match?.wording || '',
+          wording: getCurriculumOfficialStandardWording(subject, code, fallbackWording),
+          whyItMatters: getCurriculumWhyItMattersForCode(saved.whyItMatters, code, codeLines.length, index),
           priorityLessons: match?.priorityLessons || [],
           otherLessons: match?.otherLessons || []
         };
@@ -6713,15 +6763,21 @@
       const supportingStandardsByCode = new Map();
       [...computed.supporting, ...(savedCodes.length ? computed.priority.filter(standard => !selectedMainStandardCodes.has(normalizeCurriculumStandardCode(standard.code))) : [])]
         .forEach(standard => supportingStandardsByCode.set(normalizeCurriculumStandardCode(standard.code), standard));
+      const supportingStandards = Array.from(supportingStandardsByCode.values()).map(standard => ({
+        ...standard,
+        wording: getCurriculumOfficialStandardWording(subject, standard.code, standard.wording)
+      }));
       return {
         key,
-        subject: state.subject,
+        subject,
         unitOrModule: formatCurriculumUnitOrModule(state.unitOrModule),
         standardCodes: codeLines,
-        officialStandardWording: savedWording.length ? savedWording : computed.priority.map(standard => standard.wording).filter(Boolean),
+        officialStandardWording: isMath
+          ? (savedWording.length ? savedWording : computed.priority.map(standard => standard.wording).filter(Boolean))
+          : standards.map(standard => standard.wording).filter(Boolean),
         whyItMatters: String(saved.whyItMatters || '').trim(),
         standards,
-        supportingStandards: Array.from(supportingStandardsByCode.values()),
+        supportingStandards,
         mathematicalPractices: computed.practices,
         lessons: getCurriculumModuleLessons(state.subject, state.unitOrModule)
       };
@@ -6779,7 +6835,7 @@
 
     function renderCurriculumModuleInfoModalBody(view) {
       const standards = view.standards.length
-        ? view.standards.map((standard, index) => renderCurriculumModuleInfoStandard(standard, index === 0 ? view.whyItMatters : '')).join('')
+        ? view.standards.map(standard => renderCurriculumModuleInfoStandard(standard, standard.whyItMatters || '')).join('')
         : '<p class="text-sm text-gray-500">Save lessons with priority standards to build this list.</p>';
       const supportingStandards = view.supportingStandards.length
         ? view.supportingStandards.map(renderCurriculumModuleInfoSupportingStandard).join('')
@@ -6787,6 +6843,12 @@
       const mathematicalPractices = view.mathematicalPractices.length
         ? view.mathematicalPractices.map(renderCurriculumModuleInfoPractice).join('')
         : '<p class="text-sm text-gray-500">No mathematical practice standards are recorded yet.</p>';
+      const mathematicalPracticesSection = view.subject === 'math'
+        ? `<div class="curriculum-detail-section">
+            <h4>Mathematical practice standards</h4>
+            ${mathematicalPractices}
+          </div>`
+        : '';
       const lessonCount = view.lessons.length;
       return `
         <div class="curriculum-module-info-edit-grid">
@@ -6811,21 +6873,19 @@
             <h4>Supporting standards</h4>
             ${supportingStandards}
           </div>
-          <div class="curriculum-detail-section">
-            <h4>Mathematical practice standards</h4>
-            ${mathematicalPractices}
-          </div>
+          ${mathematicalPracticesSection}
         </div>
       `;
     }
 
-    function openCurriculumModuleInfo(subject, unitOrModule) {
+    async function openCurriculumModuleInfo(subject, unitOrModule) {
       const modal = document.getElementById('curriculumModuleInfoModal');
       const title = document.getElementById('curriculumModuleInfoModalTitle');
       const meta = document.getElementById('curriculumModuleInfoModalMeta');
       const body = document.getElementById('curriculumModuleInfoModalBody');
       if (!modal || !body) return;
       curriculumModuleInfoState = { subject, unitOrModule };
+      if (subject !== 'math') await loadCurriculumElaStandardsReference();
       const view = getCurriculumModuleInfoView(curriculumModuleInfoState);
       if (title) title.textContent = view.unitOrModule || 'Module information';
       if (meta) meta.textContent = `${getCurriculumSubjectLabel(subject)} - Module information`;
@@ -6858,6 +6918,7 @@
         const docId = getCurriculumModuleInfoDocId(state.subject, state.unitOrModule);
         await db.collection('curriculumModuleInfo').doc(docId).set(payload, { merge: true });
         curriculumModuleInfoCache[getCurriculumModuleInfoKey(state.subject, state.unitOrModule)] = { id: docId, ...normalizeCurriculumModuleInfo(payload) };
+        if (state.subject !== 'math') await loadCurriculumElaStandardsReference();
         const view = getCurriculumModuleInfoView(state);
         const body = document.getElementById('curriculumModuleInfoModalBody');
         if (body) body.innerHTML = renderCurriculumModuleInfoModalBody(view);
@@ -6874,7 +6935,7 @@
           <div class="lesson">
             <h3>${escapeHtml(standard.code || 'Standard')}</h3>
             ${renderCurriculumPrintField('Official wording', standard.wording || 'Official wording has not been entered yet.')}
-            ${standard === view.standards[0] ? renderCurriculumPrintField('Why it matters', view.whyItMatters || 'No explanation has been entered yet.') : ''}
+            ${standard.whyItMatters ? renderCurriculumPrintField('Why it matters', standard.whyItMatters) : ''}
             ${renderCurriculumPrintList('Priority in', standard.priorityLessons.map(lesson => [formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson', getCurriculumCardTitle(lesson)].join(' - ')))}
             ${renderCurriculumPrintList('Also appears in', standard.otherLessons.map(lesson => [formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson', getCurriculumCardTitle(lesson)].join(' - ')))}
           </div>
@@ -6899,18 +6960,21 @@
           </div>
         `).join('')
         : '<p>No mathematical practice standards have been recorded for these lessons yet.</p>';
+      const mathematicalPracticesSection = view.subject === 'math'
+        ? `<h2>Mathematical practice standards</h2>${mathematicalPractices}`
+        : '';
       return `
         <h2>Main priority standards</h2>
         ${standards}
         <h2>Supporting standards</h2>
         ${supportingStandards}
-        <h2>Mathematical practice standards</h2>
-        ${mathematicalPractices}
+        ${mathematicalPracticesSection}
       `;
     }
 
-    function printCurriculumModuleInfo() {
+    async function printCurriculumModuleInfo() {
       if (!curriculumModuleInfoState) return;
+      if (curriculumModuleInfoState.subject !== 'math') await loadCurriculumElaStandardsReference();
       const view = getCurriculumModuleInfoView(curriculumModuleInfoState);
       const title = `${getCurriculumSubjectLabel(view.subject)} - ${view.unitOrModule} Information`;
       openCurriculumPrintWindow(title, `<h1>${escapeHtml(title)}</h1><div class="meta">Generated from the Curriculum Library</div>${renderCurriculumModuleInfoPrintBody(view)}`, 'Module information print view opened.');
