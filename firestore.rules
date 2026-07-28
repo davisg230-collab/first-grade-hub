@@ -33,6 +33,10 @@ service cloud.firestore {
       allow read, write: if isTeacherEditor();
     }
 
+    match /curriculumModuleInfo/{moduleInfoId} {
+      allow read, write: if isTeacherEditor();
+    }
+
     // Parent action notifications. These records feed the teacher dashboard and email function.
     match /teacherActivity/{activityId} {
       allow create: if request.auth != null;
