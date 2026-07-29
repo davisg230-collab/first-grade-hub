@@ -2583,16 +2583,33 @@
       .curriculum-browser-view-button {
         display: inline-flex;
       }
+      #curriculumLessonBrowserList .curriculum-library-folder-body {
+        padding: .75rem .7rem .85rem;
+      }
       .curriculum-browser-lesson-stack {
-        max-height: min(24rem, 58vh);
+        display: flex;
+        flex-direction: column;
+        gap: .85rem;
+        height: min(34rem, 68vh);
+        min-height: 18rem;
         overflow-y: auto;
-        overscroll-behavior: contain;
-        padding-right: .2rem;
-        scroll-snap-type: y proximity;
+        overscroll-behavior-y: contain;
+        padding: .1rem .25rem .85rem .1rem;
+        touch-action: pan-y;
         -webkit-overflow-scrolling: touch;
       }
       .curriculum-browser-lesson-stack .curriculum-browser-item {
-        scroll-snap-align: start;
+        flex: 0 0 auto;
+        gap: .75rem;
+        min-height: 8.75rem;
+        padding: .9rem;
+      }
+      .curriculum-browser-lesson-stack .curriculum-browser-actions {
+        gap: .5rem;
+      }
+      .curriculum-browser-lesson-stack .curriculum-browser-actions button {
+        flex: 1 1 calc(50% - .25rem);
+        min-width: 6.25rem;
       }
       .curriculum-lesson-detail-panel {
         display: none;
@@ -2609,8 +2626,44 @@
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
+      .curriculum-lesson-modal-nav .curriculum-lesson-modal-button:nth-child(3) {
+        order: 4;
+      }
+      .curriculum-lesson-modal-nav .curriculum-lesson-modal-button:nth-child(4) {
+        order: 3;
+      }
       .curriculum-lesson-modal-button {
         width: 100%;
+      }
+      #curriculumLessonViewModal {
+        align-items: flex-start;
+        justify-content: center;
+        overflow-y: auto;
+        padding: max(.75rem, env(safe-area-inset-top)) .75rem max(1.25rem, env(safe-area-inset-bottom));
+      }
+      #curriculumLessonViewModal .curriculum-lesson-view-card {
+        max-height: none;
+        overflow: visible;
+        margin: 0 auto;
+      }
+      #curriculumLessonViewModal .curriculum-lesson-modal-header {
+        position: sticky;
+        top: -.25rem;
+        z-index: 2;
+        background: var(--card-bg);
+        border-bottom: 1px solid color-mix(in oklab, var(--md-slate) 12%, transparent);
+        margin: -1rem -1rem .85rem;
+        padding: 1rem 1rem .75rem;
+      }
+      #curriculumLessonViewModal .curriculum-lesson-modal-actions {
+        position: sticky;
+        bottom: -.25rem;
+        z-index: 2;
+        background: var(--card-bg);
+        box-shadow: 0 -10px 18px rgba(43,43,43,.08);
+        margin-left: -1rem;
+        margin-right: -1rem;
+        padding: .85rem 1rem 1rem;
       }
       .learning-day-picker {
         display: grid;
@@ -3703,7 +3756,7 @@
 
         <div id="curriculumLessonViewModal" class="lesson-detail-modal" onclick="if(event.target === this) closeCurriculumLessonViewModal()">
           <div class="lesson-detail-card curriculum-lesson-view-card p-5 sm:p-6" onclick="event.stopPropagation();">
-            <div class="flex items-start justify-between gap-4 mb-4">
+            <div class="curriculum-lesson-modal-header flex items-start justify-between gap-4 mb-4">
               <div>
                 <p id="curriculumLessonViewModalMeta" class="text-sm font-bold uppercase tracking-wide" style="color: var(--md-coral);">Lesson details</p>
                 <h3 id="curriculumLessonViewModalTitle" class="text-2xl font-display font-bold" style="color: var(--md-slate);">Lesson details</h3>
