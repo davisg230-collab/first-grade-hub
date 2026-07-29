@@ -1667,10 +1667,19 @@
     }
     .home-title-info-button {
       position: absolute;
-      top: 1.2rem;
+      top: .65rem;
       left: 1.2rem;
       z-index: 2;
       color: var(--md-slate);
+    }
+    @media (max-width: 640px) {
+      .home-news-card:has(.home-title-info-button) {
+        padding-top: 3.25rem !important;
+      }
+      .home-title-info-button {
+        top: .55rem;
+        left: .9rem;
+      }
     }
     .pagePanel.active > .rounded-2xl:first-child {
       position: relative;
