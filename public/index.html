@@ -2317,6 +2317,13 @@
       font-size: .74rem;
       font-weight: 900;
     }
+    .curriculum-browser-view-button {
+      display: none;
+    }
+    .curriculum-browser-lesson-stack {
+      display: grid;
+      gap: .55rem;
+    }
     .curriculum-browser-selection-tools {
       display: flex;
       flex-wrap: wrap;
@@ -2326,42 +2333,6 @@
     }
     .curriculum-browser-selection-tools[hidden] {
       display: none;
-    }
-    .curriculum-browser-page-controls {
-      border-top: 1px solid color-mix(in oklab, var(--md-slate) 14%, var(--md-white));
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: .65rem;
-      margin-top: .25rem;
-      padding-top: .65rem;
-    }
-    .curriculum-browser-page-status {
-      color: color-mix(in oklab, var(--md-ink) 70%, var(--md-white));
-      font-size: .78rem;
-      font-weight: 800;
-    }
-    .curriculum-browser-page-nav {
-      display: flex;
-      flex-wrap: wrap;
-      gap: .4rem;
-      justify-content: flex-end;
-    }
-    .curriculum-browser-page-button {
-      border: 0;
-      border-radius: .65rem;
-      background: var(--md-slate);
-      color: var(--md-white);
-      cursor: pointer;
-      font-size: .76rem;
-      font-weight: 900;
-      min-height: 2.15rem;
-      padding: .38rem .6rem;
-    }
-    .curriculum-browser-page-button:disabled {
-      cursor: not-allowed;
-      opacity: .42;
     }
     .curriculum-lesson-detail-panel {
       min-width: 0;
@@ -2501,6 +2472,48 @@
       background: var(--card-bg);
       box-shadow: 0 24px 60px rgba(0,0,0,.32);
     }
+    .curriculum-lesson-view-card {
+      width: min(46rem, 100%);
+    }
+    .curriculum-lesson-modal-actions {
+      border-top: 1px solid color-mix(in oklab, var(--md-slate) 14%, var(--md-white));
+      display: grid;
+      gap: .75rem;
+      margin-top: 1rem;
+      padding-top: 1rem;
+    }
+    .curriculum-lesson-modal-nav,
+    .curriculum-lesson-modal-open-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+    }
+    .curriculum-lesson-modal-select {
+      align-items: center;
+      display: flex;
+      gap: .55rem;
+      font-size: .9rem;
+      font-weight: 800;
+      color: var(--md-slate);
+    }
+    .curriculum-lesson-modal-select input {
+      width: 1.1rem;
+      height: 1.1rem;
+      accent-color: var(--md-coral);
+    }
+    .curriculum-lesson-modal-button {
+      border: 0;
+      border-radius: .75rem;
+      cursor: pointer;
+      font-size: .82rem;
+      font-weight: 900;
+      min-height: 2.35rem;
+      padding: .45rem .7rem;
+    }
+    .curriculum-lesson-modal-button:disabled {
+      cursor: not-allowed;
+      opacity: .42;
+    }
     #curriculumScheduleModal {
       align-items: center;
       overflow-y: auto;
@@ -2567,6 +2580,23 @@
       .curriculum-mobile-section-heading {
         display: none;
       }
+      .curriculum-browser-view-button {
+        display: inline-flex;
+      }
+      .curriculum-browser-lesson-stack {
+        max-height: min(24rem, 58vh);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding-right: .2rem;
+        scroll-snap-type: y proximity;
+        -webkit-overflow-scrolling: touch;
+      }
+      .curriculum-browser-lesson-stack .curriculum-browser-item {
+        scroll-snap-align: start;
+      }
+      .curriculum-lesson-detail-panel {
+        display: none;
+      }
       .curriculum-browser-selection-tools {
         justify-content: stretch;
       }
@@ -2574,12 +2604,12 @@
       .curriculum-browser-selection-tools span {
         width: 100%;
       }
-      .curriculum-browser-page-controls {
-        align-items: stretch;
+      .curriculum-lesson-modal-nav,
+      .curriculum-lesson-modal-open-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
-      .curriculum-browser-page-status,
-      .curriculum-browser-page-nav,
-      .curriculum-browser-page-button {
+      .curriculum-lesson-modal-button {
         width: 100%;
       }
       .learning-day-picker {
@@ -3671,6 +3701,20 @@
           </div>
         </div>
 
+        <div id="curriculumLessonViewModal" class="lesson-detail-modal" onclick="if(event.target === this) closeCurriculumLessonViewModal()">
+          <div class="lesson-detail-card curriculum-lesson-view-card p-5 sm:p-6" onclick="event.stopPropagation();">
+            <div class="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <p id="curriculumLessonViewModalMeta" class="text-sm font-bold uppercase tracking-wide" style="color: var(--md-coral);">Lesson details</p>
+                <h3 id="curriculumLessonViewModalTitle" class="text-2xl font-display font-bold" style="color: var(--md-slate);">Lesson details</h3>
+              </div>
+              <button type="button" class="w-9 h-9 rounded-full text-white font-bold" style="background: var(--md-slate);" onclick="closeCurriculumLessonViewModal()" aria-label="Close lesson details">&times;</button>
+            </div>
+            <div id="curriculumLessonViewModalBody"></div>
+            <div id="curriculumLessonViewModalActions" class="curriculum-lesson-modal-actions"></div>
+          </div>
+        </div>
+
         <div id="curriculumWorkspace" style="display: none;">
           <div class="curriculum-library-tabs" role="tablist" aria-label="Curriculum Library">
             <button id="curriculumTabUpload" type="button" class="curriculum-library-tab active" data-curriculum-tab="upload" onclick="showCurriculumLibraryTab('upload')">Upload / AI Draft</button>
@@ -3697,8 +3741,8 @@
           </div>
           <div class="curriculum-builder-shell curriculum-tab-shell">
             <div id="curriculumTabPanelUpload" class="curriculum-tab-panel active space-y-4" data-curriculum-panel="upload">
-              <div class="curriculum-builder-panel curriculum-mobile-section open rounded-2xl p-5" data-curriculum-mobile-section="source">
-                <button type="button" class="curriculum-mobile-section-toggle" aria-expanded="true" onclick="toggleCurriculumMobileSection(this)">
+              <div class="curriculum-builder-panel curriculum-mobile-section rounded-2xl p-5" data-curriculum-mobile-section="source">
+                <button type="button" class="curriculum-mobile-section-toggle" aria-expanded="false" onclick="toggleCurriculumMobileSection(this)">
                   <span>
                     Upload Lesson
                     <span class="curriculum-mobile-section-subtitle">Subject, module, lesson number, PDF, and source text</span>
@@ -5310,9 +5354,8 @@
     let curriculumToolView = 'shelf';
     let curriculumSchedulePickerLessonId = '';
     let curriculumSelectedLessonIds = new Set();
-    const CURRICULUM_BROWSER_PAGE_SIZE = 5;
-    let curriculumBrowserPageByGroup = Object.create(null);
     let curriculumActiveBrowserLessonId = '';
+    let curriculumLessonViewModalLessonId = '';
     let curriculumActiveLibraryTab = 'upload';
     let teacherRosterUnlocked = false;
     let rosterEditMode = false;
@@ -5615,6 +5658,7 @@
         renderCurriculumWeekPreview();
       }
       showCurriculumLibraryTab(curriculumActiveLibraryTab);
+      if (curriculumActiveLibraryTab === 'upload') collapseCurriculumMobileSections();
     }
 
     async function signInForCurriculumBuilder() {
@@ -5640,8 +5684,8 @@
       curriculumLessonsCache = [];
       curriculumActiveLessonId = '';
       curriculumSelectedLessonIds = new Set();
-      curriculumBrowserPageByGroup = Object.create(null);
       curriculumActiveBrowserLessonId = '';
+      curriculumLessonViewModalLessonId = '';
       curriculumActiveLibraryTab = 'upload';
       teacherRosterUnlocked = false;
       setRosterEditMode(false);
@@ -5657,6 +5701,7 @@
       const selectionTools = document.getElementById('curriculumBrowserSelectionTools');
       const count = document.getElementById('curriculumLibraryCount');
       const preview = document.getElementById('curriculumWeekPreview');
+      closeCurriculumLessonViewModal();
       if (count) count.textContent = '0';
       if (selectedCount) selectedCount.textContent = '0 selected';
       if (selectionTools) selectionTools.hidden = true;
@@ -5753,6 +5798,17 @@
       section.classList.toggle('open', !!isOpen);
       const toggle = section.querySelector('.curriculum-mobile-section-toggle');
       if (toggle) toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+
+    function isCurriculumMobileView() {
+      return window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
+    }
+
+    function collapseCurriculumMobileSections() {
+      if (!isCurriculumMobileView()) return;
+      document.querySelectorAll('.curriculum-mobile-section').forEach(section => {
+        setCurriculumMobileSectionOpen(section, false);
+      });
     }
 
     function toggleCurriculumMobileSection(button) {
@@ -7161,48 +7217,6 @@
         .filter(Boolean));
     }
 
-    function getCurriculumBrowserGroupPagination(groupKey, lessonCount) {
-      const totalPages = Math.max(1, Math.ceil(lessonCount / CURRICULUM_BROWSER_PAGE_SIZE));
-      const savedPage = Number(curriculumBrowserPageByGroup[groupKey]);
-      const pageIndex = Math.min(Math.max(Number.isFinite(savedPage) ? savedPage : 0, 0), totalPages - 1);
-      curriculumBrowserPageByGroup[groupKey] = pageIndex;
-      return {
-        pageIndex,
-        totalPages,
-        start: pageIndex * CURRICULUM_BROWSER_PAGE_SIZE,
-        end: Math.min((pageIndex + 1) * CURRICULUM_BROWSER_PAGE_SIZE, lessonCount),
-        lessonCount
-      };
-    }
-
-    function setCurriculumBrowserGroupPage(groupKey, pageIndex) {
-      const viewState = getCurriculumBrowserViewState();
-      curriculumBrowserPageByGroup[groupKey] = Math.max(0, Number(pageIndex) || 0);
-      renderCurriculumLessonBrowser();
-      restoreCurriculumBrowserViewState(viewState);
-    }
-
-    function renderCurriculumBrowserPageControls(groupKey, pagination) {
-      if (!pagination || pagination.totalPages <= 1) return '';
-      const page = pagination.pageIndex;
-      const total = pagination.totalPages;
-      const firstDisabled = page <= 0 ? 'disabled' : '';
-      const lastDisabled = page >= total - 1 ? 'disabled' : '';
-      const showingLabel = `Lessons ${pagination.start + 1}-${pagination.end} of ${pagination.lessonCount}`;
-      const safeGroupKey = encodeURIComponent(groupKey);
-      return `
-        <div class="curriculum-browser-page-controls">
-          <span class="curriculum-browser-page-status">${escapeHtml(showingLabel)} - Page ${page + 1} of ${total}</span>
-          <div class="curriculum-browser-page-nav">
-            <button type="button" class="curriculum-browser-page-button" ${firstDisabled} onclick="setCurriculumBrowserGroupPage(decodeURIComponent('${safeGroupKey}'), 0)">First</button>
-            <button type="button" class="curriculum-browser-page-button" ${firstDisabled} onclick="setCurriculumBrowserGroupPage(decodeURIComponent('${safeGroupKey}'), ${page - 1})">Previous</button>
-            <button type="button" class="curriculum-browser-page-button" ${lastDisabled} onclick="setCurriculumBrowserGroupPage(decodeURIComponent('${safeGroupKey}'), ${page + 1})">Next</button>
-            <button type="button" class="curriculum-browser-page-button" ${lastDisabled} onclick="setCurriculumBrowserGroupPage(decodeURIComponent('${safeGroupKey}'), ${total - 1})">Last Page</button>
-          </div>
-        </div>
-      `;
-    }
-
     function getCurriculumBrowserViewState() {
       const list = document.getElementById('curriculumLessonBrowserList');
       return {
@@ -7286,8 +7300,6 @@
         list.innerHTML = groups.map(group => {
           const groupKey = getCurriculumGroupDomKey(group);
           const isOpen = openGroups.has(groupKey);
-          const pagination = getCurriculumBrowserGroupPagination(groupKey, group.lessons.length);
-          const pageLessons = group.lessons.slice(pagination.start, pagination.end);
         return `
           <details class="curriculum-library-group" data-curriculum-group-key="${groupKey}" ${isOpen ? 'open' : ''}>
             <summary>
@@ -7295,8 +7307,9 @@
               <button type="button" class="curriculum-module-info-button" title="Open module information" aria-label="Open information for ${escapeHtml(group.label)}" onclick="event.preventDefault(); event.stopPropagation(); openCurriculumModuleInfo(decodeURIComponent('${encodeURIComponent(group.subject)}'), decodeURIComponent('${encodeURIComponent(group.unitOrModule)}'))">i</button>
             </summary>
             <div class="curriculum-library-folder-body">
-              ${pageLessons.map(lesson => renderCurriculumBrowserLesson(lesson)).join('')}
-              ${renderCurriculumBrowserPageControls(groupKey, pagination)}
+              <div class="curriculum-browser-lesson-stack">
+                ${group.lessons.map(lesson => renderCurriculumBrowserLesson(lesson)).join('')}
+              </div>
             </div>
           </details>
         `;
@@ -7319,7 +7332,7 @@
             <div class="font-display font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(title)}</div>
             <div class="text-sm mt-1 text-[color:var(--md-ink)]/80">${escapeHtml(plainFamilySentence(lesson.iCanStatement || lesson.objective || lesson.parentSummary || '').slice(0, 150))}</div>
             <div class="curriculum-browser-actions">
-              <button type="button" style="background: var(--md-slate); color: var(--md-white);" onclick="event.stopPropagation(); viewCurriculumLessonDetail('${lesson.id}', true)">View</button>
+              <button type="button" class="curriculum-browser-view-button" style="background: var(--md-slate); color: var(--md-white);" onclick="event.stopPropagation(); openCurriculumLessonViewModal('${lesson.id}')">View</button>
               <button type="button" style="background: var(--md-coral); color: var(--md-white);" onclick="event.stopPropagation(); loadCurriculumLessonIntoBuilder('${lesson.id}')">Edit</button>
               <button type="button" title="${escapeHtml(scheduleTitle)}" style="background: var(--md-pebble); color: var(--md-ink);" onclick="event.stopPropagation(); openCurriculumSchedulePicker('${lesson.id}')">${escapeHtml(scheduleLabel)}</button>
               <button type="button" title="Delete lesson" style="background: #dc2626; color: var(--md-white);" onclick="event.stopPropagation(); deleteCurriculumLesson('${lesson.id}')">Delete</button>
@@ -7329,12 +7342,16 @@
       `;
     }
 
-    function toggleCurriculumLessonSelection(lessonId, isSelected) {
+    function setCurriculumLessonSelection(lessonId, isSelected) {
       if (isSelected) {
         curriculumSelectedLessonIds.add(lessonId);
       } else {
         curriculumSelectedLessonIds.delete(lessonId);
       }
+    }
+
+    function toggleCurriculumLessonSelection(lessonId, isSelected) {
+      setCurriculumLessonSelection(lessonId, isSelected);
       renderCurriculumLessonBrowser();
     }
 
@@ -7344,14 +7361,13 @@
       setCurriculumStatus('Lesson selection cleared.');
     }
 
-    function viewCurriculumLessonDetail(lessonId, scrollToDetail = false) {
+    function viewCurriculumLessonDetail(lessonId) {
+      if (isCurriculumMobileView()) {
+        openCurriculumLessonViewModal(lessonId);
+        return;
+      }
       curriculumActiveBrowserLessonId = lessonId;
       renderCurriculumLessonBrowser();
-      if (scrollToDetail) {
-        requestAnimationFrame(() => {
-          document.getElementById('curriculumLessonDetailPanel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
-      }
     }
 
     function renderCurriculumLessonDetail() {
@@ -7362,8 +7378,12 @@
         panel.innerHTML = '<p class="text-sm text-gray-500">Choose a lesson to view the full saved details.</p>';
         return;
       }
+      panel.innerHTML = renderCurriculumLessonDetailContent(lesson);
+    }
+
+    function renderCurriculumLessonDetailContent(lesson) {
       const title = getCurriculumCardTitle(lesson);
-      panel.innerHTML = `
+      return `
         <div>
           <div class="text-xs font-bold uppercase tracking-wide text-gray-500">${escapeHtml(getCurriculumSubjectLabel(lesson.subject))} - ${escapeHtml(formatCurriculumUnitOrModule(lesson.unitOrModule) || 'No module yet')}</div>
           <h3 class="text-2xl font-display font-bold mt-1" style="color: var(--md-coral);">${escapeHtml(title)}</h3>
@@ -7384,6 +7404,84 @@
         ${renderCurriculumDetailList('Missing or not found', lesson.missingInformation)}
         ${renderCurriculumDetailSource(lesson.sourceText)}
       `;
+    }
+
+    function getCurriculumBrowserOrderedLessons() {
+      return groupCurriculumLessonsByModule(getFilteredCurriculumLessons())
+        .flatMap(group => group.lessons);
+    }
+
+    function getCurriculumLessonModalNavigation(lessonId) {
+      const lessons = getCurriculumBrowserOrderedLessons();
+      const index = lessons.findIndex(lesson => lesson.id === lessonId);
+      return {
+        lessons,
+        index,
+        previousLesson: index > 0 ? lessons[index - 1] : null,
+        nextLesson: index >= 0 && index < lessons.length - 1 ? lessons[index + 1] : null,
+        firstLesson: lessons[0] || null,
+        lastLesson: lessons[lessons.length - 1] || null
+      };
+    }
+
+    function openCurriculumLessonViewModal(lessonId) {
+      const lesson = curriculumLessonsCache.find(item => item.id === lessonId);
+      const modal = document.getElementById('curriculumLessonViewModal');
+      if (!lesson || !modal) return;
+      curriculumLessonViewModalLessonId = lessonId;
+      curriculumActiveBrowserLessonId = lessonId;
+      renderCurriculumLessonBrowser();
+      renderCurriculumLessonViewModal();
+      modal.classList.add('open');
+    }
+
+    function closeCurriculumLessonViewModal() {
+      const modal = document.getElementById('curriculumLessonViewModal');
+      if (modal) modal.classList.remove('open');
+      curriculumLessonViewModalLessonId = '';
+    }
+
+    function renderCurriculumLessonViewModal() {
+      const lesson = curriculumLessonsCache.find(item => item.id === curriculumLessonViewModalLessonId);
+      const modal = document.getElementById('curriculumLessonViewModal');
+      const title = document.getElementById('curriculumLessonViewModalTitle');
+      const meta = document.getElementById('curriculumLessonViewModalMeta');
+      const body = document.getElementById('curriculumLessonViewModalBody');
+      const actions = document.getElementById('curriculumLessonViewModalActions');
+      if (!modal || !body || !actions) return;
+      if (!lesson) {
+        closeCurriculumLessonViewModal();
+        return;
+      }
+      const nav = getCurriculumLessonModalNavigation(lesson.id);
+      const selectedCount = curriculumSelectedLessonIds.size;
+      const isSelected = curriculumSelectedLessonIds.has(lesson.id);
+      const openAllDisabled = selectedCount ? '' : 'disabled';
+      if (title) title.textContent = getCurriculumCardTitle(lesson);
+      if (meta) meta.textContent = `${getCurriculumSubjectLabel(lesson.subject)} - ${formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson'}`;
+      body.innerHTML = renderCurriculumLessonDetailContent(lesson);
+      actions.innerHTML = `
+        <label class="curriculum-lesson-modal-select">
+          <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleCurriculumLessonSelectionFromModal('${lesson.id}', this.checked)">
+          Select this lesson
+        </label>
+        <div class="curriculum-lesson-modal-nav" aria-label="Move through lessons">
+          <button type="button" class="curriculum-lesson-modal-button" style="background: var(--md-pebble); color: var(--md-ink);" ${nav.firstLesson && nav.firstLesson.id !== lesson.id ? '' : 'disabled'} onclick="openCurriculumLessonViewModal('${nav.firstLesson?.id || lesson.id}')">First</button>
+          <button type="button" class="curriculum-lesson-modal-button" style="background: var(--md-pebble); color: var(--md-ink);" ${nav.previousLesson ? '' : 'disabled'} onclick="openCurriculumLessonViewModal('${nav.previousLesson?.id || lesson.id}')">Previous</button>
+          <button type="button" class="curriculum-lesson-modal-button" style="background: var(--md-slate); color: var(--md-white);" ${nav.nextLesson ? '' : 'disabled'} onclick="openCurriculumLessonViewModal('${nav.nextLesson?.id || lesson.id}')">Next</button>
+          <button type="button" class="curriculum-lesson-modal-button" style="background: var(--md-slate); color: var(--md-white);" ${nav.lastLesson && nav.lastLesson.id !== lesson.id ? '' : 'disabled'} onclick="openCurriculumLessonViewModal('${nav.lastLesson?.id || lesson.id}')">Last</button>
+        </div>
+        <div class="curriculum-lesson-modal-open-actions">
+          <button type="button" class="curriculum-lesson-modal-button" style="background: var(--md-coral); color: var(--md-white);" onclick="openSingleCurriculumLesson('${lesson.id}')">Open This</button>
+          <button type="button" class="curriculum-lesson-modal-button" style="background: var(--md-slate); color: var(--md-white);" ${openAllDisabled} onclick="openSelectedCurriculumLessons()">Open All${selectedCount ? ` (${selectedCount})` : ''}</button>
+        </div>
+      `;
+    }
+
+    function toggleCurriculumLessonSelectionFromModal(lessonId, isSelected) {
+      setCurriculumLessonSelection(lessonId, isSelected);
+      renderCurriculumLessonBrowser();
+      renderCurriculumLessonViewModal();
     }
 
     function renderCurriculumDetailText(label, value) {
@@ -7486,6 +7584,7 @@
         await db.collection('curriculumLessons').doc(lessonId).delete();
         curriculumSelectedLessonIds.delete(lessonId);
         if (curriculumActiveBrowserLessonId === lessonId) curriculumActiveBrowserLessonId = '';
+        if (curriculumLessonViewModalLessonId === lessonId) closeCurriculumLessonViewModal();
         if (curriculumSchedulePickerLessonId === lessonId) closeCurriculumScheduleModal();
         removeCurriculumLessonFromWeeklyPlan(lessonId);
         await saveCurriculumWeeklyPlanDraft();
@@ -8046,12 +8145,7 @@
       return compareCurriculumLessons(a, b);
     }
 
-    function printSelectedCurriculumLessons(options = {}) {
-      const lessons = getSelectedCurriculumLessons();
-      if (!lessons.length) {
-        setCurriculumStatus('Select at least one lesson in the Lesson Browser before opening.', 'error');
-        return;
-      }
+    function openCurriculumLessonsPrintView(lessons, options = {}) {
       const title = lessons.length === 1 ? 'Selected Curriculum Lesson' : `Selected Curriculum Lessons (${lessons.length})`;
       const sections = groupCurriculumLessonsByModule(lessons).map(group => `
         <section>
@@ -8071,10 +8165,28 @@
       );
     }
 
+    function printSelectedCurriculumLessons(options = {}) {
+      const lessons = getSelectedCurriculumLessons();
+      if (!lessons.length) {
+        setCurriculumStatus('Select at least one lesson in the Lesson Browser before opening.', 'error');
+        return;
+      }
+      openCurriculumLessonsPrintView(lessons, options);
+    }
+
     function openSelectedCurriculumLessons() {
       printSelectedCurriculumLessons({
         autoPrint: false,
         successMessage: 'Selected lessons opened in a new page.'
+      });
+    }
+
+    function openSingleCurriculumLesson(lessonId) {
+      const lesson = curriculumLessonsCache.find(item => item.id === lessonId);
+      if (!lesson) return;
+      openCurriculumLessonsPrintView([lesson], {
+        autoPrint: false,
+        successMessage: 'Lesson opened in a new page.'
       });
     }
 
@@ -8259,7 +8371,7 @@
         'curriculumMissingOutput'
       ].forEach(id => setInputValue(id, ''));
       renderCurriculumLibraryList();
-      openCurriculumMobileSection('source');
+      collapseCurriculumMobileSections();
       setCurriculumPdfStatus('');
       setCurriculumStatus('Ready for a new lesson.');
     }
