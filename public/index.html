@@ -7223,9 +7223,7 @@
         const docId = getCurriculumModuleInfoDocId(state.subject, state.unitOrModule);
         const docRef = db.collection('curriculumModuleInfo').doc(docId);
         await docRef.set(payload, { merge: true });
-        const savedDoc = await docRef.get();
-        const savedData = savedDoc.exists ? savedDoc.data() : payload;
-        curriculumModuleInfoCache[getCurriculumModuleInfoKey(state.subject, state.unitOrModule)] = { id: docId, ...normalizeCurriculumModuleInfo(savedData) };
+        curriculumModuleInfoCache[getCurriculumModuleInfoKey(state.subject, state.unitOrModule)] = { id: docId, ...normalizeCurriculumModuleInfo(payload) };
         if (state.subject !== 'math') await loadCurriculumElaStandardsReference();
         const pageIndex = curriculumModuleInfoPageIndex;
         const view = getCurriculumModuleInfoView(state);
