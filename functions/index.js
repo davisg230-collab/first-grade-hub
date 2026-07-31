@@ -692,6 +692,45 @@ function getSkillsReferenceMatches(sourceText) {
   };
 }
 
+function normalizeSkillsStandardCode(code, standardsByCode) {
+  const text = asText(code);
+  return standardsByCode.get(text.toUpperCase())?.code || text;
+}
+
+function uniqueSkillsStandardCodes(codes) {
+  const seen = new Set();
+  return codes.filter((code) => {
+    const key = asText(code).toUpperCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function isMoreSpecificSkillsStandardCode(candidate, parent) {
+  const childCode = asText(candidate).toUpperCase();
+  const parentCode = asText(parent).toUpperCase();
+  return childCode.length === parentCode.length + 1
+    && childCode.startsWith(parentCode)
+    && /^[A-Z]$/.test(childCode.slice(-1));
+}
+
+function selectSkillsPriorityCodes(modelCodes, sourceCodes) {
+  const selectedCodes = uniqueSkillsStandardCodes(modelCodes)
+    .map((code) => sourceCodes.find((sourceCode) => sourceCode.toUpperCase() === code.toUpperCase()) || "")
+    .filter(Boolean);
+  const initialCodes = selectedCodes.length ? selectedCodes : sourceCodes.slice(0, 1);
+  const expandedCodes = initialCodes.flatMap((code) => {
+    const specificChildren = sourceCodes.filter((sourceCode) => isMoreSpecificSkillsStandardCode(sourceCode, code));
+    return specificChildren.length === 1 ? specificChildren : [code];
+  });
+  return uniqueSkillsStandardCodes(expandedCodes)
+    .filter((code, index, codes) => !codes.some((otherCode, otherIndex) => (
+      otherIndex !== index && isMoreSpecificSkillsStandardCode(otherCode, code)
+    )))
+    .slice(0, 2);
+}
+
 function buildSkillsStandardsContext(sourceText) {
   const { codes, matches } = getSkillsReferenceMatches(sourceText);
   if (!codes.length) {
@@ -734,7 +773,10 @@ function buildCurriculumAnalysisPrompt(data) {
     ]
     : isSkills
       ? [
-        "This is a SKILLS lesson. When the source cites a standard code such as RF.1.2b, return the exact code in priorityStandardCode and priorityStandardNumber. Choose the content standard most directly assessed by the lesson as the priority standard and put other cited content-standard codes separately in supportingStandards.",
+        "This is a SKILLS lesson. When the source cites a standard code such as RF.1.2b, return the exact code in priorityStandardCode and priorityStandardNumber. Choose the most specific content standard that represents the newly introduced or explicitly taught skill as the priority standard and put other cited content-standard codes separately in supportingStandards.",
+        "Use the lesson objective and the instructional focus together to choose Skills priority standards. Do not choose priority standards by keyword frequency alone.",
+        "Broader prerequisite, application, review, fluency, and comprehension standards should remain supporting standards unless that broader skill is itself the explicit new teaching focus.",
+        "If the lesson explicitly introduces two distinct major Skills standards, return both compact codes in priorityStandardCode and priorityStandardNumber separated by a comma. Do not return more than two priority standards.",
         "The permanent Skills standards reference is authoritative for official wording. Return compact standard codes in the code fields; the server will fill priorityStandardWording, priorityStandard, and supportingStandards with the exact reference wording. Do not invent a code or rewrite official wording.",
         "If a cited Skills code is not in the permanent reference, preserve the code and let the server display Official wording unavailable in the standards reference.",
         "For standardNotes, write one short line per cited code explaining how this lesson addresses that standard. Do not repeat or rewrite the official wording in these notes.",
@@ -1232,22 +1274,22 @@ function normalizeSkillsStandardFields(analysis, sourceText) {
     analysis.priorityStandardCode,
     analysis.priorityStandardNumber,
     analysis.priorityStandard,
-  ].filter(Boolean).join(" ")).map((code) => standardsByCode.get(code.toUpperCase())?.code || code);
-  const modelPriorityCode = modelCodes.find((code) => codes.some((sourceCode) => sourceCode.toUpperCase() === code.toUpperCase()));
-  const priorityCode = modelPriorityCode || codes[0] || "";
+  ].filter(Boolean).join(" ")).map((code) => normalizeSkillsStandardCode(code, standardsByCode));
+  const priorityCodes = selectSkillsPriorityCodes(modelCodes, codes);
   const unavailableWording = "Official wording unavailable in the standards reference.";
   const getWording = (code) => {
     const standard = standardsByCode.get(asText(code).toUpperCase());
     return standard ? standard.officialWording : unavailableWording;
   };
   const display = (code) => `${code} - ${getWording(code)}`;
-  const supportingCodes = codes.filter((code) => code.toUpperCase() !== priorityCode.toUpperCase());
+  const priorityKeys = new Set(priorityCodes.map((code) => code.toUpperCase()));
+  const supportingCodes = codes.filter((code) => !priorityKeys.has(code.toUpperCase()));
 
   return {
-    priorityStandardCode: priorityCode,
-    priorityStandardNumber: priorityCode,
-    priorityStandardWording: priorityCode ? getWording(priorityCode) : "",
-    priorityStandard: priorityCode ? display(priorityCode) : "",
+    priorityStandardCode: priorityCodes.join(", "),
+    priorityStandardNumber: priorityCodes.join(", "),
+    priorityStandardWording: priorityCodes.map(getWording).join("\n"),
+    priorityStandard: priorityCodes.map(display).join("\n"),
     supportingStandards: supportingCodes.map(display),
     mathematicalPractices: [],
     standardNotes: normalizeScholarLanguage(analysis.standardNotes),

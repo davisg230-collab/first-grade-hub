@@ -6866,14 +6866,39 @@
       return getCurriculumElaReferenceWording(normalizedCode) || curriculumMissingStandardsReferenceMessage;
     }
 
-    function getCurriculumLessonPriorityCode(lesson) {
-      return extractCurriculumStandardCodes(
-        lesson.priorityStandardCode || lesson.priorityStandardNumber || lesson.priorityStandard || ''
-      )[0] || '';
+    function getCurriculumLessonPriorityCodes(lesson) {
+      return extractCurriculumStandardCodes([
+        lesson.priorityStandardCode,
+        lesson.priorityStandardNumber,
+        lesson.priorityStandard
+      ].filter(Boolean).join('\n'));
     }
 
-    function getCurriculumLessonPriorityWording(lesson) {
-      return String(lesson.priorityStandardWording || '').trim()
+    function getCurriculumLessonPriorityCode(lesson) {
+      return getCurriculumLessonPriorityCodes(lesson)[0] || '';
+    }
+
+    function splitCurriculumStandardWordingLines(value) {
+      return String(value || '').split(/\n+/).map(line => line.trim()).filter(Boolean);
+    }
+
+    function getCurriculumLessonPriorityWording(lesson, code = '') {
+      const priorityCodes = getCurriculumLessonPriorityCodes(lesson);
+      const normalizedCode = normalizeCurriculumStandardCode(code || priorityCodes[0] || '');
+      const wordingLines = splitCurriculumStandardWordingLines(lesson.priorityStandardWording);
+      const codeIndex = priorityCodes.findIndex(priorityCode => normalizeCurriculumStandardCode(priorityCode) === normalizedCode);
+      if (wordingLines.length > 1 && codeIndex >= 0 && wordingLines[codeIndex]) {
+        return wordingLines[codeIndex]
+          .replace(/\b(?:(?:K|\d+)\.[A-Z]+\.[A-Z]+\.\d+[A-Za-z]?|(?:RL|RF|SL|L)\.\d+\.\d+[A-Za-z]?)\b\s*[-:]?\s*/i, '')
+          .trim();
+      }
+      const priorityLines = splitCurriculumStandardWordingLines(lesson.priorityStandard);
+      const matchingLine = normalizedCode
+        ? priorityLines.find(line => extractCurriculumStandardCodes(line).some(lineCode => normalizeCurriculumStandardCode(lineCode) === normalizedCode))
+        : '';
+      const codedWording = matchingLine ? getCurriculumCodedWording(matchingLine, normalizedCode) : '';
+      if (codedWording) return codedWording;
+      return wordingLines[0]
         || String(lesson.priorityStandard || '')
           .replace(/\b(?:(?:K|\d+)\.[A-Z]+\.[A-Z]+\.\d+[A-Za-z]?|(?:RL|RF|SL|L)\.\d+\.\d+[A-Za-z]?)\b\s*[-:]?\s*/i, '')
           .trim();
@@ -6944,22 +6969,23 @@
       };
 
       lessons.forEach(lesson => {
-        const priorityCode = getCurriculumLessonPriorityCode(lesson);
-        let hasSavedStandards = Boolean(priorityCode);
-        if (priorityCode) {
+        const priorityCodes = getCurriculumLessonPriorityCodes(lesson);
+        const priorityCodeKeys = new Set(priorityCodes.map(normalizeCurriculumStandardCode));
+        let hasSavedStandards = Boolean(priorityCodes.length);
+        priorityCodes.forEach(priorityCode => {
           if (/^MP\d+$/i.test(priorityCode)) {
-            addLesson(ensurePractice(priorityCode, getCurriculumLessonPriorityWording(lesson)).lessons, lesson);
+            addLesson(ensurePractice(priorityCode, getCurriculumLessonPriorityWording(lesson, priorityCode)).lessons, lesson);
           } else {
-            const standard = ensure(priorityCode, getCurriculumLessonPriorityWording(lesson));
+            const standard = ensure(priorityCode, getCurriculumLessonPriorityWording(lesson, priorityCode));
             addLesson(standard.priorityLessons, lesson);
             addLesson(isCurriculumAssessmentLesson(lesson) ? standard.priorityAssessmentLessons : standard.priorityInstructionalLessons, lesson);
           }
-        }
+        });
         const supportingItems = Array.isArray(lesson.supportingStandards) ? lesson.supportingStandards : [lesson.supportingStandards];
         const supportingCodes = extractCurriculumStandardCodes(supportingItems.join(' '));
         if (supportingCodes.length) hasSavedStandards = true;
         supportingCodes.forEach(code => {
-          if (normalizeCurriculumStandardCode(code) === normalizeCurriculumStandardCode(priorityCode)) return;
+          if (priorityCodeKeys.has(normalizeCurriculumStandardCode(code))) return;
           const source = supportingItems.find(item => extractCurriculumStandardCodes(item).some(itemCode => normalizeCurriculumStandardCode(itemCode) === normalizeCurriculumStandardCode(code)));
           if (/^MP\d+$/i.test(code)) {
             addLesson(ensurePractice(code, getCurriculumCodedWording(source, code)).lessons, lesson);
@@ -7639,6 +7665,18 @@
       const combined = String(lesson?.priorityStandard || '').trim();
       const code = String(lesson?.priorityStandardCode || lesson?.priorityStandardNumber || '').trim();
       const wording = String(lesson?.priorityStandardWording || '').trim();
+      const codes = extractCurriculumStandardCodes(code || combined);
+      if (codes.length > 1) {
+        const combinedLines = splitCurriculumStandardWordingLines(combined);
+        const wordingLines = splitCurriculumStandardWordingLines(wording);
+        return codes.map((singleCode, index) => {
+          const matchingLine = combinedLines.find(line => extractCurriculumStandardCodes(line).some(lineCode => (
+            normalizeCurriculumStandardCode(lineCode) === normalizeCurriculumStandardCode(singleCode)
+          )));
+          const lineWording = matchingLine ? getCurriculumCodedWording(matchingLine, singleCode) : wordingLines[index] || '';
+          return lineWording ? `${singleCode} - ${lineWording}` : singleCode;
+        }).join('\n');
+      }
       if (code && wording) return `${code} - ${wording}`;
       if (code && combined && combined !== code) return `${code} - ${combined}`;
       return combined || wording || code;
