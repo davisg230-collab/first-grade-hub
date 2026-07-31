@@ -6881,6 +6881,13 @@
       return text.slice(index + String(code).length).replace(/^\s*[-:]?\s*/, '').trim();
     }
 
+    function isCurriculumAssessmentLesson(lesson) {
+      const typeText = [lesson.lessonType, lesson.type, lesson.category, lesson.lessonCategory, lesson.lessonKind]
+        .filter(Boolean).join(' ');
+      const titleText = getCurriculumCardTitle(lesson);
+      return /\b(review\s*\/\s*assessment|assessment|assess|review)\b/i.test(`${typeText} ${titleText}`);
+    }
+
     function getCurriculumWhyItMattersForCode(whyItMatters, code, standardCount, index) {
       const text = String(whyItMatters || '').trim();
       if (!text) return '';
@@ -6912,7 +6919,11 @@
             code: String(code || '').trim(),
             wording: wording || '',
             priorityLessons: [],
-            otherLessons: []
+            otherLessons: [],
+            priorityInstructionalLessons: [],
+            priorityAssessmentLessons: [],
+            otherInstructionalLessons: [],
+            otherAssessmentLessons: []
           });
         } else if (!standards.get(key).wording && wording) {
           standards.get(key).wording = wording;
@@ -6932,7 +6943,9 @@
           if (/^MP\d+$/i.test(priorityCode)) {
             addLesson(ensurePractice(priorityCode, getCurriculumLessonPriorityWording(lesson)).lessons, lesson);
           } else {
-            addLesson(ensure(priorityCode, getCurriculumLessonPriorityWording(lesson)).priorityLessons, lesson);
+            const standard = ensure(priorityCode, getCurriculumLessonPriorityWording(lesson));
+            addLesson(standard.priorityLessons, lesson);
+            addLesson(isCurriculumAssessmentLesson(lesson) ? standard.priorityAssessmentLessons : standard.priorityInstructionalLessons, lesson);
           }
         }
         const supportingItems = Array.isArray(lesson.supportingStandards) ? lesson.supportingStandards : [lesson.supportingStandards];
@@ -6943,7 +6956,9 @@
           if (/^MP\d+$/i.test(code)) {
             addLesson(ensurePractice(code, getCurriculumCodedWording(source, code)).lessons, lesson);
           } else {
-            addLesson(ensure(code, getCurriculumCodedWording(source, code)).otherLessons, lesson);
+            const standard = ensure(code, getCurriculumCodedWording(source, code));
+            addLesson(standard.otherLessons, lesson);
+            addLesson(isCurriculumAssessmentLesson(lesson) ? standard.otherAssessmentLessons : standard.otherInstructionalLessons, lesson);
           }
         });
         const practiceItems = Array.isArray(lesson.mathematicalPractices) ? lesson.mathematicalPractices : [lesson.mathematicalPractices];
@@ -7014,20 +7029,26 @@
       return `<ul>${lessons.map(lesson => `<li>${escapeHtml([formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson', getCurriculumCardTitle(lesson)].join(' - '))}</li>`).join('')}</ul>`;
     }
 
+    function renderCurriculumModuleLessonSection(label, lessons) {
+      return lessons?.length ? `<div class="curriculum-detail-section"><h4>${escapeHtml(label)}</h4>${renderCurriculumModuleLessonList(lessons)}</div>` : '';
+    }
+
+    function renderCurriculumModulePrintLessonSection(label, lessons) {
+      return lessons?.length
+        ? renderCurriculumPrintList(label, lessons.map(lesson => [formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson', getCurriculumCardTitle(lesson)].join(' - ')))
+        : '';
+    }
+
     function renderCurriculumModuleInfoStandard(standard, whyItMatters = '') {
       return `
         <div class="curriculum-module-info-standard">
           <h4>${escapeHtml(standard.code || 'Standard')}</h4>
           <p>${escapeHtml(standard.wording || 'Official wording has not been entered yet.')}</p>
           ${whyItMatters ? `<div class="curriculum-detail-section"><h4>Why it matters</h4><p>${escapeHtml(whyItMatters)}</p></div>` : ''}
-          <div class="curriculum-detail-section">
-            <h4>Priority in</h4>
-            ${renderCurriculumModuleLessonList(standard.priorityLessons)}
-          </div>
-          <div class="curriculum-detail-section">
-            <h4>Also appears in</h4>
-            ${renderCurriculumModuleLessonList(standard.otherLessons)}
-          </div>
+          ${renderCurriculumModuleLessonSection('Directly taught in', standard.priorityInstructionalLessons || standard.priorityLessons)}
+          ${renderCurriculumModuleLessonSection('Assessed in', standard.priorityAssessmentLessons)}
+          ${renderCurriculumModuleLessonSection('Also appears in', standard.otherInstructionalLessons || standard.otherLessons)}
+          ${renderCurriculumModuleLessonSection('Assessed in', standard.otherAssessmentLessons)}
         </div>
       `;
     }
@@ -7037,11 +7058,10 @@
         <div class="curriculum-module-info-standard">
           <h4>${escapeHtml(standard.code || 'Standard')}</h4>
           <p>${escapeHtml(standard.wording || 'Official wording has not been entered yet.')}</p>
-          ${standard.priorityLessons?.length ? `<div class="curriculum-detail-section"><h4>Priority in</h4>${renderCurriculumModuleLessonList(standard.priorityLessons)}</div>` : ''}
-          <div class="curriculum-detail-section">
-            <h4>Also appears in</h4>
-            ${renderCurriculumModuleLessonList(standard.otherLessons)}
-          </div>
+          ${renderCurriculumModuleLessonSection('Lesson priority in', standard.priorityInstructionalLessons || standard.priorityLessons)}
+          ${renderCurriculumModuleLessonSection('Assessed in', standard.priorityAssessmentLessons)}
+          ${renderCurriculumModuleLessonSection('Also appears in', standard.otherInstructionalLessons || standard.otherLessons)}
+          ${renderCurriculumModuleLessonSection('Assessed in', standard.otherAssessmentLessons)}
         </div>
       `;
     }
@@ -7250,8 +7270,10 @@
             <h3>${escapeHtml(standard.code || 'Standard')}</h3>
             ${renderCurriculumPrintField('Official wording', standard.wording || 'Official wording has not been entered yet.')}
             ${standard.whyItMatters ? renderCurriculumPrintField('Why it matters', standard.whyItMatters) : ''}
-            ${renderCurriculumPrintList('Priority in', standard.priorityLessons.map(lesson => [formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson', getCurriculumCardTitle(lesson)].join(' - ')))}
-            ${renderCurriculumPrintList('Also appears in', standard.otherLessons.map(lesson => [formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson', getCurriculumCardTitle(lesson)].join(' - ')))}
+            ${renderCurriculumModulePrintLessonSection('Directly taught in', standard.priorityInstructionalLessons || standard.priorityLessons)}
+            ${renderCurriculumModulePrintLessonSection('Assessed in', standard.priorityAssessmentLessons)}
+            ${renderCurriculumModulePrintLessonSection('Also appears in', standard.otherInstructionalLessons || standard.otherLessons)}
+            ${renderCurriculumModulePrintLessonSection('Assessed in', standard.otherAssessmentLessons)}
           </div>
         `).join('')
         : '<p>No priority standards have been recorded for these lessons yet.</p>';
@@ -7260,8 +7282,10 @@
           <div class="lesson">
             <h3>${escapeHtml(standard.code || 'Supporting standard')}</h3>
             ${renderCurriculumPrintField('Official wording', standard.wording || 'Official wording has not been entered yet.')}
-            ${standard.priorityLessons?.length ? renderCurriculumPrintList('Priority in', standard.priorityLessons.map(lesson => [formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson', getCurriculumCardTitle(lesson)].join(' - '))) : ''}
-            ${renderCurriculumPrintList('Also appears in', standard.otherLessons.map(lesson => [formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson', getCurriculumCardTitle(lesson)].join(' - ')))}
+            ${renderCurriculumModulePrintLessonSection('Lesson priority in', standard.priorityInstructionalLessons || standard.priorityLessons)}
+            ${renderCurriculumModulePrintLessonSection('Assessed in', standard.priorityAssessmentLessons)}
+            ${renderCurriculumModulePrintLessonSection('Also appears in', standard.otherInstructionalLessons || standard.otherLessons)}
+            ${renderCurriculumModulePrintLessonSection('Assessed in', standard.otherAssessmentLessons)}
           </div>
         `).join('')
         : '<p>No supporting standards have been recorded for these lessons yet.</p>';
