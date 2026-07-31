@@ -3,15 +3,15 @@
   "curriculum": "Common Core State Standards",
   "subject": "skills",
   "grade": 1,
-  "unitOrModule": "Units 1-2",
-  "source": "User-provided Skills Unit 1 and Unit 2 standards",
+  "unitOrModule": "Units 1-3",
+  "source": "User-provided Skills Unit 1, Unit 2, and Unit 3 standards",
   "standards": [
     {
       "code": "RL.1.1",
       "grade": 1,
       "domain": "Reading Literature",
       "officialWording": "Ask and answer questions about key details in a text.",
-      "units": [1],
+      "units": [1, 3],
       "footnotes": []
     },
     {
@@ -19,7 +19,7 @@
       "grade": 1,
       "domain": "Reading Foundational Skills",
       "officialWording": "Demonstrate understanding of the organization and basic features of print.",
-      "units": [1, 2],
+      "units": [1, 2, 3],
       "footnotes": []
     },
     {
@@ -27,7 +27,7 @@
       "grade": 1,
       "domain": "Reading Foundational Skills",
       "officialWording": "Recognize the distinguishing features of a sentence (e.g., first word, capitalization, ending punctuation).",
-      "units": [1, 2],
+      "units": [1, 2, 3],
       "footnotes": []
     },
     {
@@ -35,7 +35,7 @@
       "grade": 1,
       "domain": "Reading Foundational Skills",
       "officialWording": "Demonstrate understanding of spoken words, syllables, and sounds (phonemes).",
-      "units": [2],
+      "units": [2, 3],
       "footnotes": []
     },
     {
@@ -51,7 +51,7 @@
       "grade": 1,
       "domain": "Reading Foundational Skills",
       "officialWording": "Orally produce single-syllable words by blending sounds (phonemes), including consonant blends.",
-      "units": [1, 2],
+      "units": [1, 2, 3],
       "footnotes": []
     },
     {
@@ -59,7 +59,7 @@
       "grade": 1,
       "domain": "Reading Foundational Skills",
       "officialWording": "Isolate and pronounce initial, medial vowel, and final sounds (phonemes) in spoken single-syllable words.",
-      "units": [1, 2],
+      "units": [1, 2, 3],
       "footnotes": []
     },
     {
@@ -67,7 +67,7 @@
       "grade": 1,
       "domain": "Reading Foundational Skills",
       "officialWording": "Segment spoken single-syllable words into their complete sequence of individual sounds (phonemes).",
-      "units": [1, 2],
+      "units": [1, 2, 3],
       "footnotes": []
     },
     {
@@ -75,7 +75,7 @@
       "grade": 1,
       "domain": "Reading Foundational Skills",
       "officialWording": "Know and apply grade-level phonics and word analysis skills in decoding words.",
-      "units": [1],
+      "units": [1, 3],
       "footnotes": []
     },
     {
@@ -83,7 +83,7 @@
       "grade": 1,
       "domain": "Reading Foundational Skills",
       "officialWording": "Know the spelling-sound correspondences for common consonant digraphs.",
-      "units": [1],
+      "units": [1, 3],
       "footnotes": []
     },
     {
@@ -91,7 +91,7 @@
       "grade": 1,
       "domain": "Reading Foundational Skills",
       "officialWording": "Decode regularly spelled one-syllable words.",
-      "units": [1, 2],
+      "units": [1, 2, 3],
       "footnotes": []
     },
     {
@@ -99,7 +99,7 @@
       "grade": 1,
       "domain": "Reading Foundational Skills",
       "officialWording": "Know final -e and common vowel team conventions for representing long vowel sounds.",
-      "units": [2],
+      "units": [2, 3],
       "footnotes": []
     },
     {
@@ -107,7 +107,7 @@
       "grade": 1,
       "domain": "Reading Foundational Skills",
       "officialWording": "Recognize and read grade-appropriate irregularly spelled words.",
-      "units": [1, 2],
+      "units": [1, 2, 3],
       "footnotes": []
     },
     {
@@ -115,7 +115,7 @@
       "grade": 1,
       "domain": "Reading Foundational Skills",
       "officialWording": "Read grade-level text with purpose and understanding.",
-      "units": [1, 2],
+      "units": [1, 2, 3],
       "footnotes": []
     },
     {
@@ -123,7 +123,7 @@
       "grade": 1,
       "domain": "Reading Foundational Skills",
       "officialWording": "Read grade-level text orally with accuracy, appropriate rate, and expression on successive readings.",
-      "units": [2],
+      "units": [2, 3],
       "footnotes": []
     },
     {
@@ -131,7 +131,7 @@
       "grade": 1,
       "domain": "Reading Foundational Skills",
       "officialWording": "Use context to confirm or self-correct word recognition and understanding, rereading as necessary.",
-      "units": [1],
+      "units": [1, 3],
       "footnotes": []
     },
     {
@@ -139,7 +139,7 @@
       "grade": 1,
       "domain": "Speaking and Listening",
       "officialWording": "Describe people, places, things, and events with relevant details, expressing ideas and feelings clearly.",
-      "units": [1],
+      "units": [1, 3],
       "footnotes": []
     },
     {
@@ -147,7 +147,7 @@
       "grade": 1,
       "domain": "Speaking and Listening",
       "officialWording": "Produce complete sentences when appropriate to task and situation.",
-      "units": [1],
+      "units": [1, 3],
       "footnotes": []
     },
     {
@@ -155,7 +155,7 @@
       "grade": 1,
       "domain": "Language",
       "officialWording": "Demonstrate command of the conventions of standard English grammar and usage when writing or speaking.",
-      "units": [1, 2],
+      "units": [1, 2, 3],
       "footnotes": []
     },
     {
@@ -163,7 +163,7 @@
       "grade": 1,
       "domain": "Language",
       "officialWording": "Print all upper- and lowercase letters.",
-      "units": [1, 2],
+      "units": [1, 2, 3],
       "footnotes": []
     },
     {
@@ -171,7 +171,7 @@
       "grade": 1,
       "domain": "Language",
       "officialWording": "Use common, proper, and possessive nouns.",
-      "units": [1, 2],
+      "units": [1, 2, 3],
       "footnotes": []
     },
     {
@@ -179,7 +179,7 @@
       "grade": 1,
       "domain": "Language",
       "officialWording": "Use personal, possessive, and indefinite pronouns (e.g., I, me, my; they, them, their; anyone, everything).",
-      "units": [1, 2],
+      "units": [1, 2, 3],
       "footnotes": []
     },
     {
@@ -195,7 +195,7 @@
       "grade": 1,
       "domain": "Language",
       "officialWording": "Use frequently occurring conjunctions (e.g., and, but, or, so, because).",
-      "units": [1, 2],
+      "units": [1, 2, 3],
       "footnotes": []
     },
     {
@@ -203,7 +203,7 @@
       "grade": 1,
       "domain": "Language",
       "officialWording": "Use determiners (e.g., articles, demonstratives).",
-      "units": [1, 2],
+      "units": [1, 2, 3],
       "footnotes": []
     },
     {
@@ -211,7 +211,7 @@
       "grade": 1,
       "domain": "Language",
       "officialWording": "Produce and expand complete simple and compound declarative, interrogative, imperative, and exclamatory sentences in response to prompts.",
-      "units": [2],
+      "units": [2, 3],
       "footnotes": []
     },
     {
@@ -219,7 +219,7 @@
       "grade": 1,
       "domain": "Language",
       "officialWording": "Demonstrate command of the conventions of standard English capitalization, punctuation, and spelling when writing.",
-      "units": [2],
+      "units": [2, 3],
       "footnotes": []
     },
     {
@@ -227,7 +227,7 @@
       "grade": 1,
       "domain": "Language",
       "officialWording": "Use end punctuation for sentences.",
-      "units": [1, 2],
+      "units": [1, 2, 3],
       "footnotes": []
     },
     {
@@ -235,7 +235,7 @@
       "grade": 1,
       "domain": "Language",
       "officialWording": "Use conventional spelling for words with common spelling patterns and for frequently occurring irregular words.",
-      "units": [1, 2],
+      "units": [1, 2, 3],
       "footnotes": []
     },
     {
@@ -251,7 +251,7 @@
       "grade": 1,
       "domain": "Language",
       "officialWording": "Spell untaught words phonetically, drawing on phonemic awareness and spelling conventions.",
-      "units": [1],
+      "units": [1, 3],
       "footnotes": []
     },
     {
@@ -259,7 +259,108 @@
       "grade": 1,
       "domain": "Language",
       "officialWording": "Use words and phrases acquired through conversations, reading and being read to, and responding to texts, including using frequently occurring conjunctions to signal simple relationships (e.g., because).",
-      "units": [1, 2],
+      "units": [1, 2, 3],
+      "footnotes": []
+    },
+    {
+      "code": "RL.1.3",
+      "grade": 1,
+      "domain": "Reading Literature",
+      "officialWording": "Describe characters, settings, and major events in a story, using key details.",
+      "units": [3],
+      "footnotes": []
+    },
+    {
+      "code": "RL.1.5",
+      "grade": 1,
+      "domain": "Reading Literature",
+      "officialWording": "Explain major differences between books that tell stories and books that give information, drawing on a wide reading of a range of text types.",
+      "units": [3],
+      "footnotes": []
+    }
+    ,
+    {
+      "code": "RL.1.7",
+      "grade": 1,
+      "domain": "Reading Literature",
+      "officialWording": "Use illustrations and details in a story to describe its characters, setting, or events.",
+      "units": [3],
+      "footnotes": []
+    }
+    ,
+    {
+      "code": "RL.1.10",
+      "grade": 1,
+      "domain": "Reading Literature",
+      "officialWording": "With prompting and support, read prose and poetry of appropriate complexity for Grade 1.",
+      "units": [3],
+      "footnotes": []
+    }
+    ,
+    {
+      "code": "W.1.1",
+      "grade": 1,
+      "domain": "Writing",
+      "officialWording": "Write opinion pieces in which they introduce the topic or name the book they are writing about, state an opinion, supply a reason for the opinion, and provide some sense of closure.",
+      "units": [3],
+      "footnotes": []
+    }
+    ,
+    {
+      "code": "L.1.1e",
+      "grade": 1,
+      "domain": "Language",
+      "officialWording": "Use verbs to convey a sense of past, present, and future (e.g., Yesterday I walked home; Today I walk home; Tomorrow I will walk home).",
+      "units": [3],
+      "footnotes": []
+    }
+    ,
+    {
+      "code": "SL.1.5",
+      "grade": 1,
+      "domain": "Speaking and Listening",
+      "officialWording": "Add drawings or other visual displays to descriptions when appropriate to clarify ideas, thoughts, and feelings.",
+      "units": [3],
+      "footnotes": []
+    },
+    {
+      "code": "W.1.3",
+      "grade": 1,
+      "domain": "Writing",
+      "officialWording": "Write narratives in which they recount two or more appropriately sequenced events, include some details regarding what happened, use temporal words to signal event order, and provide some sense of closure.",
+      "units": [
+        3
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "W.1.5",
+      "grade": 1,
+      "domain": "Writing",
+      "officialWording": "With guidance and support from adults, focus on a topic, respond to questions and suggestions from peers, and add details to strengthen writing as needed.",
+      "units": [
+        3
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "SL.1.5",
+      "grade": 1,
+      "domain": "Speaking and Listening",
+      "officialWording": "Add drawings or other visual displays to descriptions when appropriate to clarify ideas, thoughts, and feelings.",
+      "units": [
+        3
+      ],
+      "footnotes": []
+    },
+    {
+      "code": "L.1.1e",
+      "grade": 1,
+      "domain": "Language",
+      "officialWording": "Use verbs to convey a sense of past, present, and future (e.g., Yesterday I walked home; Today I walk home; Tomorrow I will walk home).",
+      "units": [
+        3
+      ],
       "footnotes": []
     }
   ]
