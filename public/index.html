@@ -2075,17 +2075,19 @@
       padding-top: 1rem;
     }
     #curriculumModuleInfoModal .lesson-detail-card {
-      overflow-y: hidden;
-    }
-    .curriculum-module-info-page {
-      min-height: 24rem;
-      max-height: min(58vh, 34rem);
       overflow-y: auto;
-      padding-right: .25rem;
     }
-    .curriculum-module-info-page[hidden] {
+
+.curriculum-module-info-page {
+  min-height: 0;
+  max-height: none;
+  overflow-y: visible;
+  padding-right: .25rem;
+  }
+.curriculum-module-info-page[hidden] {
       display: none;
-    }
+}
+
     .curriculum-module-info-page-title {
       margin: 0 0 .85rem;
       color: var(--md-slate);
@@ -5392,6 +5394,7 @@
       { short: 'F', title: 'Friday' }
     ];
     const curriculumSubjects = ['skills', 'listening', 'math'];
+    const curriculumMissingStandardsReferenceMessage = 'Official wording missing from standards reference';
     const approvedEditorEmails = [
       'davisg230@gmail.com',
       'lvest1010@gmail.com'
@@ -6858,7 +6861,9 @@
 
     function getCurriculumOfficialStandardWording(subject, code, fallbackWording = '') {
       if (subject === 'math') return String(fallbackWording || '').trim();
-      return getCurriculumElaReferenceWording(code);
+      const normalizedCode = extractCurriculumStandardCodes(code)[0] || '';
+      if (!normalizedCode) return String(fallbackWording || '').trim();
+      return getCurriculumElaReferenceWording(normalizedCode) || curriculumMissingStandardsReferenceMessage;
     }
 
     function getCurriculumLessonPriorityCode(lesson) {
@@ -6909,6 +6914,7 @@
       const standards = new Map();
       const practices = new Map();
       const lessons = getCurriculumModuleLessons(subject, unitOrModule);
+      const missingStandardsLessons = [];
       const addLesson = (items, lesson) => {
         if (!items.some(item => item.id === lesson.id)) items.push(lesson);
       };
@@ -6939,6 +6945,7 @@
 
       lessons.forEach(lesson => {
         const priorityCode = getCurriculumLessonPriorityCode(lesson);
+        let hasSavedStandards = Boolean(priorityCode);
         if (priorityCode) {
           if (/^MP\d+$/i.test(priorityCode)) {
             addLesson(ensurePractice(priorityCode, getCurriculumLessonPriorityWording(lesson)).lessons, lesson);
@@ -6950,6 +6957,7 @@
         }
         const supportingItems = Array.isArray(lesson.supportingStandards) ? lesson.supportingStandards : [lesson.supportingStandards];
         const supportingCodes = extractCurriculumStandardCodes(supportingItems.join(' '));
+        if (supportingCodes.length) hasSavedStandards = true;
         supportingCodes.forEach(code => {
           if (normalizeCurriculumStandardCode(code) === normalizeCurriculumStandardCode(priorityCode)) return;
           const source = supportingItems.find(item => extractCurriculumStandardCodes(item).some(itemCode => normalizeCurriculumStandardCode(itemCode) === normalizeCurriculumStandardCode(code)));
@@ -6962,10 +6970,13 @@
           }
         });
         const practiceItems = Array.isArray(lesson.mathematicalPractices) ? lesson.mathematicalPractices : [lesson.mathematicalPractices];
-        extractCurriculumStandardCodes(practiceItems.join(' ')).filter(code => /^MP\d+$/i.test(code)).forEach(code => {
+        const practiceCodes = extractCurriculumStandardCodes(practiceItems.join(' ')).filter(code => /^MP\d+$/i.test(code));
+        if (practiceCodes.length) hasSavedStandards = true;
+        practiceCodes.forEach(code => {
           const source = practiceItems.find(item => extractCurriculumStandardCodes(item).some(itemCode => normalizeCurriculumStandardCode(itemCode) === normalizeCurriculumStandardCode(code)));
           addLesson(ensurePractice(code, getCurriculumCodedWording(source, code)).lessons, lesson);
         });
+        if (!hasSavedStandards) addLesson(missingStandardsLessons, lesson);
       });
 
       const sortedStandards = Array.from(standards.values()).sort((a, b) => {
@@ -6975,7 +6986,8 @@
       return {
         priority: sortedStandards.filter(standard => standard.priorityLessons.length),
         supporting: sortedStandards.filter(standard => !standard.priorityLessons.length && standard.otherLessons.length),
-        practices: Array.from(practices.values()).sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true }))
+        practices: Array.from(practices.values()).sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true })),
+        missingStandardsLessons
       };
     }
 
@@ -7020,13 +7032,24 @@
         standards,
         supportingStandards,
         mathematicalPractices: computed.practices,
+        missingStandardsLessons: computed.missingStandardsLessons || [],
         lessons: getCurriculumModuleLessons(state.subject, state.unitOrModule)
       };
     }
 
+    function getSortedUniqueCurriculumLessons(lessons) {
+      const uniqueLessons = new Map();
+      (Array.isArray(lessons) ? lessons : []).filter(Boolean).forEach(lesson => {
+        const key = String(lesson.id || `${formatCurriculumLessonNumber(lesson.lessonNumber)}::${getCurriculumCardTitle(lesson)}`).toLowerCase();
+        if (!uniqueLessons.has(key)) uniqueLessons.set(key, lesson);
+      });
+      return Array.from(uniqueLessons.values()).sort(compareCurriculumLessons);
+    }
+
     function renderCurriculumModuleLessonList(lessons, emptyText = 'None recorded yet.') {
-      if (!lessons || !lessons.length) return `<p class="text-sm text-gray-500">${escapeHtml(emptyText)}</p>`;
-      return `<ul>${lessons.map(lesson => `<li>${escapeHtml([formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson', getCurriculumCardTitle(lesson)].join(' - '))}</li>`).join('')}</ul>`;
+      const sortedLessons = getSortedUniqueCurriculumLessons(lessons);
+      if (!sortedLessons.length) return `<p class="text-sm text-gray-500">${escapeHtml(emptyText)}</p>`;
+      return `<ul>${sortedLessons.map(lesson => `<li>${escapeHtml([formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson', getCurriculumCardTitle(lesson)].join(' - '))}</li>`).join('')}</ul>`;
     }
 
     function renderCurriculumModuleLessonSection(label, lessons) {
@@ -7034,8 +7057,9 @@
     }
 
     function renderCurriculumModulePrintLessonSection(label, lessons) {
-      return lessons?.length
-        ? renderCurriculumPrintList(label, lessons.map(lesson => [formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson', getCurriculumCardTitle(lesson)].join(' - ')))
+      const sortedLessons = getSortedUniqueCurriculumLessons(lessons);
+      return sortedLessons.length
+        ? renderCurriculumPrintList(label, sortedLessons.map(lesson => [formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson', getCurriculumCardTitle(lesson)].join(' - ')))
         : '';
     }
 
@@ -7123,6 +7147,12 @@
         pages.push({
           title: 'Supporting standards',
           body: '<p class="text-sm text-gray-500">No supporting standards are recorded yet.</p>'
+        });
+      }
+      if (view.missingStandardsLessons.length) {
+        pages.push({
+          title: 'Standards not yet entered',
+          body: renderCurriculumModuleLessonList(view.missingStandardsLessons)
         });
       }
       if (view.subject === 'math') {
@@ -7294,10 +7324,13 @@
           <div class="lesson">
             <h3>${escapeHtml(standard.code || 'Mathematical practice')}</h3>
             ${renderCurriculumPrintField('Official wording', standard.wording || 'Practice wording has not been entered yet.')}
-            ${renderCurriculumPrintList('Appears in', standard.lessons.map(lesson => [formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson', getCurriculumCardTitle(lesson)].join(' - ')))}
+            ${renderCurriculumModulePrintLessonSection('Appears in', standard.lessons)}
           </div>
         `).join('')
         : '<p>No mathematical practice standards have been recorded for these lessons yet.</p>';
+      const missingStandardsSection = view.missingStandardsLessons.length
+        ? `<h2>Standards not yet entered</h2>${renderCurriculumModulePrintLessonSection('Lessons', view.missingStandardsLessons)}`
+        : '';
       const mathematicalPracticesSection = view.subject === 'math'
         ? `<h2>Mathematical practice standards</h2>${mathematicalPractices}`
         : '';
@@ -7306,6 +7339,7 @@
         ${standards}
         <h2>Supporting standards</h2>
         ${supportingStandards}
+        ${missingStandardsSection}
         ${mathematicalPracticesSection}
       `;
     }
