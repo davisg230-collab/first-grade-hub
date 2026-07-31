@@ -3746,8 +3746,9 @@
               <button type="button" class="w-9 h-9 rounded-full text-white font-bold" style="background: var(--md-slate);" onclick="closeCurriculumModuleInfoModal()" aria-label="Close module information">&times;</button>
             </div>
             <div id="curriculumModuleInfoModalBody"></div>
-            <div class="flex flex-col sm:flex-row gap-2 mt-5">
-              <button type="button" class="curriculum-builder-button inline-flex px-4 py-2 text-white" style="background: var(--md-slate);" onclick="saveCurriculumModuleInfo()">Save Information</button>
+            <div id="curriculumModuleInfoStatus" class="mt-4 text-sm font-semibold" aria-live="polite"></div>
+            <div class="flex flex-col sm:flex-row gap-2 mt-3">
+              <button id="curriculumModuleInfoSaveBtn" type="button" class="curriculum-builder-button inline-flex px-4 py-2 text-white" style="background: var(--md-slate);" onclick="saveCurriculumModuleInfo()">Save Information</button>
               <button type="button" class="curriculum-builder-button inline-flex px-4 py-2 text-white" style="background: var(--md-coral);" onclick="printCurriculumModuleInfo()">Print Information</button>
               <button type="button" class="curriculum-builder-button inline-flex px-4 py-2" style="background: var(--md-pebble); color: var(--md-ink);" onclick="closeCurriculumModuleInfoModal()">Close</button>
             </div>
@@ -6350,6 +6351,19 @@
       return String(value || '').split('\n').map(item => item.trim()).filter(Boolean);
     }
 
+    function linesToCurriculumStandardCodes(value) {
+      const codes = [];
+      linesToList(value).forEach(line => {
+        const lineCodes = extractCurriculumStandardCodes(line);
+        if (lineCodes.length) {
+          codes.push(...lineCodes);
+        } else {
+          codes.push(line);
+        }
+      });
+      return uniqueList(codes.map(code => String(code || '').trim()).filter(Boolean));
+    }
+
     function videoLinksToLines(links) {
       if (!Array.isArray(links)) return '';
       return links
@@ -7165,6 +7179,7 @@
       curriculumModuleInfoPageIndex = 0;
       body.innerHTML = renderCurriculumModuleInfoModalBody(view);
       setCurriculumModuleInfoPage(0);
+      setCurriculumModuleInfoStatus('');
       modal.classList.add('open');
     }
 
@@ -7173,27 +7188,44 @@
       if (modal) modal.classList.remove('open');
       curriculumModuleInfoState = null;
       curriculumModuleInfoPageIndex = 0;
+      setCurriculumModuleInfoStatus('');
+    }
+
+    function setCurriculumModuleInfoStatus(message, type = 'info') {
+      const status = document.getElementById('curriculumModuleInfoStatus');
+      if (!status) return;
+      status.textContent = message || '';
+      status.style.color = type === 'error' ? '#dc2626' : (type === 'success' ? '#15803d' : '#4b5563');
     }
 
     async function saveCurriculumModuleInfo() {
       if (!curriculumModuleInfoState) return;
+      const saveButton = document.getElementById('curriculumModuleInfoSaveBtn');
       try {
+        setCurriculumModuleInfoStatus('Saving information...');
+        if (saveButton) saveButton.disabled = true;
         const user = await ensureCurriculumTeacherUser();
-        if (!user) return;
+        if (!user) {
+          setCurriculumModuleInfoStatus('Finish sign-in, then tap Save Information again.');
+          return;
+        }
         if (!db) throw new Error('The curriculum library is not available. Please refresh and try again.');
         const state = curriculumModuleInfoState;
         const payload = {
           subject: state.subject,
           unitOrModule: formatCurriculumUnitOrModule(state.unitOrModule),
-          mainPriorityStandards: linesToList(document.getElementById('curriculumModuleInfoStandardsInput')?.value || ''),
+          mainPriorityStandards: linesToCurriculumStandardCodes(document.getElementById('curriculumModuleInfoStandardsInput')?.value || ''),
           officialStandardWording: linesToList(document.getElementById('curriculumModuleInfoWordingInput')?.value || ''),
           whyItMatters: document.getElementById('curriculumModuleInfoWhyInput')?.value.trim() || '',
           updatedBy: getEditorUserEmail(user),
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
         const docId = getCurriculumModuleInfoDocId(state.subject, state.unitOrModule);
-        await db.collection('curriculumModuleInfo').doc(docId).set(payload, { merge: true });
-        curriculumModuleInfoCache[getCurriculumModuleInfoKey(state.subject, state.unitOrModule)] = { id: docId, ...normalizeCurriculumModuleInfo(payload) };
+        const docRef = db.collection('curriculumModuleInfo').doc(docId);
+        await docRef.set(payload, { merge: true });
+        const savedDoc = await docRef.get();
+        const savedData = savedDoc.exists ? savedDoc.data() : payload;
+        curriculumModuleInfoCache[getCurriculumModuleInfoKey(state.subject, state.unitOrModule)] = { id: docId, ...normalizeCurriculumModuleInfo(savedData) };
         if (state.subject !== 'math') await loadCurriculumElaStandardsReference();
         const pageIndex = curriculumModuleInfoPageIndex;
         const view = getCurriculumModuleInfoView(state);
@@ -7202,10 +7234,14 @@
           body.innerHTML = renderCurriculumModuleInfoModalBody(view);
           setCurriculumModuleInfoPage(pageIndex);
         }
+        setCurriculumModuleInfoStatus(`${view.unitOrModule} information saved.`, 'success');
         setCurriculumStatus(`${view.unitOrModule} information saved.`, 'success');
       } catch (error) {
         console.error('Saving curriculum module information failed:', error);
+        setCurriculumModuleInfoStatus(error.message || 'Module information could not be saved.', 'error');
         setCurriculumStatus(error.message || 'Module information could not be saved.', 'error');
+      } finally {
+        if (saveButton) saveButton.disabled = false;
       }
     }
 
