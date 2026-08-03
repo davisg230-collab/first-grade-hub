@@ -4469,6 +4469,61 @@
     
     // Listening Units data structure
     let listeningUnitsData = []; // Array of 11 units, each with one Vocabulary section
+
+    let classDataLoadedFromFirestore = false;
+    const curriculumStructureLoadState = {
+      skills: false,
+      math: false,
+      listening: false
+    };
+
+    function markCurriculumStructureLoaded(subject, loaded) {
+      if (Object.prototype.hasOwnProperty.call(curriculumStructureLoadState, subject)) {
+        curriculumStructureLoadState[subject] = !!loaded;
+      }
+    }
+
+    function hasMeaningfulCurriculumText(value, ignoredValues = []) {
+      const text = String(value || '').trim();
+      if (!text) return false;
+      return !ignoredValues.includes(text);
+    }
+
+    function hasMeaningfulCurriculumSection(section, sectionIndex) {
+      if (!section || typeof section !== 'object') return false;
+      const title = String(section.title || '').trim();
+      const defaultTitles = [`Section ${sectionIndex + 1}`, 'Vocabulary'];
+      if (title && !defaultTitles.includes(title)) return true;
+      const items = [
+        ...(Array.isArray(section.bullets) ? section.bullets : []),
+        ...(Array.isArray(section.bulletPoints) ? section.bulletPoints : [])
+      ];
+      return items.some(item => hasMeaningfulCurriculumText(item, ['Click to edit...', 'Migrated content']));
+    }
+
+    function hasMeaningfulCurriculumStructure(subject, items) {
+      if (!Array.isArray(items)) return false;
+      return items.some((item, index) => {
+        if (!item || typeof item !== 'object') return false;
+        const defaultTitle = subject === 'math' ? `Module ${index + 1}` : `Unit ${index + 1}`;
+        if (hasMeaningfulCurriculumText(item.title) && String(item.title).trim() !== defaultTitle) return true;
+        if (hasMeaningfulCurriculumText(item.priorityStandard)) return true;
+        if (hasMeaningfulCurriculumText(item.iCanStatement)) return true;
+        if (hasMeaningfulCurriculumText(item.description)) return true;
+        return Array.isArray(item.sections) && item.sections.some(hasMeaningfulCurriculumSection);
+      });
+    }
+
+    function shouldSaveCurriculumStructure(subject, items) {
+      if (curriculumStructureLoadState[subject]) return true;
+      return classDataLoadedFromFirestore && hasMeaningfulCurriculumStructure(subject, items);
+    }
+
+    function requireCurriculumStructureReadyToSave(subject, items, label) {
+      if (shouldSaveCurriculumStructure(subject, items)) return true;
+      alert(`${label} did not finish loading saved data, so this save was stopped to protect existing entries. Refresh the page, wait for the content to load, then try saving again.`);
+      return false;
+    }
     
     // Current Module data structure for Skills and Math
     let currentModuleData = {
@@ -5397,7 +5452,8 @@
     const curriculumMissingStandardsReferenceMessage = 'Official wording missing from standards reference';
     const approvedEditorEmails = [
       'davisg230@gmail.com',
-      'lvest1010@gmail.com'
+      'lvest1010@gmail.com',
+      'lvest@crossroadsschoolskc.org'
     ];
     let curriculumLessonsCache = [];
     let curriculumModuleInfoCache = Object.create(null);
@@ -9617,9 +9673,15 @@
 
       // Curriculum unit/module pages are edited outside the main page fields.
       // Include them here so the main Save button and local draft protection cannot drop them.
-      data.skills_units_json = JSON.stringify(skillsUnitsData);
-      data.math_modules_json = JSON.stringify(mathModulesData);
-      data.listening_units_json = JSON.stringify(listeningUnitsData);
+      if (shouldSaveCurriculumStructure('skills', skillsUnitsData)) {
+        data.skills_units_json = JSON.stringify(skillsUnitsData);
+      }
+      if (shouldSaveCurriculumStructure('math', mathModulesData)) {
+        data.math_modules_json = JSON.stringify(mathModulesData);
+      }
+      if (shouldSaveCurriculumStructure('listening', listeningUnitsData)) {
+        data.listening_units_json = JSON.stringify(listeningUnitsData);
+      }
       
       // Volunteer data
       const volunteerDataCollected = collectVolunteerData();
@@ -19294,6 +19356,7 @@ function removeSkillsBulletPoint(unitIndex, sectionIndex, bulletIndex) {
 // Save skills units to Firestore
 async function saveSkillsUnits() {
   try {
+    if (!requireCurriculumStructureReadyToSave('skills', skillsUnitsData, 'Skills units')) return;
     await ensureAuthenticated();
     
     const data = {
@@ -19302,6 +19365,7 @@ async function saveSkillsUnits() {
     
     console.log('Saving skills units to Firestore:', skillsUnitsData);
     await db.collection('classData').doc('current').set(data, { merge: true });
+    markCurriculumStructureLoaded('skills', true);
     
     alert('✅ Skills units saved successfully!');
   } catch (error) {
@@ -19410,11 +19474,13 @@ async function handleSkillsUnitDrop(e) {
 
 // Update skills units from Firestore data
 function updateSkillsUnitsData(unitsJson) {
+  markCurriculumStructureLoaded('skills', false);
   if (!unitsJson) {
     initializeSkillsUnits();
   } else {
     try {
       skillsUnitsData = JSON.parse(unitsJson);
+      markCurriculumStructureLoaded('skills', classDataLoadedFromFirestore);
       
       // Migrate old data structure (cards) to new structure (sections)
       skillsUnitsData = skillsUnitsData.map(unit => {
@@ -20427,6 +20493,7 @@ function removeMathBulletPoint(moduleIndex, sectionIndex, bulletIndex) {
 // Save math modules to Firestore
 async function saveMathModules() {
   try {
+    if (!requireCurriculumStructureReadyToSave('math', mathModulesData, 'Math modules')) return;
     await ensureAuthenticated();
     
     const data = {
@@ -20435,6 +20502,7 @@ async function saveMathModules() {
     
     console.log('Saving math modules to Firestore:', mathModulesData);
     await db.collection('classData').doc('current').set(data, { merge: true });
+    markCurriculumStructureLoaded('math', true);
     
     alert('✅ Math modules saved successfully!');
   } catch (error) {
@@ -20543,11 +20611,13 @@ async function handleMathModuleDrop(e) {
 
 // Update math modules from Firestore data
 function updateMathModulesData(modulesJson) {
+  markCurriculumStructureLoaded('math', false);
   if (!modulesJson) {
     initializeMathModules();
   } else {
     try {
       mathModulesData = JSON.parse(modulesJson);
+      markCurriculumStructureLoaded('math', classDataLoadedFromFirestore);
       
       // Migration: Convert old card-based format to new section-based format
       mathModulesData = mathModulesData.map(module => {
@@ -20609,6 +20679,7 @@ function updateMathModulesData(modulesJson) {
 
 async function saveListeningUnits() {
   try {
+    if (!requireCurriculumStructureReadyToSave('listening', listeningUnitsData, 'Listening units')) return;
     await ensureAuthenticated();
     
     const data = {
@@ -20617,6 +20688,7 @@ async function saveListeningUnits() {
     
     console.log('Saving listening units to Firestore:', listeningUnitsData);
     await db.collection('classData').doc('current').set(data, { merge: true });
+    markCurriculumStructureLoaded('listening', true);
     
     alert('✅ Listening units saved successfully!');
   } catch (error) {
@@ -20671,12 +20743,14 @@ function normalizeListeningVocabularyUnit(unit) {
 }
 
 function updateListeningUnitsData(unitsJson) {
+  markCurriculumStructureLoaded('listening', false);
   if (!unitsJson) {
     initializeListeningUnits();
   } else {
     try {
       const parsed = JSON.parse(unitsJson);
       listeningUnitsData = Array.isArray(parsed) ? parsed.map(normalizeListeningVocabularyUnit) : [];
+      markCurriculumStructureLoaded('listening', classDataLoadedFromFirestore);
       
       // Ensure we have 11 units
       while (listeningUnitsData.length < 11) {
@@ -20871,6 +20945,7 @@ function getDefaultFallbackData() {
 }
 
 async function fetchFirestoreData() {
+  classDataLoadedFromFirestore = false;
   try {
     // Check if Firebase is available
     if (typeof db === 'undefined') {
@@ -20896,6 +20971,7 @@ async function fetchFirestoreData() {
     const doc = await db.collection('classData').doc('current').get();
     if (doc.exists) {
       hideDataLoadError(); // Hide any previous error messages
+      classDataLoadedFromFirestore = true;
       return doc.data();
     } else {
       console.log('No document found, using defaults');
