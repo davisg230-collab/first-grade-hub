@@ -5789,6 +5789,14 @@
     }
 
     async function signOutCurriculumBuilder() {
+      if (document.body.classList.contains('editing')) {
+        const exited = await exitEditMode();
+        if (!exited) {
+          setCurriculumStatus('Sign out canceled because your edits could not be saved.', 'error');
+          return;
+        }
+      }
+
       try {
         if (auth) await auth.signOut();
       } catch (error) {
@@ -9044,11 +9052,22 @@
       }
       return true;
     }
+    function hasPendingEditModeSave() {
+      if (!document.body.classList.contains('editing')) return false;
+      const saveBtn = document.getElementById('saveChangesBtn');
+      const saveButtonVisible = saveBtn && getComputedStyle(saveBtn).display !== 'none';
+      return hasChanges() || hasUnsavedEditDraft || saveButtonVisible;
+    }
+
+    async function savePendingEditModeChanges() {
+      if (!hasPendingEditModeSave()) return true;
+      if (typeof saveEditDraftNow === 'function') saveEditDraftNow();
+      return await saveChangesToFirestore();
+    }
+
     async function exitEditMode(){
-      if (hasChanges()) {
-        const saved = await saveChangesToFirestore();
-        if (!saved) return false;
-      }
+      const saved = await savePendingEditModeChanges();
+      if (!saved) return false;
       isOwner = false; // Reset owner status when exiting edit mode
       document.body.classList.remove('editing');
       syncMobileHomeNewsCards();
