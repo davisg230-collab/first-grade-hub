@@ -34,6 +34,10 @@ service cloud.firestore {
       allow read, write: if isTeacherEditor();
     }
 
+    match /curriculumPlans/{planId} {
+      allow read, write: if isTeacherEditor();
+    }
+
     match /curriculumModuleInfo/{moduleInfoId} {
       allow read, write: if isTeacherEditor();
     }
