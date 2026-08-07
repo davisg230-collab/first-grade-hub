@@ -1900,6 +1900,61 @@
       min-height: 4.2rem;
       resize: vertical;
     }
+    .curriculum-plan-toggle-grid,
+    .curriculum-plan-principal-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+      gap: .65rem;
+    }
+    .curriculum-plan-toggle {
+      display: flex;
+      align-items: center;
+      gap: .55rem;
+      min-height: 2.65rem;
+      border: 1px solid color-mix(in oklab, var(--md-slate) 16%, var(--md-white));
+      border-radius: .75rem;
+      background: color-mix(in oklab, var(--md-white) 92%, var(--md-pebble));
+      padding: .55rem .7rem;
+      color: var(--md-slate);
+      font-size: .86rem;
+      font-weight: 800;
+    }
+    .curriculum-plan-toggle input {
+      width: 1rem;
+      height: 1rem;
+      accent-color: var(--md-coral);
+      flex: 0 0 auto;
+    }
+    .curriculum-plan-section-list {
+      display: grid;
+      gap: .75rem;
+    }
+    .curriculum-plan-section {
+      border: 1px solid color-mix(in oklab, var(--md-slate) 18%, var(--md-white));
+      border-radius: .85rem;
+      background: color-mix(in oklab, var(--md-white) 94%, var(--md-pebble));
+      padding: .85rem;
+    }
+    .curriculum-plan-section-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: .55rem;
+      align-items: center;
+      margin-bottom: .55rem;
+    }
+    .curriculum-plan-section-remove {
+      min-height: 2.35rem;
+      border-radius: .65rem;
+      background: #dc2626;
+      color: var(--md-white);
+      font-size: .78rem;
+      font-weight: 900;
+      padding: .4rem .7rem;
+    }
+    .curriculum-plan-section textarea {
+      min-height: 7.5rem;
+      resize: vertical;
+    }
     .curriculum-library-tabs {
       display: flex;
       flex-wrap: wrap;
@@ -2336,6 +2391,54 @@
     .curriculum-browser-selection-tools[hidden] {
       display: none;
     }
+    .curriculum-plan-calendar-grid {
+      display: grid;
+      gap: .75rem;
+    }
+    .curriculum-plan-calendar-row {
+      display: grid;
+      grid-template-columns: minmax(7rem, .8fr) repeat(3, minmax(0, 1fr)) auto;
+      gap: .65rem;
+      align-items: end;
+      border: 1px solid color-mix(in oklab, var(--md-slate) 18%, var(--md-white));
+      border-radius: .9rem;
+      background: color-mix(in oklab, var(--md-white) 92%, var(--md-pebble));
+      padding: .85rem;
+    }
+    .curriculum-plan-date-control {
+      display: flex;
+      align-items: center;
+      gap: .55rem;
+      min-width: 0;
+      color: var(--md-slate);
+      font-weight: 900;
+    }
+    .curriculum-plan-date-control input {
+      width: 1.05rem;
+      height: 1.05rem;
+      accent-color: var(--md-coral);
+      flex: 0 0 auto;
+    }
+    .curriculum-plan-calendar-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .45rem;
+      justify-content: flex-end;
+    }
+    .curriculum-plan-calendar-actions button,
+    .curriculum-plan-card-actions button {
+      border-radius: .65rem;
+      font-size: .78rem;
+      font-weight: 900;
+      min-height: 2.25rem;
+      padding: .4rem .65rem;
+    }
+    .curriculum-plan-card-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .45rem;
+      margin-top: .65rem;
+    }
     .curriculum-lesson-detail-panel {
       min-width: 0;
       max-height: 34rem;
@@ -2627,6 +2730,17 @@
       .curriculum-lesson-modal-open-actions {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .curriculum-plan-calendar-row {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+      }
+      .curriculum-plan-calendar-actions {
+        justify-content: stretch;
+      }
+      .curriculum-plan-calendar-actions button,
+      .curriculum-plan-card-actions button {
+        flex: 1 1 calc(50% - .25rem);
       }
       .curriculum-lesson-modal-nav .curriculum-lesson-modal-button:nth-child(3) {
         order: 4;
@@ -3771,10 +3885,27 @@
           </div>
         </div>
 
+        <div id="curriculumPlanViewModal" class="lesson-detail-modal" onclick="if(event.target === this) closeCurriculumPlanViewModal()">
+          <div class="lesson-detail-card curriculum-lesson-view-card p-5 sm:p-6" onclick="event.stopPropagation();">
+            <div class="curriculum-lesson-modal-header flex items-start justify-between gap-4 mb-4">
+              <div>
+                <p id="curriculumPlanViewModalMeta" class="text-sm font-bold uppercase tracking-wide" style="color: var(--md-coral);">Plan details</p>
+                <h3 id="curriculumPlanViewModalTitle" class="text-2xl font-display font-bold" style="color: var(--md-slate);">Plan details</h3>
+              </div>
+              <button type="button" class="w-9 h-9 rounded-full text-white font-bold" style="background: var(--md-slate);" onclick="closeCurriculumPlanViewModal()" aria-label="Close plan details">&times;</button>
+            </div>
+            <div id="curriculumPlanViewModalBody"></div>
+            <div id="curriculumPlanViewModalActions" class="curriculum-lesson-modal-actions"></div>
+          </div>
+        </div>
+
         <div id="curriculumWorkspace" style="display: none;">
           <div class="curriculum-library-tabs" role="tablist" aria-label="Curriculum Library">
             <button id="curriculumTabUpload" type="button" class="curriculum-library-tab active" data-curriculum-tab="upload" onclick="showCurriculumLibraryTab('upload')">Upload / AI Draft</button>
             <button id="curriculumTabBrowse" type="button" class="curriculum-library-tab" data-curriculum-tab="browse" onclick="showCurriculumLibraryTab('browse')">Browse Lessons</button>
+            <button id="curriculumTabPlanAnalyzer" type="button" class="curriculum-library-tab" data-curriculum-tab="plan-analyzer" onclick="showCurriculumLibraryTab('plan-analyzer')">Plan Analyzer</button>
+            <button id="curriculumTabPlans" type="button" class="curriculum-library-tab" data-curriculum-tab="plans" onclick="showCurriculumLibraryTab('plans')">Plan Library</button>
+            <button id="curriculumTabPlanCalendar" type="button" class="curriculum-library-tab" data-curriculum-tab="plan-calendar" onclick="showCurriculumLibraryTab('plan-calendar')">Plan Calendar</button>
           </div>
           <div id="curriculumStatus" class="mb-4 text-sm font-semibold text-gray-600" aria-live="polite"></div>
           <div id="curriculumLessonFilterPanel" class="curriculum-builder-panel rounded-2xl p-4 mb-4" style="display: none;">
@@ -3974,6 +4105,190 @@
                   Print Upcoming Week
                 </button>
               </div>
+            </div>
+          </div>
+          <div id="curriculumTabPanelPlanAnalyzer" class="curriculum-tab-panel space-y-4" data-curriculum-panel="plan-analyzer">
+            <div class="curriculum-builder-panel curriculum-mobile-section rounded-2xl p-5" data-curriculum-mobile-section="plan-source">
+              <button type="button" class="curriculum-mobile-section-toggle" aria-expanded="false" onclick="toggleCurriculumMobileSection(this)">
+                <span>
+                  Upload Plan Source
+                  <span class="curriculum-mobile-section-subtitle">Subject block, module, lesson PDF, and section toggles</span>
+                </span>
+              </button>
+              <div class="curriculum-mobile-section-body">
+                <div class="grid sm:grid-cols-3 gap-3 mb-4">
+                  <div>
+                    <label class="curriculum-builder-label" for="curriculumPlanSubjectInput">Plan type</label>
+                    <select id="curriculumPlanSubjectInput" class="curriculum-builder-field" onchange="renderCurriculumPlanToggleDefaults()">
+                      <option value="skills">Skills Plan Analyzer</option>
+                      <option value="listening">Listening &amp; Learning Plan Analyzer</option>
+                      <option value="math">Math Plan Analyzer</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="curriculum-builder-label" for="curriculumPlanUnitInput">Unit / Module</label>
+                    <input id="curriculumPlanUnitInput" class="curriculum-builder-field" type="text" placeholder="Unit 1 or Module 2">
+                  </div>
+                  <div>
+                    <label class="curriculum-builder-label" for="curriculumPlanLessonNumberInput">Lesson</label>
+                    <input id="curriculumPlanLessonNumberInput" class="curriculum-builder-field" type="text" placeholder="Lesson 4">
+                  </div>
+                </div>
+                <div class="mb-4">
+                  <label class="curriculum-builder-label" for="curriculumPlanLessonTitleInput">Optional title</label>
+                  <input id="curriculumPlanLessonTitleInput" class="curriculum-builder-field" type="text" placeholder="Leave blank if the AI should find it">
+                </div>
+                <div class="mb-4">
+                  <label class="curriculum-builder-label" for="curriculumPlanPdfInput">Lesson PDF</label>
+                  <input id="curriculumPlanPdfInput" type="file" accept="application/pdf,.pdf" style="display: none;" onchange="extractCurriculumPlanPdfText(event)">
+                  <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+                    <button id="curriculumPlanPdfSelectBtn" type="button" class="curriculum-builder-button inline-flex items-center px-4 py-2 text-white" style="background: var(--md-slate);" onclick="document.getElementById('curriculumPlanPdfInput').click();">
+                      Choose PDF
+                    </button>
+                    <span id="curriculumPlanPdfStatus" class="text-sm font-semibold text-gray-600"></span>
+                  </div>
+                </div>
+                <div class="mb-4">
+                  <label class="curriculum-builder-label" for="curriculumPlanSourceTextInput">Lesson source text</label>
+                  <textarea id="curriculumPlanSourceTextInput" class="curriculum-builder-field" rows="10" placeholder="Paste one lesson here, or choose a PDF above."></textarea>
+                </div>
+                <div class="mb-4">
+                  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+                    <label class="curriculum-builder-label mb-0">Generate sections</label>
+                    <button id="curriculumPlanSaveDefaultsBtn" type="button" class="text-xs font-bold underline" style="color: var(--md-slate);" onclick="saveCurriculumPlanToggleDefaults()">Save as Defaults</button>
+                  </div>
+                  <div id="curriculumPlanToggleGrid" class="curriculum-plan-toggle-grid"></div>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-2 mt-4">
+                  <button id="curriculumPlanAnalyzeBtn" class="curriculum-builder-button inline-flex items-center px-5 py-3 text-white" style="background: var(--md-coral);" onclick="analyzeCurriculumPlan()">
+                    Analyze Plan
+                  </button>
+                  <button id="curriculumPlanSaveBtn" class="curriculum-builder-button inline-flex items-center px-5 py-3 text-white" style="background: var(--md-slate);" onclick="saveCurriculumPlan()">
+                    Save Plan
+                  </button>
+                  <button id="curriculumPlanClearBtn" type="button" class="curriculum-builder-button inline-flex items-center px-5 py-3" style="background: var(--md-pebble); color: var(--md-ink);" onclick="clearCurriculumPlanBuilderForm()">
+                    New Draft
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="curriculum-builder-panel curriculum-mobile-section rounded-2xl p-5" data-curriculum-mobile-section="plan-draft">
+              <button type="button" class="curriculum-mobile-section-toggle" aria-expanded="false" onclick="toggleCurriculumMobileSection(this)">
+                <span>
+                  Plan Draft
+                  <span class="curriculum-mobile-section-subtitle">Edit, delete, add, and save Teacher/Sub and Principal views</span>
+                </span>
+              </button>
+              <div class="curriculum-mobile-section-body">
+                <h3 class="curriculum-mobile-section-heading text-xl font-display font-bold mb-4" style="color: var(--md-slate);">Plan Draft</h3>
+                <div class="grid md:grid-cols-2 gap-3 mb-4">
+                  <div>
+                    <label class="curriculum-builder-label" for="curriculumPlanTitleOutput">Plan title</label>
+                    <input id="curriculumPlanTitleOutput" class="curriculum-builder-field" type="text" placeholder="Plan title">
+                  </div>
+                  <div>
+                    <label class="curriculum-builder-label" for="curriculumPlanICanOutput">I Can statement</label>
+                    <input id="curriculumPlanICanOutput" class="curriculum-builder-field" type="text" placeholder="I can...">
+                  </div>
+                </div>
+                <div class="mb-5">
+                  <div class="flex items-center justify-between gap-2 mb-2">
+                    <h4 class="font-display font-bold" style="color: var(--md-coral);">Teacher/Sub View</h4>
+                    <button type="button" class="curriculum-builder-button inline-flex px-3 py-2 text-white" style="background: var(--md-slate); min-height: 2.35rem;" onclick="addCurriculumPlanSection()">Add Section</button>
+                  </div>
+                  <div id="curriculumPlanSectionList" class="curriculum-plan-section-list">
+                    <p class="text-sm text-gray-500">Analyze a plan or add a section to start.</p>
+                  </div>
+                </div>
+                <div>
+                  <h4 class="font-display font-bold mb-2" style="color: var(--md-coral);">Principal View</h4>
+                  <div class="curriculum-plan-principal-grid">
+                    <div>
+                      <label class="curriculum-builder-label" for="curriculumPlanPrincipalTeacherOutput">Teacher is doing</label>
+                      <textarea id="curriculumPlanPrincipalTeacherOutput" class="curriculum-builder-field" rows="3"></textarea>
+                    </div>
+                    <div>
+                      <label class="curriculum-builder-label" for="curriculumPlanPrincipalScholarsOutput">Scholars are doing</label>
+                      <textarea id="curriculumPlanPrincipalScholarsOutput" class="curriculum-builder-field" rows="3"></textarea>
+                    </div>
+                    <div>
+                      <label class="curriculum-builder-label" for="curriculumPlanPrincipalRotationsOutput">Brief rotation bullets</label>
+                      <textarea id="curriculumPlanPrincipalRotationsOutput" class="curriculum-builder-field" rows="4" placeholder="One per line"></textarea>
+                    </div>
+                    <div>
+                      <label class="curriculum-builder-label" for="curriculumPlanPrincipalEvidenceOutput">Evidence / data collected</label>
+                      <textarea id="curriculumPlanPrincipalEvidenceOutput" class="curriculum-builder-field" rows="3"></textarea>
+                    </div>
+                    <div>
+                      <label class="curriculum-builder-label" for="curriculumPlanPrincipalInterventionOutput">Intervention overview</label>
+                      <textarea id="curriculumPlanPrincipalInterventionOutput" class="curriculum-builder-field" rows="3"></textarea>
+                    </div>
+                    <div>
+                      <label class="curriculum-builder-label" for="curriculumPlanMissingOutput">Missing or check before teaching</label>
+                      <textarea id="curriculumPlanMissingOutput" class="curriculum-builder-field" rows="3" placeholder="One per line"></textarea>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="curriculumTabPanelPlans" class="curriculum-tab-panel curriculum-builder-panel rounded-2xl p-5 mt-4" data-curriculum-panel="plans">
+            <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3 mb-4">
+              <div>
+                <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">Plan Library</h3>
+                <p class="text-sm text-[color:var(--md-ink)]/75 mt-1">Open reusable subject-block plans for teaching, principal review, printing, and calendar assignment.</p>
+              </div>
+              <span id="curriculumPlanLibraryCount" class="text-sm font-bold text-gray-500">0 plans</span>
+            </div>
+            <div class="grid md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] gap-3 md:items-end mb-4">
+              <div>
+                <label class="curriculum-builder-label" for="curriculumPlanLibrarySubjectFilter">Plan type</label>
+                <select id="curriculumPlanLibrarySubjectFilter" class="curriculum-builder-field" onchange="renderCurriculumPlanLibrary()">
+                  <option value="all">All plan types</option>
+                  <option value="skills">Skills</option>
+                  <option value="listening">Listening &amp; Learning</option>
+                  <option value="math">Math</option>
+                </select>
+              </div>
+              <div>
+                <label class="curriculum-builder-label" for="curriculumPlanLibrarySearchInput">Search</label>
+                <input id="curriculumPlanLibrarySearchInput" class="curriculum-builder-field" type="search" placeholder="Search module, lesson, plan, I Can..." oninput="renderCurriculumPlanLibrary()">
+              </div>
+            </div>
+            <div class="curriculum-browser-layout">
+              <div id="curriculumPlanLibraryList" class="curriculum-browser-list grid gap-2">
+                <p class="text-sm text-gray-500">Sign in to browse saved plans.</p>
+              </div>
+              <div id="curriculumPlanDetailPanel" class="curriculum-lesson-detail-panel">
+                <p class="text-sm text-gray-500">Choose a plan to view the saved Teacher/Sub and Principal views.</p>
+              </div>
+            </div>
+          </div>
+
+          <div id="curriculumTabPanelPlanCalendar" class="curriculum-tab-panel curriculum-builder-panel rounded-2xl p-5 mt-4" data-curriculum-panel="plan-calendar">
+            <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3 mb-4">
+              <div>
+                <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">Lesson Plan Calendar</h3>
+                <p class="text-sm text-[color:var(--md-ink)]/75 mt-1">Assign saved Skills, Listening &amp; Learning, and Math plans to each date as your pacing guide.</p>
+              </div>
+              <div class="flex flex-col sm:flex-row gap-2">
+                <button type="button" class="curriculum-builder-button inline-flex px-4 py-2 text-white" style="background: var(--md-coral);" onclick="viewSelectedCurriculumPlanDates()">View Selected</button>
+                <button type="button" class="curriculum-builder-button inline-flex px-4 py-2 text-white" style="background: var(--md-slate);" onclick="printSelectedCurriculumPlanDates('teacher')">Print Teacher/Sub Plans</button>
+                <button type="button" class="curriculum-builder-button inline-flex px-4 py-2 text-white" style="background: var(--md-slate);" onclick="printSelectedCurriculumPlanDates('principal')">Print Principal Plans</button>
+              </div>
+            </div>
+            <div class="grid md:grid-cols-[minmax(0,14rem)_auto_auto] gap-3 md:items-end mb-4">
+              <div>
+                <label class="curriculum-builder-label" for="curriculumPlanCalendarWeekInput">Week of</label>
+                <input id="curriculumPlanCalendarWeekInput" class="curriculum-builder-field" type="date" onchange="renderCurriculumPlanCalendar()">
+              </div>
+              <button type="button" class="curriculum-builder-button inline-flex px-4 py-2" style="background: var(--md-pebble); color: var(--md-ink);" onclick="setCurriculumPlanCalendarToCurrentWeek()">This Week</button>
+              <button type="button" class="curriculum-builder-button inline-flex px-4 py-2 text-white" style="background: var(--md-coral);" onclick="printCurriculumPlanWeek()">Print Week</button>
+            </div>
+            <div id="curriculumPlanCalendarGrid" class="curriculum-plan-calendar-grid">
+              <p class="text-sm text-gray-500">Saved plans will appear here after sign-in.</p>
             </div>
           </div>
         </div>
@@ -5449,6 +5764,22 @@
       { short: 'F', title: 'Friday' }
     ];
     const curriculumSubjects = ['skills', 'listening', 'math'];
+    const curriculumPlanToggleDefinitions = [
+      { key: 'teacherScript', label: 'Teacher Script' },
+      { key: 'materials', label: 'Materials' },
+      { key: 'pageNumbers', label: 'Page Numbers' },
+      { key: 'groupA', label: 'Group A Tasks' },
+      { key: 'groupB', label: 'Group B Tasks' },
+      { key: 'groupC', label: 'Group C Tasks' },
+      { key: 'handwriting', label: 'Handwriting' },
+      { key: 'reading', label: 'Reading' },
+      { key: 'writing', label: 'Writing' },
+      { key: 'learningGames', label: 'Learning Games / Data Check' },
+      { key: 'guidedWork', label: 'Guided Work' },
+      { key: 'independentEvidence', label: 'Independent Evidence' },
+      { key: 'intervention', label: 'Intervention Work' },
+      { key: 'extensions', label: 'Extensions' }
+    ];
     const curriculumMissingStandardsReferenceMessage = 'Official wording missing from standards reference';
     const approvedEditorEmails = [
       'davisg230@gmail.com',
@@ -5456,19 +5787,27 @@
       'lvest@crossroadsschoolskc.org'
     ];
     let curriculumLessonsCache = [];
+    let curriculumPlansCache = [];
     let curriculumModuleInfoCache = Object.create(null);
     let curriculumModuleInfoState = null;
     let curriculumElaStandardsReferenceCache = null;
     let curriculumModuleInfoPageIndex = 0;
     let curriculumActiveLessonId = '';
+    let curriculumActivePlanId = '';
     let curriculumWeeklyPlan = getEmptyCurriculumWeeklyPlan();
+    let curriculumPlanCalendar = getEmptyCurriculumPlanCalendar();
     let curriculumLastPdfSuggestedTitle = '';
+    let curriculumPlanLastPdfSuggestedTitle = '';
+    let curriculumPlanToggleDefaults = getDefaultCurriculumPlanToggleSettings();
     let curriculumPdfJsLoadPromise = null;
     let curriculumToolView = 'shelf';
     let curriculumSchedulePickerLessonId = '';
     let curriculumSelectedLessonIds = new Set();
     let curriculumActiveBrowserLessonId = '';
     let curriculumLessonViewModalLessonId = '';
+    let curriculumActivePlanLibraryId = '';
+    let curriculumPlanViewModalPlanId = '';
+    let curriculumSelectedPlanDateKeys = new Set();
     let curriculumActiveLibraryTab = 'upload';
     let teacherRosterUnlocked = false;
     let rosterEditMode = false;
@@ -5803,33 +6142,49 @@
         console.warn('Teacher Tools sign-out failed:', error);
       }
       curriculumLessonsCache = [];
+      curriculumPlansCache = [];
       curriculumActiveLessonId = '';
+      curriculumActivePlanId = '';
       curriculumSelectedLessonIds = new Set();
       curriculumActiveBrowserLessonId = '';
       curriculumLessonViewModalLessonId = '';
+      curriculumActivePlanLibraryId = '';
+      curriculumPlanViewModalPlanId = '';
+      curriculumSelectedPlanDateKeys = new Set();
       curriculumActiveLibraryTab = 'upload';
       teacherRosterUnlocked = false;
       setRosterEditMode(false);
       curriculumWeeklyPlan = getEmptyCurriculumWeeklyPlan();
+      curriculumPlanCalendar = getEmptyCurriculumPlanCalendar();
       curriculumToolView = 'shelf';
       showCurriculumWorkspace(false);
       setCurriculumPdfStatus('');
+      setCurriculumPlanPdfStatus('');
       setCurriculumStatus('');
       const list = document.getElementById('curriculumLibraryList');
       const browserList = document.getElementById('curriculumLessonBrowserList');
       const browserDetail = document.getElementById('curriculumLessonDetailPanel');
+      const planList = document.getElementById('curriculumPlanLibraryList');
+      const planDetail = document.getElementById('curriculumPlanDetailPanel');
       const selectedCount = document.getElementById('curriculumSelectedLessonCount');
       const selectionTools = document.getElementById('curriculumBrowserSelectionTools');
       const count = document.getElementById('curriculumLibraryCount');
+      const planCount = document.getElementById('curriculumPlanLibraryCount');
       const preview = document.getElementById('curriculumWeekPreview');
+      const planCalendar = document.getElementById('curriculumPlanCalendarGrid');
       closeCurriculumLessonViewModal();
+      closeCurriculumPlanViewModal();
       if (count) count.textContent = '0';
+      if (planCount) planCount.textContent = '0 plans';
       if (selectedCount) selectedCount.textContent = '0 selected';
       if (selectionTools) selectionTools.hidden = true;
       if (list) list.innerHTML = '<p class="text-sm text-gray-500">Sign in to load saved lessons.</p>';
       if (browserList) browserList.innerHTML = '<p class="text-sm text-gray-500">Sign in to browse saved lessons.</p>';
       if (browserDetail) browserDetail.innerHTML = '<p class="text-sm text-gray-500">Choose a lesson to view the full saved details.</p>';
+      if (planList) planList.innerHTML = '<p class="text-sm text-gray-500">Sign in to browse saved plans.</p>';
+      if (planDetail) planDetail.innerHTML = '<p class="text-sm text-gray-500">Choose a plan to view the saved Teacher/Sub and Principal views.</p>';
       if (preview) preview.innerHTML = '<p class="text-sm text-gray-500">No lessons picked yet.</p>';
+      if (planCalendar) planCalendar.innerHTML = '<p class="text-sm text-gray-500">Saved plans will appear here after sign-in.</p>';
       if (document.querySelector('[data-page-panel="roster"].active')) showPage('home');
     }
 
@@ -5895,7 +6250,7 @@
     }
 
     function showCurriculumLibraryTab(tabId = 'upload') {
-      const validTabs = ['upload', 'browse'];
+      const validTabs = ['upload', 'browse', 'plan-analyzer', 'plans', 'plan-calendar'];
       const activeTab = validTabs.includes(tabId) ? tabId : 'upload';
       curriculumActiveLibraryTab = activeTab;
       document.querySelectorAll('[data-curriculum-tab]').forEach(button => {
@@ -5907,10 +6262,19 @@
         panel.classList.toggle('active', panel.dataset.curriculumPanel === activeTab);
       });
       const filterPanel = document.getElementById('curriculumLessonFilterPanel');
-      if (filterPanel) filterPanel.style.display = activeTab === 'upload' ? 'none' : 'block';
+      if (filterPanel) filterPanel.style.display = activeTab === 'browse' ? 'block' : 'none';
       if (activeTab === 'browse') {
         renderCurriculumLibraryList();
         renderCurriculumWeekPreview();
+      }
+      if (activeTab === 'plan-analyzer') {
+        renderCurriculumPlanToggleDefaults();
+      }
+      if (activeTab === 'plans') {
+        renderCurriculumPlanLibrary();
+      }
+      if (activeTab === 'plan-calendar') {
+        renderCurriculumPlanCalendar();
       }
     }
 
@@ -5949,7 +6313,7 @@
       if (!title || !description) return;
       if (curriculumToolView === 'curriculum') {
         title.textContent = 'Curriculum Library';
-        description.textContent = 'Use the tabs to upload AI lesson drafts, browse saved lessons, or plan the week for parent pages.';
+        description.textContent = 'Use lesson analyzers, plan analyzers, saved libraries, and calendars from one private teacher workspace.';
       } else {
         title.textContent = 'Teacher Tools';
         description.textContent = 'Choose a tool from your private teacher shelf.';
@@ -5965,6 +6329,13 @@
 
     function setCurriculumPdfStatus(message, type = 'info') {
       const status = document.getElementById('curriculumPdfStatus');
+      if (!status) return;
+      status.textContent = message || '';
+      status.style.color = type === 'error' ? '#dc2626' : (type === 'success' ? '#15803d' : '#4b5563');
+    }
+
+    function setCurriculumPlanPdfStatus(message, type = 'info') {
+      const status = document.getElementById('curriculumPlanPdfStatus');
       if (!status) return;
       status.textContent = message || '';
       status.style.color = type === 'error' ? '#dc2626' : (type === 'success' ? '#15803d' : '#4b5563');
@@ -6534,6 +6905,8 @@
         showCurriculumWorkspace(true);
         const snapshot = await db.collection('curriculumLessons').orderBy('updatedAt', 'desc').limit(500).get();
         curriculumLessonsCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        await loadCurriculumPlans();
+        await loadCurriculumPlanDefaults();
         await loadCurriculumModuleInfo();
         const lessonIds = new Set(curriculumLessonsCache.map(lesson => lesson.id));
         curriculumSelectedLessonIds = new Set(Array.from(curriculumSelectedLessonIds).filter(id => lessonIds.has(id)));
@@ -6541,8 +6914,12 @@
           curriculumActiveBrowserLessonId = '';
         }
         await loadCurriculumWeeklyPlan();
+        await loadCurriculumPlanCalendar();
         renderCurriculumLibraryList();
         renderCurriculumWeekPreview();
+        renderCurriculumPlanLibrary();
+        renderCurriculumPlanToggleDefaults();
+        renderCurriculumPlanCalendar();
       } catch (error) {
         console.error('Loading curriculum library failed:', error);
         setCurriculumStatus(error.message || 'Could not load saved lessons.', 'error');
@@ -8623,8 +9000,908 @@
       setCurriculumStatus('Ready for a new lesson.');
     }
 
+    function getDefaultCurriculumPlanToggleSettings() {
+      return curriculumSubjects.reduce((settings, subject) => {
+        settings[subject] = curriculumPlanToggleDefinitions.reduce((subjectSettings, item) => {
+          subjectSettings[item.key] = true;
+          return subjectSettings;
+        }, {});
+        return settings;
+      }, {});
+    }
+
+    function normalizeCurriculumPlanToggleSettings(value) {
+      const defaults = getDefaultCurriculumPlanToggleSettings();
+      curriculumSubjects.forEach(subject => {
+        const subjectValue = value && value[subject] && typeof value[subject] === 'object' ? value[subject] : {};
+        curriculumPlanToggleDefinitions.forEach(item => {
+          if (Object.prototype.hasOwnProperty.call(subjectValue, item.key)) {
+            defaults[subject][item.key] = subjectValue[item.key] !== false;
+          }
+        });
+      });
+      return defaults;
+    }
+
+    function getCurriculumPlanSubject() {
+      const subject = document.getElementById('curriculumPlanSubjectInput')?.value || 'skills';
+      return curriculumSubjects.includes(subject) ? subject : 'skills';
+    }
+
+    function getCurriculumPlanToggleSettings() {
+      const settings = {};
+      curriculumPlanToggleDefinitions.forEach(item => {
+        const input = document.querySelector(`[data-plan-toggle="${item.key}"]`);
+        settings[item.key] = input ? input.checked : true;
+      });
+      return settings;
+    }
+
+    function renderCurriculumPlanToggleDefaults() {
+      const grid = document.getElementById('curriculumPlanToggleGrid');
+      if (!grid) return;
+      const subject = getCurriculumPlanSubject();
+      const subjectDefaults = normalizeCurriculumPlanToggleSettings(curriculumPlanToggleDefaults)[subject] || {};
+      grid.innerHTML = curriculumPlanToggleDefinitions.map(item => `
+        <label class="curriculum-plan-toggle">
+          <input type="checkbox" data-plan-toggle="${escapeHtml(item.key)}" ${subjectDefaults[item.key] !== false ? 'checked' : ''}>
+          <span>${escapeHtml(item.label)}</span>
+        </label>
+      `).join('');
+    }
+
+    async function loadCurriculumPlanDefaults() {
+      curriculumPlanToggleDefaults = getDefaultCurriculumPlanToggleSettings();
+      if (!db) return;
+      try {
+        const doc = await db.collection('classData').doc('current').get();
+        const data = doc.exists ? doc.data() : {};
+        if (data && data.curriculum_plan_toggle_defaults_json) {
+          curriculumPlanToggleDefaults = normalizeCurriculumPlanToggleSettings(JSON.parse(data.curriculum_plan_toggle_defaults_json));
+        }
+      } catch (error) {
+        console.warn('Plan Analyzer defaults could not be loaded:', error);
+        curriculumPlanToggleDefaults = getDefaultCurriculumPlanToggleSettings();
+      }
+    }
+
+    async function saveCurriculumPlanToggleDefaults() {
+      try {
+        const user = await ensureCurriculumTeacherUser();
+        if (!user) return;
+        if (!db) throw new Error('The Plan Analyzer defaults cannot be saved right now.');
+        const subject = getCurriculumPlanSubject();
+        curriculumPlanToggleDefaults = normalizeCurriculumPlanToggleSettings(curriculumPlanToggleDefaults);
+        curriculumPlanToggleDefaults[subject] = getCurriculumPlanToggleSettings();
+        await db.collection('classData').doc('current').set({
+          curriculum_plan_toggle_defaults_json: JSON.stringify(curriculumPlanToggleDefaults)
+        }, { merge: true });
+        setCurriculumStatus(`${getCurriculumSubjectLabel(subject)} Plan Analyzer defaults saved.`, 'success');
+      } catch (error) {
+        console.error('Saving Plan Analyzer defaults failed:', error);
+        setCurriculumStatus(error.message || 'Plan Analyzer defaults could not be saved.', 'error');
+      }
+    }
+
+    async function extractCurriculumPlanPdfText(event) {
+      const input = event && event.target ? event.target : document.getElementById('curriculumPlanPdfInput');
+      const file = input && input.files && input.files[0];
+      if (!file) return;
+      const selectedSubject = getCurriculumPlanSubject();
+
+      try {
+        clearCurriculumPlanBuilderForm({ keepSubject: true, keepToggles: true });
+        setInputValue('curriculumPlanSubjectInput', selectedSubject);
+        setCurriculumBusy(true, 'Reading plan PDF...');
+        setCurriculumPlanPdfStatus('Reading PDF...');
+        const result = await readCurriculumPdfText(file);
+        setInputValue('curriculumPlanSourceTextInput', result.text);
+        applyCurriculumPlanPdfGuesses(file.name, result.text);
+        setCurriculumPlanPdfStatus(`${result.pageCount} page PDF loaded.`, 'success');
+        setCurriculumStatus(result.text.length > 22000 ? 'PDF text loaded. It is long, so trim it to one lesson before analyzing the plan.' : 'PDF text loaded. Review it, then analyze the classroom block plan.', 'success');
+      } catch (error) {
+        console.error('Plan PDF text extraction failed:', error);
+        setCurriculumPlanPdfStatus('PDF not loaded.', 'error');
+        setCurriculumStatus(error.message || 'The plan PDF could not be read.', 'error');
+      } finally {
+        if (input) input.value = '';
+        setCurriculumBusy(false);
+      }
+    }
+
+    function applyCurriculumPlanPdfGuesses(fileName, text) {
+      const guess = inferCurriculumLessonDetails(fileName, text);
+      if (guess.unitOrModule && !document.getElementById('curriculumPlanUnitInput')?.value.trim()) {
+        setInputValue('curriculumPlanUnitInput', formatCurriculumUnitOrModule(guess.unitOrModule));
+      }
+      if (guess.lessonNumber && !document.getElementById('curriculumPlanLessonNumberInput')?.value.trim()) {
+        setInputValue('curriculumPlanLessonNumberInput', guess.lessonNumber);
+      }
+      const currentTitle = document.getElementById('curriculumPlanLessonTitleInput')?.value.trim() || '';
+      if (looksLikeCurriculumFileTitle(currentTitle)) {
+        curriculumPlanLastPdfSuggestedTitle = '';
+        setInputValue('curriculumPlanLessonTitleInput', '');
+      }
+      if (guess.lessonTitle && !document.getElementById('curriculumPlanLessonTitleInput')?.value.trim()) {
+        curriculumPlanLastPdfSuggestedTitle = guess.lessonTitle;
+        setInputValue('curriculumPlanLessonTitleInput', guess.lessonTitle);
+      }
+    }
+
+    function collectCurriculumPlanRequestPayload() {
+      const lessonTitle = document.getElementById('curriculumPlanLessonTitleInput')?.value.trim() || '';
+      return {
+        subject: getCurriculumPlanSubject(),
+        unitOrModule: formatCurriculumUnitOrModule(document.getElementById('curriculumPlanUnitInput')?.value || ''),
+        lessonNumber: document.getElementById('curriculumPlanLessonNumberInput')?.value.trim() || '',
+        lessonTitle: lessonTitle === curriculumPlanLastPdfSuggestedTitle || looksLikeCurriculumFileTitle(lessonTitle) ? '' : lessonTitle,
+        sourceText: document.getElementById('curriculumPlanSourceTextInput')?.value.trim() || '',
+        toggleSettings: getCurriculumPlanToggleSettings()
+      };
+    }
+
+    async function analyzeCurriculumPlan() {
+      try {
+        const user = await ensureCurriculumTeacherUser();
+        if (!user) return;
+        if (!cloudFunctions) {
+          throw new Error('The AI connection is not available. Please refresh and try again.');
+        }
+        const payload = collectCurriculumPlanRequestPayload();
+        if (!payload.sourceText || payload.sourceText.length < 40) {
+          throw new Error('Paste or upload one full lesson first so the Plan Analyzer has enough to read.');
+        }
+        if (payload.sourceText.length > 22000) {
+          throw new Error('Trim the lesson text to one lesson before running the Plan Analyzer.');
+        }
+        setCurriculumBusy(true, 'Analyzing classroom block plan...');
+        const analyzePlan = cloudFunctions.httpsCallable('analyzeCurriculumPlan');
+        const result = await analyzePlan(payload);
+        const analysis = result && result.data ? result.data.analysis : null;
+        if (!analysis) {
+          throw new Error('The AI did not return a plan draft.');
+        }
+        applyCurriculumPlanAnalysis(analysis);
+        setCurriculumStatus('Plan draft ready. Edit, delete, or add sections before saving to the Plan Library.', 'success');
+      } catch (error) {
+        console.error('Curriculum plan analysis failed:', error);
+        setCurriculumStatus(error.message || 'Plan analysis failed.', 'error');
+      } finally {
+        setCurriculumBusy(false);
+      }
+    }
+
+    function normalizeCurriculumPlanSections(value) {
+      if (!Array.isArray(value)) return [];
+      return value.map((section, index) => ({
+        key: String(section && section.key || `section-${index + 1}`).trim(),
+        title: String(section && section.title || `Section ${index + 1}`).trim(),
+        body: String(section && section.body || '').trim()
+      })).filter(section => section.title || section.body);
+    }
+
+    function normalizeCurriculumPlanPrincipalView(value = {}) {
+      const view = value && typeof value === 'object' ? value : {};
+      return {
+        teacherDoing: String(view.teacherDoing || '').trim(),
+        scholarsDoing: String(view.scholarsDoing || '').trim(),
+        rotationBullets: Array.isArray(view.rotationBullets)
+          ? view.rotationBullets.map(item => String(item || '').trim()).filter(Boolean)
+          : linesToList(view.rotationBullets || ''),
+        evidenceCollected: String(view.evidenceCollected || '').trim(),
+        interventionOverview: String(view.interventionOverview || '').trim()
+      };
+    }
+
+    function applyCurriculumPlanAnalysis(analysis) {
+      const selectedSubject = curriculumSubjects.includes(analysis.subject) ? analysis.subject : getCurriculumPlanSubject();
+      const currentTitle = document.getElementById('curriculumPlanLessonTitleInput')?.value.trim() || '';
+      setInputValue('curriculumPlanSubjectInput', selectedSubject);
+      setInputValue('curriculumPlanUnitInput', formatCurriculumUnitOrModule(analysis.unitOrModule || document.getElementById('curriculumPlanUnitInput')?.value || ''));
+      setInputValue('curriculumPlanLessonNumberInput', formatCurriculumLessonNumber(analysis.lessonNumber || document.getElementById('curriculumPlanLessonNumberInput')?.value || ''));
+      if (!currentTitle || currentTitle === curriculumPlanLastPdfSuggestedTitle || looksLikeCurriculumFileTitle(currentTitle)) {
+        setInputValue('curriculumPlanLessonTitleInput', analysis.lessonTitle || analysis.planTitle || '');
+        curriculumPlanLastPdfSuggestedTitle = '';
+      }
+      setInputValue('curriculumPlanTitleOutput', analysis.planTitle || analysis.lessonTitle || currentTitle || '');
+      setInputValue('curriculumPlanICanOutput', analysis.iCanStatement || '');
+      renderCurriculumPlanSections(normalizeCurriculumPlanSections(analysis.teacherSubView || analysis.sections));
+      const principal = normalizeCurriculumPlanPrincipalView(analysis.principalView);
+      setInputValue('curriculumPlanPrincipalTeacherOutput', principal.teacherDoing);
+      setInputValue('curriculumPlanPrincipalScholarsOutput', principal.scholarsDoing);
+      setInputValue('curriculumPlanPrincipalRotationsOutput', principal.rotationBullets.join('\n'));
+      setInputValue('curriculumPlanPrincipalEvidenceOutput', principal.evidenceCollected);
+      setInputValue('curriculumPlanPrincipalInterventionOutput', principal.interventionOverview);
+      setInputValue('curriculumPlanMissingOutput', listToLines(analysis.missingInformation));
+      renderCurriculumPlanToggleDefaults();
+      openCurriculumMobileSection('plan-draft');
+    }
+
+    function getCurriculumPlanSectionMarkup(section = {}, index = 0) {
+      const normalized = {
+        key: section.key || `section-${Date.now()}-${index}`,
+        title: section.title || '',
+        body: section.body || ''
+      };
+      return `
+        <div class="curriculum-plan-section" data-plan-section-key="${escapeHtml(normalized.key)}">
+          <div class="curriculum-plan-section-header">
+            <input class="curriculum-builder-field" data-plan-section-title type="text" value="${escapeHtml(normalized.title)}" placeholder="Section title">
+            <button type="button" class="curriculum-plan-section-remove" onclick="removeCurriculumPlanSection(this)">Delete</button>
+          </div>
+          <textarea class="curriculum-builder-field" data-plan-section-body rows="6" placeholder="Write the teaching plan for this section.">${escapeHtml(normalized.body)}</textarea>
+        </div>
+      `;
+    }
+
+    function renderCurriculumPlanSections(sections = []) {
+      const list = document.getElementById('curriculumPlanSectionList');
+      if (!list) return;
+      const normalized = normalizeCurriculumPlanSections(sections);
+      list.innerHTML = normalized.length
+        ? normalized.map((section, index) => getCurriculumPlanSectionMarkup(section, index)).join('')
+        : '<p class="text-sm text-gray-500">Analyze a plan or add a section to start.</p>';
+    }
+
+    function addCurriculumPlanSection(section = {}) {
+      const list = document.getElementById('curriculumPlanSectionList');
+      if (!list) return;
+      if (!list.querySelector('.curriculum-plan-section')) list.innerHTML = '';
+      const index = list.querySelectorAll('.curriculum-plan-section').length;
+      list.insertAdjacentHTML('beforeend', getCurriculumPlanSectionMarkup({
+        key: section.key || `custom-${Date.now()}`,
+        title: section.title || 'New Section',
+        body: section.body || ''
+      }, index));
+    }
+
+    function removeCurriculumPlanSection(button) {
+      const section = button ? button.closest('.curriculum-plan-section') : null;
+      if (section) section.remove();
+      const list = document.getElementById('curriculumPlanSectionList');
+      if (list && !list.querySelector('.curriculum-plan-section')) {
+        list.innerHTML = '<p class="text-sm text-gray-500">Analyze a plan or add a section to start.</p>';
+      }
+    }
+
+    function collectCurriculumPlanSections() {
+      return Array.from(document.querySelectorAll('#curriculumPlanSectionList .curriculum-plan-section')).map((section, index) => ({
+        key: section.dataset.planSectionKey || `section-${index + 1}`,
+        title: section.querySelector('[data-plan-section-title]')?.value.trim() || `Section ${index + 1}`,
+        body: section.querySelector('[data-plan-section-body]')?.value.trim() || ''
+      })).filter(section => section.title || section.body);
+    }
+
+    function collectCurriculumPlanPrincipalView() {
+      return {
+        teacherDoing: document.getElementById('curriculumPlanPrincipalTeacherOutput')?.value.trim() || '',
+        scholarsDoing: document.getElementById('curriculumPlanPrincipalScholarsOutput')?.value.trim() || '',
+        rotationBullets: linesToList(document.getElementById('curriculumPlanPrincipalRotationsOutput')?.value || ''),
+        evidenceCollected: document.getElementById('curriculumPlanPrincipalEvidenceOutput')?.value.trim() || '',
+        interventionOverview: document.getElementById('curriculumPlanPrincipalInterventionOutput')?.value.trim() || ''
+      };
+    }
+
+    function collectCurriculumPlanDraft() {
+      const request = collectCurriculumPlanRequestPayload();
+      return {
+        subject: request.subject,
+        unitOrModule: request.unitOrModule,
+        lessonNumber: formatCurriculumLessonNumber(request.lessonNumber),
+        lessonTitle: request.lessonTitle || document.getElementById('curriculumPlanLessonTitleInput')?.value.trim() || '',
+        planTitle: document.getElementById('curriculumPlanTitleOutput')?.value.trim() || request.lessonTitle || '',
+        sourceText: request.sourceText,
+        toggleSettings: request.toggleSettings,
+        iCanStatement: document.getElementById('curriculumPlanICanOutput')?.value.trim() || '',
+        teacherSubView: collectCurriculumPlanSections(),
+        principalView: collectCurriculumPlanPrincipalView(),
+        missingInformation: linesToList(document.getElementById('curriculumPlanMissingOutput')?.value || '')
+      };
+    }
+
+    async function saveCurriculumPlan() {
+      try {
+        const user = await ensureCurriculumTeacherUser();
+        if (!user) return;
+        if (!db) throw new Error('The Plan Library is not available. Please refresh and try again.');
+        const plan = collectCurriculumPlanDraft();
+        if (!plan.unitOrModule || !plan.lessonNumber) {
+          throw new Error('Add the unit/module and lesson number before saving the plan.');
+        }
+        if (!plan.planTitle && !plan.iCanStatement && !plan.teacherSubView.length) {
+          throw new Error('Analyze the plan or add teaching details before saving.');
+        }
+        setCurriculumBusy(true, 'Saving plan...');
+        const plansRef = db.collection('curriculumPlans');
+        const docRef = curriculumActivePlanId ? plansRef.doc(curriculumActivePlanId) : plansRef.doc();
+        const payload = {
+          ...plan,
+          updatedBy: getEditorUserEmail(user),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        if (!curriculumActivePlanId) {
+          payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+          payload.createdBy = getEditorUserEmail(user);
+        }
+        await docRef.set(payload, { merge: true });
+        curriculumActivePlanId = docRef.id;
+        await loadCurriculumPlans();
+        renderCurriculumPlanLibrary();
+        renderCurriculumPlanCalendar();
+        clearCurriculumPlanBuilderForm({ keepSubject: true, keepToggles: true });
+        setCurriculumStatus('Plan saved to the private Plan Library. The form is ready for the next plan.', 'success');
+      } catch (error) {
+        console.error('Saving curriculum plan failed:', error);
+        setCurriculumStatus(error.message || 'Plan save failed.', 'error');
+      } finally {
+        setCurriculumBusy(false);
+      }
+    }
+
+    async function loadCurriculumPlans() {
+      if (!db) return;
+      try {
+        const snapshot = await db.collection('curriculumPlans').orderBy('updatedAt', 'desc').limit(500).get();
+        curriculumPlansCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const planIds = new Set(curriculumPlansCache.map(plan => plan.id));
+        if (curriculumActivePlanLibraryId && !planIds.has(curriculumActivePlanLibraryId)) curriculumActivePlanLibraryId = '';
+        if (curriculumPlanViewModalPlanId && !planIds.has(curriculumPlanViewModalPlanId)) closeCurriculumPlanViewModal();
+      } catch (error) {
+        console.error('Loading Plan Library failed:', error);
+        setCurriculumStatus(error.message || 'Could not load saved plans.', 'error');
+      }
+    }
+
+    function getCurriculumPlanTitle(plan) {
+      return String(plan && (plan.planTitle || plan.lessonTitle || plan.iCanStatement || formatCurriculumLessonNumber(plan.lessonNumber)) || 'Plan').trim();
+    }
+
+    function compareCurriculumPlans(a, b) {
+      const aSubject = curriculumSubjects.indexOf(a.subject || 'skills');
+      const bSubject = curriculumSubjects.indexOf(b.subject || 'skills');
+      if (aSubject !== bSubject) return aSubject - bSubject;
+      const moduleCompare = String(a.unitOrModule || '').localeCompare(String(b.unitOrModule || ''), undefined, { numeric: true, sensitivity: 'base' });
+      if (moduleCompare) return moduleCompare;
+      return compareCurriculumLessons(a, b);
+    }
+
+    function getFilteredCurriculumPlans() {
+      const subjectFilter = document.getElementById('curriculumPlanLibrarySubjectFilter')?.value || 'all';
+      const search = (document.getElementById('curriculumPlanLibrarySearchInput')?.value || '').toLowerCase().replace(/\s+/g, ' ').trim();
+      const searchParts = search.split(' ').filter(Boolean);
+      return curriculumPlansCache.filter(plan => {
+        const subjectMatches = subjectFilter === 'all' || plan.subject === subjectFilter;
+        const haystack = [
+          plan.subject,
+          getCurriculumSubjectLabel(plan.subject),
+          plan.unitOrModule,
+          formatCurriculumUnitOrModule(plan.unitOrModule),
+          plan.lessonNumber,
+          formatCurriculumLessonNumber(plan.lessonNumber),
+          plan.lessonTitle,
+          plan.planTitle,
+          plan.iCanStatement,
+          Array.isArray(plan.teacherSubView) ? plan.teacherSubView.map(section => `${section.title} ${section.body}`).join(' ') : '',
+          plan.principalView ? Object.values(plan.principalView).flat().join(' ') : ''
+        ].join(' ').toLowerCase().replace(/\s+/g, ' ');
+        return subjectMatches && (!search || haystack.includes(search) || searchParts.every(part => haystack.includes(part)));
+      });
+    }
+
+    function groupCurriculumPlansByModule(plans) {
+      const groups = new Map();
+      plans.forEach(plan => {
+        const subject = getCurriculumSubjectLabel(plan.subject);
+        const moduleName = formatCurriculumUnitOrModule(plan.unitOrModule) || 'No module yet';
+        const key = `${subject}|||${moduleName}`;
+        if (!groups.has(key)) {
+          groups.set(key, { key, subject: plan.subject || 'skills', unitOrModule: moduleName, label: `${subject} - ${moduleName}`, plans: [] });
+        }
+        groups.get(key).plans.push(plan);
+      });
+      return Array.from(groups.values()).sort((a, b) => a.label.localeCompare(b.label)).map(group => ({
+        ...group,
+        plans: group.plans.sort(compareCurriculumPlans)
+      }));
+    }
+
+    function renderCurriculumPlanLibrary() {
+      const list = document.getElementById('curriculumPlanLibraryList');
+      const count = document.getElementById('curriculumPlanLibraryCount');
+      if (!list) return;
+      const filtered = getFilteredCurriculumPlans();
+      if (count) count.textContent = `${filtered.length} plan${filtered.length === 1 ? '' : 's'}`;
+      if (!filtered.length) {
+        list.innerHTML = '<p class="text-sm text-gray-500">No saved plans match this filter.</p>';
+        renderCurriculumPlanDetail();
+        return;
+      }
+      const groups = groupCurriculumPlansByModule(filtered);
+      list.innerHTML = groups.map(group => `
+        <details class="curriculum-library-group" open>
+          <summary>${escapeHtml(group.label)} <span class="text-xs text-gray-500">(${group.plans.length})</span></summary>
+          <div class="curriculum-library-folder-body">
+            <div class="curriculum-browser-lesson-stack">
+              ${group.plans.map(plan => renderCurriculumPlanLibraryItem(plan)).join('')}
+            </div>
+          </div>
+        </details>
+      `).join('');
+      renderCurriculumPlanDetail();
+    }
+
+    function renderCurriculumPlanLibraryItem(plan) {
+      const title = getCurriculumPlanTitle(plan);
+      const isActive = plan.id === curriculumActivePlanLibraryId ? ' active' : '';
+      return `
+        <div class="curriculum-library-item curriculum-browser-item${isActive}" role="button" tabindex="0" onclick="viewCurriculumPlanDetail('${plan.id}')">
+          <div>
+            <div class="text-xs font-bold uppercase tracking-wide text-gray-500">${escapeHtml([formatCurriculumLessonNumber(plan.lessonNumber) || 'Lesson', getCurriculumSubjectLabel(plan.subject)].filter(Boolean).join(' - '))}</div>
+            <div class="font-display font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(title)}</div>
+            <div class="text-sm mt-1 text-[color:var(--md-ink)]/80">${escapeHtml(String(plan.iCanStatement || '').slice(0, 150))}</div>
+            <div class="curriculum-plan-card-actions">
+              <button type="button" style="background: var(--md-slate); color: var(--md-white);" onclick="event.stopPropagation(); openCurriculumPlanViewModal('${plan.id}')">View</button>
+              <button type="button" style="background: var(--md-coral); color: var(--md-white);" onclick="event.stopPropagation(); loadCurriculumPlanIntoBuilder('${plan.id}')">Edit</button>
+              <button type="button" style="background: var(--md-pebble); color: var(--md-ink);" onclick="event.stopPropagation(); openCurriculumPlanPrintViewForPlan('${plan.id}', 'teacher', false)">Teacher/Sub</button>
+              <button type="button" style="background: var(--md-pebble); color: var(--md-ink);" onclick="event.stopPropagation(); openCurriculumPlanPrintViewForPlan('${plan.id}', 'principal', false)">Principal</button>
+              <button type="button" title="Delete plan" style="background: #dc2626; color: var(--md-white);" onclick="event.stopPropagation(); deleteCurriculumPlan('${plan.id}')">Delete</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function viewCurriculumPlanDetail(planId) {
+      if (isCurriculumMobileView()) {
+        openCurriculumPlanViewModal(planId);
+        return;
+      }
+      curriculumActivePlanLibraryId = planId;
+      renderCurriculumPlanLibrary();
+    }
+
+    function renderCurriculumPlanDetail() {
+      const panel = document.getElementById('curriculumPlanDetailPanel');
+      if (!panel) return;
+      const plan = curriculumPlansCache.find(item => item.id === curriculumActivePlanLibraryId);
+      if (!plan) {
+        panel.innerHTML = '<p class="text-sm text-gray-500">Choose a plan to view the saved Teacher/Sub and Principal views.</p>';
+        return;
+      }
+      panel.innerHTML = renderCurriculumPlanDetailContent(plan);
+    }
+
+    function renderCurriculumPlanDetailContent(plan) {
+      const title = getCurriculumPlanTitle(plan);
+      const principal = normalizeCurriculumPlanPrincipalView(plan.principalView);
+      const sections = normalizeCurriculumPlanSections(plan.teacherSubView);
+      return `
+        <div>
+          <div class="text-xs font-bold uppercase tracking-wide text-gray-500">${escapeHtml(getCurriculumSubjectLabel(plan.subject))} - ${escapeHtml(formatCurriculumUnitOrModule(plan.unitOrModule) || 'No module yet')}</div>
+          <h3 class="text-2xl font-display font-bold mt-1" style="color: var(--md-coral);">${escapeHtml(title)}</h3>
+          <p class="text-sm font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(formatCurriculumLessonNumber(plan.lessonNumber) || 'Lesson')}</p>
+        </div>
+        ${renderCurriculumDetailText('I can statement', plan.iCanStatement)}
+        <section class="curriculum-detail-section"><h4>Teacher/Sub View</h4>${sections.length ? sections.map(section => `<h5 class="font-bold mt-3" style="color: var(--md-slate);">${escapeHtml(section.title)}</h5><p class="whitespace-pre-wrap">${escapeHtml(section.body)}</p>`).join('') : '<p>No teaching sections saved yet.</p>'}</section>
+        <section class="curriculum-detail-section">
+          <h4>Principal View</h4>
+          ${renderCurriculumDetailText('Teacher is doing', principal.teacherDoing)}
+          ${renderCurriculumDetailText('Scholars are doing', principal.scholarsDoing)}
+          ${renderCurriculumDetailList('Brief rotation bullets', principal.rotationBullets)}
+          ${renderCurriculumDetailText('Evidence / data collected', principal.evidenceCollected)}
+          ${renderCurriculumDetailText('Intervention overview', principal.interventionOverview)}
+        </section>
+        ${renderCurriculumDetailList('Missing or check before teaching', plan.missingInformation)}
+      `;
+    }
+
+    function openCurriculumPlanViewModal(planId) {
+      const plan = curriculumPlansCache.find(item => item.id === planId);
+      const modal = document.getElementById('curriculumPlanViewModal');
+      if (!plan || !modal) return;
+      curriculumPlanViewModalPlanId = planId;
+      curriculumActivePlanLibraryId = planId;
+      renderCurriculumPlanLibrary();
+      renderCurriculumPlanViewModal();
+      modal.classList.add('open');
+    }
+
+    function closeCurriculumPlanViewModal() {
+      const modal = document.getElementById('curriculumPlanViewModal');
+      if (modal) modal.classList.remove('open');
+      curriculumPlanViewModalPlanId = '';
+    }
+
+    function renderCurriculumPlanViewModal() {
+      const plan = curriculumPlansCache.find(item => item.id === curriculumPlanViewModalPlanId);
+      const title = document.getElementById('curriculumPlanViewModalTitle');
+      const meta = document.getElementById('curriculumPlanViewModalMeta');
+      const body = document.getElementById('curriculumPlanViewModalBody');
+      const actions = document.getElementById('curriculumPlanViewModalActions');
+      if (!body || !actions) return;
+      if (!plan) {
+        closeCurriculumPlanViewModal();
+        return;
+      }
+      if (title) title.textContent = getCurriculumPlanTitle(plan);
+      if (meta) meta.textContent = `${getCurriculumSubjectLabel(plan.subject)} - ${formatCurriculumLessonNumber(plan.lessonNumber) || 'Lesson'}`;
+      body.innerHTML = renderCurriculumPlanDetailContent(plan);
+      actions.innerHTML = `
+        <div class="curriculum-lesson-modal-open-actions">
+          <button type="button" class="curriculum-lesson-modal-button" style="background: var(--md-coral); color: var(--md-white);" onclick="openCurriculumPlanPrintViewForPlan('${plan.id}', 'teacher', false)">Open Teacher/Sub</button>
+          <button type="button" class="curriculum-lesson-modal-button" style="background: var(--md-slate); color: var(--md-white);" onclick="openCurriculumPlanPrintViewForPlan('${plan.id}', 'principal', false)">Open Principal</button>
+          <button type="button" class="curriculum-lesson-modal-button" style="background: var(--md-pebble); color: var(--md-ink);" onclick="loadCurriculumPlanIntoBuilder('${plan.id}')">Edit Plan</button>
+        </div>
+      `;
+    }
+
+    function loadCurriculumPlanIntoBuilder(planId) {
+      const plan = curriculumPlansCache.find(item => item.id === planId);
+      if (!plan) return;
+      curriculumActivePlanId = plan.id;
+      setInputValue('curriculumPlanSubjectInput', plan.subject || 'skills');
+      setInputValue('curriculumPlanUnitInput', formatCurriculumUnitOrModule(plan.unitOrModule || ''));
+      setInputValue('curriculumPlanLessonNumberInput', formatCurriculumLessonNumber(plan.lessonNumber || ''));
+      setInputValue('curriculumPlanLessonTitleInput', plan.lessonTitle || '');
+      setInputValue('curriculumPlanSourceTextInput', plan.sourceText || '');
+      if (plan.toggleSettings) {
+        curriculumPlanToggleDefaults = normalizeCurriculumPlanToggleSettings({
+          ...curriculumPlanToggleDefaults,
+          [plan.subject || 'skills']: plan.toggleSettings
+        });
+      }
+      applyCurriculumPlanAnalysis({
+        ...plan,
+        subject: plan.subject || 'skills',
+        sections: plan.teacherSubView || []
+      });
+      closeCurriculumPlanViewModal();
+      showCurriculumLibraryTab('plan-analyzer');
+      setCurriculumStatus('Saved plan loaded. You can edit and save it again.', 'success');
+    }
+
+    async function deleteCurriculumPlan(planId) {
+      const plan = curriculumPlansCache.find(item => item.id === planId);
+      if (!plan) return;
+      const title = getCurriculumPlanTitle(plan);
+      if (!window.confirm(`Delete ${title}? Any calendar dates assigned to it will also be cleared.`)) return;
+      try {
+        const user = await ensureCurriculumTeacherUser();
+        if (!user) return;
+        if (!db) throw new Error('The Plan Library is not available. Please refresh and try again.');
+        setCurriculumBusy(true, 'Deleting plan...');
+        await db.collection('curriculumPlans').doc(planId).delete();
+        if (curriculumActivePlanId === planId) clearCurriculumPlanBuilderForm({ keepSubject: true, keepToggles: true });
+        if (curriculumActivePlanLibraryId === planId) curriculumActivePlanLibraryId = '';
+        if (curriculumPlanViewModalPlanId === planId) closeCurriculumPlanViewModal();
+        removeCurriculumPlanFromCalendar(planId);
+        await saveCurriculumPlanCalendarDraft();
+        await loadCurriculumPlans();
+        renderCurriculumPlanLibrary();
+        renderCurriculumPlanCalendar();
+        setCurriculumStatus(`${title} was deleted from the Plan Library.`, 'success');
+      } catch (error) {
+        console.error('Deleting curriculum plan failed:', error);
+        setCurriculumStatus(error.message || 'Plan deletion failed.', 'error');
+      } finally {
+        setCurriculumBusy(false);
+      }
+    }
+
+    function clearCurriculumPlanBuilderForm(options = {}) {
+      const subject = getCurriculumPlanSubject();
+      const toggles = getCurriculumPlanToggleSettings();
+      curriculumActivePlanId = '';
+      curriculumPlanLastPdfSuggestedTitle = '';
+      [
+        'curriculumPlanUnitInput',
+        'curriculumPlanLessonNumberInput',
+        'curriculumPlanLessonTitleInput',
+        'curriculumPlanSourceTextInput',
+        'curriculumPlanTitleOutput',
+        'curriculumPlanICanOutput',
+        'curriculumPlanPrincipalTeacherOutput',
+        'curriculumPlanPrincipalScholarsOutput',
+        'curriculumPlanPrincipalRotationsOutput',
+        'curriculumPlanPrincipalEvidenceOutput',
+        'curriculumPlanPrincipalInterventionOutput',
+        'curriculumPlanMissingOutput'
+      ].forEach(id => setInputValue(id, ''));
+      renderCurriculumPlanSections([]);
+      if (options.keepSubject) setInputValue('curriculumPlanSubjectInput', subject);
+      if (options.keepToggles) {
+        curriculumPlanToggleDefaults = normalizeCurriculumPlanToggleSettings({
+          ...curriculumPlanToggleDefaults,
+          [subject]: toggles
+        });
+      }
+      renderCurriculumPlanToggleDefaults();
+      renderCurriculumPlanLibrary();
+      collapseCurriculumMobileSections();
+      setCurriculumPlanPdfStatus('');
+      setCurriculumStatus('Ready for a new plan.');
+    }
+
+    function getEmptyCurriculumPlanCalendar() {
+      return { dates: {} };
+    }
+
+    function normalizeCurriculumPlanCalendar(value) {
+      const calendar = getEmptyCurriculumPlanCalendar();
+      const rawDates = value && value.dates && typeof value.dates === 'object' ? value.dates : {};
+      Object.entries(rawDates).forEach(([dateKey, assignment]) => {
+        if (!isValidCurriculumDateKey(dateKey) || !assignment || typeof assignment !== 'object') return;
+        const next = {};
+        curriculumSubjects.forEach(subject => {
+          const planId = String(assignment[subject] || '').trim();
+          if (planId) next[subject] = planId;
+        });
+        if (Object.keys(next).length) calendar.dates[dateKey] = next;
+      });
+      return calendar;
+    }
+
+    async function loadCurriculumPlanCalendar() {
+      curriculumPlanCalendar = getEmptyCurriculumPlanCalendar();
+      if (!db) return;
+      try {
+        const doc = await db.collection('classData').doc('current').get();
+        const data = doc.exists ? doc.data() : {};
+        if (data && data.curriculum_plan_calendar_json) {
+          curriculumPlanCalendar = normalizeCurriculumPlanCalendar(JSON.parse(data.curriculum_plan_calendar_json));
+        }
+      } catch (error) {
+        console.warn('Plan calendar could not be loaded:', error);
+        curriculumPlanCalendar = getEmptyCurriculumPlanCalendar();
+      }
+    }
+
+    function getCurriculumPlanAssignment(dateKey) {
+      if (!curriculumPlanCalendar || typeof curriculumPlanCalendar !== 'object') {
+        curriculumPlanCalendar = getEmptyCurriculumPlanCalendar();
+      }
+      if (!curriculumPlanCalendar.dates) curriculumPlanCalendar.dates = {};
+      if (!curriculumPlanCalendar.dates[dateKey]) curriculumPlanCalendar.dates[dateKey] = {};
+      return curriculumPlanCalendar.dates[dateKey];
+    }
+
+    async function saveCurriculumPlanCalendarDraft() {
+      if (!db) return;
+      try {
+        await db.collection('classData').doc('current').set({
+          curriculum_plan_calendar_json: JSON.stringify(curriculumPlanCalendar)
+        }, { merge: true });
+      } catch (error) {
+        console.warn('Plan calendar draft could not be saved:', error);
+      }
+    }
+
+    function getCurriculumPlanCalendarWeekStartKey() {
+      const input = document.getElementById('curriculumPlanCalendarWeekInput');
+      const selected = input && input.value ? parseCurriculumDateKey(input.value) : null;
+      const weekStart = getCurriculumWeekStartDate(selected || new Date());
+      const weekStartKey = formatCurriculumDateKey(weekStart);
+      if (input && input.value !== weekStartKey) input.value = weekStartKey;
+      return weekStartKey;
+    }
+
+    function setCurriculumPlanCalendarToCurrentWeek() {
+      const input = document.getElementById('curriculumPlanCalendarWeekInput');
+      if (input) input.value = formatCurriculumDateKey(getCurrentCurriculumWeekStartDate());
+      renderCurriculumPlanCalendar();
+    }
+
+    function renderCurriculumPlanCalendarOptions(subject, selectedId = '') {
+      const plans = curriculumPlansCache
+        .filter(plan => (plan.subject || 'skills') === subject)
+        .sort(compareCurriculumPlans);
+      return [
+        '<option value="">No saved plan</option>',
+        ...plans.map(plan => `<option value="${escapeHtml(plan.id)}" ${plan.id === selectedId ? 'selected' : ''}>${escapeHtml([formatCurriculumUnitOrModule(plan.unitOrModule), formatCurriculumLessonNumber(plan.lessonNumber), getCurriculumPlanTitle(plan)].filter(Boolean).join(' - '))}</option>`)
+      ].join('');
+    }
+
+    function renderCurriculumPlanCalendar() {
+      const grid = document.getElementById('curriculumPlanCalendarGrid');
+      if (!grid) return;
+      const weekStartKey = getCurriculumPlanCalendarWeekStartKey();
+      const weekStart = parseCurriculumDateKey(weekStartKey);
+      const dateKeys = curriculumWeekdays.map((day, index) => formatCurriculumDateKey(addCurriculumDays(weekStart, index)));
+      curriculumSelectedPlanDateKeys = new Set(Array.from(curriculumSelectedPlanDateKeys).filter(dateKey => dateKeys.includes(dateKey)));
+      grid.innerHTML = dateKeys.map((dateKey, index) => {
+        const assignment = getCurriculumPlanAssignment(dateKey);
+        return `
+          <div class="curriculum-plan-calendar-row">
+            <label class="curriculum-plan-date-control">
+              <input type="checkbox" ${curriculumSelectedPlanDateKeys.has(dateKey) ? 'checked' : ''} onchange="toggleCurriculumPlanDateSelection('${dateKey}', this.checked)">
+              <span>${escapeHtml(curriculumWeekdays[index].title)}<br><span class="text-xs text-gray-500">${escapeHtml(formatCurriculumDateLabel(dateKey))}</span></span>
+            </label>
+            ${curriculumSubjects.map(subject => `
+              <div>
+                <label class="curriculum-builder-label" for="plan-calendar-${subject}-${dateKey}">${escapeHtml(getCurriculumSubjectLabel(subject))}</label>
+                <select id="plan-calendar-${subject}-${dateKey}" class="curriculum-builder-field" onchange="updateCurriculumPlanCalendarAssignment('${dateKey}', '${subject}', this.value)">
+                  ${renderCurriculumPlanCalendarOptions(subject, assignment[subject] || '')}
+                </select>
+              </div>
+            `).join('')}
+            <div class="curriculum-plan-calendar-actions">
+              <button type="button" style="background: var(--md-coral); color: var(--md-white);" onclick="openCurriculumPlanDate('${dateKey}', 'teacher')">Open All</button>
+              <button type="button" style="background: var(--md-pebble); color: var(--md-ink);" onclick="openCurriculumPlanDate('${dateKey}', 'principal')">Principal</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function updateCurriculumPlanCalendarAssignment(dateKey, subject, planId) {
+      if (!isValidCurriculumDateKey(dateKey) || !curriculumSubjects.includes(subject)) return;
+      const assignment = getCurriculumPlanAssignment(dateKey);
+      if (planId) {
+        assignment[subject] = planId;
+      } else {
+        delete assignment[subject];
+      }
+      if (!Object.keys(assignment).length) delete curriculumPlanCalendar.dates[dateKey];
+      await saveCurriculumPlanCalendarDraft();
+      setCurriculumStatus(`${formatCurriculumDateLabel(dateKey)} plan assignment saved.`, 'success');
+    }
+
+    function toggleCurriculumPlanDateSelection(dateKey, isSelected) {
+      if (isSelected) {
+        curriculumSelectedPlanDateKeys.add(dateKey);
+      } else {
+        curriculumSelectedPlanDateKeys.delete(dateKey);
+      }
+    }
+
+    function getCurriculumPlansForDate(dateKey) {
+      const assignment = (curriculumPlanCalendar.dates && curriculumPlanCalendar.dates[dateKey]) || {};
+      return curriculumSubjects.map(subject => {
+        const plan = curriculumPlansCache.find(item => item.id === assignment[subject]);
+        return plan ? { subject, plan } : null;
+      }).filter(Boolean);
+    }
+
+    function getSelectedCurriculumPlanDateKeys() {
+      return Array.from(curriculumSelectedPlanDateKeys).filter(isValidCurriculumDateKey).sort();
+    }
+
+    function viewSelectedCurriculumPlanDates() {
+      const dateKeys = getSelectedCurriculumPlanDateKeys();
+      if (!dateKeys.length) {
+        setCurriculumStatus('Select at least one date in the Plan Calendar first.', 'error');
+        return;
+      }
+      openCurriculumPlanPrintView(dateKeys, { view: 'teacher', autoPrint: false, successMessage: 'Selected plans opened in a new page.' });
+    }
+
+    function printSelectedCurriculumPlanDates(view = 'teacher') {
+      const dateKeys = getSelectedCurriculumPlanDateKeys();
+      if (!dateKeys.length) {
+        setCurriculumStatus('Select at least one date in the Plan Calendar first.', 'error');
+        return;
+      }
+      openCurriculumPlanPrintView(dateKeys, {
+        view,
+        autoPrint: true,
+        successMessage: view === 'principal' ? 'Principal plan print view opened.' : 'Teacher/Sub plan print view opened.'
+      });
+    }
+
+    function printCurriculumPlanWeek() {
+      const weekStartKey = getCurriculumPlanCalendarWeekStartKey();
+      const weekStart = parseCurriculumDateKey(weekStartKey);
+      const dateKeys = curriculumWeekdays.map((day, index) => formatCurriculumDateKey(addCurriculumDays(weekStart, index)));
+      openCurriculumPlanPrintView(dateKeys, {
+        view: 'teacher',
+        autoPrint: true,
+        title: `Lesson Plan Week - ${getCurriculumWeekRangeLabel(weekStartKey)}`,
+        successMessage: 'Weekly plan print view opened.'
+      });
+    }
+
+    function openCurriculumPlanDate(dateKey, view = 'teacher') {
+      if (!getCurriculumPlansForDate(dateKey).length) {
+        setCurriculumStatus(`No saved plans are assigned to ${formatCurriculumDateLabel(dateKey)} yet.`, 'error');
+        return;
+      }
+      openCurriculumPlanPrintView([dateKey], {
+        view,
+        autoPrint: false,
+        title: `${view === 'principal' ? 'Principal' : 'Teacher/Sub'} Plans - ${formatCurriculumDateLabel(dateKey)}`,
+        successMessage: `${formatCurriculumDateLabel(dateKey)} plans opened in teaching order.`
+      });
+    }
+
+    function openCurriculumPlanPrintViewForPlan(planId, view = 'teacher', autoPrint = false) {
+      const plan = curriculumPlansCache.find(item => item.id === planId);
+      if (!plan) return;
+      const title = `${view === 'principal' ? 'Principal' : 'Teacher/Sub'} Plan - ${getCurriculumPlanTitle(plan)}`;
+      openCurriculumPrintWindow(
+        title,
+        `<h1>${escapeHtml(title)}</h1><div class="meta">Generated from the Curriculum Plan Library</div>${renderCurriculumPlanPrintSavedPlan(plan, view)}`,
+        `${view === 'principal' ? 'Principal' : 'Teacher/Sub'} plan opened.`,
+        { autoPrint }
+      );
+    }
+
+    function openCurriculumPlanPrintView(dateKeys, options = {}) {
+      const view = options.view === 'principal' ? 'principal' : 'teacher';
+      const sections = dateKeys.map(dateKey => {
+        const plans = getCurriculumPlansForDate(dateKey);
+        if (!plans.length) {
+          return `<section><h2>${escapeHtml(formatCurriculumDateLabel(dateKey) || dateKey)}</h2><div class="lesson"><p>No saved plans assigned.</p></div></section>`;
+        }
+        return `
+          <section>
+            <h2>${escapeHtml(formatCurriculumDateLabel(dateKey) || dateKey)}</h2>
+            ${plans.map(({ plan }) => renderCurriculumPlanPrintSavedPlan(plan, view)).join('')}
+          </section>
+        `;
+      }).join('');
+      const title = options.title || (dateKeys.length === 1
+        ? `${view === 'principal' ? 'Principal' : 'Teacher/Sub'} Plans - ${formatCurriculumDateLabel(dateKeys[0])}`
+        : `${view === 'principal' ? 'Principal' : 'Teacher/Sub'} Plans (${dateKeys.length} dates)`);
+      openCurriculumPrintWindow(
+        title,
+        `<h1>${escapeHtml(title)}</h1><div class="meta">Generated from the Curriculum Plan Calendar</div>${sections}`,
+        options.successMessage || 'Plan print view opened.',
+        { autoPrint: options.autoPrint !== false }
+      );
+    }
+
+    function renderCurriculumPlanPrintSavedPlan(plan, view = 'teacher') {
+      const title = getCurriculumPlanTitle(plan);
+      const meta = [getCurriculumSubjectLabel(plan.subject), formatCurriculumUnitOrModule(plan.unitOrModule), formatCurriculumLessonNumber(plan.lessonNumber)].filter(Boolean).join(' - ');
+      if (view === 'principal') {
+        const principal = normalizeCurriculumPlanPrincipalView(plan.principalView);
+        return `
+          <div class="lesson">
+            <div class="day">${escapeHtml(meta)}</div>
+            <h3>${escapeHtml(title)}</h3>
+            <div class="grid">
+              ${renderCurriculumPrintField('I Can statement', plan.iCanStatement)}
+              ${renderCurriculumPrintField('Teacher is doing', principal.teacherDoing)}
+              ${renderCurriculumPrintField('Scholars are doing', principal.scholarsDoing)}
+              ${renderCurriculumPrintList('Brief rotation bullets', principal.rotationBullets)}
+              ${renderCurriculumPrintField('Evidence / data collected', principal.evidenceCollected)}
+              ${renderCurriculumPrintField('Intervention overview', principal.interventionOverview)}
+            </div>
+          </div>
+        `;
+      }
+      const sections = normalizeCurriculumPlanSections(plan.teacherSubView);
+      return `
+        <div class="lesson">
+          <div class="day">${escapeHtml(meta)}</div>
+          <h3>${escapeHtml(title)}</h3>
+          <div class="grid">
+            ${renderCurriculumPrintField('I Can statement', plan.iCanStatement)}
+            ${sections.map(section => renderCurriculumPlanPrintSection(section.title, section.body)).join('')}
+            ${renderCurriculumPrintList('Missing or check before teaching', plan.missingInformation)}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderCurriculumPlanPrintSection(label, value) {
+      const text = String(value || '').trim();
+      if (!text) return '';
+      return `<div class="field" style="grid-column:1/-1;"><strong>${escapeHtml(label)}</strong><div style="white-space:pre-wrap;">${escapeHtml(text)}</div></div>`;
+    }
+
+    function removeCurriculumPlanFromCalendar(planId) {
+      Object.keys(curriculumPlanCalendar.dates || {}).forEach(dateKey => {
+        const assignment = curriculumPlanCalendar.dates[dateKey] || {};
+        curriculumSubjects.forEach(subject => {
+          if (assignment[subject] === planId) delete assignment[subject];
+        });
+        if (!Object.keys(assignment).length) delete curriculumPlanCalendar.dates[dateKey];
+      });
+    }
+
     function setCurriculumBusy(isBusy, message = '') {
-      ['curriculumAnalyzeBtn', 'curriculumSaveBtn', 'curriculumRefreshLibraryBtn', 'curriculumSignOutBtn', 'curriculumPdfSelectBtn', 'curriculumPdfInput', 'curriculumPublishWeekBtn', 'curriculumPrintWeekBtn', 'curriculumOpenSelectedBtn', 'curriculumClearSelectionBtn', 'curriculumBackToToolsBtn', 'curriculumTabUpload', 'curriculumTabBrowse'].forEach(id => {
+      ['curriculumAnalyzeBtn', 'curriculumSaveBtn', 'curriculumRefreshLibraryBtn', 'curriculumSignOutBtn', 'curriculumPdfSelectBtn', 'curriculumPdfInput', 'curriculumPublishWeekBtn', 'curriculumPrintWeekBtn', 'curriculumOpenSelectedBtn', 'curriculumClearSelectionBtn', 'curriculumBackToToolsBtn', 'curriculumTabUpload', 'curriculumTabBrowse', 'curriculumTabPlanAnalyzer', 'curriculumTabPlans', 'curriculumTabPlanCalendar', 'curriculumPlanAnalyzeBtn', 'curriculumPlanSaveBtn', 'curriculumPlanClearBtn', 'curriculumPlanPdfSelectBtn', 'curriculumPlanPdfInput', 'curriculumPlanSaveDefaultsBtn'].forEach(id => {
         const button = document.getElementById(id);
         if (button) button.disabled = isBusy;
       });

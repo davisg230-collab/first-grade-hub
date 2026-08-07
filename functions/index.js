@@ -218,6 +218,132 @@ exports.analyzeCurriculumLesson = onCall(
   }
 );
 
+exports.analyzeCurriculumPlan = onCall(
+  {
+    secrets: [OPENAI_API_KEY],
+    timeoutSeconds: 120,
+    memory: "512MiB",
+  },
+  async (request) => {
+    const email = asText(request.auth && request.auth.token && request.auth.token.email).toLowerCase();
+    if (!APPROVED_EDITOR_EMAILS.has(email)) {
+      throw new HttpsError("permission-denied", "Teacher sign-in is required to analyze curriculum plans.");
+    }
+
+    const data = request.data || {};
+    const subject = normalizeCurriculumPlanSubject(data.subject);
+    const sourceText = asText(data.sourceText);
+    if (sourceText.length < 40) {
+      throw new HttpsError("invalid-argument", "Upload or paste one complete lesson before running the Plan Analyzer.");
+    }
+    if (sourceText.length > 22000) {
+      throw new HttpsError("invalid-argument", "Trim the lesson text to one lesson before running the Plan Analyzer.");
+    }
+
+    const apiKey = OPENAI_API_KEY.value();
+    if (!apiKey) {
+      throw new HttpsError("failed-precondition", "The OpenAI API key is not configured yet.");
+    }
+
+    const model = process.env.OPENAI_MODEL || "gpt-5.6-luna";
+    const toggleSettings = normalizeCurriculumPlanToggleSettings(data.toggleSettings);
+    const prompt = buildCurriculumPlanPrompt({
+      subject,
+      unitOrModule: asText(data.unitOrModule),
+      lessonNumber: asText(data.lessonNumber),
+      lessonTitle: asText(data.lessonTitle),
+      sourceText,
+      toggleSettings,
+    });
+
+    let response;
+    try {
+      response = await fetch("https://api.openai.com/v1/responses", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          instructions: [
+            "You are a careful first grade planning assistant.",
+            "Your job is to turn a curriculum lesson into a classroom-block plan for how Mr. Davis's class actually runs.",
+            "Do not merely summarize the lesson. Adapt it into the fixed block structure named in the prompt.",
+            "Use only facts, pages, materials, vocabulary, story content, problems, worksheets, and lesson ideas supported by the source.",
+            "When you infer practical directions, make them teacher-useful and substitute-friendly without inventing unsupported curriculum facts.",
+            "Always refer to children as scholars in newly written fields.",
+            "Do not generate sections that the teacher turned off in the toggle settings.",
+            "The Principal View must be a shorter view derived from the same plan, not a separate unrelated plan.",
+          ].join(" "),
+          input: prompt,
+          max_output_tokens: subject === "listening" ? 4500 : 9000,
+          text: {
+            format: {
+              type: "json_schema",
+              name: "curriculum_plan_analysis",
+              strict: true,
+              schema: CURRICULUM_PLAN_SCHEMA,
+            },
+          },
+        }),
+      });
+    } catch (error) {
+      logger.error("OpenAI curriculum plan request failed before response.", { message: error.message });
+      throw new HttpsError("unavailable", "The AI service could not be reached. Please try again.");
+    }
+
+    const responseBody = await readJsonResponse(response);
+    if (!response.ok) {
+      const openAiError = responseBody && responseBody.error ? responseBody.error : {};
+      logger.error("OpenAI curriculum plan request failed.", {
+        status: response.status,
+        code: openAiError.code,
+        type: openAiError.type,
+        param: openAiError.param,
+        message: openAiError.message,
+        ...buildCurriculumResponseDiagnostics(responseBody, extractOpenAIOutputText(responseBody)),
+      });
+      throw new HttpsError("failed-precondition", getOpenAICurriculumFailureMessage(response.status, responseBody));
+    }
+
+    const outputText = extractOpenAIOutputText(responseBody);
+    const responseDiagnostics = buildCurriculumResponseDiagnostics(responseBody, outputText);
+    if (responseDiagnostics.truncated) {
+      logger.error("OpenAI curriculum plan response was incomplete.", responseDiagnostics);
+      throw new HttpsError("internal", "The AI plan draft was cut off before it finished. Please try analyzing this lesson again.");
+    }
+    if (!outputText) {
+      logger.error("OpenAI curriculum plan response had no output text.", responseDiagnostics);
+      throw new HttpsError("internal", "The Plan Analyzer did not return a usable draft.");
+    }
+
+    let analysis;
+    try {
+      analysis = parseCurriculumAnalysisOutput(outputText);
+      analysis = normalizeCurriculumPlanAnalysis(analysis, {
+        subject,
+        unitOrModule: asText(data.unitOrModule),
+        lessonNumber: asText(data.lessonNumber),
+        lessonTitle: asText(data.lessonTitle),
+        sourceText,
+        toggleSettings,
+      });
+    } catch (error) {
+      logger.error("OpenAI curriculum plan response failed normalization.", {
+        ...buildCurriculumResponseDiagnostics(responseBody, outputText, error),
+      });
+      throw new HttpsError("internal", "The AI plan draft could not be normalized. Please try analyzing the lesson again.");
+    }
+
+    return {
+      analysis,
+      analyzedAt: new Date().toISOString(),
+      model,
+    };
+  }
+);
+
 exports.analyzeCurriculumUnit = onCall(
   {
     secrets: [OPENAI_API_KEY],
@@ -496,6 +622,64 @@ const CURRICULUM_LESSON_SCHEMA = {
   ],
 };
 
+const CURRICULUM_PLAN_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    subject: { type: "string", enum: ["skills", "listening", "math"] },
+    unitOrModule: { type: "string" },
+    lessonNumber: { type: "string" },
+    lessonTitle: { type: "string" },
+    planTitle: { type: "string" },
+    iCanStatement: { type: "string" },
+    teacherSubView: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          key: { type: "string" },
+          title: { type: "string" },
+          body: { type: "string" },
+        },
+        required: ["key", "title", "body"],
+      },
+    },
+    principalView: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        teacherDoing: { type: "string" },
+        scholarsDoing: { type: "string" },
+        rotationBullets: { type: "array", items: { type: "string" } },
+        evidenceCollected: { type: "string" },
+        interventionOverview: { type: "string" },
+      },
+      required: [
+        "teacherDoing",
+        "scholarsDoing",
+        "rotationBullets",
+        "evidenceCollected",
+        "interventionOverview",
+      ],
+    },
+    missingInformation: { type: "array", items: { type: "string" } },
+    sourceConfidence: { type: "string", enum: ["high", "medium", "low"] },
+  },
+  required: [
+    "subject",
+    "unitOrModule",
+    "lessonNumber",
+    "lessonTitle",
+    "planTitle",
+    "iCanStatement",
+    "teacherSubView",
+    "principalView",
+    "missingInformation",
+    "sourceConfidence",
+  ],
+};
+
 const CURRICULUM_UNIT_SCHEMA = {
   type: "object",
   additionalProperties: false,
@@ -753,6 +937,117 @@ function buildSkillsStandardsContext(sourceText) {
     lines.push(`- ${code} | ${standard.domain} | ${standard.officialWording}`);
   });
   return lines.join("\n");
+}
+
+function normalizeCurriculumPlanSubject(subject) {
+  return ["skills", "listening", "math"].includes(subject) ? subject : "skills";
+}
+
+function getCurriculumPlanToggleLabels() {
+  return {
+    teacherScript: "Teacher Script",
+    materials: "Materials",
+    pageNumbers: "Page Numbers",
+    groupA: "Group A Tasks",
+    groupB: "Group B Tasks",
+    groupC: "Group C Tasks",
+    handwriting: "Handwriting",
+    reading: "Reading",
+    writing: "Writing",
+    learningGames: "Learning Games / Data Check",
+    guidedWork: "Guided Work",
+    independentEvidence: "Independent Evidence",
+    intervention: "Intervention Work",
+    extensions: "Extensions",
+  };
+}
+
+function normalizeCurriculumPlanToggleSettings(value) {
+  const labels = getCurriculumPlanToggleLabels();
+  return Object.keys(labels).reduce((settings, key) => {
+    settings[key] = !(value && value[key] === false);
+    return settings;
+  }, {});
+}
+
+function getCurriculumPlanSelectedToggleLabels(toggleSettings) {
+  const labels = getCurriculumPlanToggleLabels();
+  return Object.keys(labels)
+    .filter((key) => toggleSettings[key] !== false)
+    .map((key) => labels[key]);
+}
+
+function getCurriculumPlanDisabledToggleLabels(toggleSettings) {
+  const labels = getCurriculumPlanToggleLabels();
+  return Object.keys(labels)
+    .filter((key) => toggleSettings[key] === false)
+    .map((key) => labels[key]);
+}
+
+function buildCurriculumPlanStructureGuidance(subject) {
+  if (subject === "math") {
+    return [
+      "Math fixed rotations:",
+      "Rotation 1: A/B Lesson Station, C review/Learning Games.",
+      "Rotation 2: A Worksheet Station, B Learning Games/application, C Lesson Station.",
+      "Rotation 3: A independent application/Learning Games, B/C Guided Work.",
+      "Rotation 4: Math Closing + Exit Ticket.",
+      "Rotation 5: Math Intervention.",
+      "",
+      "Read the uploaded math lesson and decide what parts the teacher should actually teach, exact teacher directions, page numbers, materials, Group A independent work, Group B independent work, Group C support, quick Learning Game/data-check tasks, worksheet/problem-set expectations, extension/application for A, guided-work focus for B/C, what to watch for, closing/debrief, exit ticket use, and what non-intervention scholars do during Math Intervention.",
+    ].join("\n");
+  }
+  if (subject === "listening") {
+    return [
+      "Listening & Learning plan structure:",
+      "Create a focused story/content plan with title, page numbers, materials, vocabulary, brief teacher script, important places to stop and ask questions, comprehension focus, short discussion, and short response/activity based specifically on that story or content.",
+      "This plan is separate from Skills and Math. Do not create a second pacing system.",
+    ].join("\n");
+  }
+  return [
+    "Skills fixed rotations:",
+    "Rotation 1: A/B Lesson Station, C independent review.",
+    "Rotation 2: A worksheet/handwriting, B independent literacy/data check, C Lesson Station.",
+    "Rotation 3: A independent literacy/data check, B/C Guided Work.",
+    "Rotation 4: Listening & Learning lesson.",
+    "Rotation 5: Listening & Learning discussion/response.",
+    "",
+    "Read the uploaded Skills lesson and adapt it into those rotations instead of keeping the publisher's original timing. Decide what the teacher teaches during each rotation, what Group A/B/C do when they are not with the teacher, worksheet/practice, handwriting, 2-3 Learning Game questions for quick data, decodable or lesson-based reading, writing/application, independent evidence, Reading Intervention work while the teacher works with a small UFLI group, book-bag/free-choice reading with a short response, materials, pages, and substitute-friendly teacher directions.",
+    "If the Skills plan references Listening & Learning time, keep it as the linked L&L portion of the block and do not duplicate an unrelated saved L&L plan.",
+  ].join("\n");
+}
+
+function buildCurriculumPlanPrompt(data) {
+  const subjectLabel = labelForCurriculumSubject(data.subject);
+  const selectedToggleLabels = getCurriculumPlanSelectedToggleLabels(data.toggleSettings);
+  const disabledToggleLabels = getCurriculumPlanDisabledToggleLabels(data.toggleSettings);
+  return [
+    `Create a first grade ${subjectLabel} Plan Analyzer draft.`,
+    "",
+    "Core idea: the teacher uploads a lesson PDF, but you are analyzing this lesson inside the teacher's actual classroom block, not just summarizing the lesson itself.",
+    "",
+    `Plan type selected by teacher: ${subjectLabel}`,
+    `Unit/module selected by teacher: ${data.unitOrModule || "not provided"}`,
+    `Lesson number selected by teacher: ${data.lessonNumber || "not provided"}`,
+    `Lesson title selected by teacher: ${data.lessonTitle || "not provided"}`,
+    "",
+    buildCurriculumPlanStructureGuidance(data.subject),
+    "",
+    "Teacher toggle settings:",
+    `Generate these sections/details when supported: ${selectedToggleLabels.join(", ") || "none"}.`,
+    disabledToggleLabels.length
+      ? `Do not generate standalone sections or details for: ${disabledToggleLabels.join(", ")}.`
+      : "No sections are turned off.",
+    "",
+    "Return teacherSubView as editable sections. Use clear section titles. Include the fixed rotation sections for Skills and Math. For Listening & Learning, include practical story/content sections rather than rotations unless the source clearly has lesson segments.",
+    "Each teacherSubView body should be detailed enough that the teacher or a substitute could teach from it without reopening the teacher guide unless needed.",
+    "Make Principal View much shorter and derived from the same teacherSubView plan: title/I Can lives in the top fields; then teacherDoing, scholarsDoing, brief rotationBullets, evidenceCollected, and interventionOverview.",
+    "Use page numbers only when the source provides or strongly implies them. If exact pages are unclear and Page Numbers is on, say what page range/source location to check rather than inventing numbers.",
+    "Use missingInformation only for information needed before teaching that the source does not responsibly provide.",
+    "",
+    "Lesson source:",
+    data.sourceText,
+  ].join("\n");
 }
 
 function buildCurriculumAnalysisPrompt(data) {
@@ -1338,6 +1633,101 @@ function normalizeCurriculumAnalysis(analysis, sourceText = "") {
   };
   normalized.missingInformation = normalizeCurriculumMissingInformation(normalized);
   return normalized;
+}
+
+function normalizeCurriculumPlanSection(value, index) {
+  if (!value || typeof value !== "object") {
+    const text = normalizeScholarLanguage(value);
+    return text ? { key: `section-${index + 1}`, title: `Section ${index + 1}`, body: text } : null;
+  }
+  const title = normalizeScholarLanguage(value.title || value.heading || value.name) || `Section ${index + 1}`;
+  const body = normalizeScholarLanguage(value.body || value.details || value.text || value.content);
+  const key = asText(value.key || value.id || title)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60) || `section-${index + 1}`;
+  if (!title && !body) return null;
+  return { key, title, body };
+}
+
+function normalizeCurriculumPlanSections(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map(normalizeCurriculumPlanSection)
+    .filter(Boolean)
+    .filter((section) => section.body || section.title)
+    .slice(0, 24);
+}
+
+function normalizeCurriculumPlanPrincipalView(value) {
+  const view = value && typeof value === "object" ? value : {};
+  return {
+    teacherDoing: normalizeScholarLanguage(view.teacherDoing),
+    scholarsDoing: normalizeScholarLanguage(view.scholarsDoing),
+    rotationBullets: normalizeScholarLanguageArray(view.rotationBullets).slice(0, 8),
+    evidenceCollected: normalizeScholarLanguage(view.evidenceCollected),
+    interventionOverview: normalizeScholarLanguage(view.interventionOverview),
+  };
+}
+
+function getCurriculumPlanDisabledMatchers(toggleSettings) {
+  const matchers = [];
+  if (toggleSettings.teacherScript === false) matchers.push(/teacher script/i);
+  if (toggleSettings.materials === false) matchers.push(/materials?/i);
+  if (toggleSettings.pageNumbers === false) matchers.push(/pages?|page numbers?/i);
+  if (toggleSettings.groupA === false) matchers.push(/group a/i);
+  if (toggleSettings.groupB === false) matchers.push(/group b/i);
+  if (toggleSettings.groupC === false) matchers.push(/group c/i);
+  if (toggleSettings.handwriting === false) matchers.push(/handwriting/i);
+  if (toggleSettings.reading === false) matchers.push(/\breading|decodable|book[-\s]?bag/i);
+  if (toggleSettings.writing === false) matchers.push(/\bwriting|application/i);
+  if (toggleSettings.learningGames === false) matchers.push(/learning games?|data check/i);
+  if (toggleSettings.guidedWork === false) matchers.push(/guided work/i);
+  if (toggleSettings.independentEvidence === false) matchers.push(/independent evidence|formative data/i);
+  if (toggleSettings.intervention === false) matchers.push(/intervention|ufli/i);
+  if (toggleSettings.extensions === false) matchers.push(/extension/i);
+  return matchers;
+}
+
+function filterCurriculumPlanSectionsByToggles(sections, toggleSettings) {
+  const matchers = getCurriculumPlanDisabledMatchers(toggleSettings);
+  if (!matchers.length) return sections;
+  return sections.filter((section) => {
+    if (/^rotation-\d+$/i.test(section.key)) return true;
+    const label = `${section.key} ${section.title}`;
+    return !matchers.some((matcher) => matcher.test(label));
+  });
+}
+
+function normalizeCurriculumPlanAnalysis(rawAnalysis, fallback = {}) {
+  if (!rawAnalysis || typeof rawAnalysis !== "object" || Array.isArray(rawAnalysis)) {
+    throw new Error("The response root must be a JSON object.");
+  }
+  const subject = normalizeCurriculumPlanSubject(rawAnalysis.subject || fallback.subject);
+  const toggleSettings = normalizeCurriculumPlanToggleSettings(fallback.toggleSettings);
+  const sections = filterCurriculumPlanSectionsByToggles(
+    normalizeCurriculumPlanSections(rawAnalysis.teacherSubView || rawAnalysis.sections),
+    toggleSettings
+  );
+  const principalView = normalizeCurriculumPlanPrincipalView(rawAnalysis.principalView);
+  const lessonTitle = normalizeScholarLanguage(rawAnalysis.lessonTitle || fallback.lessonTitle);
+  const planTitle = normalizeScholarLanguage(rawAnalysis.planTitle)
+    || lessonTitle
+    || `${labelForCurriculumSubject(subject)} ${normalizeScholarLanguage(rawAnalysis.lessonNumber || fallback.lessonNumber || "Plan")}`;
+
+  return {
+    subject,
+    unitOrModule: normalizeCurriculumUnitOrModule(rawAnalysis.unitOrModule || fallback.unitOrModule),
+    lessonNumber: normalizeScholarLanguage(rawAnalysis.lessonNumber || fallback.lessonNumber),
+    lessonTitle,
+    planTitle,
+    iCanStatement: normalizeScholarLanguage(rawAnalysis.iCanStatement),
+    teacherSubView: sections,
+    principalView,
+    missingInformation: normalizeScholarLanguageArray(rawAnalysis.missingInformation).slice(0, 8),
+    sourceConfidence: ["high", "medium", "low"].includes(rawAnalysis.sourceConfidence) ? rawAnalysis.sourceConfidence : "medium",
+  };
 }
 
 function extractExplicitCurriculumSightWords(sourceText) {
