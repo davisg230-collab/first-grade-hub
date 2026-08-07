@@ -252,6 +252,7 @@ exports.analyzeCurriculumPlan = onCall(
       unitOrModule: asText(data.unitOrModule),
       lessonNumber: asText(data.lessonNumber),
       lessonTitle: asText(data.lessonTitle),
+      priorityStandard: asText(data.priorityStandard),
       sourceText,
       toggleSettings,
     });
@@ -631,6 +632,7 @@ const CURRICULUM_PLAN_SCHEMA = {
     lessonNumber: { type: "string" },
     lessonTitle: { type: "string" },
     planTitle: { type: "string" },
+    priorityStandard: { type: "string" },
     iCanStatement: { type: "string" },
     teacherSubView: {
       type: "array",
@@ -672,6 +674,7 @@ const CURRICULUM_PLAN_SCHEMA = {
     "lessonNumber",
     "lessonTitle",
     "planTitle",
+    "priorityStandard",
     "iCanStatement",
     "teacherSubView",
     "principalView",
@@ -995,6 +998,7 @@ function buildCurriculumPlanStructureGuidance(subject) {
       "Rotation 5: Math Intervention.",
       "",
       "Read the uploaded math lesson and decide what parts the teacher should actually teach, exact teacher directions, page numbers, materials, Group A independent work, Group B independent work, Group C support, quick Learning Game/data-check tasks, worksheet/problem-set expectations, extension/application for A, guided-work focus for B/C, what to watch for, closing/debrief, exit ticket use, and what non-intervention scholars do during Math Intervention.",
+      "The Teacher/Sub View must be chronological: Rotation 1, Rotation 2, Rotation 3, Rotation 4, Rotation 5. Put worksheet work, game checks, guided work, independent evidence, extensions, and intervention tasks inside the rotation where they happen, not as separate repeated sections.",
     ].join("\n");
   }
   if (subject === "listening") {
@@ -1009,11 +1013,10 @@ function buildCurriculumPlanStructureGuidance(subject) {
     "Rotation 1: A/B Lesson Station, C independent review.",
     "Rotation 2: A worksheet/handwriting, B independent literacy/data check, C Lesson Station.",
     "Rotation 3: A independent literacy/data check, B/C Guided Work.",
-    "Rotation 4: Listening & Learning lesson.",
-    "Rotation 5: Listening & Learning discussion/response.",
     "",
-    "Read the uploaded Skills lesson and adapt it into those rotations instead of keeping the publisher's original timing. Decide what the teacher teaches during each rotation, what Group A/B/C do when they are not with the teacher, worksheet/practice, handwriting, 2-3 Learning Game questions for quick data, decodable or lesson-based reading, writing/application, independent evidence, Reading Intervention work while the teacher works with a small UFLI group, book-bag/free-choice reading with a short response, materials, pages, and substitute-friendly teacher directions.",
-    "If the Skills plan references Listening & Learning time, keep it as the linked L&L portion of the block and do not duplicate an unrelated saved L&L plan.",
+    "Only build Rotations 1-3 from the Skills lesson. Listening & Learning is analyzed separately and supplies Rotations 4-5 when plans are viewed together.",
+    "Read the uploaded Skills lesson and adapt it into those three rotations instead of keeping the publisher's original timing. Decide what the teacher teaches during each rotation, what Group A/B/C do when they are not with the teacher, worksheet/practice, handwriting, 2-3 Learning Game questions for quick data, decodable or lesson-based reading, writing/application, independent evidence, Reading Intervention work while the teacher works with a small UFLI group, book-bag/free-choice reading with a short response, materials, pages, and substitute-friendly teacher directions.",
+    "The Teacher/Sub View must be chronological: Rotation 1, Rotation 2, Rotation 3. Put handwriting, reading, writing, game checks, guided work, independent evidence, extensions, and intervention work inside the rotation where they happen, not as separate repeated sections.",
   ].join("\n");
 }
 
@@ -1021,6 +1024,10 @@ function buildCurriculumPlanPrompt(data) {
   const subjectLabel = labelForCurriculumSubject(data.subject);
   const selectedToggleLabels = getCurriculumPlanSelectedToggleLabels(data.toggleSettings);
   const disabledToggleLabels = getCurriculumPlanDisabledToggleLabels(data.toggleSettings);
+  const priorityStandard = asText(data.priorityStandard);
+  const standardsContext = data.subject === "math"
+    ? buildMathStandardsContext(`${priorityStandard}\n${data.sourceText}`)
+    : "";
   return [
     `Create a first grade ${subjectLabel} Plan Analyzer draft.`,
     "",
@@ -1030,8 +1037,10 @@ function buildCurriculumPlanPrompt(data) {
     `Unit/module selected by teacher: ${data.unitOrModule || "not provided"}`,
     `Lesson number selected by teacher: ${data.lessonNumber || "not provided"}`,
     `Lesson title selected by teacher: ${data.lessonTitle || "not provided"}`,
+    `Priority standard selected by teacher: ${priorityStandard || "not provided"}`,
     "",
     buildCurriculumPlanStructureGuidance(data.subject),
+    ...(standardsContext ? ["", standardsContext] : []),
     "",
     "Teacher toggle settings:",
     `Generate these sections/details when supported: ${selectedToggleLabels.join(", ") || "none"}.`,
@@ -1041,6 +1050,8 @@ function buildCurriculumPlanPrompt(data) {
     "",
     "Return teacherSubView as editable sections. Use clear section titles. Include the fixed rotation sections for Skills and Math. For Listening & Learning, include practical story/content sections rather than rotations unless the source clearly has lesson segments.",
     "Each teacherSubView body should be detailed enough that the teacher or a substitute could teach from it without reopening the teacher guide unless needed.",
+    "The selected priorityStandard field must guide what the plan emphasizes, what evidence/data is collected, and what intervention or independent work is assigned. Copy the selected priority standard into priorityStandard unless the teacher left it blank.",
+    "Do not write vague placeholders such as \"if available,\" \"use assigned work,\" \"complete the worksheet,\" or \"as needed.\" Name the exact lesson-aligned task, question, response, page/checkpoint, or evidence source when the lesson supports it. If the source does not support an exact task, put that need in missingInformation instead.",
     "Make Principal View much shorter and derived from the same teacherSubView plan: title/I Can lives in the top fields; then teacherDoing, scholarsDoing, brief rotationBullets, evidenceCollected, and interventionOverview.",
     "Use page numbers only when the source provides or strongly implies them. If exact pages are unclear and Page Numbers is on, say what page range/source location to check rather than inventing numbers.",
     "Use missingInformation only for information needed before teaching that the source does not responsibly provide.",
@@ -1700,18 +1711,51 @@ function filterCurriculumPlanSectionsByToggles(sections, toggleSettings) {
   });
 }
 
+function getCurriculumPlanRotationNumber(section) {
+  const text = `${section && section.key || ""} ${section && section.title || ""}`;
+  const match = text.match(/\brotation\s*([0-9]+)/i) || text.match(/\brotation-([0-9]+)/i);
+  return match ? Number(match[1]) : 0;
+}
+
+function enforceCurriculumPlanChronology(sections, subject) {
+  if (!["skills", "math"].includes(subject)) return sections;
+  const maxRotation = subject === "skills" ? 3 : 5;
+  const standaloneDetailPattern = /^(teacher script|materials?|page numbers?|group [abc] tasks?|handwriting|reading|writing|learning games?(?: \/ data check)?|data check|guided work|independent evidence|intervention work|extensions?)$/i;
+  const rotations = [];
+  const otherSections = [];
+  sections.forEach((section) => {
+    const rotationNumber = getCurriculumPlanRotationNumber(section);
+    if (rotationNumber) {
+      if (rotationNumber <= maxRotation) rotations.push({ ...section, rotationNumber });
+      return;
+    }
+    if (!standaloneDetailPattern.test(asText(section.title))) {
+      otherSections.push(section);
+    }
+  });
+  rotations.sort((a, b) => a.rotationNumber - b.rotationNumber);
+  return [
+    ...rotations.map(({ rotationNumber, ...section }) => section),
+    ...otherSections,
+  ];
+}
+
 function normalizeCurriculumPlanAnalysis(rawAnalysis, fallback = {}) {
   if (!rawAnalysis || typeof rawAnalysis !== "object" || Array.isArray(rawAnalysis)) {
     throw new Error("The response root must be a JSON object.");
   }
   const subject = normalizeCurriculumPlanSubject(rawAnalysis.subject || fallback.subject);
   const toggleSettings = normalizeCurriculumPlanToggleSettings(fallback.toggleSettings);
-  const sections = filterCurriculumPlanSectionsByToggles(
-    normalizeCurriculumPlanSections(rawAnalysis.teacherSubView || rawAnalysis.sections),
-    toggleSettings
+  const sections = enforceCurriculumPlanChronology(
+    filterCurriculumPlanSectionsByToggles(
+      normalizeCurriculumPlanSections(rawAnalysis.teacherSubView || rawAnalysis.sections),
+      toggleSettings
+    ),
+    subject
   );
   const principalView = normalizeCurriculumPlanPrincipalView(rawAnalysis.principalView);
   const lessonTitle = normalizeScholarLanguage(rawAnalysis.lessonTitle || fallback.lessonTitle);
+  const priorityStandard = normalizeScholarLanguage(rawAnalysis.priorityStandard || fallback.priorityStandard);
   const planTitle = normalizeScholarLanguage(rawAnalysis.planTitle)
     || lessonTitle
     || `${labelForCurriculumSubject(subject)} ${normalizeScholarLanguage(rawAnalysis.lessonNumber || fallback.lessonNumber || "Plan")}`;
@@ -1722,6 +1766,7 @@ function normalizeCurriculumPlanAnalysis(rawAnalysis, fallback = {}) {
     lessonNumber: normalizeScholarLanguage(rawAnalysis.lessonNumber || fallback.lessonNumber),
     lessonTitle,
     planTitle,
+    priorityStandard,
     iCanStatement: normalizeScholarLanguage(rawAnalysis.iCanStatement),
     teacherSubView: sections,
     principalView,
