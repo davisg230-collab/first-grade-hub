@@ -512,7 +512,7 @@
     }
     .master-roster-row {
       display: grid;
-      grid-template-columns: minmax(160px, 1.05fr) minmax(110px, .65fr) minmax(120px, .7fr) minmax(120px, .7fr) minmax(145px, .85fr) minmax(190px, 1.15fr) auto;
+      grid-template-columns: minmax(180px, 1.15fr) minmax(110px, .65fr) minmax(120px, .7fr) minmax(120px, .7fr) minmax(165px, 1fr) auto;
       gap: .65rem;
       align-items: center;
       padding: .75rem;
@@ -528,6 +528,36 @@
       padding: .7rem .8rem;
       background: var(--md-white);
       color: var(--md-ink);
+    }
+    .master-row-name-cell {
+      display: grid;
+      gap: .45rem;
+      min-width: 0;
+    }
+    .master-row-name-button {
+      width: 100%;
+      min-height: 2.6rem;
+      border-radius: .75rem;
+      border: 1px solid color-mix(in oklab, var(--md-coral) 50%, var(--md-white) 50%);
+      background: color-mix(in oklab, var(--md-white) 78%, var(--md-blush) 22%);
+      color: var(--md-slate);
+      font-weight: 900;
+      padding: .65rem .75rem;
+      text-align: left;
+      overflow-wrap: anywhere;
+    }
+    .master-row-name-button:hover,
+    .master-row-name-button:focus {
+      background: color-mix(in oklab, var(--md-white) 64%, var(--md-blush) 36%);
+      outline: 2px solid color-mix(in oklab, var(--md-coral) 55%, var(--md-white) 45%);
+      outline-offset: 2px;
+    }
+    .guardian-summary-note,
+    .transportation-expiration-note {
+      font-size: .75rem;
+      color: #64748b;
+      font-weight: 700;
+      line-height: 1.25;
     }
     .master-roster-heading {
       font-size: .75rem;
@@ -600,6 +630,46 @@
     }
     body:not(.editing):not(.roster-editing) #rosterImportPanel {
       display: none !important;
+    }
+    .guardian-modal-panel {
+      width: min(980px, calc(100vw - 2rem));
+      max-height: 90vh;
+      overflow-y: auto;
+      border: 3px solid var(--md-coral);
+    }
+    .guardian-field {
+      width: 100%;
+      border-radius: .75rem;
+      border: 1px solid color-mix(in oklab, var(--md-slate) 28%, var(--md-white) 72%);
+      background: var(--md-white);
+      color: var(--md-ink);
+      padding: .7rem .8rem;
+    }
+    .guardian-list-card {
+      border-radius: .9rem;
+      border: 1px solid color-mix(in oklab, var(--md-slate) 22%, var(--md-white) 78%);
+      background: var(--md-white);
+      padding: .9rem;
+    }
+    .guardian-badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: .25rem .55rem;
+      font-size: .72rem;
+      font-weight: 900;
+      background: color-mix(in oklab, var(--md-white) 64%, var(--md-mustard) 36%);
+      color: var(--md-ink);
+    }
+    .transportation-update-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin-top: .75rem;
+    }
+    .transportation-update-actions button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
     }
     .roster-import-panel {
       display: none;
@@ -3709,7 +3779,7 @@
             </button>
             <button id="teacherRosterTool" type="button" class="teacher-tool-book" style="background: linear-gradient(90deg, #be5b45 0 .55rem, var(--md-coral) .55rem);" onclick="openTeacherRosterTool()">
               <h3 class="font-display font-bold">Roster Tools</h3>
-              <p>Manage scholars, dismissal, approved guardians, birthdays, and classroom records.</p>
+              <p>Manage scholars, dismissal, family contacts, birthdays, and classroom records.</p>
             </button>
             <button type="button" class="teacher-tool-book" style="background: linear-gradient(90deg, #b45309 0 .55rem, var(--md-mustard) .55rem); color: var(--md-ink);" disabled>
               <h3 class="font-display font-bold">Printables</h3>
@@ -4471,6 +4541,11 @@
     let listeningUnitsData = []; // Array of 11 units, each with one Vocabulary section
 
     let classDataLoadedFromFirestore = false;
+    let rosterGuardiansByScholar = {};
+    let transportationTemporaryPlans = {};
+    let activeGuardianScholarKey = '';
+    let activeGuardianScholarName = '';
+    let activeGuardianEditIndex = -1;
     const curriculumStructureLoadState = {
       skills: false,
       math: false,
@@ -9582,6 +9657,8 @@
 
       const transportationUpdatesEl = document.getElementById('transportationUpdatesTextarea');
       if (transportationUpdatesEl) data.transportation_updates_json = transportationUpdatesEl.value || '[]';
+      data.roster_guardians_json = getRosterGuardiansJson();
+      data.transportation_temporary_json = getTransportationTemporaryJson();
       
       // Birthday fields
       const classRosterEl = document.getElementById('classRosterTextarea');
@@ -13562,6 +13639,8 @@ async function updateGalleryPhotos(galleryUrlsJson) {
 // Function to update transportation fields with saved data
 function updateTransportationFields(data) {
   if (!data) return;
+  setRosterGuardiansFromJson(data.roster_guardians_json || '{}');
+  setTransportationTemporaryFromJson(data.transportation_temporary_json || '{}');
   
   const busRidersEl = document.getElementById('busRidersTextarea');
   if (busRidersEl && data.bus_riders) {
@@ -13586,6 +13665,9 @@ function updateTransportationFields(data) {
   const rosterEl = document.getElementById('transportationRosterTextarea');
   if (rosterEl) {
     rosterEl.value = data.transportation_roster_text || buildTransportationRosterFromLegacy(data);
+    const rows = parseTransportationRosterText(rosterEl.value || '');
+    migrateLegacyApprovedGuardians(rows);
+    rosterEl.value = rows.map(applyTemporaryReturnIfNeeded).map(formatTransportationRosterRow).join('\n');
   }
 
   const updatesEl = document.getElementById('transportationUpdatesTextarea');
@@ -13641,7 +13723,10 @@ function getTransportationRoster() {
   if (document.querySelectorAll('#masterRosterRows .master-roster-row:not(.master-roster-heading)').length) {
     syncMasterRosterTextareas();
   }
-  return parseTransportationRosterText(document.getElementById('transportationRosterTextarea')?.value || '');
+  const rosterEl = document.getElementById('transportationRosterTextarea');
+  const rows = parseTransportationRosterText(rosterEl?.value || '').map(applyTemporaryReturnIfNeeded);
+  if (rosterEl) rosterEl.value = rows.map(formatTransportationRosterRow).join('\n');
+  return rows;
 }
 
 function normalizeTransportationType(type) {
@@ -13702,44 +13787,269 @@ function normalizeGuardianName(value) {
     .trim();
 }
 
-function getGuardianApprovalResult(scholar, guardianName) {
-  const approvedNames = parseApprovedGuardianNames(scholar?.approvedGuardians || '');
+function getScholarGuardianKey(scholarOrName) {
+  const name = typeof scholarOrName === 'string' ? scholarOrName : (scholarOrName?.name || '');
+  return normalizeGuardianName(name).replace(/\s+/g, '-');
+}
+
+function createGuardianId() {
+  if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+    return window.crypto.randomUUID();
+  }
+  return `guardian-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function parseJsonObject(value, fallback = {}) {
+  if (!value) return fallback;
+  if (typeof value === 'object' && !Array.isArray(value)) return value;
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : fallback;
+  } catch (error) {
+    console.error('Failed to parse saved JSON object:', error);
+    return fallback;
+  }
+}
+
+function normalizeGuardianRecord(record = {}) {
+  const name = String(record.name || record.guardianName || '').trim();
+  return {
+    id: String(record.id || createGuardianId()),
+    name,
+    relationship: String(record.relationship || '').trim(),
+    phone: String(record.phone || '').trim(),
+    email: String(record.email || '').trim(),
+    approvedPickup: record.approvedPickup !== false,
+    canChangeTransportation: record.canChangeTransportation === true
+  };
+}
+
+function normalizeGuardianList(value) {
+  if (Array.isArray(value)) {
+    return value.map(normalizeGuardianRecord).filter(guardian => guardian.name);
+  }
+  return parseApprovedGuardianNames(value).map(name => normalizeGuardianRecord({
+    name,
+    relationship: '',
+    approvedPickup: true,
+    canChangeTransportation: true
+  }));
+}
+
+function normalizeGuardianData(value) {
+  const source = parseJsonObject(value, {});
+  const normalized = {};
+  Object.entries(source).forEach(([key, list]) => {
+    const cleanKey = getScholarGuardianKey(key);
+    if (!cleanKey) return;
+    const guardians = normalizeGuardianList(list);
+    if (guardians.length) normalized[cleanKey] = guardians;
+  });
+  return normalized;
+}
+
+function getRosterGuardiansJson() {
+  const cleaned = {};
+  Object.entries(rosterGuardiansByScholar || {}).forEach(([key, guardians]) => {
+    const cleanKey = getScholarGuardianKey(key);
+    const cleanGuardians = normalizeGuardianList(guardians);
+    if (cleanKey && cleanGuardians.length) cleaned[cleanKey] = cleanGuardians;
+  });
+  rosterGuardiansByScholar = cleaned;
+  return JSON.stringify(cleaned);
+}
+
+function setRosterGuardiansFromJson(value) {
+  rosterGuardiansByScholar = normalizeGuardianData(value);
+}
+
+function getRosterGuardiansForScholar(scholarOrName) {
+  const key = getScholarGuardianKey(scholarOrName);
+  return key ? normalizeGuardianList(rosterGuardiansByScholar[key] || []) : [];
+}
+
+function setRosterGuardiansForScholar(scholarOrName, guardians) {
+  const key = getScholarGuardianKey(scholarOrName);
+  if (!key) return;
+  const cleanGuardians = normalizeGuardianList(guardians);
+  if (cleanGuardians.length) {
+    rosterGuardiansByScholar[key] = cleanGuardians;
+  } else {
+    delete rosterGuardiansByScholar[key];
+  }
+}
+
+function migrateLegacyApprovedGuardians(rows = []) {
+  rows.forEach(row => {
+    const key = getScholarGuardianKey(row);
+    const legacyNames = parseApprovedGuardianNames(row.approvedGuardians || '');
+    if (!key || !legacyNames.length) return;
+    const guardians = getRosterGuardiansForScholar(row);
+    legacyNames.forEach(name => {
+      if (guardians.some(guardian => normalizeGuardianName(guardian.name) === normalizeGuardianName(name))) return;
+      guardians.push(normalizeGuardianRecord({
+        name,
+        relationship: '',
+        approvedPickup: true,
+        canChangeTransportation: true
+      }));
+    });
+    setRosterGuardiansForScholar(row, guardians);
+  });
+}
+
+function getGuardianTransportationAuthorizationResult(scholar, guardianName) {
+  const guardians = getRosterGuardiansForScholar(scholar);
   const submittedName = String(guardianName || '').trim();
-  if (!approvedNames.length) {
+  if (!guardians.length) {
     return {
       status: 'no-list',
       approved: false,
-      label: 'No approved guardians listed for this scholar',
-      matchedName: ''
+      label: 'No guardians listed for this scholar',
+      matchedName: '',
+      guardian: null
     };
   }
 
   const normalizedSubmittedName = normalizeGuardianName(submittedName);
-  const matchedName = approvedNames.find(name => normalizeGuardianName(name) === normalizedSubmittedName) || '';
-  if (matchedName) {
+  const matchedGuardian = guardians.find(guardian => normalizeGuardianName(guardian.name) === normalizedSubmittedName);
+  if (matchedGuardian && matchedGuardian.canChangeTransportation) {
     return {
-      status: 'approved',
+      status: 'authorized',
       approved: true,
-      label: `Approved guardian matched: ${matchedName}`,
-      matchedName
+      label: `Transportation changes authorized: ${matchedGuardian.name}`,
+      matchedName: matchedGuardian.name,
+      guardian: matchedGuardian
+    };
+  }
+
+  if (matchedGuardian) {
+    return {
+      status: 'not-authorized',
+      approved: false,
+      label: `${matchedGuardian.name} is listed but not authorized to make transportation changes`,
+      matchedName: matchedGuardian.name,
+      guardian: matchedGuardian
     };
   }
 
   return {
     status: 'not-found',
     approved: false,
-    label: 'Not on approved guardian list',
-    matchedName: ''
+    label: 'Guardian is not listed for transportation changes',
+    matchedName: '',
+    guardian: null
   };
+}
+
+function getPickupApprovalResult(scholar, pickupName) {
+  const guardians = getRosterGuardiansForScholar(scholar);
+  const submittedName = String(pickupName || '').trim();
+  if (!submittedName) {
+    return { status: 'not-needed', approved: true, label: 'No pickup person needed', matchedName: '', guardian: null };
+  }
+  if (!guardians.length) {
+    return { status: 'no-list', approved: false, label: 'No approved pickup guardians listed', matchedName: '', guardian: null };
+  }
+  const normalizedPickupName = normalizeGuardianName(submittedName);
+  const matchedGuardian = guardians.find(guardian => normalizeGuardianName(guardian.name) === normalizedPickupName);
+  if (matchedGuardian && matchedGuardian.approvedPickup) {
+    return {
+      status: 'approved',
+      approved: true,
+      label: `Approved pickup guardian: ${matchedGuardian.name}`,
+      matchedName: matchedGuardian.name,
+      guardian: matchedGuardian
+    };
+  }
+  if (matchedGuardian) {
+    return {
+      status: 'not-approved',
+      approved: false,
+      label: `${matchedGuardian.name} is listed but not approved for pickup`,
+      matchedName: matchedGuardian.name,
+      guardian: matchedGuardian
+    };
+  }
+  return {
+    status: 'not-found',
+    approved: false,
+    label: 'Pickup person is not on the approved pickup list',
+    matchedName: '',
+    guardian: null
+  };
+}
+
+function getGuardianApprovalResult(scholar, guardianName) {
+  return getGuardianTransportationAuthorizationResult(scholar, guardianName);
 }
 
 function getGuardianApprovalBadgeText(update) {
   if (!update.guardianApprovalStatus) return 'Not checked on older update';
-  if (update.guardianApprovalStatus === 'approved') {
-    return update.guardianMatchedName ? `Approved: ${update.guardianMatchedName}` : 'Approved guardian';
+  if (update.guardianApprovalStatus === 'authorized' || update.guardianApprovalStatus === 'approved') {
+    return update.guardianMatchedName ? `Authorized: ${update.guardianMatchedName}` : 'Transportation changes authorized';
   }
-  if (update.guardianApprovalStatus === 'no-list') return 'No approved guardian list';
-  return 'Not on approved guardian list';
+  if (update.guardianApprovalStatus === 'not-authorized') return 'Guardian is not authorized for transportation changes';
+  if (update.guardianApprovalStatus === 'no-list') return 'No guardian list';
+  return 'Guardian not listed';
+}
+
+function getPickupApprovalBadgeText(update) {
+  if (!update.pickupApprovalStatus || update.requestedType !== 'car') return '';
+  if (update.pickupApprovalStatus === 'approved') {
+    return update.pickupMatchedName ? `Pickup approved: ${update.pickupMatchedName}` : 'Pickup person approved';
+  }
+  if (update.pickupApprovalRequested) return 'New pickup approval requested';
+  if (update.pickupApprovalStatus === 'no-list') return 'No approved pickup list';
+  return 'Pickup person not approved';
+}
+
+function getGuardianSummaryText(scholarOrName) {
+  const guardians = getRosterGuardiansForScholar(scholarOrName);
+  if (!guardians.length) return 'No guardians added';
+  const pickupCount = guardians.filter(guardian => guardian.approvedPickup).length;
+  const changeCount = guardians.filter(guardian => guardian.canChangeTransportation).length;
+  return `${guardians.length} guardian${guardians.length === 1 ? '' : 's'} | ${pickupCount} pickup | ${changeCount} transport`;
+}
+
+function getTransportationTemporaryJson() {
+  return JSON.stringify(transportationTemporaryPlans || {});
+}
+
+function setTransportationTemporaryFromJson(value) {
+  transportationTemporaryPlans = parseJsonObject(value, {});
+}
+
+function normalizeDateKey(value) {
+  const text = String(value || '').trim();
+  return /^\d{4}-\d{2}-\d{2}$/.test(text) ? text : '';
+}
+
+function getTodayDateKey() {
+  const today = new Date();
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+}
+
+function getTomorrowDateKey() {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+}
+
+function formatDateForDisplay(dateKey) {
+  const cleanKey = normalizeDateKey(dateKey);
+  if (!cleanKey) return '';
+  const [year, month, day] = cleanKey.split('-').map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
+}
+
+function isTemporaryPlanExpired(dateKey) {
+  const cleanKey = normalizeDateKey(dateKey);
+  return !!cleanKey && cleanKey < getTodayDateKey();
 }
 
 function getLastNameFromRosterName(name) {
@@ -13779,8 +14089,7 @@ function getTransportationRowData() {
       lastName: getLastNameFromRosterName(name),
       type,
       details,
-      duration: 'permanent',
-      approvedGuardians: ''
+      duration: 'permanent'
     };
   }).filter(row => row.name);
 }
@@ -13791,8 +14100,40 @@ function formatTransportationRosterRow(row) {
   const details = cleanRosterStorageField(row.details || '');
   const classKey = normalizeRosterClass(row.classKey);
   const duration = getTransportationDurationLabel(row.duration);
-  const approvedGuardians = cleanRosterStorageField(row.approvedGuardians || '');
-  return `${name} | ${lastName} | ${getTransportationStorageType(row.type)} | ${details} | ${classKey} | ${duration} | ${approvedGuardians}`;
+  return `${name} | ${lastName} | ${getTransportationStorageType(row.type)} | ${details} | ${classKey} | ${duration} |`;
+}
+
+let transportationAutoSaveTimer = null;
+
+function applyTemporaryReturnIfNeeded(row) {
+  if (!row || normalizeTransportationDuration(row.duration) !== 'temporary') return row;
+  const key = getScholarGuardianKey(row);
+  const plan = key ? transportationTemporaryPlans[key] : null;
+  if (!plan || !isTemporaryPlanExpired(plan.temporaryUntil)) return row;
+  row.type = normalizeTransportationType(plan.permanentType || row.type);
+  row.details = String(plan.permanentDetails || '').trim();
+  row.duration = 'permanent';
+  delete transportationTemporaryPlans[key];
+  queueTransportationAutoSave();
+  return row;
+}
+
+function queueTransportationAutoSave() {
+  clearTimeout(transportationAutoSaveTimer);
+  transportationAutoSaveTimer = setTimeout(() => {
+    saveTransportationStateSilently().catch(error => console.warn('Automatic transportation return could not be saved:', error));
+  }, 600);
+}
+
+async function saveTransportationStateSilently() {
+  if (typeof db === 'undefined') return;
+  syncMasterRosterTextareas();
+  await ensureParentActionAuth();
+  await db.collection('classData').doc('current').set({
+    transportation_roster_text: document.getElementById('transportationRosterTextarea')?.value || '',
+    transportation_temporary_json: getTransportationTemporaryJson(),
+    roster_guardians_json: getRosterGuardiansJson()
+  }, { merge: true });
 }
 
 function syncTransportationRosterText() {
@@ -13851,8 +14192,7 @@ function buildTransportationRowsFromRoster() {
       lastName: getLastNameFromRosterName(name),
       type: 'bus',
       details: '',
-      duration: 'permanent',
-      approvedGuardians: ''
+      duration: 'permanent'
     };
   });
   rosterEl.value = rows.map(formatTransportationRosterRow).join('\n');
@@ -13871,8 +14211,7 @@ function addTransportationRosterRow(name = '', type = 'bus', details = '') {
     lastName: getLastNameFromRosterName(cleanName),
     type: normalizeTransportationType(type),
     details: typeof details === 'string' ? details.trim() : '',
-    duration: 'permanent',
-    approvedGuardians: ''
+    duration: 'permanent'
   });
   rosterEl.value = rows.map(formatTransportationRosterRow).join('\n');
   renderTransportationRosterManager();
@@ -13897,7 +14236,10 @@ function handleTransportationRowInput() {
 
 function getTransportationStatus(scholar) {
   if (!scholar) return '';
-  const duration = ` (${getTransportationDurationLabel(scholar.duration)})`;
+  const plan = transportationTemporaryPlans[getScholarGuardianKey(scholar)] || {};
+  const duration = normalizeTransportationDuration(scholar.duration) === 'temporary'
+    ? ` (Temporary${plan.temporaryUntil ? ` through ${formatDateForDisplay(plan.temporaryUntil)}` : ''})`
+    : ' (Permanent)';
   if (scholar.type === 'bus') return `${scholar.details ? `Bus ${scholar.details.replace(/^bus\s*/i, '')}` : 'Bus'}${duration}`;
   if (scholar.type === 'car') return `${scholar.details ? `Car Pickup: ${scholar.details}` : 'Car Pickup'}${duration}`;
   return `${scholar.details ? `Porch Pickup: ${scholar.details}` : 'Porch Pickup'}${duration}`;
@@ -13928,10 +14270,13 @@ function renderTransportationUpdates() {
     list.innerHTML = '<div class="rounded-xl p-4 bg-white text-gray-600">No submitted updates yet.</div>';
     return;
   }
-  list.innerHTML = updates.slice().reverse().map(update => {
+  list.innerHTML = updates.slice().reverse().map((update, reverseIndex) => {
+    const originalIndex = updates.length - 1 - reverseIndex;
+    const requestStatus = update.status || 'pending';
     const approvalStatus = update.guardianApprovalStatus || '';
     const approvalText = getGuardianApprovalBadgeText(update);
-    const approvalStyle = approvalStatus === 'approved'
+    const pickupText = getPickupApprovalBadgeText(update);
+    const approvalStyle = (approvalStatus === 'approved' || approvalStatus === 'authorized')
       ? 'background: color-mix(in oklab, var(--md-white) 65%, #22c55e 35%); color:#14532d;'
       : approvalStatus
         ? 'background: color-mix(in oklab, var(--md-white) 58%, #f97316 42%); color:#7c2d12;'
@@ -13941,14 +14286,121 @@ function renderTransportationUpdates() {
         <div class="font-semibold">${escapeBirthdayText(update.studentName)} -> ${escapeBirthdayText(getTransportationTypeLabel(update.requestedType))}</div>
         <div class="text-gray-600">${escapeBirthdayText(update.duration)} change requested by ${escapeBirthdayText(update.guardianName)}</div>
         <div class="inline-flex mt-2 px-3 py-1 rounded-full text-xs font-bold" style="${approvalStyle}">Guardian check: ${escapeBirthdayText(approvalText)}</div>
+        ${pickupText ? `<div class="inline-flex mt-2 ml-2 px-3 py-1 rounded-full text-xs font-bold" style="background: color-mix(in oklab, var(--md-white) 64%, var(--md-mustard) 36%); color: var(--md-ink);">Pickup: ${escapeBirthdayText(pickupText)}</div>` : ''}
         <div class="text-gray-700 font-semibold mt-2">${escapeBirthdayText(getTransportationChangeSentence(update))}</div>
         <div class="text-gray-600">Current: ${escapeBirthdayText(update.currentStatus || 'Not listed')}</div>
         ${update.details ? `<div class="text-gray-600">Details: ${escapeBirthdayText(update.details)}</div>` : ''}
         ${update.note ? `<div class="text-gray-600">Note: ${escapeBirthdayText(update.note)}</div>` : ''}
         <div class="text-xs text-gray-500 mt-2">${escapeBirthdayText(update.createdAt || '')}</div>
+        ${requestStatus === 'pending' ? `
+          <div class="transportation-update-actions">
+            <button class="px-3 py-2 rounded-lg text-white text-xs font-semibold" style="background: var(--md-slate);" onclick="approveTransportationUpdate(${originalIndex}, false)">Approve Change</button>
+            ${update.requestedType === 'car' && update.details ? `<button class="px-3 py-2 rounded-lg text-white text-xs font-semibold" style="background: var(--md-coral);" onclick="approveTransportationUpdate(${originalIndex}, true)">Approve + Add Pickup</button>` : ''}
+            <button class="px-3 py-2 rounded-lg border text-xs font-semibold" onclick="denyTransportationUpdate(${originalIndex})">Deny</button>
+          </div>
+        ` : `<div class="mt-3 text-xs font-bold text-gray-500">Reviewed: ${escapeBirthdayText(requestStatus)}${update.reviewedAt ? ` on ${escapeBirthdayText(update.reviewedAt)}` : ''}</div>`}
       </div>
     `;
   }).join('');
+}
+
+function findRosterRowIndexForUpdate(rows, update) {
+  const updateName = normalizeGuardianName(update.studentName || '');
+  const updateLast = normalizeGuardianName(update.lastName || '');
+  return rows.findIndex(row => {
+    const rowName = normalizeGuardianName(row.name || '');
+    const rowLast = normalizeGuardianName(row.lastName || getLastNameFromRosterName(row.name));
+    return rowName === updateName || (updateLast && rowLast === updateLast && rowName.includes(updateLast));
+  });
+}
+
+function addPickupGuardianFromUpdate(row, update) {
+  if (!row || update.requestedType !== 'car' || !String(update.details || '').trim()) return;
+  const guardians = getRosterGuardiansForScholar(row);
+  const pickupName = String(update.details || '').trim();
+  const existing = guardians.find(guardian => normalizeGuardianName(guardian.name) === normalizeGuardianName(pickupName));
+  if (existing) {
+    existing.approvedPickup = true;
+  } else {
+    guardians.push(normalizeGuardianRecord({
+      name: pickupName,
+      relationship: 'Pickup person',
+      phone: '',
+      email: '',
+      approvedPickup: true,
+      canChangeTransportation: false
+    }));
+  }
+  setRosterGuardiansForScholar(row, guardians);
+}
+
+async function approveTransportationUpdate(updateIndex, addPickupGuardian = false) {
+  const updates = getTransportationUpdates();
+  const update = updates[updateIndex];
+  if (!update || (update.status && update.status !== 'pending')) return;
+  try {
+    const user = await ensureCurriculumTeacherUser();
+    if (!user) return;
+    const rows = getMasterRosterRowData();
+    const rowIndex = findRosterRowIndexForUpdate(rows, update);
+    if (rowIndex < 0) {
+      alert('This scholar is no longer on the roster. Add the scholar back before approving this change.');
+      return;
+    }
+    const row = rows[rowIndex];
+    const key = getScholarGuardianKey(row);
+    const duration = normalizeTransportationDuration(update.duration || 'temporary');
+    if (duration === 'temporary') {
+      const existingPlan = transportationTemporaryPlans[key] || {};
+      const permanentType = existingPlan.permanentType || (normalizeTransportationDuration(row.duration) === 'permanent' ? row.type : row.type);
+      const permanentDetails = Object.prototype.hasOwnProperty.call(existingPlan, 'permanentDetails')
+        ? existingPlan.permanentDetails
+        : (normalizeTransportationDuration(row.duration) === 'permanent' ? row.details : row.details);
+      transportationTemporaryPlans[key] = {
+        temporaryUntil: normalizeDateKey(update.temporaryEndDate) || getTodayDateKey(),
+        permanentType: normalizeTransportationType(permanentType || row.type),
+        permanentDetails: String(permanentDetails || ''),
+        approvedAt: new Date().toISOString()
+      };
+      row.duration = 'temporary';
+    } else {
+      row.duration = 'permanent';
+      if (key) delete transportationTemporaryPlans[key];
+    }
+    row.type = normalizeTransportationType(update.requestedType || row.type);
+    row.details = String(update.details || '').trim();
+    if (addPickupGuardian) addPickupGuardianFromUpdate(row, update);
+    rows[rowIndex] = row;
+    setMasterRosterData(rows);
+    renderMasterRosterRows(rows);
+    update.status = addPickupGuardian ? 'approved-with-pickup' : 'approved';
+    update.reviewedAt = new Date().toLocaleString();
+    update.reviewedBy = getEditorUserEmail(user);
+    setTransportationUpdates(updates);
+    await saveTransportationRoster();
+  } catch (error) {
+    console.error('Transportation approval failed:', error);
+    alert(error.message || 'Transportation change could not be approved.');
+  }
+}
+
+async function denyTransportationUpdate(updateIndex) {
+  const updates = getTransportationUpdates();
+  const update = updates[updateIndex];
+  if (!update || (update.status && update.status !== 'pending')) return;
+  if (!confirm(`Deny this transportation change for ${update.studentName}?`)) return;
+  try {
+    const user = await ensureCurriculumTeacherUser();
+    if (!user) return;
+    update.status = 'denied';
+    update.reviewedAt = new Date().toLocaleString();
+    update.reviewedBy = getEditorUserEmail(user);
+    setTransportationUpdates(updates);
+    await saveTransportationRoster();
+  } catch (error) {
+    console.error('Transportation denial failed:', error);
+    alert(error.message || 'Transportation change could not be denied.');
+  }
 }
 
 // Function to save individual transportation fields
@@ -14059,7 +14511,9 @@ async function saveTransportationRoster() {
     const updatesEl = document.getElementById('transportationUpdatesTextarea');
     await db.collection('classData').doc('current').set({
       transportation_roster_text: rosterEl ? rosterEl.value || '' : '',
-      transportation_updates_json: updatesEl ? updatesEl.value || '[]' : '[]'
+      transportation_updates_json: updatesEl ? updatesEl.value || '[]' : '[]',
+      roster_guardians_json: getRosterGuardiansJson(),
+      transportation_temporary_json: getTransportationTemporaryJson()
     }, { merge: true });
     if (saveBtn) {
       saveBtn.textContent = 'Saved!';
@@ -14081,7 +14535,7 @@ async function saveTransportationRoster() {
 async function clearTransportationUpdates() {
   if (!document.body.classList.contains('editing')) return;
   if (!confirm('Clear submitted transportation updates after you have reviewed them?')) return;
-  setTransportationUpdates([]);
+  setTransportationUpdates(getTransportationUpdates().filter(update => !update.status || update.status === 'pending'));
   await saveTransportationRoster();
 }
 
@@ -14801,6 +15255,7 @@ function getTransportationByName() {
   const rosterText = document.getElementById('transportationRosterTextarea')?.value || '';
   const map = new Map();
   parseTransportationRosterText(rosterText).forEach(row => {
+    applyTemporaryReturnIfNeeded(row);
     map.set(row.name.toLowerCase(), row);
   });
   return map;
@@ -14815,16 +15270,22 @@ function getMasterRosterRowData() {
       const type = normalizeTransportationType(row.querySelector('.master-row-type')?.value || 'bus');
       const duration = normalizeTransportationDuration(row.querySelector('.master-row-duration')?.value || 'permanent');
       const details = row.querySelector('.master-row-details')?.value.trim() || '';
-      const approvedGuardians = row.querySelector('.master-row-guardians')?.value.trim() || '';
-      return {
+      const hiddenKey = row.querySelector('.master-row-guardian-key');
+      const previousKey = hiddenKey?.value || '';
+      const currentKey = getScholarGuardianKey(name);
+      if (previousKey && currentKey && previousKey !== currentKey && rosterGuardiansByScholar[previousKey] && !rosterGuardiansByScholar[currentKey]) {
+        rosterGuardiansByScholar[currentKey] = rosterGuardiansByScholar[previousKey];
+        delete rosterGuardiansByScholar[previousKey];
+      }
+      if (hiddenKey && currentKey) hiddenKey.value = currentKey;
+      return applyTemporaryReturnIfNeeded({
         name,
         lastName: getLastNameFromRosterName(name),
         classKey,
         type,
         duration,
-        details,
-        approvedGuardians
-      };
+        details
+      });
     }).filter(row => row.name);
   }
 
@@ -14833,27 +15294,25 @@ function getMasterRosterRowData() {
   const sourceNames = names.length ? names : Array.from(transportationByName.values()).map(row => row.name);
   return Array.from(new Set(sourceNames)).map(name => {
     const savedTransportation = transportationByName.get(name.toLowerCase());
-    return {
+    return applyTemporaryReturnIfNeeded({
       name,
       lastName: getLastNameFromRosterName(name),
       classKey: savedTransportation?.classKey || 'davis',
       type: savedTransportation?.type || 'bus',
       duration: savedTransportation?.duration || 'permanent',
-      details: savedTransportation?.details || '',
-      approvedGuardians: savedTransportation?.approvedGuardians || ''
-    };
+      details: savedTransportation?.details || ''
+    });
   });
 }
 
 function setMasterRosterData(rows) {
-  const cleanRows = rows.map(row => ({
+  const cleanRows = rows.map(row => applyTemporaryReturnIfNeeded({
     name: String(row.name || '').trim(),
     lastName: getLastNameFromRosterName(row.name),
     classKey: normalizeRosterClass(row.classKey || 'davis'),
     type: normalizeTransportationType(row.type || 'bus'),
     duration: normalizeTransportationDuration(row.duration || 'permanent'),
-    details: String(row.details || '').trim(),
-    approvedGuardians: String(row.approvedGuardians || '').trim()
+    details: String(row.details || '').trim()
   })).filter(row => row.name);
 
   const namesText = cleanRows.map(row => row.name).join('\n');
@@ -14958,9 +15417,20 @@ function getMasterRosterRowMarkup(row, index) {
   const inputState = canEdit ? '' : 'disabled readonly';
   const selectState = canEdit ? '' : 'disabled';
   const removeStyle = canEdit ? '' : 'display:none;';
+  const guardianKey = getScholarGuardianKey(row);
+  const guardianSummary = getGuardianSummaryText(row);
+  const tempPlan = transportationTemporaryPlans[guardianKey] || {};
+  const temporaryNote = normalizeTransportationDuration(row.duration) === 'temporary' && tempPlan.temporaryUntil
+    ? `<div class="transportation-expiration-note">Returns after ${escapeBirthdayText(formatDateForDisplay(tempPlan.temporaryUntil))}</div>`
+    : '';
   return `
     <div class="master-roster-row" data-roster-index="${index}">
-      <input class="master-row-name teacher-only-edit" value="${escapeBirthdayText(row.name)}" placeholder="Scholar full name" oninput="handleMasterRosterInput()" ${inputState}>
+      <div class="master-row-name-cell">
+        <button type="button" class="master-row-name-button" onclick="openGuardianModalByIndex(${index})">${escapeBirthdayText(row.name || 'Add scholar name')}</button>
+        <div class="guardian-summary-note">${escapeBirthdayText(guardianSummary)}</div>
+        <input type="hidden" class="master-row-guardian-key" value="${escapeBirthdayText(guardianKey)}">
+        <input class="master-row-name teacher-only-edit" style="${canEdit ? '' : 'display:none;'}" value="${escapeBirthdayText(row.name)}" placeholder="Scholar full name" oninput="handleMasterRosterInput()" ${inputState}>
+      </div>
       <select class="master-row-class teacher-only-edit" onchange="handleMasterRosterClassChange(this)" ${selectState}>
         ${getRosterClassOptions(row.classKey)}
       </select>
@@ -14972,8 +15442,10 @@ function getMasterRosterRowMarkup(row, index) {
       <select class="master-row-duration teacher-only-edit" onchange="handleMasterRosterInput()" ${selectState}>
         ${getTransportationDurationOptions(row.duration)}
       </select>
-      <input class="master-row-details teacher-only-edit" value="${escapeBirthdayText(row.details || '')}" placeholder="${getTransportationDetailPlaceholder(cleanType)}" oninput="handleMasterRosterInput()" ${inputState}>
-      <input class="master-row-guardians teacher-only-edit" value="${escapeBirthdayText(row.approvedGuardians || '')}" placeholder="Names separated by commas" oninput="handleMasterRosterInput()" ${inputState}>
+      <div>
+        <input class="master-row-details teacher-only-edit" value="${escapeBirthdayText(row.details || '')}" placeholder="${getTransportationDetailPlaceholder(cleanType)}" oninput="handleMasterRosterInput()" ${inputState}>
+        ${temporaryNote}
+      </div>
       <button type="button" class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral); ${removeStyle}" onclick="removeMasterRosterRow(this)">Remove</button>
     </div>
   `;
@@ -15017,7 +15489,6 @@ function renderMasterRosterRows(rows) {
         <div>Dismissal</div>
         <div>Status</div>
         <div>Details</div>
-        <div>Approved guardians</div>
         <div></div>
       </div>
       <div class="grid gap-3 mt-3">${hiddenRows}${emptyMessage}</div>
@@ -15033,7 +15504,7 @@ function renderMasterRosterManager() {
 function addMasterRosterRow() {
   const rows = getMasterRosterRowData();
   const classKey = normalizeRosterClass(activeRosterClassTab || 'davis');
-  rows.push({ name: '', classKey, type: 'bus', duration: 'permanent', details: '', approvedGuardians: '' });
+  rows.push({ name: '', classKey, type: 'bus', duration: 'permanent', details: '' });
   const container = document.getElementById('masterRosterRows');
   if (!container) return;
   renderMasterRosterRows(rows);
@@ -15092,7 +15563,7 @@ function insertRosterFromPaste() {
   const existingNames = new Set(rows.map(row => row.name.toLowerCase()));
   names.forEach(name => {
     if (existingNames.has(name.toLowerCase())) return;
-    rows.push({ name, classKey, type, duration: 'permanent', details: '', approvedGuardians: '' });
+    rows.push({ name, classKey, type, duration: 'permanent', details: '' });
     existingNames.add(name.toLowerCase());
   });
   activeRosterClassTab = classKey;
@@ -15115,7 +15586,9 @@ async function saveRosterField() {
     }
     await db.collection('classData').doc('current').set({
       class_roster: getMasterRosterText(),
-      transportation_roster_text: document.getElementById('transportationRosterTextarea')?.value || ''
+      transportation_roster_text: document.getElementById('transportationRosterTextarea')?.value || '',
+      roster_guardians_json: getRosterGuardiansJson(),
+      transportation_temporary_json: getTransportationTemporaryJson()
     }, { merge: true });
     if (saveBtn) {
       saveBtn.textContent = 'Saved!';
@@ -15156,10 +15629,9 @@ function printRoster(classKey = '') {
       <td>${escapeHtml(getTransportationTypeLabel(row.type))}</td>
       <td>${escapeHtml(getTransportationDurationLabel(row.duration))}</td>
       <td>${escapeHtml(row.details || '')}</td>
-      <td>${escapeHtml(row.approvedGuardians || '')}</td>
     </tr>
   `).join('');
-  const printHtml = `<!doctype html><html><head><title>${escapeHtml(classLabel)} Roster</title><style>@page{margin:.45in;}html,body{margin:0;padding:0;}body{font-family:Arial,sans-serif;color:#1f2937;}h1{margin:0 0 4px;font-size:26px;color:#475569;}p{margin:0 0 14px;color:#64748b;font-size:13px;}table{width:100%;border-collapse:collapse;font-size:12px;}th{background:#f7efe2;color:#475569;text-align:left;}th,td{border:1px solid #d8c7ad;padding:7px 8px;vertical-align:top;}tr{break-inside:avoid;}@media print{html,body{width:auto;height:auto;}}</style></head><body><h1>${escapeHtml(classLabel)} Roster</h1><p>Teacher copy - ${rosterRows.length} scholar${rosterRows.length === 1 ? '' : 's'}</p><table><thead><tr><th>Scholar</th>${includeClass ? '<th>Class</th>' : ''}<th>Dismissal</th><th>Status</th><th>Details</th><th>Approved guardians</th></tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`;
+  const printHtml = `<!doctype html><html><head><title>${escapeHtml(classLabel)} Roster</title><style>@page{margin:.45in;}html,body{margin:0;padding:0;}body{font-family:Arial,sans-serif;color:#1f2937;}h1{margin:0 0 4px;font-size:26px;color:#475569;}p{margin:0 0 14px;color:#64748b;font-size:13px;}table{width:100%;border-collapse:collapse;font-size:12px;}th{background:#f7efe2;color:#475569;text-align:left;}th,td{border:1px solid #d8c7ad;padding:7px 8px;vertical-align:top;}tr{break-inside:avoid;}@media print{html,body{width:auto;height:auto;}}</style></head><body><h1>${escapeHtml(classLabel)} Roster</h1><p>Teacher copy - ${rosterRows.length} scholar${rosterRows.length === 1 ? '' : 's'}</p><table><thead><tr><th>Scholar</th>${includeClass ? '<th>Class</th>' : ''}<th>Dismissal</th><th>Status</th><th>Details</th></tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`;
   printWindow.document.open();
   printWindow.document.write(printHtml);
   printWindow.document.close();
@@ -15171,6 +15643,223 @@ function printRoster(classKey = '') {
 
 function saveRosterImage(classKey = '') {
   printRoster(classKey);
+}
+
+async function openGuardianModalByIndex(index) {
+  const rows = getMasterRosterRowData();
+  const scholar = rows[index];
+  if (!scholar || !String(scholar.name || '').trim()) {
+    alert('Add the scholar name before opening family information.');
+    return;
+  }
+  try {
+    const user = await ensureCurriculumTeacherUser();
+    if (!user) return;
+    teacherRosterUnlocked = true;
+    activeGuardianScholarKey = getScholarGuardianKey(scholar);
+    activeGuardianScholarName = scholar.name;
+    activeGuardianEditIndex = -1;
+    resetGuardianForm();
+    renderGuardianModal();
+    const modal = document.getElementById('guardianModal');
+    if (modal) {
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+  } catch (error) {
+    console.error('Could not open guardian modal:', error);
+    alert(error.message || 'Family information could not be opened.');
+  }
+}
+
+function closeGuardianModal() {
+  const modal = document.getElementById('guardianModal');
+  if (modal) modal.style.display = 'none';
+  document.body.style.overflow = '';
+  activeGuardianScholarKey = '';
+  activeGuardianScholarName = '';
+  activeGuardianEditIndex = -1;
+}
+
+function resetGuardianForm() {
+  activeGuardianEditIndex = -1;
+  ['guardianNameInput', 'guardianRelationshipInput', 'guardianPhoneInput', 'guardianEmailInput'].forEach(id => {
+    const input = document.getElementById(id);
+    if (input) input.value = '';
+  });
+  const pickup = document.getElementById('guardianPickupApprovedInput');
+  const changes = document.getElementById('guardianTransportChangesInput');
+  if (pickup) pickup.checked = true;
+  if (changes) changes.checked = false;
+  const title = document.getElementById('guardianFormTitle');
+  const saveBtn = document.getElementById('guardianSaveBtn');
+  if (title) title.textContent = 'Add Guardian';
+  if (saveBtn) saveBtn.textContent = 'Add Guardian';
+}
+
+function getActiveGuardianScholar() {
+  return getMasterRosterRowData().find(row => getScholarGuardianKey(row) === activeGuardianScholarKey) || {
+    name: activeGuardianScholarName,
+    classKey: activeRosterClassTab,
+    type: 'bus',
+    duration: 'permanent',
+    details: ''
+  };
+}
+
+function renderGuardianModal() {
+  const scholar = getActiveGuardianScholar();
+  const title = document.getElementById('guardianModalTitle');
+  const subtitle = document.getElementById('guardianModalSubtitle');
+  const status = document.getElementById('guardianTransportationStatus');
+  const list = document.getElementById('guardianList');
+  if (title) title.textContent = `${activeGuardianScholarName || scholar.name} Family Information`;
+  if (subtitle) subtitle.textContent = `${getRosterClassLabel(scholar.classKey)} | Teacher only`;
+  if (status) status.textContent = getTransportationStatus(scholar);
+  if (!list) return;
+  const guardians = getRosterGuardiansForScholar(activeGuardianScholarKey);
+  if (!guardians.length) {
+    list.innerHTML = '<div class="guardian-list-card text-sm text-gray-600">No guardians added yet.</div>';
+    return;
+  }
+  list.innerHTML = guardians.map((guardian, index) => `
+    <div class="guardian-list-card">
+      <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div>
+          <div class="font-bold text-lg" style="color: var(--md-slate);">${escapeBirthdayText(guardian.name)}</div>
+          <div class="text-sm text-gray-600">${escapeBirthdayText(guardian.relationship || 'Relationship not listed')}</div>
+          <div class="text-sm mt-2">${escapeBirthdayText(guardian.phone || 'No phone')} ${guardian.email ? `| ${escapeBirthdayText(guardian.email)}` : ''}</div>
+          <div class="flex flex-wrap gap-2 mt-3">
+            <span class="guardian-badge">${guardian.approvedPickup ? 'Approved pickup' : 'No pickup approval'}</span>
+            <span class="guardian-badge">${guardian.canChangeTransportation ? 'Can change transportation' : 'No transportation changes'}</span>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="editGuardian(${index})">Edit</button>
+          <button class="px-3 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="removeGuardian(${index})">Remove</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function readGuardianForm() {
+  return normalizeGuardianRecord({
+    id: activeGuardianEditIndex >= 0 ? getRosterGuardiansForScholar(activeGuardianScholarKey)[activeGuardianEditIndex]?.id : createGuardianId(),
+    name: document.getElementById('guardianNameInput')?.value || '',
+    relationship: document.getElementById('guardianRelationshipInput')?.value || '',
+    phone: document.getElementById('guardianPhoneInput')?.value || '',
+    email: document.getElementById('guardianEmailInput')?.value || '',
+    approvedPickup: document.getElementById('guardianPickupApprovedInput')?.checked === true,
+    canChangeTransportation: document.getElementById('guardianTransportChangesInput')?.checked === true
+  });
+}
+
+async function saveGuardianRosterData() {
+  const user = await ensureCurriculumTeacherUser();
+  if (!user) return false;
+  if (typeof db === 'undefined') throw new Error('Firebase not available');
+  syncMasterRosterTextareas({ renderBirthdays: true });
+  await db.collection('classData').doc('current').set({
+    class_roster: getMasterRosterText(),
+    transportation_roster_text: document.getElementById('transportationRosterTextarea')?.value || '',
+    roster_guardians_json: getRosterGuardiansJson(),
+    transportation_temporary_json: getTransportationTemporaryJson()
+  }, { merge: true });
+  renderMasterRosterRows(getMasterRosterRowData());
+  renderGuardianModal();
+  return true;
+}
+
+async function saveGuardianFromForm() {
+  if (!activeGuardianScholarKey) return;
+  const guardian = readGuardianForm();
+  if (!guardian.name) {
+    alert('Enter the guardian name first.');
+    return;
+  }
+  const guardians = getRosterGuardiansForScholar(activeGuardianScholarKey);
+  if (activeGuardianEditIndex >= 0) {
+    guardians[activeGuardianEditIndex] = guardian;
+  } else {
+    guardians.push(guardian);
+  }
+  setRosterGuardiansForScholar(activeGuardianScholarKey, guardians);
+  try {
+    await saveGuardianRosterData();
+    resetGuardianForm();
+    renderGuardianModal();
+  } catch (error) {
+    console.error('Guardian save failed:', error);
+    alert('Guardian information could not be saved. Please try again.');
+  }
+}
+
+function editGuardian(index) {
+  const guardian = getRosterGuardiansForScholar(activeGuardianScholarKey)[index];
+  if (!guardian) return;
+  activeGuardianEditIndex = index;
+  const title = document.getElementById('guardianFormTitle');
+  const saveBtn = document.getElementById('guardianSaveBtn');
+  if (title) title.textContent = 'Edit Guardian';
+  if (saveBtn) saveBtn.textContent = 'Save Guardian';
+  const name = document.getElementById('guardianNameInput');
+  const relationship = document.getElementById('guardianRelationshipInput');
+  const phone = document.getElementById('guardianPhoneInput');
+  const email = document.getElementById('guardianEmailInput');
+  const pickup = document.getElementById('guardianPickupApprovedInput');
+  const changes = document.getElementById('guardianTransportChangesInput');
+  if (name) name.value = guardian.name || '';
+  if (relationship) relationship.value = guardian.relationship || '';
+  if (phone) phone.value = guardian.phone || '';
+  if (email) email.value = guardian.email || '';
+  if (pickup) pickup.checked = guardian.approvedPickup === true;
+  if (changes) changes.checked = guardian.canChangeTransportation === true;
+  name?.focus();
+}
+
+async function removeGuardian(index) {
+  const guardians = getRosterGuardiansForScholar(activeGuardianScholarKey);
+  const guardian = guardians[index];
+  if (!guardian) return;
+  if (!confirm(`Remove ${guardian.name} from this scholar's guardian list?`)) return;
+  guardians.splice(index, 1);
+  setRosterGuardiansForScholar(activeGuardianScholarKey, guardians);
+  try {
+    await saveGuardianRosterData();
+    resetGuardianForm();
+  } catch (error) {
+    console.error('Guardian removal failed:', error);
+    alert('Guardian could not be removed. Please try again.');
+  }
+}
+
+function printGuardianFamilySheet() {
+  const scholar = getActiveGuardianScholar();
+  const guardians = getRosterGuardiansForScholar(activeGuardianScholarKey);
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) {
+    alert('Your browser blocked the print window. Allow pop-ups for this site and try again.');
+    return;
+  }
+  const guardianRows = guardians.length ? guardians.map(guardian => `
+    <tr>
+      <td>${escapeHtml(guardian.name)}</td>
+      <td>${escapeHtml(guardian.relationship || '')}</td>
+      <td>${escapeHtml(guardian.phone || '')}</td>
+      <td>${escapeHtml(guardian.email || '')}</td>
+      <td>${guardian.approvedPickup ? 'Yes' : 'No'}</td>
+      <td>${guardian.canChangeTransportation ? 'Yes' : 'No'}</td>
+    </tr>
+  `).join('') : '<tr><td colspan="6">No guardians added yet.</td></tr>';
+  const printHtml = `<!doctype html><html><head><title>${escapeHtml(scholar.name)} Family Information</title><style>@page{margin:.45in;}body{font-family:Arial,sans-serif;color:#1f2937;}h1{margin:0;color:#475569;}h2{margin:20px 0 8px;color:#475569;font-size:17px;}p{margin:4px 0 10px;color:#4b5563;}table{width:100%;border-collapse:collapse;font-size:12px;}th{background:#f7efe2;color:#475569;text-align:left;}th,td{border:1px solid #d8c7ad;padding:7px 8px;vertical-align:top;}tr{break-inside:avoid;}</style></head><body><h1>${escapeHtml(scholar.name)}</h1><p>${escapeHtml(getRosterClassLabel(scholar.classKey))}</p><h2>Transportation</h2><p><strong>Current:</strong> ${escapeHtml(getTransportationStatus(scholar))}</p><p><strong>Details:</strong> ${escapeHtml(scholar.details || '')}</p><h2>Family And Guardian Information</h2><table><thead><tr><th>Name</th><th>Relationship</th><th>Phone</th><th>Email</th><th>Pickup</th><th>Transportation Changes</th></tr></thead><tbody>${guardianRows}</tbody></table></body></html>`;
+  printWindow.document.open();
+  printWindow.document.write(printHtml);
+  printWindow.document.close();
+  setTimeout(() => {
+    printWindow.focus();
+    printWindow.print();
+  }, 150);
 }
 
 function getBirthdayRosterNames() {
@@ -15482,12 +16171,17 @@ function closeTransportationModal() {
 function resetTransportationModal() {
   selectedTransportationScholar = null;
   selectedTransportationMethod = '';
-  ['transportationSearchInput', 'transportationDetailInput', 'transportationGuardianInput', 'transportationNoteInput'].forEach(id => {
+  ['transportationSearchInput', 'transportationDetailInput', 'transportationGuardianInput', 'transportationNoteInput', 'transportationTemporaryEndDateInput'].forEach(id => {
     const field = document.getElementById(id);
     if (field) field.value = '';
   });
   const duration = document.getElementById('transportationDurationSelect');
   if (duration) duration.value = 'temporary';
+  const temporaryEnd = document.getElementById('transportationTemporaryEndDateInput');
+  if (temporaryEnd) {
+    temporaryEnd.min = getTodayDateKey();
+    temporaryEnd.value = getTodayDateKey();
+  }
   const selectedBox = document.getElementById('transportationSelectedScholar');
   if (selectedBox) selectedBox.style.display = 'none';
   const changeBox = document.getElementById('transportationChangeFields');
@@ -15497,7 +16191,21 @@ function resetTransportationModal() {
   const success = document.getElementById('transportationSuccessMessage');
   if (success) success.style.display = 'none';
   document.querySelectorAll('.transportation-choice-button').forEach(button => button.classList.remove('active'));
+  toggleTransportationTemporaryDate();
   renderTransportationMatches();
+}
+
+function toggleTransportationTemporaryDate() {
+  const duration = document.getElementById('transportationDurationSelect')?.value || 'temporary';
+  const wrap = document.getElementById('transportationTemporaryEndWrap');
+  const input = document.getElementById('transportationTemporaryEndDateInput');
+  const isTemporary = normalizeTransportationDuration(duration) === 'temporary';
+  if (wrap) wrap.style.display = isTemporary ? 'block' : 'none';
+  if (input) {
+    input.required = isTemporary;
+    input.min = getTodayDateKey();
+    if (isTemporary && !input.value) input.value = getTodayDateKey();
+  }
 }
 
 function renderTransportationMatches() {
@@ -15571,7 +16279,9 @@ function chooseTransportationMethod(method) {
 }
 
 function getTransportationChangeSentence(update) {
-  const timing = update.duration === 'permanent' ? 'going forward' : 'today';
+  const timing = update.duration === 'permanent'
+    ? 'going forward'
+    : (update.temporaryEndDate ? `through ${formatDateForDisplay(update.temporaryEndDate)}` : 'temporarily');
   const noteText = update.note ? ` Note: ${update.note}` : '';
   if (update.requestedType === 'bus') {
     return `They will ride bus ${update.details || ''} ${timing}.${noteText}`.replace(/\s+/g, ' ').trim();
@@ -15598,10 +16308,33 @@ async function submitTransportationUpdate() {
   }
   const guardianName = document.getElementById('transportationGuardianInput')?.value.trim() || '';
   if (!guardianName) {
-    alert('Please enter your first and last name so the teacher can verify the approved pickup list.');
+    alert('Please enter your first and last name so the teacher can verify transportation-change authorization.');
     return;
   }
   const guardianApproval = getGuardianApprovalResult(selectedTransportationScholar, guardianName);
+  if (!guardianApproval.approved) {
+    alert(`${guardianApproval.label}. Please contact the teacher to submit this transportation change.`);
+    return;
+  }
+  const duration = normalizeTransportationDuration(document.getElementById('transportationDurationSelect')?.value || 'temporary');
+  const temporaryEndDate = duration === 'temporary'
+    ? normalizeDateKey(document.getElementById('transportationTemporaryEndDateInput')?.value || '')
+    : '';
+  if (duration === 'temporary' && !temporaryEndDate) {
+    alert('Please choose the last day this temporary transportation plan will be used.');
+    return;
+  }
+  if (duration === 'temporary' && temporaryEndDate < getTodayDateKey()) {
+    alert('Choose today or a future date for the temporary transportation plan.');
+    return;
+  }
+  const pickupApproval = selectedTransportationMethod === 'car'
+    ? getPickupApprovalResult(selectedTransportationScholar, detail)
+    : { status: 'not-needed', approved: true, label: '', matchedName: '' };
+  let pickupApprovalRequested = false;
+  if (selectedTransportationMethod === 'car' && !pickupApproval.approved) {
+    pickupApprovalRequested = confirm(`${detail} is not approved to pick up this scholar yet. Do you want to ask the teacher to add this person as an approved pickup guardian with this transportation change?`);
+  }
   const submitBtn = document.getElementById('transportationSubmitBtn');
   const originalText = submitBtn ? submitBtn.textContent : '';
   try {
@@ -15612,17 +16345,25 @@ async function submitTransportationUpdate() {
       submitBtn.disabled = true;
     }
     const update = {
+      id: `transportation-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      status: 'pending',
       studentName: selectedTransportationScholar.name,
       lastName: selectedTransportationScholar.lastName,
       currentStatus: getTransportationStatus(selectedTransportationScholar),
       requestedType: selectedTransportationMethod,
       details: detail,
-      duration: document.getElementById('transportationDurationSelect')?.value || 'temporary',
+      duration,
+      temporaryEndDate,
       guardianName,
       guardianApprovalStatus: guardianApproval.status,
       guardianApproved: guardianApproval.approved,
       guardianMatchedName: guardianApproval.matchedName,
       guardianApprovalLabel: guardianApproval.label,
+      pickupApprovalStatus: pickupApproval.status,
+      pickupApproved: pickupApproval.approved,
+      pickupMatchedName: pickupApproval.matchedName,
+      pickupApprovalLabel: pickupApproval.label,
+      pickupApprovalRequested,
       note: document.getElementById('transportationNoteInput')?.value.trim() || '',
       createdAt: new Date().toLocaleString()
     };
@@ -17075,6 +17816,8 @@ async function saveBirthdayField(fieldType) {
     syncMasterRosterTextareas({ renderBirthdays: true });
     data.class_roster = getMasterRosterText();
     data.transportation_roster_text = document.getElementById('transportationRosterTextarea')?.value || '';
+    data.roster_guardians_json = getRosterGuardiansJson();
+    data.transportation_temporary_json = getTransportationTemporaryJson();
     
     // Save to Firestore
     await db.collection('classData').doc('current').set(data, { merge: true });
@@ -20959,6 +21702,9 @@ function getDefaultFallbackData() {
     fun_facts_html: ["I love teaching first grade!", "Reading is my favorite subject", "I enjoy outdoor activities"],
     photo_urls_json: JSON.stringify([]),
     gallery_urls_json: JSON.stringify({}),
+    roster_guardians_json: JSON.stringify({}),
+    transportation_temporary_json: JSON.stringify({}),
+    transportation_updates_json: JSON.stringify([]),
     calendar_url: "#"
   };
 }
@@ -21902,15 +22648,19 @@ document.head.appendChild(style);
           <div class="grid sm:grid-cols-2 gap-3">
             <div>
               <label class="block text-sm font-semibold mb-2">This change is</label>
-              <select id="transportationDurationSelect" class="transportation-modal-field">
+              <select id="transportationDurationSelect" class="transportation-modal-field" onchange="toggleTransportationTemporaryDate()">
                 <option value="temporary">Temporary</option>
                 <option value="permanent">Permanent</option>
               </select>
             </div>
+            <div id="transportationTemporaryEndWrap">
+              <label class="block text-sm font-semibold mb-2">Last day for temporary transportation</label>
+              <input id="transportationTemporaryEndDateInput" class="transportation-modal-field" type="date">
+            </div>
             <div>
               <label class="block text-sm font-semibold mb-2">Parent/guardian first and last name</label>
               <input id="transportationGuardianInput" class="transportation-modal-field" type="text" placeholder="Example: Maria Gonzalez">
-              <p class="text-xs text-gray-500 mt-1">Use the adult's full name so the teacher can verify it with the approved pickup list.</p>
+              <p class="text-xs text-gray-500 mt-1">Use the adult's full name so the teacher can verify transportation-change authorization.</p>
             </div>
           </div>
 
@@ -21930,6 +22680,66 @@ document.head.appendChild(style);
         <button id="transportationSubmitBtn" onclick="submitTransportationUpdate()" class="px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">
           Submit Update
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Guardian Modal -->
+  <div id="guardianModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.78); z-index: 9999; justify-content: center; align-items: center; padding: 1rem;" onclick="closeGuardianModal()">
+    <div class="guardian-modal-panel bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-6 sm:p-8" onclick="event.stopPropagation();">
+      <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+        <div>
+          <p id="guardianModalSubtitle" class="text-sm font-bold uppercase tracking-wide" style="color: var(--md-slate);">Teacher only</p>
+          <h3 id="guardianModalTitle" class="text-2xl font-display font-bold" style="color: var(--md-coral);">Family Information</h3>
+          <p class="mt-2 text-sm">Current transportation: <span id="guardianTransportationStatus" class="font-semibold"></span></p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="printGuardianFamilySheet()">Print Family Sheet</button>
+          <button type="button" class="px-4 py-2 rounded-lg border text-sm font-semibold" onclick="closeGuardianModal()">Close</button>
+        </div>
+      </div>
+
+      <div class="grid lg:grid-cols-[1fr,1.15fr] gap-5">
+        <section class="rounded-xl bg-white p-4" style="border: 1px solid color-mix(in oklab, var(--md-slate) 22%, var(--md-white) 78%);">
+          <h4 id="guardianFormTitle" class="font-display font-bold text-lg mb-3" style="color: var(--md-slate);">Add Guardian</h4>
+          <div class="grid gap-3">
+            <div>
+              <label class="block text-sm font-semibold mb-1">Name</label>
+              <input id="guardianNameInput" class="guardian-field" type="text" placeholder="Full name">
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-1">Relationship</label>
+              <input id="guardianRelationshipInput" class="guardian-field" type="text" placeholder="Parent, aunt, grandparent">
+            </div>
+            <div class="grid sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-sm font-semibold mb-1">Phone</label>
+                <input id="guardianPhoneInput" class="guardian-field" type="tel" placeholder="Phone number">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-1">Email</label>
+                <input id="guardianEmailInput" class="guardian-field" type="email" placeholder="Email address">
+              </div>
+            </div>
+            <label class="inline-flex items-center gap-2 text-sm font-semibold">
+              <input id="guardianPickupApprovedInput" type="checkbox" class="w-4 h-4">
+              Approved to pick up
+            </label>
+            <label class="inline-flex items-center gap-2 text-sm font-semibold">
+              <input id="guardianTransportChangesInput" type="checkbox" class="w-4 h-4">
+              Allowed to make transportation changes
+            </label>
+            <div class="flex flex-wrap gap-2 pt-1">
+              <button id="guardianSaveBtn" type="button" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveGuardianFromForm()">Add Guardian</button>
+              <button type="button" class="px-4 py-2 rounded-lg border text-sm font-semibold" onclick="resetGuardianForm()">Cancel Edit</button>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h4 class="font-display font-bold text-lg mb-3" style="color: var(--md-slate);">Guardians</h4>
+          <div id="guardianList" class="grid gap-3"></div>
+        </section>
       </div>
     </div>
   </div>
