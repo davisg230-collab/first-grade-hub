@@ -4410,8 +4410,8 @@
                       <textarea id="curriculumPlanPrincipalInterventionOutput" class="curriculum-builder-field" rows="3"></textarea>
                     </div>
                     <div>
-                      <label class="curriculum-builder-label" for="curriculumPlanMissingOutput">Missing or check before teaching</label>
-                      <textarea id="curriculumPlanMissingOutput" class="curriculum-builder-field" rows="3" placeholder="One per line"></textarea>
+                      <label class="curriculum-builder-label" for="curriculumPlanMissingOutput">Needed before teaching</label>
+                      <textarea id="curriculumPlanMissingOutput" class="curriculum-builder-field" rows="3" placeholder="Only true blockers, one per line"></textarea>
                     </div>
                   </div>
                 </div>
@@ -9704,7 +9704,7 @@
           ${renderCurriculumDetailText('Evidence / data collected', principal.evidenceCollected)}
           ${renderCurriculumDetailText('Intervention overview', principal.interventionOverview)}
         </section>
-        ${renderCurriculumDetailList('Missing or check before teaching', plan.missingInformation)}
+        ${renderCurriculumDetailList('Needed before teaching', plan.missingInformation)}
       `;
     }
 
@@ -10221,7 +10221,7 @@
             ${renderCurriculumPrintField('I Can statement', plan.iCanStatement)}
             ${renderCurriculumPrintField('Priority standard', plan.priorityStandard)}
             ${sections.map(section => renderCurriculumPlanPrintSection(section.title, section.body)).join('')}
-            ${renderCurriculumPrintList('Missing or check before teaching', plan.missingInformation)}
+            ${renderCurriculumPrintList('Needed before teaching', plan.missingInformation)}
           </div>
         </div>
       `;

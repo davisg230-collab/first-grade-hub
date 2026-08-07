@@ -1013,10 +1013,12 @@ function buildCurriculumPlanStructureGuidance(subject) {
     "Rotation 1: A/B Lesson Station, C independent review.",
     "Rotation 2: A worksheet/handwriting, B independent literacy/data check, C Lesson Station.",
     "Rotation 3: A independent literacy/data check, B/C Guided Work.",
+    "Reading Intervention (11:30-12:00): teacher works with the selected UFLI small group; other scholars complete exact independent lesson-aligned work, book-bag/free-choice reading, and a short response prompt.",
     "",
     "Only build Rotations 1-3 from the Skills lesson. Listening & Learning is analyzed separately and supplies Rotations 4-5 when plans are viewed together.",
-    "Read the uploaded Skills lesson and adapt it into those three rotations instead of keeping the publisher's original timing. Decide what the teacher teaches during each rotation, what Group A/B/C do when they are not with the teacher, worksheet/practice, handwriting, 2-3 Learning Game questions for quick data, decodable or lesson-based reading, writing/application, independent evidence, Reading Intervention work while the teacher works with a small UFLI group, book-bag/free-choice reading with a short response, materials, pages, and substitute-friendly teacher directions.",
-    "The Teacher/Sub View must be chronological: Rotation 1, Rotation 2, Rotation 3. Put handwriting, reading, writing, game checks, guided work, independent evidence, extensions, and intervention work inside the rotation where they happen, not as separate repeated sections.",
+    "Read the uploaded Skills lesson for lesson content and skill focus, then use the teacher's classroom-block routine to generate the activities needed to fill the block. The activities do not have to appear word-for-word in the curriculum PDF; they must be appropriate for the lesson content and priority standard.",
+    "Generate lesson-specific planning details when the toggles are on: a 2-3 question data check, lesson-based handwriting practice, exact independent literacy tasks, a short writing/application activity, book-bag/free-choice reading directions with a short response prompt, independent work for scholars not in the UFLI group during Reading Intervention, and lesson-aligned extensions.",
+    "The Teacher/Sub View must be chronological: Rotation 1, Rotation 2, Rotation 3, then Reading Intervention (11:30-12:00). Put handwriting, reading, writing, game checks, guided work, independent evidence, and extensions inside the rotation where they happen. Keep Reading Intervention as its own section after Rotation 3 instead of burying it inside Rotation 3.",
   ].join("\n");
 }
 
@@ -1043,7 +1045,7 @@ function buildCurriculumPlanPrompt(data) {
     ...(standardsContext ? ["", standardsContext] : []),
     "",
     "Teacher toggle settings:",
-    `Generate these sections/details when supported: ${selectedToggleLabels.join(", ") || "none"}.`,
+    `Generate these sections/details from the uploaded lesson content plus the classroom routine when their toggles are on: ${selectedToggleLabels.join(", ") || "none"}.`,
     disabledToggleLabels.length
       ? `Do not generate standalone sections or details for: ${disabledToggleLabels.join(", ")}.`
       : "No sections are turned off.",
@@ -1051,10 +1053,12 @@ function buildCurriculumPlanPrompt(data) {
     "Return teacherSubView as editable sections. Use clear section titles. Include the fixed rotation sections for Skills and Math. For Listening & Learning, include practical story/content sections rather than rotations unless the source clearly has lesson segments.",
     "Each teacherSubView body should be detailed enough that the teacher or a substitute could teach from it without reopening the teacher guide unless needed.",
     "The selected priorityStandard field must guide what the plan emphasizes, what evidence/data is collected, and what intervention or independent work is assigned. Copy the selected priority standard into priorityStandard unless the teacher left it blank.",
-    "Do not write vague placeholders such as \"if available,\" \"use assigned work,\" \"complete the worksheet,\" or \"as needed.\" Name the exact lesson-aligned task, question, response, page/checkpoint, or evidence source when the lesson supports it. If the source does not support an exact task, put that need in missingInformation instead.",
+    "Behave like a classroom planner, not a source checker. The PDF provides the lesson content and skills; the saved classroom-block settings provide the routine. Combine both to create the lesson-aligned classroom activities needed to fill the block.",
+    "You are allowed to generate a 2-3 question lesson-specific data check, lesson-based handwriting practice, exact independent literacy tasks, a short writing/application activity, book-bag/free-choice reading directions with a short response prompt, independent work for scholars not in the UFLI group, and lesson-aligned extensions. These activities do not have to appear word-for-word in the curriculum PDF.",
+    "Do not write vague placeholders or source-checking refusals such as \"if available,\" \"use assigned work,\" \"the source does not provide a data-check form,\" \"do not assign an invented response,\" or \"the teacher must supply intervention work.\" Name the exact lesson-aligned task, question, response, page/checkpoint, or evidence source you created from the lesson content and priority standard.",
     "Make Principal View much shorter and derived from the same teacherSubView plan: title/I Can lives in the top fields; then teacherDoing, scholarsDoing, brief rotationBullets, evidenceCollected, and interventionOverview.",
     "Use page numbers only when the source provides or strongly implies them. If exact pages are unclear and Page Numbers is on, say what page range/source location to check rather than inventing numbers.",
-    "Use missingInformation only for information needed before teaching that the source does not responsibly provide.",
+    "Return missingInformation as an empty array unless something is genuinely required before the plan can be used, such as unreadable lesson text, a missing lesson objective, contradictory source content, or an essential page/image that cannot be inferred. Do not use missingInformation for normal planning gaps that you can solve from the lesson content, priority standard, and classroom routine.",
     "",
     "Lesson source:",
     data.sourceText,
@@ -1720,13 +1724,24 @@ function getCurriculumPlanRotationNumber(section) {
 function enforceCurriculumPlanChronology(sections, subject) {
   if (!["skills", "math"].includes(subject)) return sections;
   const maxRotation = subject === "skills" ? 3 : 5;
-  const standaloneDetailPattern = /^(teacher script|materials?|page numbers?|group [abc] tasks?|handwriting|reading|writing|learning games?(?: \/ data check)?|data check|guided work|independent evidence|intervention work|extensions?)$/i;
+  const standaloneDetailPattern = subject === "skills"
+    ? /^(teacher script|materials?|page numbers?|group [abc] tasks?|handwriting|reading|writing|learning games?(?: \/ data check)?|data check|guided work|independent evidence|extensions?)$/i
+    : /^(teacher script|materials?|page numbers?|group [abc] tasks?|handwriting|reading|writing|learning games?(?: \/ data check)?|data check|guided work|independent evidence|intervention work|extensions?)$/i;
   const rotations = [];
+  const readingInterventionSections = [];
   const otherSections = [];
   sections.forEach((section) => {
     const rotationNumber = getCurriculumPlanRotationNumber(section);
     if (rotationNumber) {
       if (rotationNumber <= maxRotation) rotations.push({ ...section, rotationNumber });
+      return;
+    }
+    if (subject === "skills" && /\b(?:reading\s+)?intervention\b|\bufli\b/i.test(asText(section.title))) {
+      readingInterventionSections.push({
+        ...section,
+        key: section.key || "reading-intervention",
+        title: /11:30|12:00/.test(section.title) ? section.title : "Reading Intervention (11:30-12:00)",
+      });
       return;
     }
     if (!standaloneDetailPattern.test(asText(section.title))) {
@@ -1736,8 +1751,22 @@ function enforceCurriculumPlanChronology(sections, subject) {
   rotations.sort((a, b) => a.rotationNumber - b.rotationNumber);
   return [
     ...rotations.map(({ rotationNumber, ...section }) => section),
+    ...readingInterventionSections,
     ...otherSections,
   ];
+}
+
+function normalizeCurriculumPlanMissingInformation(value) {
+  return normalizeScholarLanguageArray(value).filter((item) => {
+    const text = item.toLowerCase();
+    if (!text) return false;
+    if (/\b(if available|as available|when available|use assigned work|complete the worksheet|as needed)\b/.test(text)) return false;
+    if (/\bsource\b.*\b(does not provide|doesn't provide|does not include|doesn't include|lacks|missing|not supplied)\b/.test(text)) return false;
+    if (/\b(not provided|not supplied|not included|not in the source|not in source)\b/.test(text)) return false;
+    if (/\b(teacher must supply|must supply|must provide|do not assign|cannot assign|invented response)\b/.test(text)) return false;
+    if (/\b(recording page|data[-\s]?check form|intervention work|independent work|handwriting practice|writing\/application|book[-\s]?bag|free[-\s]?choice reading|lesson[-\s]?aligned extension)\b/.test(text)) return false;
+    return true;
+  }).slice(0, 4);
 }
 
 function normalizeCurriculumPlanAnalysis(rawAnalysis, fallback = {}) {
@@ -1770,7 +1799,7 @@ function normalizeCurriculumPlanAnalysis(rawAnalysis, fallback = {}) {
     iCanStatement: normalizeScholarLanguage(rawAnalysis.iCanStatement),
     teacherSubView: sections,
     principalView,
-    missingInformation: normalizeScholarLanguageArray(rawAnalysis.missingInformation).slice(0, 8),
+    missingInformation: normalizeCurriculumPlanMissingInformation(rawAnalysis.missingInformation),
     sourceConfidence: ["high", "medium", "low"].includes(rawAnalysis.sourceConfidence) ? rawAnalysis.sourceConfidence : "medium",
   };
 }
