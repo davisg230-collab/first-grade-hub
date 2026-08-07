@@ -2439,6 +2439,71 @@
       gap: .45rem;
       margin-top: .65rem;
     }
+    .curriculum-calendar-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(17rem, .42fr);
+      gap: 1rem;
+      align-items: start;
+    }
+    .curriculum-month-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: .45rem;
+    }
+    .curriculum-month-weekday {
+      color: var(--md-slate);
+      font-size: .75rem;
+      font-weight: 900;
+      text-align: center;
+      text-transform: uppercase;
+    }
+    .curriculum-month-day {
+      min-height: 7.8rem;
+      border: 1px solid color-mix(in oklab, var(--md-slate) 16%, var(--md-white));
+      border-radius: .85rem;
+      background: color-mix(in oklab, var(--md-white) 94%, var(--md-pebble));
+      padding: .55rem;
+      text-align: left;
+      overflow: hidden;
+    }
+    .curriculum-month-day.outside {
+      opacity: .48;
+    }
+    .curriculum-month-day.has-items {
+      border-color: color-mix(in oklab, var(--md-coral) 52%, var(--md-white));
+      background: color-mix(in oklab, var(--md-white) 86%, var(--md-coral) 14%);
+    }
+    .curriculum-month-day.active {
+      outline: 3px solid color-mix(in oklab, var(--md-mustard) 80%, var(--md-white));
+      outline-offset: 1px;
+    }
+    .curriculum-month-day-number {
+      color: var(--md-slate);
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: .35rem;
+    }
+    .curriculum-month-item {
+      display: block;
+      border-radius: .45rem;
+      margin-top: .25rem;
+      padding: .22rem .35rem;
+      background: var(--md-white);
+      color: var(--md-ink);
+      font-size: .72rem;
+      font-weight: 800;
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+    }
+    .curriculum-month-item.plan {
+      background: color-mix(in oklab, var(--md-white) 68%, var(--md-mustard) 32%);
+    }
+    .curriculum-calendar-detail {
+      border: 1px solid color-mix(in oklab, var(--md-slate) 18%, var(--md-white));
+      border-radius: .95rem;
+      background: color-mix(in oklab, var(--md-white) 90%, var(--md-pebble));
+      padding: 1rem;
+    }
     .curriculum-lesson-detail-panel {
       min-width: 0;
       max-height: 34rem;
@@ -2619,13 +2684,15 @@
       cursor: not-allowed;
       opacity: .42;
     }
-    #curriculumScheduleModal {
+    #curriculumScheduleModal,
+    #curriculumPlanScheduleModal {
       align-items: center;
       overflow-y: auto;
       padding-top: max(1rem, env(safe-area-inset-top));
       padding-bottom: max(1rem, env(safe-area-inset-bottom));
     }
-    #curriculumScheduleModal .lesson-detail-card {
+    #curriculumScheduleModal .lesson-detail-card,
+    #curriculumPlanScheduleModal .lesson-detail-card {
       max-height: none;
       margin: 1rem auto;
     }
@@ -2734,6 +2801,19 @@
       .curriculum-plan-calendar-row {
         grid-template-columns: 1fr;
         align-items: stretch;
+      }
+      .curriculum-calendar-layout {
+        grid-template-columns: 1fr;
+      }
+      .curriculum-month-grid {
+        gap: .3rem;
+      }
+      .curriculum-month-day {
+        min-height: 5.6rem;
+        padding: .42rem;
+      }
+      .curriculum-month-item {
+        font-size: .66rem;
       }
       .curriculum-plan-calendar-actions {
         justify-content: stretch;
@@ -3852,6 +3932,26 @@
           </div>
         </div>
 
+        <div id="curriculumPlanScheduleModal" class="lesson-detail-modal" onclick="if(event.target === this) closeCurriculumPlanScheduleModal()">
+          <div class="lesson-detail-card p-5 sm:p-6" onclick="event.stopPropagation();">
+            <div class="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <p id="curriculumPlanScheduleModalMeta" class="text-sm font-bold uppercase tracking-wide" style="color: var(--md-coral);">Schedule plan</p>
+                <h3 id="curriculumPlanScheduleModalTitle" class="text-2xl font-display font-bold" style="color: var(--md-slate);">Choose a date</h3>
+              </div>
+              <button type="button" class="w-9 h-9 rounded-full text-white font-bold" style="background: var(--md-slate);" onclick="closeCurriculumPlanScheduleModal()" aria-label="Close plan schedule picker">&times;</button>
+            </div>
+            <label class="curriculum-builder-label" for="curriculumPlanScheduleModalDate">Plan date</label>
+            <input id="curriculumPlanScheduleModalDate" class="curriculum-builder-field" type="date">
+            <p class="mt-2 text-xs text-[color:var(--md-ink)]/70">This assigns the saved plan to the calendar. It does not change the existing lesson date system or parent-facing lesson cards.</p>
+            <div class="flex flex-col sm:flex-row gap-2 mt-5">
+              <button type="button" class="curriculum-builder-button inline-flex px-4 py-2 text-white" style="background: var(--md-coral);" onclick="saveCurriculumPlanScheduleModalDate()">Save Date</button>
+              <button type="button" class="curriculum-builder-button inline-flex px-4 py-2 text-white" style="background: var(--md-slate);" onclick="clearCurriculumPlanScheduleModalDate()">Clear Date</button>
+              <button type="button" class="curriculum-builder-button inline-flex px-4 py-2" style="background: var(--md-pebble); color: var(--md-ink);" onclick="closeCurriculumPlanScheduleModal()">Cancel</button>
+            </div>
+          </div>
+        </div>
+
         <div id="curriculumModuleInfoModal" class="lesson-detail-modal" onclick="if(event.target === this) closeCurriculumModuleInfoModal()">
           <div class="lesson-detail-card p-5 sm:p-6" onclick="event.stopPropagation();">
             <div class="flex items-start justify-between gap-4 mb-4">
@@ -3903,9 +4003,9 @@
           <div class="curriculum-library-tabs" role="tablist" aria-label="Curriculum Library">
             <button id="curriculumTabUpload" type="button" class="curriculum-library-tab active" data-curriculum-tab="upload" onclick="showCurriculumLibraryTab('upload')">Upload / AI Draft</button>
             <button id="curriculumTabBrowse" type="button" class="curriculum-library-tab" data-curriculum-tab="browse" onclick="showCurriculumLibraryTab('browse')">Browse Lessons</button>
+            <button id="curriculumTabPlanCalendar" type="button" class="curriculum-library-tab" data-curriculum-tab="plan-calendar" onclick="showCurriculumLibraryTab('plan-calendar')">Calendar</button>
             <button id="curriculumTabPlanAnalyzer" type="button" class="curriculum-library-tab" data-curriculum-tab="plan-analyzer" onclick="showCurriculumLibraryTab('plan-analyzer')">Plan Analyzer</button>
-            <button id="curriculumTabPlans" type="button" class="curriculum-library-tab" data-curriculum-tab="plans" onclick="showCurriculumLibraryTab('plans')">Plan Library</button>
-            <button id="curriculumTabPlanCalendar" type="button" class="curriculum-library-tab" data-curriculum-tab="plan-calendar" onclick="showCurriculumLibraryTab('plan-calendar')">Plan Calendar</button>
+            <button id="curriculumTabPlans" type="button" class="curriculum-library-tab" data-curriculum-tab="plans" onclick="showCurriculumLibraryTab('plans')">Browse Plans</button>
           </div>
           <div id="curriculumStatus" class="mb-4 text-sm font-semibold text-gray-600" aria-live="polite"></div>
           <div id="curriculumLessonFilterPanel" class="curriculum-builder-panel rounded-2xl p-4 mb-4" style="display: none;">
@@ -4139,6 +4239,17 @@
                   <input id="curriculumPlanLessonTitleInput" class="curriculum-builder-field" type="text" placeholder="Leave blank if the AI should find it">
                 </div>
                 <div class="mb-4">
+                  <label class="curriculum-builder-label" for="curriculumPlanPriorityStandardInput">Priority Standard</label>
+                  <input id="curriculumPlanPriorityStandardInput" class="curriculum-builder-field" type="text" list="curriculumPlanPriorityStandardOptions" placeholder="For example: K.OA.A.1 or 1.OA.C.6">
+                  <datalist id="curriculumPlanPriorityStandardOptions">
+                    <option value="K.OA.A.1 - Represent addition and subtraction with objects, fingers, mental images, drawings, sounds, acting out situations, verbal explanations, expressions, or equations."></option>
+                    <option value="K.OA.A.5 - Fluently add and subtract within 5."></option>
+                    <option value="1.OA.A.1 - Use addition and subtraction within 20 to solve word problems."></option>
+                    <option value="1.OA.C.6 - Add and subtract within 20."></option>
+                    <option value="1.MD.C.4 - Organize, represent, and interpret data."></option>
+                  </datalist>
+                </div>
+                <div class="mb-4">
                   <label class="curriculum-builder-label" for="curriculumPlanPdfInput">Lesson PDF</label>
                   <input id="curriculumPlanPdfInput" type="file" accept="application/pdf,.pdf" style="display: none;" onchange="extractCurriculumPlanPdfText(event)">
                   <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
@@ -4182,7 +4293,7 @@
               </button>
               <div class="curriculum-mobile-section-body">
                 <h3 class="curriculum-mobile-section-heading text-xl font-display font-bold mb-4" style="color: var(--md-slate);">Plan Draft</h3>
-                <div class="grid md:grid-cols-2 gap-3 mb-4">
+                <div class="grid md:grid-cols-3 gap-3 mb-4">
                   <div>
                     <label class="curriculum-builder-label" for="curriculumPlanTitleOutput">Plan title</label>
                     <input id="curriculumPlanTitleOutput" class="curriculum-builder-field" type="text" placeholder="Plan title">
@@ -4190,6 +4301,10 @@
                   <div>
                     <label class="curriculum-builder-label" for="curriculumPlanICanOutput">I Can statement</label>
                     <input id="curriculumPlanICanOutput" class="curriculum-builder-field" type="text" placeholder="I can...">
+                  </div>
+                  <div>
+                    <label class="curriculum-builder-label" for="curriculumPlanPriorityStandardOutput">Priority standard</label>
+                    <input id="curriculumPlanPriorityStandardOutput" class="curriculum-builder-field" type="text" placeholder="Standard focus">
                   </div>
                 </div>
                 <div class="mb-5">
@@ -4270,25 +4385,30 @@
           <div id="curriculumTabPanelPlanCalendar" class="curriculum-tab-panel curriculum-builder-panel rounded-2xl p-5 mt-4" data-curriculum-panel="plan-calendar">
             <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3 mb-4">
               <div>
-                <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">Lesson Plan Calendar</h3>
-                <p class="text-sm text-[color:var(--md-ink)]/75 mt-1">Assign saved Skills, Listening &amp; Learning, and Math plans to each date as your pacing guide.</p>
+                <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">Calendar</h3>
+                <p class="text-sm text-[color:var(--md-ink)]/75 mt-1">See scheduled curriculum lessons from Browse Lessons and saved plans from Browse Plans in one month view.</p>
               </div>
               <div class="flex flex-col sm:flex-row gap-2">
-                <button type="button" class="curriculum-builder-button inline-flex px-4 py-2 text-white" style="background: var(--md-coral);" onclick="viewSelectedCurriculumPlanDates()">View Selected</button>
-                <button type="button" class="curriculum-builder-button inline-flex px-4 py-2 text-white" style="background: var(--md-slate);" onclick="printSelectedCurriculumPlanDates('teacher')">Print Teacher/Sub Plans</button>
-                <button type="button" class="curriculum-builder-button inline-flex px-4 py-2 text-white" style="background: var(--md-slate);" onclick="printSelectedCurriculumPlanDates('principal')">Print Principal Plans</button>
+                <button type="button" class="curriculum-builder-button inline-flex px-4 py-2" style="background: var(--md-pebble); color: var(--md-ink);" onclick="setCurriculumCalendarToCurrentMonth()">This Month</button>
+                <button type="button" class="curriculum-builder-button inline-flex px-4 py-2 text-white" style="background: var(--md-coral);" onclick="printCurriculumCalendarMonth()">Print Month</button>
               </div>
             </div>
-            <div class="grid md:grid-cols-[minmax(0,14rem)_auto_auto] gap-3 md:items-end mb-4">
+            <div class="grid md:grid-cols-[minmax(0,14rem)_auto] gap-3 md:items-end mb-4">
               <div>
-                <label class="curriculum-builder-label" for="curriculumPlanCalendarWeekInput">Week of</label>
-                <input id="curriculumPlanCalendarWeekInput" class="curriculum-builder-field" type="date" onchange="renderCurriculumPlanCalendar()">
+                <label class="curriculum-builder-label" for="curriculumCalendarMonthInput">Month</label>
+                <input id="curriculumCalendarMonthInput" class="curriculum-builder-field" type="month" onchange="renderCurriculumCalendar()">
               </div>
-              <button type="button" class="curriculum-builder-button inline-flex px-4 py-2" style="background: var(--md-pebble); color: var(--md-ink);" onclick="setCurriculumPlanCalendarToCurrentWeek()">This Week</button>
-              <button type="button" class="curriculum-builder-button inline-flex px-4 py-2 text-white" style="background: var(--md-coral);" onclick="printCurriculumPlanWeek()">Print Week</button>
+              <p class="text-sm text-[color:var(--md-ink)]/75 pb-2">Click a day to see lesson titles, I Can statements, priority standards, and whether a saved plan exists.</p>
             </div>
-            <div id="curriculumPlanCalendarGrid" class="curriculum-plan-calendar-grid">
-              <p class="text-sm text-gray-500">Saved plans will appear here after sign-in.</p>
+            <div class="curriculum-calendar-layout">
+              <div>
+                <div id="curriculumCalendarGrid" class="curriculum-month-grid">
+                  <p class="text-sm text-gray-500">Calendar will appear after sign-in.</p>
+                </div>
+              </div>
+              <div id="curriculumCalendarDayDetail" class="curriculum-calendar-detail">
+                <p class="text-sm text-gray-500">Choose a day to view scheduled lessons and plans.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -5802,12 +5922,14 @@
     let curriculumPdfJsLoadPromise = null;
     let curriculumToolView = 'shelf';
     let curriculumSchedulePickerLessonId = '';
+    let curriculumPlanSchedulePickerPlanId = '';
     let curriculumSelectedLessonIds = new Set();
     let curriculumActiveBrowserLessonId = '';
     let curriculumLessonViewModalLessonId = '';
     let curriculumActivePlanLibraryId = '';
     let curriculumPlanViewModalPlanId = '';
     let curriculumSelectedPlanDateKeys = new Set();
+    let curriculumActiveCalendarDateKey = '';
     let curriculumActiveLibraryTab = 'upload';
     let teacherRosterUnlocked = false;
     let rosterEditMode = false;
@@ -6150,7 +6272,9 @@
       curriculumLessonViewModalLessonId = '';
       curriculumActivePlanLibraryId = '';
       curriculumPlanViewModalPlanId = '';
+      curriculumPlanSchedulePickerPlanId = '';
       curriculumSelectedPlanDateKeys = new Set();
+      curriculumActiveCalendarDateKey = '';
       curriculumActiveLibraryTab = 'upload';
       teacherRosterUnlocked = false;
       setRosterEditMode(false);
@@ -6171,9 +6295,11 @@
       const count = document.getElementById('curriculumLibraryCount');
       const planCount = document.getElementById('curriculumPlanLibraryCount');
       const preview = document.getElementById('curriculumWeekPreview');
-      const planCalendar = document.getElementById('curriculumPlanCalendarGrid');
+      const calendarGrid = document.getElementById('curriculumCalendarGrid');
+      const calendarDetail = document.getElementById('curriculumCalendarDayDetail');
       closeCurriculumLessonViewModal();
       closeCurriculumPlanViewModal();
+      closeCurriculumPlanScheduleModal();
       if (count) count.textContent = '0';
       if (planCount) planCount.textContent = '0 plans';
       if (selectedCount) selectedCount.textContent = '0 selected';
@@ -6184,7 +6310,8 @@
       if (planList) planList.innerHTML = '<p class="text-sm text-gray-500">Sign in to browse saved plans.</p>';
       if (planDetail) planDetail.innerHTML = '<p class="text-sm text-gray-500">Choose a plan to view the saved Teacher/Sub and Principal views.</p>';
       if (preview) preview.innerHTML = '<p class="text-sm text-gray-500">No lessons picked yet.</p>';
-      if (planCalendar) planCalendar.innerHTML = '<p class="text-sm text-gray-500">Saved plans will appear here after sign-in.</p>';
+      if (calendarGrid) calendarGrid.innerHTML = '<p class="text-sm text-gray-500">Calendar will appear after sign-in.</p>';
+      if (calendarDetail) calendarDetail.innerHTML = '<p class="text-sm text-gray-500">Choose a day to view scheduled lessons and plans.</p>';
       if (document.querySelector('[data-page-panel="roster"].active')) showPage('home');
     }
 
@@ -9135,6 +9262,7 @@
         unitOrModule: formatCurriculumUnitOrModule(document.getElementById('curriculumPlanUnitInput')?.value || ''),
         lessonNumber: document.getElementById('curriculumPlanLessonNumberInput')?.value.trim() || '',
         lessonTitle: lessonTitle === curriculumPlanLastPdfSuggestedTitle || looksLikeCurriculumFileTitle(lessonTitle) ? '' : lessonTitle,
+        priorityStandard: document.getElementById('curriculumPlanPriorityStandardInput')?.value.trim() || '',
         sourceText: document.getElementById('curriculumPlanSourceTextInput')?.value.trim() || '',
         toggleSettings: getCurriculumPlanToggleSettings()
       };
@@ -9205,6 +9333,8 @@
       }
       setInputValue('curriculumPlanTitleOutput', analysis.planTitle || analysis.lessonTitle || currentTitle || '');
       setInputValue('curriculumPlanICanOutput', analysis.iCanStatement || '');
+      setInputValue('curriculumPlanPriorityStandardOutput', analysis.priorityStandard || document.getElementById('curriculumPlanPriorityStandardInput')?.value.trim() || '');
+      setInputValue('curriculumPlanPriorityStandardInput', analysis.priorityStandard || document.getElementById('curriculumPlanPriorityStandardInput')?.value.trim() || '');
       renderCurriculumPlanSections(normalizeCurriculumPlanSections(analysis.teacherSubView || analysis.sections));
       const principal = normalizeCurriculumPlanPrincipalView(analysis.principalView);
       setInputValue('curriculumPlanPrincipalTeacherOutput', principal.teacherDoing);
@@ -9290,6 +9420,7 @@
         lessonNumber: formatCurriculumLessonNumber(request.lessonNumber),
         lessonTitle: request.lessonTitle || document.getElementById('curriculumPlanLessonTitleInput')?.value.trim() || '',
         planTitle: document.getElementById('curriculumPlanTitleOutput')?.value.trim() || request.lessonTitle || '',
+        priorityStandard: document.getElementById('curriculumPlanPriorityStandardOutput')?.value.trim() || request.priorityStandard || '',
         sourceText: request.sourceText,
         toggleSettings: request.toggleSettings,
         iCanStatement: document.getElementById('curriculumPlanICanOutput')?.value.trim() || '',
@@ -9380,6 +9511,7 @@
           formatCurriculumLessonNumber(plan.lessonNumber),
           plan.lessonTitle,
           plan.planTitle,
+          plan.priorityStandard,
           plan.iCanStatement,
           Array.isArray(plan.teacherSubView) ? plan.teacherSubView.map(section => `${section.title} ${section.body}`).join(' ') : '',
           plan.principalView ? Object.values(plan.principalView).flat().join(' ') : ''
@@ -9433,15 +9565,20 @@
     function renderCurriculumPlanLibraryItem(plan) {
       const title = getCurriculumPlanTitle(plan);
       const isActive = plan.id === curriculumActivePlanLibraryId ? ' active' : '';
+      const scheduledDate = getCurriculumPlanPrimaryScheduleDate(plan);
+      const scheduleLabel = scheduledDate ? formatCurriculumDateLabel(scheduledDate) : 'Calendar';
+      const scheduleTitle = scheduledDate ? `Scheduled for ${formatCurriculumDateLabel(scheduledDate)}` : 'Schedule plan';
       return `
         <div class="curriculum-library-item curriculum-browser-item${isActive}" role="button" tabindex="0" onclick="viewCurriculumPlanDetail('${plan.id}')">
           <div>
             <div class="text-xs font-bold uppercase tracking-wide text-gray-500">${escapeHtml([formatCurriculumLessonNumber(plan.lessonNumber) || 'Lesson', getCurriculumSubjectLabel(plan.subject)].filter(Boolean).join(' - '))}</div>
             <div class="font-display font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(title)}</div>
             <div class="text-sm mt-1 text-[color:var(--md-ink)]/80">${escapeHtml(String(plan.iCanStatement || '').slice(0, 150))}</div>
+            ${plan.priorityStandard ? `<div class="text-xs font-bold mt-1" style="color: var(--md-coral);">${escapeHtml(String(plan.priorityStandard).slice(0, 160))}</div>` : ''}
             <div class="curriculum-plan-card-actions">
               <button type="button" style="background: var(--md-slate); color: var(--md-white);" onclick="event.stopPropagation(); openCurriculumPlanViewModal('${plan.id}')">View</button>
               <button type="button" style="background: var(--md-coral); color: var(--md-white);" onclick="event.stopPropagation(); loadCurriculumPlanIntoBuilder('${plan.id}')">Edit</button>
+              <button type="button" title="${escapeHtml(scheduleTitle)}" style="background: var(--md-pebble); color: var(--md-ink);" onclick="event.stopPropagation(); openCurriculumPlanSchedulePicker('${plan.id}')">${escapeHtml(scheduleLabel)}</button>
               <button type="button" style="background: var(--md-pebble); color: var(--md-ink);" onclick="event.stopPropagation(); openCurriculumPlanPrintViewForPlan('${plan.id}', 'teacher', false)">Teacher/Sub</button>
               <button type="button" style="background: var(--md-pebble); color: var(--md-ink);" onclick="event.stopPropagation(); openCurriculumPlanPrintViewForPlan('${plan.id}', 'principal', false)">Principal</button>
               <button type="button" title="Delete plan" style="background: #dc2626; color: var(--md-white);" onclick="event.stopPropagation(); deleteCurriculumPlan('${plan.id}')">Delete</button>
@@ -9482,6 +9619,7 @@
           <p class="text-sm font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(formatCurriculumLessonNumber(plan.lessonNumber) || 'Lesson')}</p>
         </div>
         ${renderCurriculumDetailText('I can statement', plan.iCanStatement)}
+        ${renderCurriculumDetailText('Priority standard', plan.priorityStandard)}
         <section class="curriculum-detail-section"><h4>Teacher/Sub View</h4>${sections.length ? sections.map(section => `<h5 class="font-bold mt-3" style="color: var(--md-slate);">${escapeHtml(section.title)}</h5><p class="whitespace-pre-wrap">${escapeHtml(section.body)}</p>`).join('') : '<p>No teaching sections saved yet.</p>'}</section>
         <section class="curriculum-detail-section">
           <h4>Principal View</h4>
@@ -9530,6 +9668,7 @@
         <div class="curriculum-lesson-modal-open-actions">
           <button type="button" class="curriculum-lesson-modal-button" style="background: var(--md-coral); color: var(--md-white);" onclick="openCurriculumPlanPrintViewForPlan('${plan.id}', 'teacher', false)">Open Teacher/Sub</button>
           <button type="button" class="curriculum-lesson-modal-button" style="background: var(--md-slate); color: var(--md-white);" onclick="openCurriculumPlanPrintViewForPlan('${plan.id}', 'principal', false)">Open Principal</button>
+          <button type="button" class="curriculum-lesson-modal-button" style="background: var(--md-pebble); color: var(--md-ink);" onclick="openCurriculumPlanSchedulePicker('${plan.id}')">Schedule</button>
           <button type="button" class="curriculum-lesson-modal-button" style="background: var(--md-pebble); color: var(--md-ink);" onclick="loadCurriculumPlanIntoBuilder('${plan.id}')">Edit Plan</button>
         </div>
       `;
@@ -9543,6 +9682,7 @@
       setInputValue('curriculumPlanUnitInput', formatCurriculumUnitOrModule(plan.unitOrModule || ''));
       setInputValue('curriculumPlanLessonNumberInput', formatCurriculumLessonNumber(plan.lessonNumber || ''));
       setInputValue('curriculumPlanLessonTitleInput', plan.lessonTitle || '');
+      setInputValue('curriculumPlanPriorityStandardInput', plan.priorityStandard || '');
       setInputValue('curriculumPlanSourceTextInput', plan.sourceText || '');
       if (plan.toggleSettings) {
         curriculumPlanToggleDefaults = normalizeCurriculumPlanToggleSettings({
@@ -9597,9 +9737,11 @@
         'curriculumPlanUnitInput',
         'curriculumPlanLessonNumberInput',
         'curriculumPlanLessonTitleInput',
+        'curriculumPlanPriorityStandardInput',
         'curriculumPlanSourceTextInput',
         'curriculumPlanTitleOutput',
         'curriculumPlanICanOutput',
+        'curriculumPlanPriorityStandardOutput',
         'curriculumPlanPrincipalTeacherOutput',
         'curriculumPlanPrincipalScholarsOutput',
         'curriculumPlanPrincipalRotationsOutput',
@@ -9676,132 +9818,256 @@
       }
     }
 
-    function getCurriculumPlanCalendarWeekStartKey() {
-      const input = document.getElementById('curriculumPlanCalendarWeekInput');
-      const selected = input && input.value ? parseCurriculumDateKey(input.value) : null;
-      const weekStart = getCurriculumWeekStartDate(selected || new Date());
-      const weekStartKey = formatCurriculumDateKey(weekStart);
-      if (input && input.value !== weekStartKey) input.value = weekStartKey;
-      return weekStartKey;
+    function getCurriculumPlanScheduleDates(plan) {
+      if (!plan || !plan.id) return [];
+      const dates = curriculumPlanCalendar.dates || {};
+      return Object.keys(dates).filter(dateKey => Object.values(dates[dateKey] || {}).includes(plan.id)).sort();
     }
 
-    function setCurriculumPlanCalendarToCurrentWeek() {
-      const input = document.getElementById('curriculumPlanCalendarWeekInput');
-      if (input) input.value = formatCurriculumDateKey(getCurrentCurriculumWeekStartDate());
-      renderCurriculumPlanCalendar();
+    function getCurriculumPlanPrimaryScheduleDate(plan) {
+      return getCurriculumPlanScheduleDates(plan)[0] || '';
     }
 
-    function renderCurriculumPlanCalendarOptions(subject, selectedId = '') {
-      const plans = curriculumPlansCache
-        .filter(plan => (plan.subject || 'skills') === subject)
-        .sort(compareCurriculumPlans);
-      return [
-        '<option value="">No saved plan</option>',
-        ...plans.map(plan => `<option value="${escapeHtml(plan.id)}" ${plan.id === selectedId ? 'selected' : ''}>${escapeHtml([formatCurriculumUnitOrModule(plan.unitOrModule), formatCurriculumLessonNumber(plan.lessonNumber), getCurriculumPlanTitle(plan)].filter(Boolean).join(' - '))}</option>`)
-      ].join('');
+    function openCurriculumPlanSchedulePicker(planId) {
+      const plan = curriculumPlansCache.find(item => item.id === planId);
+      if (!plan) return;
+      closeCurriculumPlanViewModal();
+      curriculumPlanSchedulePickerPlanId = planId;
+      const modal = document.getElementById('curriculumPlanScheduleModal');
+      const title = document.getElementById('curriculumPlanScheduleModalTitle');
+      const meta = document.getElementById('curriculumPlanScheduleModalMeta');
+      const input = document.getElementById('curriculumPlanScheduleModalDate');
+      if (!modal || !input) return;
+      if (title) title.textContent = getCurriculumPlanTitle(plan);
+      if (meta) meta.textContent = `${getCurriculumSubjectLabel(plan.subject)} - ${formatCurriculumLessonNumber(plan.lessonNumber) || 'Lesson'}`;
+      input.value = getCurriculumPlanPrimaryScheduleDate(plan) || '';
+      modal.classList.add('open');
     }
 
-    function renderCurriculumPlanCalendar() {
-      const grid = document.getElementById('curriculumPlanCalendarGrid');
-      if (!grid) return;
-      const weekStartKey = getCurriculumPlanCalendarWeekStartKey();
-      const weekStart = parseCurriculumDateKey(weekStartKey);
-      const dateKeys = curriculumWeekdays.map((day, index) => formatCurriculumDateKey(addCurriculumDays(weekStart, index)));
-      curriculumSelectedPlanDateKeys = new Set(Array.from(curriculumSelectedPlanDateKeys).filter(dateKey => dateKeys.includes(dateKey)));
-      grid.innerHTML = dateKeys.map((dateKey, index) => {
+    function closeCurriculumPlanScheduleModal() {
+      const modal = document.getElementById('curriculumPlanScheduleModal');
+      const input = document.getElementById('curriculumPlanScheduleModalDate');
+      if (modal) modal.classList.remove('open');
+      if (input) input.value = '';
+      curriculumPlanSchedulePickerPlanId = '';
+    }
+
+    async function saveCurriculumPlanScheduleModalDate() {
+      if (!curriculumPlanSchedulePickerPlanId) return;
+      const input = document.getElementById('curriculumPlanScheduleModalDate');
+      const saved = await setCurriculumScheduledPlanDate(curriculumPlanSchedulePickerPlanId, input ? input.value : '');
+      if (saved) closeCurriculumPlanScheduleModal();
+    }
+
+    async function clearCurriculumPlanScheduleModalDate() {
+      if (!curriculumPlanSchedulePickerPlanId) return;
+      const cleared = await setCurriculumScheduledPlanDate(curriculumPlanSchedulePickerPlanId, '');
+      if (cleared) closeCurriculumPlanScheduleModal();
+    }
+
+    async function setCurriculumScheduledPlanDate(planId, dateKey) {
+      const plan = curriculumPlansCache.find(item => item.id === planId);
+      if (!plan) return false;
+      if (dateKey && !isValidCurriculumDateKey(dateKey)) {
+        setCurriculumStatus('Choose a valid date for the saved plan.', 'error');
+        return false;
+      }
+      removeCurriculumPlanFromCalendar(planId);
+      if (dateKey) {
         const assignment = getCurriculumPlanAssignment(dateKey);
-        return `
-          <div class="curriculum-plan-calendar-row">
-            <label class="curriculum-plan-date-control">
-              <input type="checkbox" ${curriculumSelectedPlanDateKeys.has(dateKey) ? 'checked' : ''} onchange="toggleCurriculumPlanDateSelection('${dateKey}', this.checked)">
-              <span>${escapeHtml(curriculumWeekdays[index].title)}<br><span class="text-xs text-gray-500">${escapeHtml(formatCurriculumDateLabel(dateKey))}</span></span>
-            </label>
-            ${curriculumSubjects.map(subject => `
-              <div>
-                <label class="curriculum-builder-label" for="plan-calendar-${subject}-${dateKey}">${escapeHtml(getCurriculumSubjectLabel(subject))}</label>
-                <select id="plan-calendar-${subject}-${dateKey}" class="curriculum-builder-field" onchange="updateCurriculumPlanCalendarAssignment('${dateKey}', '${subject}', this.value)">
-                  ${renderCurriculumPlanCalendarOptions(subject, assignment[subject] || '')}
-                </select>
-              </div>
-            `).join('')}
-            <div class="curriculum-plan-calendar-actions">
-              <button type="button" style="background: var(--md-coral); color: var(--md-white);" onclick="openCurriculumPlanDate('${dateKey}', 'teacher')">Open All</button>
-              <button type="button" style="background: var(--md-pebble); color: var(--md-ink);" onclick="openCurriculumPlanDate('${dateKey}', 'principal')">Principal</button>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    async function updateCurriculumPlanCalendarAssignment(dateKey, subject, planId) {
-      if (!isValidCurriculumDateKey(dateKey) || !curriculumSubjects.includes(subject)) return;
-      const assignment = getCurriculumPlanAssignment(dateKey);
-      if (planId) {
-        assignment[subject] = planId;
-      } else {
-        delete assignment[subject];
+        assignment[plan.subject || 'skills'] = planId;
       }
-      if (!Object.keys(assignment).length) delete curriculumPlanCalendar.dates[dateKey];
       await saveCurriculumPlanCalendarDraft();
-      setCurriculumStatus(`${formatCurriculumDateLabel(dateKey)} plan assignment saved.`, 'success');
-    }
-
-    function toggleCurriculumPlanDateSelection(dateKey, isSelected) {
-      if (isSelected) {
-        curriculumSelectedPlanDateKeys.add(dateKey);
-      } else {
-        curriculumSelectedPlanDateKeys.delete(dateKey);
-      }
+      renderCurriculumPlanLibrary();
+      renderCurriculumCalendar();
+      setCurriculumStatus(dateKey
+        ? `${getCurriculumPlanTitle(plan)} scheduled for ${formatCurriculumDateLabel(dateKey) || dateKey}.`
+        : `${getCurriculumPlanTitle(plan)} removed from the plan calendar.`,
+        'success');
+      return true;
     }
 
     function getCurriculumPlansForDate(dateKey) {
       const assignment = (curriculumPlanCalendar.dates && curriculumPlanCalendar.dates[dateKey]) || {};
       return curriculumSubjects.map(subject => {
         const plan = curriculumPlansCache.find(item => item.id === assignment[subject]);
-        return plan ? { subject, plan } : null;
-      }).filter(Boolean);
-    }
-
-    function getSelectedCurriculumPlanDateKeys() {
-      return Array.from(curriculumSelectedPlanDateKeys).filter(isValidCurriculumDateKey).sort();
-    }
-
-    function viewSelectedCurriculumPlanDates() {
-      const dateKeys = getSelectedCurriculumPlanDateKeys();
-      if (!dateKeys.length) {
-        setCurriculumStatus('Select at least one date in the Plan Calendar first.', 'error');
-        return;
-      }
-      openCurriculumPlanPrintView(dateKeys, { view: 'teacher', autoPrint: false, successMessage: 'Selected plans opened in a new page.' });
-    }
-
-    function printSelectedCurriculumPlanDates(view = 'teacher') {
-      const dateKeys = getSelectedCurriculumPlanDateKeys();
-      if (!dateKeys.length) {
-        setCurriculumStatus('Select at least one date in the Plan Calendar first.', 'error');
-        return;
-      }
-      openCurriculumPlanPrintView(dateKeys, {
-        view,
-        autoPrint: true,
-        successMessage: view === 'principal' ? 'Principal plan print view opened.' : 'Teacher/Sub plan print view opened.'
+        return { subject, plan: plan || null };
       });
     }
 
-    function printCurriculumPlanWeek() {
-      const weekStartKey = getCurriculumPlanCalendarWeekStartKey();
-      const weekStart = parseCurriculumDateKey(weekStartKey);
-      const dateKeys = curriculumWeekdays.map((day, index) => formatCurriculumDateKey(addCurriculumDays(weekStart, index)));
-      openCurriculumPlanPrintView(dateKeys, {
-        view: 'teacher',
-        autoPrint: true,
-        title: `Lesson Plan Week - ${getCurriculumWeekRangeLabel(weekStartKey)}`,
-        successMessage: 'Weekly plan print view opened.'
+    function getCurriculumLessonsForDate(dateKey) {
+      return curriculumSubjects.map(subject => {
+        const lessonId = (getCurriculumSubjectPlan(subject).dates || {})[dateKey] || '';
+        const lesson = lessonId ? curriculumLessonsCache.find(item => item.id === lessonId) : null;
+        return { subject, lesson: lesson || null };
       });
+    }
+
+    function getCurriculumCalendarMonthKey() {
+      const input = document.getElementById('curriculumCalendarMonthInput');
+      const today = new Date();
+      const fallback = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+      const value = input && /^\d{4}-\d{2}$/.test(input.value || '') ? input.value : fallback;
+      if (input && input.value !== value) input.value = value;
+      return value;
+    }
+
+    function setCurriculumCalendarToCurrentMonth() {
+      const input = document.getElementById('curriculumCalendarMonthInput');
+      const today = new Date();
+      if (input) input.value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+      curriculumActiveCalendarDateKey = formatCurriculumDateKey(today);
+      renderCurriculumCalendar();
+    }
+
+    function getCurriculumCalendarDateKeys(monthKey) {
+      const [year, month] = String(monthKey || '').split('-').map(Number);
+      const first = new Date(year, month - 1, 1);
+      const start = addCurriculumDays(first, -first.getDay());
+      return Array.from({ length: 42 }, (item, index) => formatCurriculumDateKey(addCurriculumDays(start, index)));
+    }
+
+    function getCurriculumCalendarMonthLabel(monthKey) {
+      const [year, month] = String(monthKey || '').split('-').map(Number);
+      if (!year || !month) return 'Calendar';
+      return new Date(year, month - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    }
+
+    function renderCurriculumPlanCalendar() {
+      renderCurriculumCalendar();
+    }
+
+    function renderCurriculumCalendar() {
+      const grid = document.getElementById('curriculumCalendarGrid');
+      if (!grid) return;
+      const monthKey = getCurriculumCalendarMonthKey();
+      const dateKeys = getCurriculumCalendarDateKeys(monthKey);
+      const currentMonth = Number(monthKey.split('-')[1]);
+      if (!curriculumActiveCalendarDateKey || !dateKeys.includes(curriculumActiveCalendarDateKey)) {
+        const todayKey = formatCurriculumDateKey(new Date());
+        curriculumActiveCalendarDateKey = dateKeys.includes(todayKey) ? todayKey : `${monthKey}-01`;
+      }
+      const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+        .map(day => `<div class="curriculum-month-weekday">${day}</div>`)
+        .join('');
+      const days = dateKeys.map(dateKey => renderCurriculumCalendarDayButton(dateKey, currentMonth)).join('');
+      grid.innerHTML = weekdays + days;
+      renderCurriculumCalendarDayDetail(curriculumActiveCalendarDateKey);
+    }
+
+    function renderCurriculumCalendarDayButton(dateKey, currentMonth) {
+      const date = parseCurriculumDateKey(dateKey);
+      const lessons = getCurriculumLessonsForDate(dateKey).filter(item => item.lesson);
+      const plans = getCurriculumPlansForDate(dateKey).filter(item => item.plan);
+      const hasItems = lessons.length || plans.length;
+      const classes = [
+        'curriculum-month-day',
+        date.getMonth() + 1 === currentMonth ? '' : 'outside',
+        hasItems ? 'has-items' : '',
+        dateKey === curriculumActiveCalendarDateKey ? 'active' : ''
+      ].filter(Boolean).join(' ');
+      const lessonItems = lessons.map(({ subject, lesson }) => `
+        <span class="curriculum-month-item">${escapeHtml(getCurriculumSubjectLabel(subject))}: ${escapeHtml(formatCurriculumLessonNumber(lesson.lessonNumber) || getCurriculumCardTitle(lesson))}</span>
+      `).join('');
+      const planItems = plans.map(({ subject, plan }) => `
+        <span class="curriculum-month-item plan">${escapeHtml(getCurriculumSubjectLabel(subject))} plan</span>
+      `).join('');
+      return `
+        <button type="button" class="${classes}" onclick="selectCurriculumCalendarDate('${dateKey}')">
+          <span class="curriculum-month-day-number">${date.getDate()}</span>
+          ${lessonItems}${planItems}
+        </button>
+      `;
+    }
+
+    function selectCurriculumCalendarDate(dateKey) {
+      curriculumActiveCalendarDateKey = dateKey;
+      renderCurriculumCalendar();
+    }
+
+    function renderCurriculumCalendarDayDetail(dateKey) {
+      const detail = document.getElementById('curriculumCalendarDayDetail');
+      if (!detail) return;
+      const lessons = getCurriculumLessonsForDate(dateKey);
+      const plans = getCurriculumPlansForDate(dateKey);
+      detail.innerHTML = `
+        <h4 class="font-display font-bold text-xl mb-2" style="color: var(--md-coral);">${escapeHtml(formatCurriculumLongDateLabel(dateKey))}</h4>
+        <div class="grid gap-3">
+          ${curriculumSubjects.map(subject => renderCurriculumCalendarSubjectDetail(subject, lessons.find(item => item.subject === subject)?.lesson || null, plans.find(item => item.subject === subject)?.plan || null)).join('')}
+        </div>
+      `;
+    }
+
+    function renderCurriculumCalendarSubjectDetail(subject, lesson, plan) {
+      return `
+        <section class="curriculum-detail-section">
+          <h4>${escapeHtml(getCurriculumSubjectLabel(subject))}</h4>
+          ${lesson ? `
+            <p><strong>Lesson:</strong> ${escapeHtml([formatCurriculumLessonNumber(lesson.lessonNumber), getCurriculumCardTitle(lesson)].filter(Boolean).join(': '))}</p>
+            ${renderCurriculumCalendarInlineField('I Can', lesson.iCanStatement)}
+            ${renderCurriculumCalendarInlineField('Priority standard', getCurriculumPriorityStandardDisplay(lesson))}
+          ` : '<p><strong>Lesson:</strong> No curriculum lesson scheduled.</p>'}
+          ${plan ? `
+            <p class="mt-2"><strong>Saved plan exists:</strong> Yes - ${escapeHtml(getCurriculumPlanTitle(plan))}</p>
+            ${renderCurriculumCalendarInlineField('Plan I Can', plan.iCanStatement)}
+            ${renderCurriculumCalendarInlineField('Plan priority standard', plan.priorityStandard)}
+          ` : '<p class="mt-2"><strong>Saved plan exists:</strong> No</p>'}
+        </section>
+      `;
+    }
+
+    function renderCurriculumCalendarInlineField(label, value) {
+      const text = String(value || '').trim();
+      return text ? `<p><strong>${escapeHtml(label)}:</strong> ${escapeHtml(text)}</p>` : '';
+    }
+
+    function formatCurriculumLongDateLabel(dateKey) {
+      const date = parseCurriculumDateKey(dateKey);
+      if (!date) return dateKey || 'Date';
+      return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    }
+
+    function printCurriculumCalendarMonth() {
+      const monthKey = getCurriculumCalendarMonthKey();
+      const [year, month] = monthKey.split('-').map(Number);
+      const dateKeys = Array.from({ length: new Date(year, month, 0).getDate() }, (item, index) =>
+        formatCurriculumDateKey(new Date(year, month - 1, index + 1))
+      );
+      const sections = dateKeys.map(dateKey => `
+        <div class="lesson">
+          <div class="day">${escapeHtml(formatCurriculumLongDateLabel(dateKey))}</div>
+          <div class="grid">
+            ${curriculumSubjects.map(subject => renderCurriculumCalendarPrintSubject(subject, dateKey)).join('')}
+          </div>
+        </div>
+      `).join('');
+      const title = `Curriculum Calendar - ${getCurriculumCalendarMonthLabel(monthKey)}`;
+      openCurriculumPrintWindow(
+        title,
+        `<h1>${escapeHtml(title)}</h1><div class="meta">Scheduled lessons come from Browse Lessons. Saved plans come from Browse Plans.</div>${sections}`,
+        'Monthly calendar print view opened.'
+      );
+    }
+
+    function renderCurriculumCalendarPrintSubject(subject, dateKey) {
+      const lesson = getCurriculumLessonsForDate(dateKey).find(item => item.subject === subject)?.lesson || null;
+      const plan = getCurriculumPlansForDate(dateKey).find(item => item.subject === subject)?.plan || null;
+      return `
+        <div class="field">
+          <strong>${escapeHtml(getCurriculumSubjectLabel(subject))}</strong>
+          ${lesson ? `Lesson: ${escapeHtml([formatCurriculumLessonNumber(lesson.lessonNumber), getCurriculumCardTitle(lesson)].filter(Boolean).join(': '))}<br>` : 'Lesson: none<br>'}
+          ${lesson && lesson.iCanStatement ? `I Can: ${escapeHtml(lesson.iCanStatement)}<br>` : ''}
+          ${lesson && getCurriculumPriorityStandardDisplay(lesson) ? `Standard: ${escapeHtml(getCurriculumPriorityStandardDisplay(lesson))}<br>` : ''}
+          ${plan ? `Plan: ${escapeHtml(getCurriculumPlanTitle(plan))}<br>` : 'Plan: none'}
+          ${plan && plan.iCanStatement ? `Plan I Can: ${escapeHtml(plan.iCanStatement)}<br>` : ''}
+          ${plan && plan.priorityStandard ? `Plan Standard: ${escapeHtml(plan.priorityStandard)}` : ''}
+        </div>
+      `;
     }
 
     function openCurriculumPlanDate(dateKey, view = 'teacher') {
-      if (!getCurriculumPlansForDate(dateKey).length) {
+      const scheduledPlans = getCurriculumPlansForDate(dateKey).filter(item => item.plan);
+      if (!scheduledPlans.length) {
         setCurriculumStatus(`No saved plans are assigned to ${formatCurriculumDateLabel(dateKey)} yet.`, 'error');
         return;
       }
@@ -9828,7 +10094,7 @@
     function openCurriculumPlanPrintView(dateKeys, options = {}) {
       const view = options.view === 'principal' ? 'principal' : 'teacher';
       const sections = dateKeys.map(dateKey => {
-        const plans = getCurriculumPlansForDate(dateKey);
+        const plans = getCurriculumPlansForDate(dateKey).filter(item => item.plan);
         if (!plans.length) {
           return `<section><h2>${escapeHtml(formatCurriculumDateLabel(dateKey) || dateKey)}</h2><div class="lesson"><p>No saved plans assigned.</p></div></section>`;
         }
@@ -9861,6 +10127,7 @@
             <h3>${escapeHtml(title)}</h3>
             <div class="grid">
               ${renderCurriculumPrintField('I Can statement', plan.iCanStatement)}
+              ${renderCurriculumPrintField('Priority standard', plan.priorityStandard)}
               ${renderCurriculumPrintField('Teacher is doing', principal.teacherDoing)}
               ${renderCurriculumPrintField('Scholars are doing', principal.scholarsDoing)}
               ${renderCurriculumPrintList('Brief rotation bullets', principal.rotationBullets)}
@@ -9877,6 +10144,7 @@
           <h3>${escapeHtml(title)}</h3>
           <div class="grid">
             ${renderCurriculumPrintField('I Can statement', plan.iCanStatement)}
+            ${renderCurriculumPrintField('Priority standard', plan.priorityStandard)}
             ${sections.map(section => renderCurriculumPlanPrintSection(section.title, section.body)).join('')}
             ${renderCurriculumPrintList('Missing or check before teaching', plan.missingInformation)}
           </div>

@@ -14,6 +14,22 @@
   ],
   "standards": [
     {
+      "code": "K.OA.A.1",
+      "grade": "K",
+      "domain": "Understand addition as putting together and adding to, and understand subtraction as taking apart and taking from",
+      "officialWording": "Represent addition and subtraction with objects, fingers, mental images, drawings, sounds, acting out situations, verbal explanations, expressions, or equations.",
+      "modules": [],
+      "footnotes": []
+    },
+    {
+      "code": "K.OA.A.5",
+      "grade": "K",
+      "domain": "Understand addition as putting together and adding to, and understand subtraction as taking apart and taking from",
+      "officialWording": "Fluently add and subtract within 5.",
+      "modules": [],
+      "footnotes": []
+    },
+    {
       "code": "1.G.A.1",
       "grade": 1,
       "domain": "Reason with shapes and their attributes",
