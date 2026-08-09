@@ -18,7 +18,9 @@
       "grade": "K",
       "domain": "Understand addition as putting together and adding to, and understand subtraction as taking apart and taking from",
       "officialWording": "Represent addition and subtraction with objects, fingers, mental images, drawings, sounds, acting out situations, verbal explanations, expressions, or equations.",
-      "modules": [],
+      "modules": [
+        5
+      ],
       "footnotes": []
     },
     {
@@ -26,7 +28,9 @@
       "grade": "K",
       "domain": "Understand addition as putting together and adding to, and understand subtraction as taking apart and taking from",
       "officialWording": "Fluently add and subtract within 5.",
-      "modules": [],
+      "modules": [
+        5
+      ],
       "footnotes": []
     },
     {
