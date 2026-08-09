@@ -2528,11 +2528,11 @@
       text-transform: uppercase;
     }
     .curriculum-month-day {
-      min-height: 7.8rem;
+      height: 6.4rem;
       border: 1px solid color-mix(in oklab, var(--md-slate) 16%, var(--md-white));
       border-radius: .85rem;
       background: color-mix(in oklab, var(--md-white) 94%, var(--md-pebble));
-      padding: .55rem;
+      padding: .45rem;
       text-align: left;
       overflow: hidden;
     }
@@ -2551,19 +2551,21 @@
       color: var(--md-slate);
       font-weight: 900;
       line-height: 1;
-      margin-bottom: .35rem;
+      margin-bottom: .25rem;
     }
     .curriculum-month-item {
       display: block;
-      border-radius: .45rem;
-      margin-top: .25rem;
-      padding: .22rem .35rem;
+      border-radius: .35rem;
+      margin-top: .16rem;
+      padding: .14rem .25rem;
       background: var(--md-white);
       color: var(--md-ink);
-      font-size: .72rem;
+      font-size: .62rem;
       font-weight: 800;
-      line-height: 1.2;
-      overflow-wrap: anywhere;
+      line-height: 1.12;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .curriculum-calendar-detail {
       border: 1px solid color-mix(in oklab, var(--md-slate) 18%, var(--md-white));
@@ -10300,9 +10302,7 @@
         dateKey === curriculumActiveCalendarDateKey ? 'active' : ''
       ].filter(Boolean).join(' ');
       const lessonItems = visibleItems.map(({ subject, lesson, note }) => `
-        <span class="curriculum-month-item">${escapeHtml(getCurriculumSubjectLabel(subject))}: ${escapeHtml(lesson
-          ? [formatCurriculumUnitOrModule(lesson.unitOrModule), formatCurriculumLessonNumber(lesson.lessonNumber), getCurriculumCardTitle(lesson)].filter(Boolean).join(' - ')
-          : note)}</span>
+        <span class="curriculum-month-item">${escapeHtml(getCurriculumCalendarCompactItemLabel(subject, lesson, note))}</span>
       `).join('');
       return `
         <button type="button" class="${classes}" onclick="selectCurriculumCalendarDate('${dateKey}')">
@@ -10310,6 +10310,33 @@
           ${lessonItems}
         </button>
       `;
+    }
+
+    function getCurriculumCalendarSubjectShortLabel(subject) {
+      if (subject === 'listening') return 'L&L';
+      return getCurriculumSubjectLabel(subject);
+    }
+
+    function getCurriculumCalendarCompactUnitLabel(value) {
+      const text = formatCurriculumUnitOrModule(value);
+      const match = text.match(/^(Unit|Module)\s+(.+)$/i);
+      return match ? `${match[1].charAt(0).toUpperCase()}${match[2]}` : text;
+    }
+
+    function getCurriculumCalendarCompactLessonLabel(value) {
+      const text = formatCurriculumLessonNumber(value);
+      const match = text.match(/^Lesson\s+(.+)$/i);
+      return match ? `L${match[1]}` : text;
+    }
+
+    function getCurriculumCalendarCompactItemLabel(subject, lesson, note = '') {
+      const subjectLabel = getCurriculumCalendarSubjectShortLabel(subject);
+      if (!lesson) return `${subjectLabel}: ${note ? 'Note' : 'Scheduled'}`;
+      const parts = [
+        getCurriculumCalendarCompactUnitLabel(lesson.unitOrModule),
+        getCurriculumCalendarCompactLessonLabel(lesson.lessonNumber)
+      ].filter(Boolean);
+      return `${subjectLabel}: ${parts.join(' ') || 'Scheduled'}`;
     }
 
     function selectCurriculumCalendarDate(dateKey) {
@@ -10646,37 +10673,30 @@
       const text = String(value || '').trim();
       if (!text && !options.showEmpty) return '';
       return `
-        <div class="weekly-print-field${options.wide ? ' wide' : ''}">
+        <div class="weekly-print-field">
           <strong>${escapeHtml(label)}:</strong> ${escapeHtml(text)}
         </div>
       `;
     }
 
-    function renderWeeklyLessonPlanPrintSubject(row) {
-      if (isWeeklyLessonPlanEmptyRow(row)) {
-        return `
-          <section class="weekly-print-subject empty">
-            <h3>${escapeHtml(row.subject)}</h3>
-            <p>No scheduled lesson.</p>
-          </section>
-        `;
-      }
+    function renderWeeklyLessonPlanPrintChartRow(row) {
+      const materialsEvidence = String(row.materialsEvidence || '').trim();
       return `
-        <section class="weekly-print-subject">
-          <h3>${escapeHtml(row.subject)}</h3>
-          <div class="weekly-print-identity">
-            ${row.unit ? `<span><strong>Unit / Module:</strong> ${escapeHtml(row.unit)}</span>` : ''}
-            ${row.lessonNumber ? `<span><strong>Lesson:</strong> ${escapeHtml(row.lessonNumber)}</span>` : ''}
-            ${row.lessonTitle ? `<span><strong>Title:</strong> ${escapeHtml(row.lessonTitle)}</span>` : ''}
-          </div>
-          <div class="weekly-print-fields">
-            ${renderWeeklyLessonPlanPrintField('Priority Standard', row.priorityStandard, { wide: true })}
-            ${renderWeeklyLessonPlanPrintField('I Can Statement', row.iCanStatement)}
-            ${renderWeeklyLessonPlanPrintField('Objective / Learning Focus', row.objectiveFocus)}
-            ${renderWeeklyLessonPlanPrintField('Key Learning / Activity Summary', row.activitySummary, { wide: true })}
-            ${renderWeeklyLessonPlanPrintField('Materials / Assessment Evidence', row.materialsEvidence, { wide: true })}
-          </div>
-        </section>
+        <tr>
+          <td class="subject">${escapeHtml(row.subject)}</td>
+          <td>${escapeHtml(row.unit)}</td>
+          <td>${escapeHtml(row.lessonNumber)}</td>
+          <td>${escapeHtml(row.lessonTitle)}</td>
+          <td>${escapeHtml(row.priorityStandard)}</td>
+          <td>${escapeHtml(row.iCanStatement)}</td>
+          <td>${escapeHtml(row.objectiveFocus)}</td>
+          <td>${escapeHtml(row.activitySummary)}</td>
+        </tr>
+        ${materialsEvidence ? `
+          <tr class="materials-row">
+            <td colspan="8"><strong>Materials / Assessment Evidence:</strong> ${escapeHtml(materialsEvidence)}</td>
+          </tr>
+        ` : ''}
       `;
     }
 
@@ -10698,10 +10718,29 @@
       const days = groupWeeklyLessonPlanRowsByDay(rows);
       return `
         <div class="weekly-print-days">
-          ${days.map(day => `
+          ${days.map((day, index) => `
             <section class="weekly-print-day">
-              <h2>${escapeHtml(day.day || 'Day')} <span>${escapeHtml(formatCurriculumDateLabel(day.dateKey))}</span></h2>
-              ${day.rows.map(renderWeeklyLessonPlanPrintSubject).join('')}
+              <div class="weekly-print-day-header">
+                <h2>${escapeHtml(day.day || 'Day')} <span>${escapeHtml(formatCurriculumDateLabel(day.dateKey))}</span></h2>
+                <p>Day ${index + 1} of ${days.length}</p>
+              </div>
+              <table class="weekly-print-lesson-table">
+                <thead>
+                  <tr>
+                    <th>Subject</th>
+                    <th>Unit / Module</th>
+                    <th>Lesson</th>
+                    <th>Lesson Title</th>
+                    <th>Priority Standard</th>
+                    <th>I Can</th>
+                    <th>Objective / Focus</th>
+                    <th>Key Learning / Activity</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${day.rows.map(renderWeeklyLessonPlanPrintChartRow).join('')}
+                </tbody>
+              </table>
             </section>
           `).join('')}
         </div>
@@ -10712,16 +10751,26 @@
       return `
         <section class="weekly-print-intervention">
           <h2>Reading Intervention</h2>
-          <div class="weekly-print-intervention-grid">
-            ${rows.map(row => `
-              <section class="weekly-print-intervention-day">
-                <h3>${escapeHtml(row.day)} <span>${escapeHtml(formatCurriculumDateLabel(row.dateKey))}</span></h3>
-                ${renderWeeklyLessonPlanPrintField('Teacher Group', row.teacherGroup, { showEmpty: true })}
-                ${renderWeeklyLessonPlanPrintField('Independent Reading', row.independentReading, { showEmpty: true })}
-                ${renderWeeklyLessonPlanPrintField('Independent Skill Work', row.independentSkillWork, { showEmpty: true })}
-              </section>
-            `).join('')}
-          </div>
+          <table class="weekly-print-intervention-table">
+            <thead>
+              <tr>
+                <th>Day</th>
+                <th>Teacher Group</th>
+                <th>Independent Reading</th>
+                <th>Independent Skill Work</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map(row => `
+                <tr>
+                  <td class="subject">${escapeHtml(row.day)}<br><span>${escapeHtml(formatCurriculumDateLabel(row.dateKey))}</span></td>
+                  <td>${escapeHtml(row.teacherGroup)}</td>
+                  <td>${escapeHtml(row.independentReading)}</td>
+                  <td>${escapeHtml(row.independentSkillWork)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
         </section>
       `;
     }
@@ -10737,29 +10786,38 @@
       const interventionRows = collectWeeklyInterventionRows();
       const body = `
         <style>
-          @page{size:landscape;margin:.28in;}
-          h1{font-size:21px;margin-bottom:3px;}
-          .meta{font-size:10.5px;margin-bottom:6px;}
+          @page{size:landscape;margin:.3in;}
+          h1{font-size:20px;margin:0 0 2px;}
+          .meta{font-size:10px;margin:0 0 5px;}
           .weekly-print-days{display:block;}
-          .weekly-print-day{border:1px solid #cbd5e1;border-radius:7px;padding:5px;margin:0 0 6px;break-inside:auto;page-break-inside:auto;}
-          .weekly-print-day h2{margin:0 0 4px;font-size:13px;line-height:1.1;color:#334155;border:0;padding:0;}
-          .weekly-print-day h2 span{font-size:10px;font-weight:400;color:#64748b;margin-left:5px;}
-          .weekly-print-subject{border-top:1px solid #e2e8f0;padding:4px 0 3px;break-inside:auto;page-break-inside:auto;}
-          .weekly-print-subject:first-of-type{border-top:0;}
-          .weekly-print-subject h3{margin:0 0 2px;font-size:11.2px;line-height:1.15;color:#be5b45;border:0;padding:0;}
-          .weekly-print-subject.empty{display:grid;grid-template-columns:8rem 1fr;gap:6px;align-items:center;color:#64748b;}
-          .weekly-print-subject.empty p{margin:0;font-size:9.5px;}
-          .weekly-print-identity{display:flex;flex-wrap:wrap;gap:3px 9px;font-size:9.2px;line-height:1.2;color:#475569;margin-bottom:3px;}
-          .weekly-print-identity strong,.weekly-print-field strong{color:#334155;}
-          .weekly-print-fields{display:grid;grid-template-columns:1fr 1fr;gap:3px 9px;}
-          .weekly-print-field{font-size:9.2px;line-height:1.2;white-space:pre-wrap;overflow-wrap:anywhere;}
-          .weekly-print-field.wide{grid-column:1/-1;}
-          .weekly-print-intervention{margin-top:7px;break-inside:auto;page-break-inside:auto;}
-          .weekly-print-intervention h2{margin:0 0 5px;font-size:13px;line-height:1.1;color:#334155;border-bottom:1px solid #f4b56a;padding-bottom:3px;}
-          .weekly-print-intervention-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;}
-          .weekly-print-intervention-day{border:1px solid #cbd5e1;border-radius:6px;padding:4px;min-height:42px;}
-          .weekly-print-intervention-day h3{margin:0 0 3px;font-size:10.2px;line-height:1.1;color:#be5b45;}
-          .weekly-print-intervention-day h3 span{display:block;font-size:8.8px;font-weight:400;color:#64748b;}
+          .weekly-print-day{min-height:7.35in;break-after:page;page-break-after:always;break-inside:avoid;page-break-inside:avoid;}
+          .weekly-print-day:last-child{break-after:auto;page-break-after:auto;}
+          .weekly-print-day-header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:0 0 5px;}
+          .weekly-print-day-header h2{margin:0;font-size:14px;line-height:1.1;color:#334155;border:0;padding:0;}
+          .weekly-print-day-header h2 span{font-size:10px;font-weight:400;color:#64748b;margin-left:5px;}
+          .weekly-print-day-header p{margin:0;font-size:9px;color:#64748b;}
+          .weekly-print-lesson-table,.weekly-print-intervention-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:8.8px;line-height:1.18;}
+          .weekly-print-lesson-table th,.weekly-print-lesson-table td,.weekly-print-intervention-table th,.weekly-print-intervention-table td{border:1px solid #cbd5e1;padding:3.5px;vertical-align:top;white-space:pre-wrap;overflow-wrap:anywhere;}
+          .weekly-print-lesson-table th,.weekly-print-intervention-table th{background:#e8edf2;color:#334155;text-align:left;font-weight:800;}
+          .weekly-print-lesson-table .subject{font-weight:800;color:#be5b45;}
+          .weekly-print-lesson-table th:nth-child(1),.weekly-print-lesson-table td:nth-child(1){width:8%;}
+          .weekly-print-lesson-table th:nth-child(2),.weekly-print-lesson-table td:nth-child(2){width:9%;}
+          .weekly-print-lesson-table th:nth-child(3),.weekly-print-lesson-table td:nth-child(3){width:7%;}
+          .weekly-print-lesson-table th:nth-child(4),.weekly-print-lesson-table td:nth-child(4){width:13%;}
+          .weekly-print-lesson-table th:nth-child(5),.weekly-print-lesson-table td:nth-child(5){width:18%;}
+          .weekly-print-lesson-table th:nth-child(6),.weekly-print-lesson-table td:nth-child(6){width:12%;}
+          .weekly-print-lesson-table th:nth-child(7),.weekly-print-lesson-table td:nth-child(7){width:14%;}
+          .weekly-print-lesson-table th:nth-child(8),.weekly-print-lesson-table td:nth-child(8){width:19%;}
+          .weekly-print-lesson-table .materials-row td{background:#f8fafc;color:#334155;font-size:8.6px;}
+          .weekly-print-intervention{break-before:page;page-break-before:always;break-inside:avoid;page-break-inside:avoid;}
+          .weekly-print-intervention h2{margin:0 0 6px;font-size:14px;line-height:1.1;color:#334155;border:0;padding:0;}
+          .weekly-print-intervention-table{font-size:9px;}
+          .weekly-print-intervention-table th:nth-child(1),.weekly-print-intervention-table td:nth-child(1){width:13%;}
+          .weekly-print-intervention-table th:nth-child(2),.weekly-print-intervention-table td:nth-child(2){width:29%;}
+          .weekly-print-intervention-table th:nth-child(3),.weekly-print-intervention-table td:nth-child(3){width:29%;}
+          .weekly-print-intervention-table th:nth-child(4),.weekly-print-intervention-table td:nth-child(4){width:29%;}
+          .weekly-print-intervention-table .subject{font-weight:800;color:#be5b45;}
+          .weekly-print-intervention-table .subject span{font-size:8px;font-weight:400;color:#64748b;}
         </style>
         <h1>${escapeHtml(title)}</h1>
         <div class="meta">Generated from scheduled Curriculum Library lessons. Editable Reading Intervention entries are teacher-completed.</div>
