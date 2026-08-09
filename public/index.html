@@ -10701,71 +10701,52 @@
       `;
     }
 
-    function groupWeeklyLessonPlanRowsByDay(rows) {
-      const days = [];
-      rows.forEach(row => {
-        const key = row.dateKey || row.day || `day-${days.length}`;
-        let day = days.find(item => item.key === key);
-        if (!day) {
-          day = { key, day: row.day, dateKey: row.dateKey, rows: [] };
-          days.push(day);
-        }
-        day.rows.push(row);
-      });
-      return days;
-    }
-
     function getWeeklyLessonPlanPrintWeekKey(dateKey) {
       return getCurriculumWeekStartKeyFromDateKey(dateKey) || dateKey || 'week';
-    }
-
-    function groupWeeklyLessonPlanDaysByWeek(days) {
-      const weeks = [];
-      days.forEach(day => {
-        const key = getWeeklyLessonPlanPrintWeekKey(day.dateKey);
-        let week = weeks.find(item => item.key === key);
-        if (!week) {
-          week = { key, days: [] };
-          weeks.push(week);
-        }
-        week.days.push(day);
-      });
-      return weeks;
     }
 
     function getWeeklyInterventionRowsForWeek(rows, weekKey) {
       return rows.filter(row => getWeeklyLessonPlanPrintWeekKey(row.dateKey) === weekKey);
     }
 
+    function groupWeeklyLessonPlanRowsByWeek(rows) {
+      const weeks = [];
+      rows.forEach(row => {
+        const key = getWeeklyLessonPlanPrintWeekKey(row.dateKey);
+        let week = weeks.find(item => item.key === key);
+        if (!week) {
+          week = { key, rows: [] };
+          weeks.push(week);
+        }
+        week.rows.push(row);
+      });
+      return weeks;
+    }
+
     function renderWeeklyLessonPlanPrintTable(rows, interventionRows = []) {
-      const days = groupWeeklyLessonPlanRowsByDay(rows);
-      const weeks = groupWeeklyLessonPlanDaysByWeek(days);
+      const weeks = groupWeeklyLessonPlanRowsByWeek(rows);
       return `
         <div class="weekly-print-weeks">
           ${weeks.map(week => `
             <section class="weekly-print-week">
-              ${week.days.map(day => `
-                <section class="weekly-print-day">
-                  <table class="weekly-print-lesson-table">
-                    <thead>
-                      <tr>
-                        <th>Day</th>
-                        <th>Subject</th>
-                        <th>Unit / Module</th>
-                        <th>Lesson</th>
-                        <th>Lesson Title</th>
-                        <th>Priority Standard</th>
-                        <th>I Can</th>
-                        <th>Objective / Focus</th>
-                        <th>Key Learning / Activity</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${day.rows.map(renderWeeklyLessonPlanPrintChartRow).join('')}
-                    </tbody>
-                  </table>
-                </section>
-              `).join('')}
+              <table class="weekly-print-lesson-table">
+                <thead>
+                  <tr>
+                    <th>Day</th>
+                    <th>Subject</th>
+                    <th>Unit / Module</th>
+                    <th>Lesson</th>
+                    <th>Lesson Title</th>
+                    <th>Priority Standard</th>
+                    <th>I Can</th>
+                    <th>Objective / Focus</th>
+                    <th>Key Learning / Activity</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${week.rows.map(renderWeeklyLessonPlanPrintChartRow).join('')}
+                </tbody>
+              </table>
               ${renderWeeklyInterventionPrintTable(getWeeklyInterventionRowsForWeek(interventionRows, week.key), week.key)}
             </section>
           `).join('')}
@@ -10816,10 +10797,12 @@
           h1{font-size:20px;margin:0 0 2px;}
           .meta{font-size:10px;margin:0 0 5px;}
           .weekly-print-weeks{display:block;}
-          .weekly-print-day{break-after:page;page-break-after:always;break-inside:avoid;page-break-inside:avoid;}
+          .weekly-print-week{break-inside:auto;page-break-inside:auto;}
           .weekly-print-lesson-table,.weekly-print-intervention-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:9px;line-height:1.18;}
           .weekly-print-lesson-table th,.weekly-print-lesson-table td,.weekly-print-intervention-table th,.weekly-print-intervention-table td{border:1px solid #cbd5e1;padding:4px;vertical-align:top;white-space:pre-wrap;overflow-wrap:anywhere;}
           .weekly-print-lesson-table th,.weekly-print-intervention-table th{background:#e8edf2;color:#334155;text-align:left;font-weight:800;}
+          .weekly-print-lesson-table thead,.weekly-print-intervention-table thead{display:table-header-group;}
+          .weekly-print-lesson-table tr,.weekly-print-intervention-table tr{break-inside:avoid;page-break-inside:avoid;}
           .weekly-print-lesson-table .day-cell{font-weight:800;color:#334155;}
           .weekly-print-lesson-table .day-cell span{font-size:8px;font-weight:400;color:#64748b;}
           .weekly-print-lesson-table .subject{font-weight:800;color:#be5b45;}
@@ -10833,7 +10816,7 @@
           .weekly-print-lesson-table th:nth-child(8),.weekly-print-lesson-table td:nth-child(8){width:29%;}
           .weekly-print-lesson-table th:nth-child(9),.weekly-print-lesson-table td:nth-child(9){width:15.6%;}
           .weekly-print-lesson-table .materials-row td{background:#f8fafc;color:#334155;font-size:8.8px;padding:6px;}
-          .weekly-print-intervention{break-inside:avoid;page-break-inside:avoid;}
+          .weekly-print-intervention{margin-top:10px;break-inside:avoid;page-break-inside:avoid;}
           .weekly-print-week:not(:last-child) .weekly-print-intervention{break-after:page;page-break-after:always;}
           .weekly-print-intervention h2{margin:0 0 6px;font-size:14px;line-height:1.1;color:#334155;border:0;padding:0;}
           .weekly-print-intervention-table{font-size:9px;}
