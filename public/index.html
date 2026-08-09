@@ -12118,12 +12118,13 @@
     }
     
     // Remove a lesson card
-    function removeLessonCard(btn, subject) {
+    async function removeLessonCard(btn, subject) {
       const card = btn.closest('.lesson-card');
       if (card) {
         const weekdayBox = card.closest('.weekday-box');
         const container = card.parentElement;
         const dayIndex = parseInt(weekdayBox.dataset.dayIndex);
+        const lessonId = card.dataset.lessonId || '';
         
         // Try to get existing placeholder text from data attribute, or default to "No Lesson"
         let placeholderTextContent = weekdayBox.dataset.placeholder || 'No Lesson';
@@ -12190,7 +12191,32 @@
         }
         
         container.appendChild(placeholder);
+        updateWeekdayBoxDisplay(weekdayBox, subject);
+
+        try {
+          await saveLessonCardsDataForSubject(subject);
+          if (lessonId) {
+            await loadCurriculumWeeklyPlan();
+            removeCurriculumLessonFromWeeklyPlan(lessonId);
+            await saveCurriculumWeeklyPlanDraft();
+            renderCurriculumCalendar();
+            generateWeeklyLessonPlan();
+          }
+        } catch (error) {
+          console.error('Failed to save lesson card deletion:', error);
+        }
       }
+    }
+
+    async function saveLessonCardsDataForSubject(subject) {
+      if (!db) return;
+      await ensureAuthenticated();
+      const lessonData = getLessonCardsData(subject);
+      const dataField = subject === 'skills' ? 'skills_lessons_json' : (subject === 'listening' ? 'listening_lessons_json' : 'math_lessons_json');
+      const data = {};
+      data[dataField] = lessonData;
+      learningLessonDataCache[subject] = cloneLearningLessonData(safeJsonParse(lessonData, null));
+      await db.collection('classData').doc('current').set(data, { merge: true });
     }
     
     // Update weekday box display based on whether it has a card
