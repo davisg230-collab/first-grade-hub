@@ -13,6 +13,11 @@ const MATH_STANDARDS_REFERENCE_PATH = path.join(__dirname, "data", "math-standar
 const SKILLS_STANDARDS_REFERENCE_PATH = path.join(__dirname, "data", "skills-standards-reference.json");
 let mathStandardsReferenceCache;
 let skillsStandardsReferenceCache;
+const KINDERGARTEN_MATH_SUBJECT = "kindergarten-math";
+const CURRICULUM_LESSON_SUBJECTS = ["skills", "listening", "math", KINDERGARTEN_MATH_SUBJECT, "other"];
+const CURRICULUM_PLAN_SUBJECTS = ["skills", "listening", "math"];
+const CURRICULUM_DEFAULT_LESSON_SOURCE_LIMIT = 20000;
+const CURRICULUM_LONG_SINGLE_LESSON_SOURCE_LIMIT = 45000;
 const MAIL_COLLECTION = process.env.MAIL_COLLECTION || "mail";
 const APPROVED_EDITOR_EMAILS = new Set([
   "davisg230@gmail.com",
@@ -64,12 +69,21 @@ exports.analyzeCurriculumLesson = onCall(
 
     const data = request.data || {};
     const subject = normalizeCurriculumSubject(data.subject);
+    const unitOrModule = asText(data.unitOrModule);
+    const lessonNumber = asText(data.lessonNumber);
+    const lessonTitle = asText(data.lessonTitle);
     const sourceText = asText(data.sourceText);
     if (sourceText.length < 40) {
       throw new HttpsError("invalid-argument", "Paste one full lesson before running the AI analyzer.");
     }
-    if (sourceText.length > 20000) {
-      throw new HttpsError("invalid-argument", "Paste one lesson at a time so the AI request stays focused and low-cost.");
+    const sourceLimit = getCurriculumLessonSourceLimit(subject, sourceText, lessonNumber);
+    if (sourceText.length > sourceLimit) {
+      throw new HttpsError(
+        "invalid-argument",
+        sourceLimit > CURRICULUM_DEFAULT_LESSON_SOURCE_LIMIT
+          ? "That lesson text is still too long for one AI draft. Trim extra pages or duplicate teacher-guide sections, then try again."
+          : "Paste one lesson at a time so the AI request stays focused and low-cost."
+      );
     }
 
     const apiKey = OPENAI_API_KEY.value();
@@ -80,9 +94,9 @@ exports.analyzeCurriculumLesson = onCall(
     const model = process.env.OPENAI_MODEL || "gpt-5.6-luna";
     const prompt = buildCurriculumAnalysisPrompt({
       subject,
-      unitOrModule: asText(data.unitOrModule),
-      lessonNumber: asText(data.lessonNumber),
-      lessonTitle: asText(data.lessonTitle),
+      unitOrModule,
+      lessonNumber,
+      lessonTitle,
       sourceText,
     });
 
@@ -97,7 +111,7 @@ exports.analyzeCurriculumLesson = onCall(
         body: JSON.stringify({
           model,
           instructions: [
-            "You are a careful first grade curriculum assistant.",
+            "You are a careful elementary curriculum assistant for first grade and Kindergarten lessons.",
             "Use the provided lesson source as evidence, but create teacher-useful planning fields when the lesson implies them.",
             "Do not make up lesson facts, materials, URLs, or official standard codes that are not supported by the source.",
             "The I can statement, priority standard focus, sounds/spellings, vocabulary, parent summary, family questions, and teacher notes are expected to be inferred or written from the lesson when possible.",
@@ -109,7 +123,7 @@ exports.analyzeCurriculumLesson = onCall(
             "Keep generated sections concise so the structured response stays complete: at most 5 teacher notes, 3 family questions, 12 vocabulary items, and 12 materials. Keep standard notes to one short line per cited standard, and do not repeat the full official standard wording there.",
           ].join(" "),
           input: prompt,
-          max_output_tokens: subject === "math" ? 6000 : 2200,
+          max_output_tokens: isMathCurriculumSubject(subject) ? 6000 : 2200,
           text: {
             format: {
               type: "json_schema",
@@ -172,7 +186,7 @@ exports.analyzeCurriculumLesson = onCall(
           apiKey,
           model,
           outputText,
-          maxOutputTokens: subject === "math" ? 6000 : 2200,
+          maxOutputTokens: isMathCurriculumSubject(subject) ? 6000 : 2200,
         });
         if (repairedText) {
           try {
@@ -560,7 +574,7 @@ const CURRICULUM_LESSON_SCHEMA = {
   type: "object",
   additionalProperties: false,
   properties: {
-    subject: { type: "string", enum: ["skills", "listening", "math", "other"] },
+    subject: { type: "string", enum: CURRICULUM_LESSON_SUBJECTS },
     unitOrModule: { type: "string" },
     lessonNumber: { type: "string" },
     lessonTitle: { type: "string" },
@@ -627,7 +641,7 @@ const CURRICULUM_PLAN_SCHEMA = {
   type: "object",
   additionalProperties: false,
   properties: {
-    subject: { type: "string", enum: ["skills", "listening", "math"] },
+    subject: { type: "string", enum: CURRICULUM_PLAN_SUBJECTS },
     unitOrModule: { type: "string" },
     lessonNumber: { type: "string" },
     lessonTitle: { type: "string" },
@@ -942,8 +956,58 @@ function buildSkillsStandardsContext(sourceText) {
   return lines.join("\n");
 }
 
+function isMathCurriculumSubject(subject) {
+  return subject === "math" || subject === KINDERGARTEN_MATH_SUBJECT;
+}
+
+function isKindergartenMathSubject(subject) {
+  return subject === KINDERGARTEN_MATH_SUBJECT;
+}
+
+function getCurriculumLessonSourceLimit(subject, sourceText, lessonNumber = "") {
+  if ((subject === "listening" || isMathCurriculumSubject(subject))
+    && looksLikeSingleCurriculumLessonText(sourceText, lessonNumber)) {
+    return CURRICULUM_LONG_SINGLE_LESSON_SOURCE_LIMIT;
+  }
+  return CURRICULUM_DEFAULT_LESSON_SOURCE_LIMIT;
+}
+
+function looksLikeSingleCurriculumLessonText(sourceText, lessonNumber = "") {
+  const text = asText(sourceText).slice(0, 60000);
+  const lessonTokens = extractCurriculumLessonNumberTokens(text);
+  if (lessonTokens.length <= 1) return true;
+
+  const selectedToken = extractCurriculumLessonNumberTokens(lessonNumber)[0] || "";
+  const distinctTokens = Array.from(new Set(lessonTokens));
+  if (distinctTokens.length === 1) return true;
+
+  if (selectedToken) {
+    const otherTokenCount = lessonTokens.filter((token) => token !== selectedToken).length;
+    const firstToken = lessonTokens[0] || "";
+    if (firstToken === selectedToken && otherTokenCount <= 2) return true;
+  }
+
+  const counts = lessonTokens.reduce((map, token) => {
+    map.set(token, (map.get(token) || 0) + 1);
+    return map;
+  }, new Map());
+  const mostCommonCount = Math.max(...Array.from(counts.values()));
+  if (mostCommonCount >= Math.max(3, lessonTokens.length - 1)) return true;
+
+  return false;
+}
+
+function extractCurriculumLessonNumberTokens(value) {
+  const text = asText(value).replace(/[\u2010-\u2015]/g, "-");
+  const tokens = [];
+  for (const match of text.matchAll(/\blesson\s*(?:number|no\.?|#|:|-)?\s*([0-9]{1,3}[A-Za-z]?)(?!\s*-\s*[0-9])/gi)) {
+    tokens.push(String(match[1] || "").toLowerCase());
+  }
+  return tokens;
+}
+
 function normalizeCurriculumPlanSubject(subject) {
-  return ["skills", "listening", "math"].includes(subject) ? subject : "skills";
+  return CURRICULUM_PLAN_SUBJECTS.includes(subject) ? subject : "skills";
 }
 
 function getCurriculumPlanToggleLabels() {
@@ -988,7 +1052,7 @@ function getCurriculumPlanDisabledToggleLabels(toggleSettings) {
 }
 
 function buildCurriculumPlanStructureGuidance(subject) {
-  if (subject === "math") {
+  if (isMathCurriculumSubject(subject)) {
     return [
       "Math fixed rotations:",
       "Rotation 1: A/B Lesson Station, C review/Learning Games.",
@@ -1027,7 +1091,7 @@ function buildCurriculumPlanPrompt(data) {
   const selectedToggleLabels = getCurriculumPlanSelectedToggleLabels(data.toggleSettings);
   const disabledToggleLabels = getCurriculumPlanDisabledToggleLabels(data.toggleSettings);
   const priorityStandard = asText(data.priorityStandard);
-  const standardsContext = data.subject === "math"
+  const standardsContext = isMathCurriculumSubject(data.subject)
     ? buildMathStandardsContext(`${priorityStandard}\n${data.sourceText}`)
     : "";
   return [
@@ -1066,11 +1130,13 @@ function buildCurriculumPlanPrompt(data) {
 }
 
 function buildCurriculumAnalysisPrompt(data) {
-  const isMath = String(data.subject || "").trim().toLowerCase() === "math";
+  const isMath = isMathCurriculumSubject(String(data.subject || "").trim().toLowerCase());
+  const isKindergartenMath = isKindergartenMathSubject(String(data.subject || "").trim().toLowerCase());
   const isSkills = String(data.subject || "").trim().toLowerCase() === "skills";
+  const isListening = String(data.subject || "").trim().toLowerCase() === "listening";
   const titleAndStandardGuidance = isMath
     ? [
-      "This is a MATH lesson. officialLessonTitle is an extraction field, not a generation field. If the source contains an official lesson title, copy it exactly into both lessonTitle and officialLessonTitle, including its wording, numbering, punctuation, and capitalization. Do not shorten, summarize, paraphrase, or replace it with a title based on the objective. If no official title is available, leave both title fields empty rather than inventing a title.",
+      `This is a ${isKindergartenMath ? "KINDERGARTEN MATH" : "MATH"} lesson. officialLessonTitle is an extraction field, not a generation field. If the source contains an official lesson title, copy it exactly into both lessonTitle and officialLessonTitle, including its wording, numbering, punctuation, and capitalization. Do not shorten, summarize, paraphrase, or replace it with a title based on the objective. If no official title is available, leave both title fields empty rather than inventing a title.`,
       "For priorityStandardCode and priorityStandardNumber, return the same official content-standard code exactly as written in the source, such as 1.MD.C.4 or K.CC.C.6. Never invent, infer, or silently omit a code that is present.",
       "For a compact response, put only the selected code in priorityStandardCode and priorityStandardNumber. The server will fill priorityStandardWording and priorityStandard from the permanent reference, so do not copy long official wording into those response fields.",
       "When the local math standards reference lookup provides a match, the server is authoritative for priorityStandardWording, supportingStandards, and mathematicalPractices. Return only codes in supportingStandards and mathematicalPractices. If a cited code has no match, preserve the code; the server will display exactly \"Official wording unavailable in the standards reference.\"",
@@ -1094,6 +1160,9 @@ function buildCurriculumAnalysisPrompt(data) {
       ]
     : [
       "For non-math lessons, look first at the objective or main learning goal and create a short 3-7 word lesson name that says what scholars are learning. Use the printed lesson title only if it is already clear and specific. Never use file names, guide names, internal labels, or generic titles like \"Lesson 1\".",
+      ...(isListening
+        ? ["For Listening & Learning, treat the read-aloud, vocabulary, discussion, checks, and application activity as parts of one lesson when they share the same lesson number or title. Do not tell the teacher to trim the source unless it clearly includes multiple distinct lesson numbers or lesson titles."]
+        : []),
       "For non-math lessons, set officialLessonTitle, priorityStandardCode, priorityStandardNumber, priorityStandardWording, supportingStandards, mathematicalPractices, and standardNotes to empty values unless the source clearly supplies those separate fields.",
       "For priorityStandard, identify the one main standard focus for the lesson, or two if the lesson genuinely has two equal main goals. Prefer standards listed in the source, choosing the one or two that best match the lesson's main teaching point. If the source provides no standard codes, write the main standard skill in plain language instead of inventing a code.",
     ];
@@ -1104,7 +1173,7 @@ function buildCurriculumAnalysisPrompt(data) {
       ? buildSkillsStandardsContext(data.sourceText)
       : "";
   return [
-    "Analyze this first grade curriculum lesson for a teacher-facing lesson library.",
+    `Analyze this ${isKindergartenMath ? "Kindergarten Math" : "first grade curriculum"} lesson for a teacher-facing lesson library.`,
     "",
     `Subject selected by teacher: ${data.subject || "not provided"}`,
     `Unit/module selected by teacher: ${data.unitOrModule || "not provided"}`,
@@ -1135,11 +1204,12 @@ function buildCurriculumUnitPrompt(data) {
     skills: "For Skills, pull out the taught sounds and spellings, the exact words from an explicitly labeled Tricky Words or Sight Words list, and family-friendly vocabulary. Leave strategies empty unless the source clearly uses them.",
     listening: "For Listening & Learning, pull out family-friendly vocabulary from the stories and ideas. Leave sounds, sight words, and math strategies empty.",
     math: "For Math, pull out family-friendly vocabulary and the main strategies or models scholars use. Leave sounds and sight words empty.",
+    [KINDERGARTEN_MATH_SUBJECT]: "For Kindergarten Math, pull out family-friendly vocabulary and the main strategies, representations, or models scholars use. Leave sounds and sight words empty.",
     other: "Use the source to choose the most useful family-facing vocabulary and learning strategies, leaving unrelated categories empty.",
   }[data.subject] || "Use the source to choose the most useful family-facing fields.";
 
   return [
-    `Analyze this complete first grade ${subjectLabel} unit or module for the View by Unit page.`,
+    `Analyze this complete ${isKindergartenMathSubject(data.subject) ? "Kindergarten Math" : `first grade ${subjectLabel}`} unit or module for the View by Unit page.`,
     `Unit title currently shown on the site: ${data.unitTitle || "not provided"}`,
     "",
     "Return the exact structured fields requested by the schema.",
@@ -1219,7 +1289,7 @@ function normalizeSpotlightText(value) {
 }
 
 function normalizeCurriculumSubject(subject) {
-  return ["skills", "listening", "math", "other"].includes(subject) ? subject : "other";
+  return CURRICULUM_LESSON_SUBJECTS.includes(subject) ? subject : "other";
 }
 
 function labelForCurriculumSubject(subject) {
@@ -1230,6 +1300,8 @@ function labelForCurriculumSubject(subject) {
       return "Listening & Learning";
     case "math":
       return "Math";
+    case KINDERGARTEN_MATH_SUBJECT:
+      return "Kindergarten Math";
     default:
       return "First Grade";
   }
@@ -1534,6 +1606,10 @@ function normalizeCurriculumAnalysisShape(rawAnalysis, fallbackSubject) {
     missingInformation: readArray("missingInformation"),
     sourceConfidence: ["high", "medium", "low"].includes(raw.sourceConfidence) ? raw.sourceConfidence : "medium",
   };
+  const normalizedSubject = normalizeCurriculumSubject(normalized.subject);
+  normalized.subject = fallbackSubject === KINDERGARTEN_MATH_SUBJECT && normalizedSubject === "math"
+    ? KINDERGARTEN_MATH_SUBJECT
+    : (normalizedSubject === "other" && fallbackSubject !== "other" ? fallbackSubject : normalizedSubject);
 
   if (!has("videoLinks")) fieldErrors.push("videoLinks: missing; defaulted to an empty array");
   else if (!Array.isArray(raw.videoLinks)) fieldErrors.push(`videoLinks: expected array, received ${typeof raw.videoLinks}; defaulted to an empty array`);
@@ -1607,8 +1683,8 @@ function normalizeSkillsStandardFields(analysis, sourceText) {
 }
 
 function normalizeCurriculumAnalysis(analysis, sourceText = "") {
-  const subject = ["skills", "listening", "math", "other"].includes(analysis.subject) ? analysis.subject : "other";
-  const isMath = subject === "math";
+  const subject = normalizeCurriculumSubject(analysis.subject);
+  const isMath = isMathCurriculumSubject(subject);
   const isSkills = subject === "skills";
   const standardFields = isMath
     ? normalizeMathStandardFields(analysis, sourceText)
