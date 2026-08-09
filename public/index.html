@@ -21513,12 +21513,14 @@ function renderSkillsUnits() {
     descriptionInput.style.minHeight = '80px';
     descriptionInput.value = unit.description || '';
     descriptionInput.placeholder = isEditMode ? 'Enter description...' : '';
+    setupCurriculumDescriptionTextarea(descriptionInput);
     
     // Make it editable only in edit mode, read-only otherwise
     if (isEditMode) {
       descriptionInput.removeAttribute('readonly');
       descriptionInput.addEventListener('input', (e) => {
         skillsUnitsData[unitIndex].description = e.target.value;
+        autoSizeCurriculumDescriptionTextarea(e.target);
       });
       descriptionInput.onclick = (e) => e.stopPropagation();
     } else {
@@ -21617,7 +21619,10 @@ function toggleSkillsUnit(unitIndex) {
       if (editFields) editFields.style.display = isHidden ? 'block' : 'none';
       if (priorityDisplay) priorityDisplay.style.display = isHidden ? 'none' : 'block';
       if (iCanContainer) iCanContainer.style.display = isHidden ? 'block' : 'none';
-      if (descriptionContainer) descriptionContainer.style.display = isHidden ? 'block' : 'none';
+      if (descriptionContainer) {
+        descriptionContainer.style.display = isHidden ? 'block' : 'none';
+        if (isHidden) autoSizeCurriculumDescriptionTextareas(descriptionContainer);
+      }
       if (sectionActions) sectionActions.style.display = isHidden ? 'flex' : 'none';
     } else {
       container.style.display = 'none';
@@ -21658,6 +21663,36 @@ function updatePriorityDisplay(unitIndex, value) {
     // Remove the priority display if the value is empty
     priorityDisplay.remove();
   }
+}
+
+let curriculumDescriptionAutosizeResizeBound = false;
+
+function autoSizeCurriculumDescriptionTextarea(textarea) {
+  if (!textarea) return;
+  textarea.style.height = 'auto';
+  textarea.style.height = `${Math.max(80, textarea.scrollHeight + 2)}px`;
+}
+
+function setupCurriculumDescriptionTextarea(textarea) {
+  if (!textarea) return;
+  textarea.classList.add('curriculum-description-textarea');
+  textarea.style.overflow = 'hidden';
+  textarea.style.resize = 'none';
+  textarea.style.lineHeight = '1.5';
+  textarea.setAttribute('rows', '1');
+  textarea.addEventListener('input', () => autoSizeCurriculumDescriptionTextarea(textarea));
+  if (!curriculumDescriptionAutosizeResizeBound) {
+    curriculumDescriptionAutosizeResizeBound = true;
+    window.addEventListener('resize', () => autoSizeCurriculumDescriptionTextareas(document));
+  }
+  requestAnimationFrame(() => autoSizeCurriculumDescriptionTextarea(textarea));
+}
+
+function autoSizeCurriculumDescriptionTextareas(container) {
+  if (!container) return;
+  requestAnimationFrame(() => {
+    container.querySelectorAll('.curriculum-description-textarea').forEach(autoSizeCurriculumDescriptionTextarea);
+  });
 }
 
 function parseCurriculumSectionItems(value, splitCommaList = false) {
@@ -22401,12 +22436,14 @@ function renderMathModules() {
     descriptionInput.style.minHeight = '80px';
     descriptionInput.value = module.description || '';
     descriptionInput.placeholder = isEditMode ? 'Enter description...' : '';
+    setupCurriculumDescriptionTextarea(descriptionInput);
     
     // Make it editable only in edit mode, read-only otherwise
     if (isEditMode) {
       descriptionInput.removeAttribute('readonly');
       descriptionInput.addEventListener('input', (e) => {
         mathModulesData[moduleIndex].description = e.target.value;
+        autoSizeCurriculumDescriptionTextarea(e.target);
       });
       descriptionInput.onclick = (e) => e.stopPropagation();
     } else {
@@ -22627,10 +22664,12 @@ function renderListeningUnits() {
     descriptionInput.style.minHeight = '80px';
     descriptionInput.value = unit.description || '';
     descriptionInput.placeholder = isEditMode ? 'Enter description...' : '';
+    setupCurriculumDescriptionTextarea(descriptionInput);
     if (isEditMode) {
       descriptionInput.removeAttribute('readonly');
       descriptionInput.addEventListener('input', event => {
         listeningUnitsData[unitIndex].description = event.target.value;
+        autoSizeCurriculumDescriptionTextarea(event.target);
       });
       descriptionInput.onclick = event => event.stopPropagation();
     } else {
@@ -22852,7 +22891,10 @@ function toggleListeningUnit(unitIndex) {
     if (currentEditFields) currentEditFields.style.display = shouldOpen ? 'block' : 'none';
     if (currentPriorityDisplay) currentPriorityDisplay.style.display = shouldOpen ? 'none' : 'block';
     if (currentICanContainer) currentICanContainer.style.display = shouldOpen ? 'block' : 'none';
-    if (currentDescriptionContainer) currentDescriptionContainer.style.display = shouldOpen ? 'block' : 'none';
+    if (currentDescriptionContainer) {
+      currentDescriptionContainer.style.display = shouldOpen ? 'block' : 'none';
+      if (shouldOpen) autoSizeCurriculumDescriptionTextareas(currentDescriptionContainer);
+    }
     if (currentSectionActions) currentSectionActions.style.display = shouldOpen ? 'flex' : 'none';
   });
 }
@@ -22943,7 +22985,10 @@ function toggleMathModule(moduleIndex) {
       if (editFields) editFields.style.display = isHidden ? 'block' : 'none';
       if (priorityDisplay) priorityDisplay.style.display = isHidden ? 'none' : 'block';
       if (iCanContainer) iCanContainer.style.display = isHidden ? 'block' : 'none';
-      if (descriptionContainer) descriptionContainer.style.display = isHidden ? 'block' : 'none';
+      if (descriptionContainer) {
+        descriptionContainer.style.display = isHidden ? 'block' : 'none';
+        if (isHidden) autoSizeCurriculumDescriptionTextareas(descriptionContainer);
+      }
       if (sectionActions) sectionActions.style.display = isHidden ? 'flex' : 'none';
     } else {
       container.style.display = 'none';
