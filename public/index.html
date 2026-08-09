@@ -4523,22 +4523,30 @@
                 <button type="button" class="curriculum-builder-button inline-flex px-4 py-2 text-white" style="background: var(--md-coral);" onclick="printCurriculumCalendarMonth()">Print Month</button>
               </div>
             </div>
-            <div class="grid md:grid-cols-[minmax(0,14rem)_minmax(0,14rem)_minmax(0,14rem)_auto] gap-3 md:items-end mb-4">
+            <div class="grid md:grid-cols-[minmax(0,12rem)_minmax(0,1.25fr)_minmax(0,14rem)_minmax(0,12rem)_auto] gap-3 md:items-end mb-2">
               <div>
                 <label class="curriculum-builder-label" for="curriculumCalendarMonthInput">Month</label>
                 <input id="curriculumCalendarMonthInput" class="curriculum-builder-field" type="month" onchange="renderCurriculumCalendar()">
               </div>
               <div>
-                <label class="curriculum-builder-label" for="curriculumCalendarRangeStartInput">Range start</label>
-                <input id="curriculumCalendarRangeStartInput" class="curriculum-builder-field" type="date">
+                <label class="curriculum-builder-label" for="curriculumCalendarLessonSearchInput">Find lesson</label>
+                <input id="curriculumCalendarLessonSearchInput" class="curriculum-builder-field" type="search" placeholder="Search title, standard, module..." oninput="refreshCurriculumCalendarLessonFinderOptions()" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); jumpToCurriculumCalendarLessonMatch(); }">
               </div>
               <div>
-                <label class="curriculum-builder-label" for="curriculumCalendarRangeEndInput">Range end</label>
-                <input id="curriculumCalendarRangeEndInput" class="curriculum-builder-field" type="date">
+                <label class="curriculum-builder-label" for="curriculumCalendarModuleSelect">Unit / Module</label>
+                <select id="curriculumCalendarModuleSelect" class="curriculum-builder-field" onchange="refreshCurriculumCalendarLessonFinderOptions({ preserveLesson: false }); jumpToCurriculumCalendarLessonMatch();">
+                  <option value="">All units/modules</option>
+                </select>
               </div>
-              <button type="button" class="curriculum-builder-button inline-flex justify-center px-4 py-2 text-white" style="background: var(--md-slate);" onclick="printCurriculumCalendarDateRange()">Print Range</button>
-              <p class="text-sm text-[color:var(--md-ink)]/75 pb-2">Click a day to see lesson titles, I Can statements, and priority standards.</p>
+              <div>
+                <label class="curriculum-builder-label" for="curriculumCalendarLessonSelect">Lesson</label>
+                <select id="curriculumCalendarLessonSelect" class="curriculum-builder-field" onchange="jumpToCurriculumCalendarLessonMatch()">
+                  <option value="">Any lesson</option>
+                </select>
+              </div>
+              <button type="button" class="curriculum-builder-button inline-flex justify-center px-4 py-2 text-white" style="background: var(--md-slate);" onclick="jumpToCurriculumCalendarLessonMatch()">Open Date</button>
             </div>
+            <p id="curriculumCalendarFinderStatus" class="text-sm text-[color:var(--md-ink)]/75 mb-4">Click a day to see lesson titles, I Can statements, and priority standards, or find a scheduled lesson above.</p>
             <div class="curriculum-calendar-layout">
               <div>
                 <div id="curriculumCalendarGrid" class="curriculum-month-grid">
@@ -10288,6 +10296,7 @@
       const days = dateKeys.map(dateKey => renderCurriculumCalendarDayButton(dateKey, currentMonth)).join('');
       grid.innerHTML = weekdays + days;
       renderCurriculumCalendarDayDetail(curriculumActiveCalendarDateKey);
+      refreshCurriculumCalendarLessonFinderOptions();
     }
 
     function renderCurriculumCalendarDayButton(dateKey, currentMonth) {
@@ -10385,6 +10394,115 @@
       return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
     }
 
+    function getCurriculumCalendarDisplaySubject(subject) {
+      return subject === KINDERGARTEN_MATH_SUBJECT ? 'math' : subject;
+    }
+
+    function getCurriculumCalendarScheduledFinderEntries() {
+      return curriculumLessonsCache.flatMap(lesson => {
+        const subject = getCurriculumCalendarDisplaySubject(lesson.subject || 'skills');
+        return getCurriculumLessonScheduleDates(lesson).map(dateKey => ({
+          dateKey,
+          subject,
+          lesson
+        }));
+      }).sort((a, b) => a.dateKey.localeCompare(b.dateKey)
+        || getCurriculumSubjectLabel(a.subject).localeCompare(getCurriculumSubjectLabel(b.subject))
+        || compareCurriculumLessons(a.lesson, b.lesson));
+    }
+
+    function getCurriculumCalendarFinderFilters() {
+      return {
+        search: (document.getElementById('curriculumCalendarLessonSearchInput')?.value || '').toLowerCase().replace(/\s+/g, ' ').trim(),
+        module: document.getElementById('curriculumCalendarModuleSelect')?.value || '',
+        lessonNumber: document.getElementById('curriculumCalendarLessonSelect')?.value || ''
+      };
+    }
+
+    function curriculumCalendarFinderEntryMatchesSearch(entry, search) {
+      const searchParts = String(search || '').split(' ').filter(Boolean);
+      if (!searchParts.length) return true;
+      const lesson = entry.lesson || {};
+      const haystack = [
+        getCurriculumSubjectLabel(entry.subject),
+        formatCurriculumUnitOrModule(lesson.unitOrModule),
+        formatCurriculumLessonNumber(lesson.lessonNumber),
+        getCurriculumCardTitle(lesson),
+        getCurriculumPriorityStandardDisplay(lesson),
+        lesson.iCanStatement,
+        lesson.objective,
+        formatCurriculumLongDateLabel(entry.dateKey)
+      ].join(' ').toLowerCase().replace(/\s+/g, ' ');
+      return searchParts.every(part => haystack.includes(part));
+    }
+
+    function getCurriculumCalendarFinderMatches(filters = getCurriculumCalendarFinderFilters()) {
+      return getCurriculumCalendarScheduledFinderEntries().filter(entry => {
+        const moduleLabel = formatCurriculumUnitOrModule(entry.lesson.unitOrModule);
+        const lessonLabel = formatCurriculumLessonNumber(entry.lesson.lessonNumber);
+        return curriculumCalendarFinderEntryMatchesSearch(entry, filters.search)
+          && (!filters.module || moduleLabel === filters.module)
+          && (!filters.lessonNumber || lessonLabel === filters.lessonNumber);
+      });
+    }
+
+    function setCurriculumCalendarFinderStatus(message, type = '') {
+      const status = document.getElementById('curriculumCalendarFinderStatus');
+      if (!status) return;
+      status.textContent = message;
+      status.style.color = type === 'error' ? '#b91c1c' : '';
+    }
+
+    function refreshCurriculumCalendarLessonFinderOptions(options = {}) {
+      const moduleSelect = document.getElementById('curriculumCalendarModuleSelect');
+      const lessonSelect = document.getElementById('curriculumCalendarLessonSelect');
+      if (!moduleSelect || !lessonSelect) return;
+      const filters = getCurriculumCalendarFinderFilters();
+      const previousModule = filters.module;
+      const previousLesson = filters.lessonNumber;
+      const searchEntries = getCurriculumCalendarScheduledFinderEntries()
+        .filter(entry => curriculumCalendarFinderEntryMatchesSearch(entry, filters.search));
+      const modules = uniqueList(searchEntries.map(entry => formatCurriculumUnitOrModule(entry.lesson.unitOrModule)).filter(Boolean))
+        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+      const nextModule = modules.includes(previousModule) ? previousModule : '';
+      moduleSelect.innerHTML = `<option value="">All units/modules</option>${modules.map(moduleLabel =>
+        `<option value="${escapeHtml(moduleLabel)}"${moduleLabel === nextModule ? ' selected' : ''}>${escapeHtml(moduleLabel)}</option>`
+      ).join('')}`;
+
+      const lessonEntries = searchEntries.filter(entry => !nextModule || formatCurriculumUnitOrModule(entry.lesson.unitOrModule) === nextModule);
+      const lessonNumbers = uniqueList(lessonEntries.map(entry => formatCurriculumLessonNumber(entry.lesson.lessonNumber)).filter(Boolean))
+        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+      const nextLesson = options.preserveLesson === false ? '' : (lessonNumbers.includes(previousLesson) ? previousLesson : '');
+      lessonSelect.innerHTML = `<option value="">Any lesson</option>${lessonNumbers.map(lessonLabel =>
+        `<option value="${escapeHtml(lessonLabel)}"${lessonLabel === nextLesson ? ' selected' : ''}>${escapeHtml(lessonLabel)}</option>`
+      ).join('')}`;
+
+      const matchCount = getCurriculumCalendarFinderMatches({
+        ...filters,
+        module: nextModule,
+        lessonNumber: nextLesson
+      }).length;
+      setCurriculumCalendarFinderStatus(matchCount
+        ? `${matchCount} scheduled lesson${matchCount === 1 ? '' : 's'} match. Choose a lesson or click Open Date.`
+        : 'No scheduled lessons match that search yet.',
+        matchCount ? '' : 'error');
+    }
+
+    function jumpToCurriculumCalendarLessonMatch() {
+      refreshCurriculumCalendarLessonFinderOptions();
+      const matches = getCurriculumCalendarFinderMatches();
+      if (!matches.length) {
+        setCurriculumCalendarFinderStatus('No scheduled lesson matches those filters.', 'error');
+        return;
+      }
+      const match = matches[0];
+      const monthInput = document.getElementById('curriculumCalendarMonthInput');
+      if (monthInput) monthInput.value = match.dateKey.slice(0, 7);
+      curriculumActiveCalendarDateKey = match.dateKey;
+      renderCurriculumCalendar();
+      setCurriculumCalendarFinderStatus(`${getCurriculumSubjectLabel(match.subject)} ${formatCurriculumLessonNumber(match.lesson.lessonNumber) || 'lesson'} is scheduled for ${formatCurriculumLongDateLabel(match.dateKey)}.`);
+    }
+
     function printCurriculumCalendarMonth() {
       const monthKey = getCurriculumCalendarMonthKey();
       const [year, month] = monthKey.split('-').map(Number);
@@ -10404,45 +10522,6 @@
         title,
         `<h1>${escapeHtml(title)}</h1><div class="meta">Scheduled lessons come from Browse Lessons.</div>${sections}`,
         'Monthly calendar print view opened.'
-      );
-    }
-
-    function ensureCurriculumCalendarRangeInputs() {
-      const startInput = document.getElementById('curriculumCalendarRangeStartInput');
-      const endInput = document.getElementById('curriculumCalendarRangeEndInput');
-      const fallbackStartKey = isValidCurriculumDateKey(curriculumActiveCalendarDateKey)
-        ? curriculumActiveCalendarDateKey
-        : formatCurriculumDateKey(new Date());
-      let startKey = startInput && isValidCurriculumDateKey(startInput.value) ? startInput.value : fallbackStartKey;
-      let endKey = endInput && isValidCurriculumDateKey(endInput.value)
-        ? endInput.value
-        : formatCurriculumDateKey(addCurriculumDays(parseCurriculumDateKey(startKey), 13));
-      if (parseCurriculumDateKey(endKey) < parseCurriculumDateKey(startKey)) endKey = startKey;
-      if (startInput) startInput.value = startKey;
-      if (endInput) endInput.value = endKey;
-      return { startKey, endKey };
-    }
-
-    function printCurriculumCalendarDateRange() {
-      const range = ensureCurriculumCalendarRangeInputs();
-      const dateKeys = getCurriculumDateRangeKeys(range.startKey, range.endKey, { weekdaysOnly: true, limit: 65 });
-      if (!dateKeys.length) {
-        setCurriculumStatus('Choose a valid start and end date for the calendar range.', 'error');
-        return;
-      }
-      const sections = dateKeys.map(dateKey => `
-        <div class="lesson">
-          <div class="day">${escapeHtml(formatCurriculumLongDateLabel(dateKey))}</div>
-          <div class="grid">
-            ${curriculumScheduledSubjects.map(subject => renderCurriculumCalendarPrintSubject(subject, dateKey)).join('')}
-          </div>
-        </div>
-      `).join('');
-      const title = `Curriculum Calendar - ${formatCurriculumDateRangeLabel(range.startKey, range.endKey)}`;
-      openCurriculumPrintWindow(
-        title,
-        `<h1>${escapeHtml(title)}</h1><div class="meta">Scheduled lessons come from Browse Lessons.</div>${sections}`,
-        'Calendar range print view opened.'
       );
     }
 
