@@ -7127,6 +7127,57 @@
       }).filter(Boolean);
     }
 
+    function getCurriculumVisibleStandardWording(standardText, code) {
+      const normalizedCode = normalizeCurriculumStandardCode(code);
+      const matchingLine = splitCurriculumStandardWordingLines(standardText).find(line =>
+        extractCurriculumStandardCodes(line).some(lineCode => normalizeCurriculumStandardCode(lineCode) === normalizedCode)
+      );
+      return matchingLine ? getCurriculumCodedWording(matchingLine, normalizedCode) : '';
+    }
+
+    function getCurriculumExistingStandardWording(lesson, code) {
+      const normalizedCode = normalizeCurriculumStandardCode(code);
+      const existingCodes = extractCurriculumStandardCodes([
+        lesson.priorityStandardCode,
+        lesson.priorityStandardNumber
+      ].filter(Boolean).join('\n'));
+      const existingIndex = existingCodes.findIndex(existingCode => normalizeCurriculumStandardCode(existingCode) === normalizedCode);
+      const wordingLines = splitCurriculumStandardWordingLines(lesson.priorityStandardWording);
+      return existingIndex >= 0 ? (wordingLines[existingIndex] || '') : '';
+    }
+
+    async function normalizeCurriculumLessonDraftForSave(lesson) {
+      const priorityText = String(lesson.priorityStandard || '').trim();
+      const priorityCodes = extractCurriculumStandardCodes(priorityText);
+      if (!priorityCodes.length) {
+        return {
+          ...lesson,
+          priorityStandardCode: '',
+          priorityStandardNumber: '',
+          priorityStandardWording: ''
+        };
+      }
+
+      if (!isCurriculumMathSubject(lesson.subject)) {
+        await loadCurriculumElaStandardsReference();
+      }
+
+      const wordingLines = priorityCodes.map(code =>
+        getCurriculumVisibleStandardWording(priorityText, code)
+        || getCurriculumExistingStandardWording(lesson, code)
+        || getCurriculumOfficialStandardWording(lesson.subject, code, '')
+      );
+      return {
+        ...lesson,
+        priorityStandardCode: priorityCodes.join(', '),
+        priorityStandardNumber: priorityCodes.join(', '),
+        priorityStandardWording: wordingLines.join('\n').trim(),
+        priorityStandard: priorityCodes.map((code, index) =>
+          wordingLines[index] ? `${code} - ${wordingLines[index]}` : code
+        ).join('\n')
+      };
+    }
+
     function collectCurriculumLessonDraft() {
       const request = collectCurriculumRequestPayload();
       return {
@@ -7161,7 +7212,7 @@
         const user = await ensureCurriculumTeacherUser();
         if (!user) return;
         if (!db) throw new Error('The lesson library is not available. Please refresh and try again.');
-        const lesson = collectCurriculumLessonDraft();
+        const lesson = await normalizeCurriculumLessonDraftForSave(collectCurriculumLessonDraft());
         if (!lesson.unitOrModule || !lesson.lessonNumber) {
           throw new Error('Add the unit/module and lesson number before saving.');
         }
