@@ -10905,6 +10905,7 @@
       renderSkillsUnits();
       renderMathModules();
       renderListeningUnits();
+      setAllRenderedFeatureInfoEditability();
       
       // Enable volunteer page editing
       const backgroundCheckLink = document.getElementById('backgroundCheckLink');
@@ -11154,6 +11155,8 @@
       renderSkillsUnits();
       renderMathModules();
       renderListeningUnits();
+      syncFeatureInfoDataFromDom();
+      setAllRenderedFeatureInfoEditability();
       return true;
     }
     
@@ -14779,6 +14782,7 @@ function updateLearningHubInfo(learningHubInfoJson) {
     console.error('Failed to parse Learning Hub Info data:', e);
     return;
   }
+  featureInfoCurrentData = mergeFeatureInfoData(getFeatureInfoData(), { learningHub: learningHubInfo });
   
   // Update Skills section
   if (learningHubInfo.skills) {
@@ -14885,21 +14889,21 @@ const featureInfoPageConfigs = {
         title: 'Skills',
         imageId: 'learningHubInfoSkillsImage',
         descId: 'learningHubInfoSkillsDesc',
-        description: 'Skills shows the current reading lessons, sounds, tricky words, vocabulary, and lesson cards for the unit. Families can see what students are practicing in foundational reading.'
+        description: 'This page shows the reading and word-work skills scholars are currently practicing in class. The spotlight and the sound, tricky word, and vocabulary lists come from our current Skills lessons. The lesson cards show the next upcoming Skills lessons so families can preview what scholars will practice next.'
       },
       {
         key: 'listening',
         title: 'Listening and Learning',
         imageId: 'learningHubInfoListeningImage',
         descId: 'learningHubInfoListeningDesc',
-        description: 'Listening and Learning shows the current knowledge-building unit, lesson questions, vocabulary, and lesson cards. Families can preview the topics students are discussing and reading about.'
+        description: 'This page shows the stories, topics, vocabulary, and big ideas scholars are currently discussing in class. The spotlight, vocabulary, and family discussion questions come from our current Listening & Learning lessons. The lesson cards show the next upcoming Listening & Learning lessons so families can preview what scholars will hear, talk about, and learn next.'
       },
       {
         key: 'math',
         title: 'Math',
         imageId: 'learningHubInfoMathImage',
         descId: 'learningHubInfoMathDesc',
-        description: 'Math shows the current module, lesson cards, and vocabulary. Families can see the skills students are building and the language used in class.'
+        description: 'This page shows the math concepts, vocabulary, and strategies scholars are currently practicing in class. The spotlight, vocabulary, and strategy list come from our current Math lessons. The lesson cards show the next upcoming Math lessons so families can preview the concepts and math language scholars will use next.'
       },
       {
         key: 'practice',
@@ -14998,6 +15002,19 @@ const featureInfoPageConfigs = {
 
 const featureInfoPersistentPageKeys = ['learningHub', 'studentServices'];
 let featureInfoCurrentData = {};
+const featureInfoLegacyDefaultDescriptions = {
+  learningHub: {
+    skills: [
+      'Skills shows the current reading lessons, sounds, tricky words, vocabulary, and lesson cards for the unit. Families can see what students are practicing in foundational reading.'
+    ],
+    listening: [
+      'Listening and Learning shows the current knowledge-building unit, lesson questions, vocabulary, and lesson cards. Families can preview the topics students are discussing and reading about.'
+    ],
+    math: [
+      'Math shows the current module, lesson cards, and vocabulary. Families can see the skills students are building and the language used in class.'
+    ]
+  }
+};
 
 function buildDefaultFeatureInfoData() {
   const data = {};
@@ -15027,7 +15044,7 @@ function mergeFeatureInfoData(base, incoming) {
       merged[pageKey][sectionKey] = {
         image: typeof item.image === 'string' ? item.image : existing.image || '',
         description: typeof item.description === 'string'
-          ? sanitizeHTML(item.description)
+          ? normalizeFeatureInfoDescription(pageKey, sectionKey, item.description)
           : existing.description || ''
       };
     });
@@ -15046,6 +15063,16 @@ function getFeatureInfoSectionConfig(pageKey, sectionKey) {
   return config.sections.find(section => section.key === sectionKey) || null;
 }
 
+function normalizeFeatureInfoDescription(pageKey, sectionKey, description) {
+  const safeDescription = sanitizeHTML(description || '');
+  const legacyDefaults = featureInfoLegacyDefaultDescriptions[pageKey]?.[sectionKey] || [];
+  if (legacyDefaults.includes(safeDescription)) {
+    const section = getFeatureInfoSectionConfig(pageKey, sectionKey);
+    return sanitizeHTML(section?.description || safeDescription);
+  }
+  return safeDescription;
+}
+
 function syncFeatureInfoDataFromDom() {
   const nextData = getFeatureInfoData();
 
@@ -15060,7 +15087,7 @@ function syncFeatureInfoDataFromDom() {
 
     nextData[pageKey][sectionKey] = {
       image: imageEl?.getAttribute('data-screenshot-url') || '',
-      description: sanitizeHTML(descriptionEl?.innerHTML || '')
+      description: normalizeFeatureInfoDescription(pageKey, sectionKey, descriptionEl?.innerHTML || '')
     };
   });
 
@@ -15145,6 +15172,17 @@ function setRenderedFeatureInfoEditability(container) {
   const isEditing = document.body.classList.contains('editing');
   container.querySelectorAll('[data-edit="teacher"]').forEach(el => {
     el.setAttribute('contenteditable', isEditing ? 'true' : 'false');
+    if (el.hasAttribute('data-feature-info-description') && !el.dataset.featureInfoInputWired) {
+      el.dataset.featureInfoInputWired = 'true';
+      el.addEventListener('input', markFeatureInfoChanged);
+      el.addEventListener('blur', () => syncFeatureInfoDataFromDom());
+    }
+  });
+}
+
+function setAllRenderedFeatureInfoEditability() {
+  document.querySelectorAll('.feature-info-page, #featureInfoModalContent').forEach(container => {
+    setRenderedFeatureInfoEditability(container);
   });
 }
 
