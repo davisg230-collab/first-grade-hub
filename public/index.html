@@ -6779,7 +6779,7 @@
       const text = String(value || '').replace(/\s+/g, ' ').trim();
       if (!text) return false;
       const code = String(analysis.priorityStandardCode || analysis.priorityStandardNumber || '').trim();
-      return /^(?:(?:K|\d+)\.[A-Z]+\.[A-Z]\.\d+[A-Za-z]?|(?:RL|RF|SL|L)\.\d+\.\d+[A-Za-z]?)\s*[-:]/i.test(text)
+      return /^(?:(?:K|\d+)\.[A-Z]+\.[A-Z]\.\d+[A-Za-z]?|(?:RL|RF|RI|SL|L)\.\d+\.\d+(?:\.?[A-Za-z])?)\s*[-:]/i.test(text)
         || (code && text.toLowerCase().startsWith(`${code.toLowerCase()} -`))
         || (code && text.toLowerCase().startsWith(`${code.toLowerCase()}:`))
         || text === String(analysis.priorityStandard || '').trim();
@@ -6802,7 +6802,7 @@
             ? 'That lesson text is still too long for one AI draft. Trim extra pages or duplicate teacher-guide sections, then try again.'
             : 'Trim the lesson text to one lesson before running the AI analyzer.');
         }
-        setCurriculumBusy(true, 'Analyzing lesson...');
+        setCurriculumBusy(true, payload.priorityStandard ? 'Analyzing lesson with selected priority standard...' : 'Analyzing lesson...');
         const analyzeLesson = cloudFunctions.httpsCallable('analyzeCurriculumLesson');
         const result = await analyzeLesson(payload);
         const analysis = result && result.data ? result.data.analysis : null;
@@ -6826,6 +6826,9 @@
         unitOrModule: formatCurriculumUnitOrModule(document.getElementById('curriculumUnitInput')?.value || ''),
         lessonNumber: document.getElementById('curriculumLessonNumberInput')?.value.trim() || '',
         lessonTitle: lessonTitle === curriculumLastPdfSuggestedTitle || looksLikeCurriculumFileTitle(lessonTitle) ? '' : lessonTitle,
+        priorityStandard: document.getElementById('curriculumStandardOutput')?.value.trim() || '',
+        priorityStandardCode: document.getElementById('curriculumStandardCodeOutput')?.value.trim() || '',
+        priorityStandardWording: document.getElementById('curriculumStandardWordingOutput')?.value.trim() || '',
         sourceText: document.getElementById('curriculumSourceTextInput')?.value.trim() || ''
       };
     }
@@ -7685,7 +7688,7 @@
       const codeIndex = priorityCodes.findIndex(priorityCode => normalizeCurriculumStandardCode(priorityCode) === normalizedCode);
       if (wordingLines.length > 1 && codeIndex >= 0 && wordingLines[codeIndex]) {
         return wordingLines[codeIndex]
-          .replace(/\b(?:(?:K|\d+)\.[A-Z]+\.[A-Z]+\.\d+[A-Za-z]?|(?:RL|RF|SL|L)\.\d+\.\d+[A-Za-z]?)\b\s*[-:]?\s*/i, '')
+          .replace(/\b(?:(?:K|\d+)\.[A-Z]+\.[A-Z]+\.\d+[A-Za-z]?|(?:RL|RF|RI|SL|L)\.\d+\.\d+(?:\.?[A-Za-z])?)\b\s*[-:]?\s*/i, '')
           .trim();
       }
       const priorityLines = splitCurriculumStandardWordingLines(lesson.priorityStandard);
@@ -7696,7 +7699,7 @@
       if (codedWording) return codedWording;
       return wordingLines[0]
         || String(lesson.priorityStandard || '')
-          .replace(/\b(?:(?:K|\d+)\.[A-Z]+\.[A-Z]+\.\d+[A-Za-z]?|(?:RL|RF|SL|L)\.\d+\.\d+[A-Za-z]?)\b\s*[-:]?\s*/i, '')
+          .replace(/\b(?:(?:K|\d+)\.[A-Z]+\.[A-Z]+\.\d+[A-Za-z]?|(?:RL|RF|RI|SL|L)\.\d+\.\d+(?:\.?[A-Za-z])?)\b\s*[-:]?\s*/i, '')
           .trim();
     }
 
@@ -7718,7 +7721,7 @@
       const text = String(whyItMatters || '').trim();
       if (!text) return '';
       const currentCode = normalizeCurriculumStandardCode(code);
-      const codeMatches = Array.from(text.matchAll(/\b(?:(?:K|\d+)\.[A-Z]+\.[A-Z]+\.\d+[A-Za-z]?|(?:RL|RF|SL|L)\.\d+\.\d+[A-Za-z]?)\b/gi));
+      const codeMatches = Array.from(text.matchAll(/\b(?:(?:K|\d+)\.[A-Z]+\.[A-Z]+\.\d+[A-Za-z]?|(?:RL|RF|RI|SL|L)\.\d+\.\d+(?:\.?[A-Za-z])?)\b/gi));
       if (!codeMatches.length) {
         const lines = text.split(/\n+/).map(line => line.trim()).filter(Boolean);
         if (lines.length === standardCount) return lines[index] || '';

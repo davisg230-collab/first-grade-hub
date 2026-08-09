@@ -72,6 +72,7 @@ exports.analyzeCurriculumLesson = onCall(
     const unitOrModule = asText(data.unitOrModule);
     const lessonNumber = asText(data.lessonNumber);
     const lessonTitle = asText(data.lessonTitle);
+    const selectedPriorityStandard = getTeacherSelectedPriorityStandard(data);
     const sourceText = asText(data.sourceText);
     if (sourceText.length < 40) {
       throw new HttpsError("invalid-argument", "Paste one full lesson before running the AI analyzer.");
@@ -97,6 +98,7 @@ exports.analyzeCurriculumLesson = onCall(
       unitOrModule,
       lessonNumber,
       lessonTitle,
+      selectedPriorityStandard,
       sourceText,
     });
 
@@ -225,7 +227,7 @@ exports.analyzeCurriculumLesson = onCall(
     }
 
     return {
-      analysis: normalizeCurriculumAnalysis(analysis, sourceText),
+      analysis: normalizeCurriculumAnalysis(analysis, sourceText, { selectedPriorityStandard }),
       analyzedAt: new Date().toISOString(),
       model,
     };
@@ -970,6 +972,15 @@ function isKindergartenMathSubject(subject) {
   return subject === KINDERGARTEN_MATH_SUBJECT;
 }
 
+function getTeacherSelectedPriorityStandard(data = {}) {
+  const visibleStandard = asText(data.priorityStandard);
+  if (visibleStandard) return visibleStandard;
+  return [
+    asText(data.priorityStandardCode || data.priorityStandardNumber),
+    asText(data.priorityStandardWording),
+  ].filter(Boolean).join(" - ");
+}
+
 function getCurriculumLessonSourceLimit(subject, sourceText, lessonNumber = "") {
   if ((subject === "listening" || isMathCurriculumSubject(subject))
     && looksLikeSingleCurriculumLessonText(sourceText, lessonNumber)) {
@@ -1140,6 +1151,7 @@ function buildCurriculumAnalysisPrompt(data) {
   const isKindergartenMath = isKindergartenMathSubject(String(data.subject || "").trim().toLowerCase());
   const isSkills = String(data.subject || "").trim().toLowerCase() === "skills";
   const isListening = String(data.subject || "").trim().toLowerCase() === "listening";
+  const selectedPriorityStandard = asText(data.selectedPriorityStandard);
   const titleAndStandardGuidance = isMath
     ? [
       `This is a ${isKindergartenMath ? "KINDERGARTEN MATH" : "MATH"} lesson. officialLessonTitle is an extraction field, not a generation field. If the source contains an official lesson title, copy it exactly into both lessonTitle and officialLessonTitle, including its wording, numbering, punctuation, and capitalization. Do not shorten, summarize, paraphrase, or replace it with a title based on the objective. If no official title is available, leave both title fields empty rather than inventing a title.`,
@@ -1181,9 +1193,9 @@ function buildCurriculumAnalysisPrompt(data) {
     ];
 
   const standardsContext = isMath
-    ? buildMathStandardsContext(data.sourceText)
+    ? buildMathStandardsContext(`${selectedPriorityStandard}\n${data.sourceText}`)
     : (isSkills || isListening)
-      ? buildSkillsStandardsContext(data.sourceText, isListening ? "ELA" : "Skills")
+      ? buildSkillsStandardsContext(`${selectedPriorityStandard}\n${data.sourceText}`, isListening ? "ELA" : "Skills")
       : "";
   return [
     `Analyze this ${isKindergartenMath ? "Kindergarten Math" : "first grade curriculum"} lesson for a teacher-facing lesson library.`,
@@ -1192,10 +1204,17 @@ function buildCurriculumAnalysisPrompt(data) {
     `Unit/module selected by teacher: ${data.unitOrModule || "not provided"}`,
     `Lesson number selected by teacher: ${data.lessonNumber || "not provided"}`,
     `Lesson title selected by teacher: ${data.lessonTitle || "not provided"}`,
+    `Priority standard selected by teacher before analysis: ${selectedPriorityStandard || "not provided"}`,
     "",
     "Return the exact structured fields requested by the schema.",
+    selectedPriorityStandard
+      ? "Use the teacher-selected priority standard as the anchor for this draft. The selected standard is trusted teacher input, not an invented standard. Keep the lesson content grounded in the source, but align the I Can statement, objective/focus, family summary, family questions, teacher notes, and standard notes to that selected priority standard. Do not replace it with a different standard just because another code appears first or more often in the source."
+      : "If no priority standard was selected by the teacher, choose the best priority standard from the lesson source.",
     "Use full unit labels in unitOrModule: write Module 1 instead of M1, Mod 1, or module-1, and write Unit 1 instead of U1 when the source uses unit shorthand.",
     ...titleAndStandardGuidance,
+    ...(selectedPriorityStandard
+      ? ["Teacher-selected priority standard override: return the teacher-selected standard as the priority standard, and move other relevant source standards to supportingStandards when they apply."]
+      : []),
     ...(standardsContext ? ["", standardsContext] : []),
     "For the I can statement, create one scholar-friendly sentence starting with \"I can\" by turning the lesson objective or main teaching goal into kid-friendly language. It does not need to appear word-for-word in the source.",
     "For vocabulary, choose lesson words, teaching terms, or curriculum words that scholars or families may need explained, even if the lesson does not provide a labeled vocabulary list.",
@@ -1637,17 +1656,22 @@ function normalizeCurriculumAnalysisShape(rawAnalysis, fallbackSubject) {
   return normalized;
 }
 
-function normalizeMathStandardFields(analysis, sourceText) {
-  const { codes, standardsByCode } = getMathReferenceMatches(sourceText);
+function normalizeMathStandardFields(analysis, sourceText, options = {}) {
+  const selectedPriorityStandard = asText(options.selectedPriorityStandard);
+  const referenceText = [selectedPriorityStandard, sourceText].filter(Boolean).join("\n");
+  const { codes, standardsByCode } = getMathReferenceMatches(referenceText);
   const contentCodes = codes.filter((code) => !isMathematicalPracticeCode(code));
   const practiceCodes = codes.filter(isMathematicalPracticeCode);
+  const selectedCodes = extractMathStandardCodes(selectedPriorityStandard)
+    .filter((code) => !isMathematicalPracticeCode(code));
   const modelCodes = extractMathStandardCodes([
     analysis.priorityStandardCode,
     analysis.priorityStandardNumber,
     analysis.priorityStandard,
   ].filter(Boolean).join(" "));
+  const selectedPriorityCode = selectedCodes.find((code) => contentCodes.includes(code));
   const modelPriorityCode = modelCodes.find((code) => contentCodes.includes(code));
-  const priorityCode = modelPriorityCode || contentCodes[0] || "";
+  const priorityCode = selectedPriorityCode || modelPriorityCode || contentCodes[0] || "";
   const unavailableWording = "Official wording unavailable in the standards reference.";
   const getWording = (code) => {
     const standard = standardsByCode.get(code);
@@ -1655,6 +1679,18 @@ function normalizeMathStandardFields(analysis, sourceText) {
   };
   const display = (code) => `${code} - ${getWording(code)}`;
   const supportingCodes = contentCodes.filter((code) => code !== priorityCode);
+
+  if (selectedPriorityStandard && !selectedCodes.length) {
+    return {
+      priorityStandardCode: "",
+      priorityStandardNumber: "",
+      priorityStandardWording: "",
+      priorityStandard: normalizeScholarLanguage(selectedPriorityStandard),
+      supportingStandards: contentCodes.map(display),
+      mathematicalPractices: practiceCodes.map(display),
+      standardNotes: normalizeScholarLanguage(analysis.standardNotes),
+    };
+  }
 
   return {
     priorityStandardCode: priorityCode,
@@ -1668,19 +1704,28 @@ function normalizeMathStandardFields(analysis, sourceText) {
 }
 
 function normalizeSkillsStandardFields(analysis, sourceText, options = {}) {
-  const { codes, standardsByCode } = getSkillsReferenceMatches(sourceText);
+  const selectedPriorityStandard = asText(options.selectedPriorityStandard);
+  const referenceText = [selectedPriorityStandard, sourceText].filter(Boolean).join("\n");
+  const { codes, standardsByCode } = getSkillsReferenceMatches(referenceText);
+  const selectedCodes = extractSkillsStandardCodes(selectedPriorityStandard)
+    .map((code) => normalizeSkillsStandardCode(code, standardsByCode));
   const modelCodes = extractSkillsStandardCodes([
     analysis.priorityStandardCode,
     analysis.priorityStandardNumber,
     analysis.priorityStandard,
   ].filter(Boolean).join(" ")).map((code) => normalizeSkillsStandardCode(code, standardsByCode));
-  const priorityCodes = selectSkillsPriorityCodes(modelCodes, codes);
+  const selectedPriorityCodes = uniqueSkillsStandardCodes(selectedCodes)
+    .map((code) => codes.find((sourceCode) => sourceCode.toUpperCase() === code.toUpperCase()) || "")
+    .filter(Boolean)
+    .slice(0, 2);
+  const priorityCodes = selectedPriorityCodes.length ? selectedPriorityCodes : selectSkillsPriorityCodes(modelCodes, codes);
   if (!priorityCodes.length) {
+    const fallbackPriority = normalizeScholarLanguage(selectedPriorityStandard || (options.preservePlainFallback ? analysis.priorityStandard : ""));
     return {
       priorityStandardCode: "",
       priorityStandardNumber: "",
       priorityStandardWording: options.preservePlainFallback ? normalizeScholarLanguage(analysis.priorityStandardWording) : "",
-      priorityStandard: options.preservePlainFallback ? normalizeScholarLanguage(analysis.priorityStandard) : "",
+      priorityStandard: fallbackPriority,
       supportingStandards: options.preservePlainFallback ? normalizeScholarLanguageArray(analysis.supportingStandards) : [],
       mathematicalPractices: [],
       standardNotes: options.preservePlainFallback ? normalizeScholarLanguage(analysis.standardNotes) : "",
@@ -1692,6 +1737,19 @@ function normalizeSkillsStandardFields(analysis, sourceText, options = {}) {
     return standard ? standard.officialWording : unavailableWording;
   };
   const display = (code) => `${code} - ${getWording(code)}`;
+
+  if (selectedPriorityStandard && !selectedCodes.length) {
+    return {
+      priorityStandardCode: "",
+      priorityStandardNumber: "",
+      priorityStandardWording: "",
+      priorityStandard: normalizeScholarLanguage(selectedPriorityStandard),
+      supportingStandards: codes.map(display),
+      mathematicalPractices: [],
+      standardNotes: options.preservePlainFallback ? normalizeScholarLanguage(analysis.standardNotes) : "",
+    };
+  }
+
   const priorityKeys = new Set(priorityCodes.map((code) => code.toUpperCase()));
   const supportingCodes = codes.filter((code) => !priorityKeys.has(code.toUpperCase()));
 
@@ -1706,15 +1764,15 @@ function normalizeSkillsStandardFields(analysis, sourceText, options = {}) {
   };
 }
 
-function normalizeCurriculumAnalysis(analysis, sourceText = "") {
+function normalizeCurriculumAnalysis(analysis, sourceText = "", options = {}) {
   const subject = normalizeCurriculumSubject(analysis.subject);
   const isMath = isMathCurriculumSubject(subject);
   const isSkills = subject === "skills";
   const isListening = subject === "listening";
   const standardFields = isMath
-    ? normalizeMathStandardFields(analysis, sourceText)
+    ? normalizeMathStandardFields(analysis, sourceText, options)
     : (isSkills || isListening)
-      ? normalizeSkillsStandardFields(analysis, sourceText, { preservePlainFallback: isListening })
+      ? normalizeSkillsStandardFields(analysis, sourceText, { ...options, preservePlainFallback: isListening })
     : {
       priorityStandardCode: "",
       priorityStandardNumber: "",
