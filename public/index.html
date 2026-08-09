@@ -4494,15 +4494,19 @@
                 <button type="button" class="curriculum-builder-button inline-flex px-4 py-2 text-white" style="background: var(--md-coral);" onclick="printWeeklyLessonPlan()">Print / Save PDF</button>
               </div>
             </div>
-            <div class="grid md:grid-cols-[minmax(0,14rem)_auto] gap-3 md:items-end mb-4">
+            <div class="grid md:grid-cols-[minmax(0,14rem)_minmax(0,14rem)_auto] gap-3 md:items-end mb-4">
               <div>
-                <label class="curriculum-builder-label" for="weeklyLessonPlanWeekInput">Week of</label>
+                <label class="curriculum-builder-label" for="weeklyLessonPlanWeekInput">Start date</label>
                 <input id="weeklyLessonPlanWeekInput" class="curriculum-builder-field" type="date" onchange="generateWeeklyLessonPlan()">
               </div>
-              <p id="weeklyLessonPlanSummary" class="text-sm text-[color:var(--md-ink)]/75 pb-2">Choose a week to organize scheduled curriculum lessons.</p>
+              <div>
+                <label class="curriculum-builder-label" for="weeklyLessonPlanEndInput">End date</label>
+                <input id="weeklyLessonPlanEndInput" class="curriculum-builder-field" type="date" onchange="generateWeeklyLessonPlan()">
+              </div>
+              <p id="weeklyLessonPlanSummary" class="text-sm text-[color:var(--md-ink)]/75 pb-2">Choose a date range to organize scheduled curriculum lessons.</p>
             </div>
             <div id="weeklyLessonPlanEditor" class="weekly-lesson-plan-editor">
-              <p class="text-sm text-gray-500">Select a week, then generate a principal-facing lesson plan from scheduled curriculum lessons.</p>
+              <p class="text-sm text-gray-500">Select a date range, then generate a principal-facing lesson plan from scheduled curriculum lessons.</p>
             </div>
           </div>
 
@@ -4517,11 +4521,20 @@
                 <button type="button" class="curriculum-builder-button inline-flex px-4 py-2 text-white" style="background: var(--md-coral);" onclick="printCurriculumCalendarMonth()">Print Month</button>
               </div>
             </div>
-            <div class="grid md:grid-cols-[minmax(0,14rem)_auto] gap-3 md:items-end mb-4">
+            <div class="grid md:grid-cols-[minmax(0,14rem)_minmax(0,14rem)_minmax(0,14rem)_auto] gap-3 md:items-end mb-4">
               <div>
                 <label class="curriculum-builder-label" for="curriculumCalendarMonthInput">Month</label>
                 <input id="curriculumCalendarMonthInput" class="curriculum-builder-field" type="month" onchange="renderCurriculumCalendar()">
               </div>
+              <div>
+                <label class="curriculum-builder-label" for="curriculumCalendarRangeStartInput">Range start</label>
+                <input id="curriculumCalendarRangeStartInput" class="curriculum-builder-field" type="date">
+              </div>
+              <div>
+                <label class="curriculum-builder-label" for="curriculumCalendarRangeEndInput">Range end</label>
+                <input id="curriculumCalendarRangeEndInput" class="curriculum-builder-field" type="date">
+              </div>
+              <button type="button" class="curriculum-builder-button inline-flex justify-center px-4 py-2 text-white" style="background: var(--md-slate);" onclick="printCurriculumCalendarDateRange()">Print Range</button>
               <p class="text-sm text-[color:var(--md-ink)]/75 pb-2">Click a day to see lesson titles, I Can statements, and priority standards.</p>
             </div>
             <div class="curriculum-calendar-layout">
@@ -6014,7 +6027,8 @@
     ];
     const KINDERGARTEN_MATH_SUBJECT = 'kindergarten-math';
     const curriculumSubjects = ['skills', 'listening', 'math', KINDERGARTEN_MATH_SUBJECT];
-    const curriculumParentPageSubjects = ['skills', 'listening', 'math'];
+    const curriculumScheduledSubjects = ['skills', 'listening', 'math'];
+    const curriculumParentPageSubjects = curriculumScheduledSubjects;
     const curriculumDefaultLessonSourceLimit = 20000;
     const curriculumLongSingleLessonSourceLimit = 45000;
     const curriculumPlanToggleDefinitions = [
@@ -6431,8 +6445,8 @@
       if (preview) preview.innerHTML = '<p class="text-sm text-gray-500">No lessons picked yet.</p>';
       if (calendarGrid) calendarGrid.innerHTML = '<p class="text-sm text-gray-500">Calendar will appear after sign-in.</p>';
       if (calendarDetail) calendarDetail.innerHTML = '<p class="text-sm text-gray-500">Choose a day to view scheduled lessons.</p>';
-      if (weeklyEditor) weeklyEditor.innerHTML = '<p class="text-sm text-gray-500">Select a week, then generate a principal-facing lesson plan from scheduled curriculum lessons.</p>';
-      if (weeklySummary) weeklySummary.textContent = 'Choose a week to organize scheduled curriculum lessons.';
+      if (weeklyEditor) weeklyEditor.innerHTML = '<p class="text-sm text-gray-500">Select a date range, then generate a principal-facing lesson plan from scheduled curriculum lessons.</p>';
+      if (weeklySummary) weeklySummary.textContent = 'Choose a date range to organize scheduled curriculum lessons.';
       if (document.querySelector('[data-page-panel="roster"].active')) showPage('home');
     }
 
@@ -7392,10 +7406,57 @@
       return `${dayLabel} ${date.getMonth() + 1}/${date.getDate()}`.trim();
     }
 
+    function getCurriculumDayInfo(dateKey) {
+      const dayIndex = getCurriculumSchoolDayIndex(dateKey);
+      if (dayIndex >= 0) return curriculumWeekdays[dayIndex];
+      const date = parseCurriculumDateKey(dateKey);
+      return {
+        short: '',
+        title: date ? date.toLocaleDateString('en-US', { weekday: 'long' }) : 'Day'
+      };
+    }
+
+    function getCurriculumDateRangeKeys(startKey, endKey, options = {}) {
+      const start = parseCurriculumDateKey(startKey);
+      const end = parseCurriculumDateKey(endKey);
+      if (!start || !end || end < start) return [];
+      const weekdaysOnly = options.weekdaysOnly !== false;
+      const limit = Number.isFinite(options.limit) ? options.limit : 45;
+      const dateKeys = [];
+      let current = start;
+      let checked = 0;
+      while (current <= end && checked < limit) {
+        const dateKey = formatCurriculumDateKey(current);
+        if (!weekdaysOnly || getCurriculumSchoolDayIndex(dateKey) >= 0) {
+          dateKeys.push(dateKey);
+        }
+        current = addCurriculumDays(current, 1);
+        checked += 1;
+      }
+      return dateKeys;
+    }
+
+    function formatCurriculumDateRangeLabel(startKey, endKey) {
+      const start = parseCurriculumDateKey(startKey);
+      const end = parseCurriculumDateKey(endKey);
+      if (!start && !end) return 'Selected Dates';
+      if (!end || startKey === endKey) {
+        return (start || end).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      }
+      if (!start) return end.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      const startLabel = start.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+      const endLabel = end.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      return `${startLabel} - ${endLabel}`;
+    }
+
     function getCurriculumLessonScheduleDates(lesson) {
       const subject = lesson && lesson.subject ? lesson.subject : 'skills';
       const dates = getCurriculumSubjectPlan(subject).dates || {};
       return Object.keys(dates).filter(dateKey => dates[dateKey] === lesson.id).sort();
+    }
+
+    function getCurriculumScheduleSourceSubjects(subject) {
+      return subject === 'math' ? ['math', KINDERGARTEN_MATH_SUBJECT] : [subject];
     }
 
     function getCurriculumPrimaryScheduleDate(lesson) {
@@ -7403,10 +7464,11 @@
     }
 
     function getCurriculumScheduledWeekStarts(subject, mode) {
-      const dates = getCurriculumSubjectPlan(subject).dates || {};
       const currentWeek = formatCurriculumDateKey(getCurrentCurriculumWeekStartDate());
-      const starts = uniqueList(Object.keys(dates)
-        .filter(dateKey => dates[dateKey] && getCurriculumSchoolDayIndex(dateKey) >= 0)
+      const starts = uniqueList(getCurriculumScheduleSourceSubjects(subject).flatMap(sourceSubject => {
+        const dates = getCurriculumSubjectPlan(sourceSubject).dates || {};
+        return Object.keys(dates).filter(dateKey => dates[dateKey] && getCurriculumSchoolDayIndex(dateKey) >= 0);
+      })
         .map(getCurriculumWeekStartKeyFromDateKey)
         .filter(Boolean));
       return starts
@@ -8587,7 +8649,9 @@
       const preview = document.getElementById('curriculumWeekPreview');
       if (!preview) return;
       const subjectFilter = document.getElementById('curriculumLibrarySubjectFilter')?.value || 'all';
-      const subjectsToShow = subjectFilter === 'all' ? curriculumSubjects : [subjectFilter];
+      const subjectsToShow = subjectFilter === 'all'
+        ? curriculumScheduledSubjects
+        : (curriculumScheduledSubjects.includes(subjectFilter) ? [subjectFilter] : []);
       const sections = subjectsToShow.map(subject => {
         const spotlight = buildCurriculumWeekDraft(subject, 'spotlight');
         const upcoming = buildCurriculumWeekDraft(subject, 'upcoming');
@@ -8742,10 +8806,7 @@
       const dateKeys = weekStartKey ? curriculumWeekdays.map((day, index) =>
         formatCurriculumDateKey(addCurriculumDays(parseCurriculumDateKey(weekStartKey), index))
       ) : [];
-      const planDates = getCurriculumSubjectPlan(subject).dates || {};
-      const lessonsByDay = dateKeys.map(dateKey =>
-        curriculumLessonsCache.find(lesson => lesson.id === planDates[dateKey]) || null
-      );
+      const lessonsByDay = dateKeys.map(dateKey => getCurriculumScheduledLessonForDate(subject, dateKey));
       while (lessonsByDay.length < curriculumWeekdays.length) lessonsByDay.push(null);
       const selectedLessons = lessonsByDay.filter(Boolean);
       const moduleLabel = getCurriculumWeekModuleLabel(selectedLessons, subject);
@@ -9106,7 +9167,7 @@
     }
 
     function printCurriculumUpcomingWeek() {
-      const weeks = curriculumSubjects
+      const weeks = curriculumScheduledSubjects
         .map(subject => buildCurriculumWeekDraft(subject, 'upcoming'))
         .filter(week => week.selectedLessons.length);
       if (!weeks.length) {
@@ -10012,7 +10073,7 @@
       Object.entries(rawDates).forEach(([dateKey, assignment]) => {
         if (!isValidCurriculumDateKey(dateKey) || !assignment || typeof assignment !== 'object') return;
         const next = {};
-        curriculumSubjects.forEach(subject => {
+        curriculumScheduledSubjects.forEach(subject => {
           const planId = String(assignment[subject] || '').trim();
           if (planId) next[subject] = planId;
         });
@@ -10127,19 +10188,21 @@
 
     function getCurriculumPlansForDate(dateKey) {
       const assignment = (curriculumPlanCalendar.dates && curriculumPlanCalendar.dates[dateKey]) || {};
-      return curriculumSubjects.map(subject => {
+      return curriculumScheduledSubjects.map(subject => {
         const plan = curriculumPlansCache.find(item => item.id === assignment[subject]);
         return { subject, plan: plan || null };
       });
     }
 
     function getCurriculumCalendarSubjectNote(subject, dateKey) {
-      const notes = getCurriculumSubjectPlan(subject).notes || {};
-      return String(notes[dateKey] || '').trim();
+      return getCurriculumScheduleSourceSubjects(subject).map(sourceSubject => {
+        const notes = getCurriculumSubjectPlan(sourceSubject).notes || {};
+        return String(notes[dateKey] || '').trim();
+      }).filter(Boolean).join('\n');
     }
 
     async function saveCurriculumCalendarSubjectNote(dateKey, subject, value) {
-      if (!isValidCurriculumDateKey(dateKey) || !curriculumSubjects.includes(subject)) return;
+      if (!isValidCurriculumDateKey(dateKey) || !curriculumScheduledSubjects.includes(subject)) return;
       const subjectPlan = getCurriculumSubjectPlan(subject);
       const cleanNote = String(value || '').trim();
       if (cleanNote) {
@@ -10156,13 +10219,21 @@
         'success');
     }
 
-    function getCurriculumLessonsForDate(dateKey) {
-      return curriculumSubjects.map(subject => {
-        const subjectPlan = getCurriculumSubjectPlan(subject);
-        const lessonId = (subjectPlan.dates || {})[dateKey] || '';
+    function getCurriculumScheduledLessonForDate(subject, dateKey) {
+      for (const sourceSubject of getCurriculumScheduleSourceSubjects(subject)) {
+        const lessonId = (getCurriculumSubjectPlan(sourceSubject).dates || {})[dateKey] || '';
         const lesson = lessonId ? curriculumLessonsCache.find(item => item.id === lessonId) : null;
-        return { subject, lesson: lesson || null, note: getCurriculumCalendarSubjectNote(subject, dateKey) };
-      });
+        if (lesson) return lesson;
+      }
+      return null;
+    }
+
+    function getCurriculumLessonsForDate(dateKey) {
+      return curriculumScheduledSubjects.map(subject => ({
+        subject,
+        lesson: getCurriculumScheduledLessonForDate(subject, dateKey),
+        note: getCurriculumCalendarSubjectNote(subject, dateKey)
+      }));
     }
 
     function getCurriculumCalendarMonthKey() {
@@ -10253,7 +10324,7 @@
       detail.innerHTML = `
         <h4 class="font-display font-bold text-xl mb-2" style="color: var(--md-coral);">${escapeHtml(formatCurriculumLongDateLabel(dateKey))}</h4>
         <div class="grid gap-3">
-          ${curriculumSubjects.map(subject => {
+          ${curriculumScheduledSubjects.map(subject => {
             const entry = lessons.find(item => item.subject === subject) || {};
             return renderCurriculumCalendarSubjectDetail(subject, entry.lesson || null, dateKey, entry.note || '');
           }).join('')}
@@ -10297,7 +10368,7 @@
         <div class="lesson">
           <div class="day">${escapeHtml(formatCurriculumLongDateLabel(dateKey))}</div>
           <div class="grid">
-            ${curriculumSubjects.map(subject => renderCurriculumCalendarPrintSubject(subject, dateKey)).join('')}
+            ${curriculumScheduledSubjects.map(subject => renderCurriculumCalendarPrintSubject(subject, dateKey)).join('')}
           </div>
         </div>
       `).join('');
@@ -10306,6 +10377,45 @@
         title,
         `<h1>${escapeHtml(title)}</h1><div class="meta">Scheduled lessons come from Browse Lessons.</div>${sections}`,
         'Monthly calendar print view opened.'
+      );
+    }
+
+    function ensureCurriculumCalendarRangeInputs() {
+      const startInput = document.getElementById('curriculumCalendarRangeStartInput');
+      const endInput = document.getElementById('curriculumCalendarRangeEndInput');
+      const fallbackStartKey = isValidCurriculumDateKey(curriculumActiveCalendarDateKey)
+        ? curriculumActiveCalendarDateKey
+        : formatCurriculumDateKey(new Date());
+      let startKey = startInput && isValidCurriculumDateKey(startInput.value) ? startInput.value : fallbackStartKey;
+      let endKey = endInput && isValidCurriculumDateKey(endInput.value)
+        ? endInput.value
+        : formatCurriculumDateKey(addCurriculumDays(parseCurriculumDateKey(startKey), 13));
+      if (parseCurriculumDateKey(endKey) < parseCurriculumDateKey(startKey)) endKey = startKey;
+      if (startInput) startInput.value = startKey;
+      if (endInput) endInput.value = endKey;
+      return { startKey, endKey };
+    }
+
+    function printCurriculumCalendarDateRange() {
+      const range = ensureCurriculumCalendarRangeInputs();
+      const dateKeys = getCurriculumDateRangeKeys(range.startKey, range.endKey, { weekdaysOnly: true, limit: 65 });
+      if (!dateKeys.length) {
+        setCurriculumStatus('Choose a valid start and end date for the calendar range.', 'error');
+        return;
+      }
+      const sections = dateKeys.map(dateKey => `
+        <div class="lesson">
+          <div class="day">${escapeHtml(formatCurriculumLongDateLabel(dateKey))}</div>
+          <div class="grid">
+            ${curriculumScheduledSubjects.map(subject => renderCurriculumCalendarPrintSubject(subject, dateKey)).join('')}
+          </div>
+        </div>
+      `).join('');
+      const title = `Curriculum Calendar - ${formatCurriculumDateRangeLabel(range.startKey, range.endKey)}`;
+      openCurriculumPrintWindow(
+        title,
+        `<h1>${escapeHtml(title)}</h1><div class="meta">Scheduled lessons come from Browse Lessons.</div>${sections}`,
+        'Calendar range print view opened.'
       );
     }
 
@@ -10325,20 +10435,29 @@
     }
 
     function ensureWeeklyLessonPlanWeekInput() {
-      const input = document.getElementById('weeklyLessonPlanWeekInput');
-      if (!input) return '';
-      if (!isValidCurriculumDateKey(input.value)) {
-        input.value = formatCurriculumDateKey(getCurrentCurriculumWeekStartDate());
-      }
-      const weekStart = getCurriculumWeekStartDate(parseCurriculumDateKey(input.value));
-      const weekStartKey = formatCurriculumDateKey(weekStart);
-      if (input.value !== weekStartKey) input.value = weekStartKey;
-      return weekStartKey;
+      return ensureWeeklyLessonPlanRangeInputs().startKey;
+    }
+
+    function ensureWeeklyLessonPlanRangeInputs() {
+      const startInput = document.getElementById('weeklyLessonPlanWeekInput');
+      const endInput = document.getElementById('weeklyLessonPlanEndInput');
+      const currentWeekStart = getCurrentCurriculumWeekStartDate();
+      const defaultStartKey = formatCurriculumDateKey(currentWeekStart);
+      const defaultEndKey = formatCurriculumDateKey(addCurriculumDays(currentWeekStart, 4));
+      let startKey = startInput && isValidCurriculumDateKey(startInput.value) ? startInput.value : defaultStartKey;
+      let endKey = endInput && isValidCurriculumDateKey(endInput.value) ? endInput.value : defaultEndKey;
+      if (parseCurriculumDateKey(endKey) < parseCurriculumDateKey(startKey)) endKey = startKey;
+      if (startInput) startInput.value = startKey;
+      if (endInput) endInput.value = endKey;
+      return { startKey, endKey };
     }
 
     function setWeeklyLessonPlanToCurrentWeek() {
-      const input = document.getElementById('weeklyLessonPlanWeekInput');
-      if (input) input.value = formatCurriculumDateKey(getCurrentCurriculumWeekStartDate());
+      const startInput = document.getElementById('weeklyLessonPlanWeekInput');
+      const endInput = document.getElementById('weeklyLessonPlanEndInput');
+      const currentWeekStart = getCurrentCurriculumWeekStartDate();
+      if (startInput) startInput.value = formatCurriculumDateKey(currentWeekStart);
+      if (endInput) endInput.value = formatCurriculumDateKey(addCurriculumDays(currentWeekStart, 4));
       generateWeeklyLessonPlan();
     }
 
@@ -10346,18 +10465,25 @@
       return ensureWeeklyLessonPlanWeekInput() || formatCurriculumDateKey(getCurrentCurriculumWeekStartDate());
     }
 
-    function getWeeklyLessonPlanDateKeys(weekStartKey = getWeeklyLessonPlanWeekStartKey()) {
-      const start = parseCurriculumDateKey(weekStartKey) || getCurrentCurriculumWeekStartDate();
-      return curriculumWeekdays.map((day, index) => formatCurriculumDateKey(addCurriculumDays(start, index)));
+    function getWeeklyLessonPlanDateKeys(range = ensureWeeklyLessonPlanRangeInputs()) {
+      if (typeof range === 'string') {
+        const start = parseCurriculumDateKey(range) || getCurrentCurriculumWeekStartDate();
+        range = {
+          startKey: formatCurriculumDateKey(start),
+          endKey: formatCurriculumDateKey(addCurriculumDays(start, 4))
+        };
+      }
+      return getCurriculumDateRangeKeys(range.startKey, range.endKey, { weekdaysOnly: true, limit: 65 });
     }
 
     function formatWeeklyLessonPlanWeekLabel(weekStartKey) {
       const start = parseCurriculumDateKey(weekStartKey);
-      if (!start) return 'Selected Week';
-      const end = addCurriculumDays(start, 4);
-      const startLabel = start.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-      const endLabel = end.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-      return `${startLabel} - ${endLabel}`;
+      const endKey = start ? formatCurriculumDateKey(addCurriculumDays(start, 4)) : '';
+      return formatCurriculumDateRangeLabel(weekStartKey, endKey);
+    }
+
+    function formatWeeklyLessonPlanRangeLabel(range) {
+      return formatCurriculumDateRangeLabel(range.startKey, range.endKey);
     }
 
     function getWeeklyLessonPlanLesson(dateKey, subject) {
@@ -10417,12 +10543,12 @@
       const editor = document.getElementById('weeklyLessonPlanEditor');
       const summary = document.getElementById('weeklyLessonPlanSummary');
       if (!editor) return;
-      const weekStartKey = getWeeklyLessonPlanWeekStartKey();
-      const dateKeys = getWeeklyLessonPlanDateKeys(weekStartKey);
+      const range = ensureWeeklyLessonPlanRangeInputs();
+      const dateKeys = getWeeklyLessonPlanDateKeys(range);
       const lessonCount = dateKeys.reduce((total, dateKey) =>
         total + getCurriculumLessonsForDate(dateKey).filter(item => item.lesson).length, 0);
       if (summary) {
-        summary.textContent = `${formatWeeklyLessonPlanWeekLabel(weekStartKey)} - ${lessonCount} scheduled lesson${lessonCount === 1 ? '' : 's'} found.`;
+        summary.textContent = `${formatWeeklyLessonPlanRangeLabel(range)} - ${lessonCount} scheduled lesson${lessonCount === 1 ? '' : 's'} found.`;
       }
       editor.innerHTML = `
         <div class="weekly-lesson-plan-table-wrap">
@@ -10442,8 +10568,8 @@
               </tr>
             </thead>
             <tbody>
-              ${dateKeys.map((dateKey, dayIndex) =>
-                curriculumSubjects.map(subject => renderWeeklyLessonPlanLessonRow(dateKey, curriculumWeekdays[dayIndex], subject)).join('')
+              ${dateKeys.map(dateKey =>
+                curriculumScheduledSubjects.map(subject => renderWeeklyLessonPlanLessonRow(dateKey, getCurriculumDayInfo(dateKey), subject)).join('')
               ).join('')}
             </tbody>
           </table>
@@ -10452,7 +10578,7 @@
           <h4>Reading Intervention</h4>
           <p class="text-sm text-[color:var(--md-ink)]/75 mb-3">Fill this in manually. The weekly plan will not invent groups or intervention activities.</p>
           <div class="weekly-intervention-grid">
-            ${dateKeys.map((dateKey, index) => renderWeeklyInterventionDay(curriculumWeekdays[index], dateKey)).join('')}
+            ${dateKeys.map(dateKey => renderWeeklyInterventionDay(getCurriculumDayInfo(dateKey), dateKey)).join('')}
           </div>
         </section>
       `;
@@ -10461,7 +10587,7 @@
     function renderWeeklyInterventionDay(day, dateKey) {
       return `
         <div class="weekly-intervention-day" data-weekly-intervention-day="true" data-day-label="${escapeHtml(day.title)}" data-date-key="${escapeHtml(dateKey)}">
-          <h4>${escapeHtml(day.title)}</h4>
+          <h4>${escapeHtml(day.title)} <span class="text-xs text-gray-500">${escapeHtml(formatCurriculumDateLabel(dateKey))}</span></h4>
           <label class="curriculum-builder-label">Teacher Group</label>
           ${renderWeeklyLessonPlanTextarea('teacherGroup', '', 3)}
           <label class="curriculum-builder-label mt-2">Independent Reading</label>
@@ -10502,68 +10628,101 @@
       }));
     }
 
-    function renderWeeklyLessonPlanPrintTable(rows) {
-      const mainColumns = ['Day', 'Subject', 'Unit / Module', 'Lesson', 'Lesson Title', 'Priority Standard', 'I Can', 'Objective / Focus', 'Key Learning / Activity'];
+    function isWeeklyLessonPlanEmptyRow(row) {
+      const detailFields = [
+        row.unit,
+        row.lessonNumber,
+        row.priorityStandard,
+        row.iCanStatement,
+        row.objectiveFocus,
+        row.activitySummary,
+        row.materialsEvidence
+      ];
+      return detailFields.every(value => !String(value || '').trim())
+        && /^no scheduled lesson/i.test(String(row.lessonTitle || '').trim());
+    }
+
+    function renderWeeklyLessonPlanPrintField(label, value, options = {}) {
+      const text = String(value || '').trim();
+      if (!text && !options.showEmpty) return '';
       return `
-        <table style="width:100%;border-collapse:collapse;font-size:10px;line-height:1.25;">
-          <thead>
-            <tr>
-              ${mainColumns.map(label =>
-                `<th style="border:1px solid #cbd5e1;background:#e8edf2;color:#334155;padding:5px;text-align:left;vertical-align:top;">${escapeHtml(label)}</th>`
-              ).join('')}
-            </tr>
-          </thead>
-          <tbody>
-            ${rows.map(row => {
-              const materialsEvidence = String(row.materialsEvidence || '').trim();
-              return `
-                <tr>
-                  <td style="border:1px solid #cbd5e1;padding:5px;vertical-align:top;font-weight:700;">${escapeHtml(row.day)}<br><span style="font-weight:400;color:#64748b;">${escapeHtml(formatCurriculumDateLabel(row.dateKey))}</span></td>
-                  <td style="border:1px solid #cbd5e1;padding:5px;vertical-align:top;">${escapeHtml(row.subject)}</td>
-                  <td style="border:1px solid #cbd5e1;padding:5px;vertical-align:top;">${escapeHtml(row.unit)}</td>
-                  <td style="border:1px solid #cbd5e1;padding:5px;vertical-align:top;">${escapeHtml(row.lessonNumber)}</td>
-                  <td style="border:1px solid #cbd5e1;padding:5px;vertical-align:top;">${escapeHtml(row.lessonTitle)}</td>
-                  <td style="border:1px solid #cbd5e1;padding:5px;vertical-align:top;white-space:pre-wrap;">${escapeHtml(row.priorityStandard)}</td>
-                  <td style="border:1px solid #cbd5e1;padding:5px;vertical-align:top;white-space:pre-wrap;">${escapeHtml(row.iCanStatement)}</td>
-                  <td style="border:1px solid #cbd5e1;padding:5px;vertical-align:top;white-space:pre-wrap;">${escapeHtml(row.objectiveFocus)}</td>
-                  <td style="border:1px solid #cbd5e1;padding:5px;vertical-align:top;white-space:pre-wrap;">${escapeHtml(row.activitySummary)}</td>
-                </tr>
-                ${materialsEvidence ? `
-                  <tr>
-                    <td colspan="${mainColumns.length}" style="border:1px solid #cbd5e1;border-top:0;background:#f8fafc;padding:5px 7px;vertical-align:top;white-space:pre-wrap;">
-                      <strong style="color:#334155;">Materials / Evidence:</strong> ${escapeHtml(materialsEvidence)}
-                    </td>
-                  </tr>
-                ` : ''}
-              `;
-            }).join('')}
-          </tbody>
-        </table>
+        <div class="weekly-print-field${options.wide ? ' wide' : ''}">
+          <strong>${escapeHtml(label)}:</strong> ${escapeHtml(text)}
+        </div>
+      `;
+    }
+
+    function renderWeeklyLessonPlanPrintSubject(row) {
+      if (isWeeklyLessonPlanEmptyRow(row)) {
+        return `
+          <section class="weekly-print-subject empty">
+            <h3>${escapeHtml(row.subject)}</h3>
+            <p>No scheduled lesson.</p>
+          </section>
+        `;
+      }
+      return `
+        <section class="weekly-print-subject">
+          <h3>${escapeHtml(row.subject)}</h3>
+          <div class="weekly-print-identity">
+            ${row.unit ? `<span><strong>Unit / Module:</strong> ${escapeHtml(row.unit)}</span>` : ''}
+            ${row.lessonNumber ? `<span><strong>Lesson:</strong> ${escapeHtml(row.lessonNumber)}</span>` : ''}
+            ${row.lessonTitle ? `<span><strong>Title:</strong> ${escapeHtml(row.lessonTitle)}</span>` : ''}
+          </div>
+          <div class="weekly-print-fields">
+            ${renderWeeklyLessonPlanPrintField('Priority Standard', row.priorityStandard, { wide: true })}
+            ${renderWeeklyLessonPlanPrintField('I Can Statement', row.iCanStatement)}
+            ${renderWeeklyLessonPlanPrintField('Objective / Learning Focus', row.objectiveFocus)}
+            ${renderWeeklyLessonPlanPrintField('Key Learning / Activity Summary', row.activitySummary, { wide: true })}
+            ${renderWeeklyLessonPlanPrintField('Materials / Assessment Evidence', row.materialsEvidence, { wide: true })}
+          </div>
+        </section>
+      `;
+    }
+
+    function groupWeeklyLessonPlanRowsByDay(rows) {
+      const days = [];
+      rows.forEach(row => {
+        const key = row.dateKey || row.day || `day-${days.length}`;
+        let day = days.find(item => item.key === key);
+        if (!day) {
+          day = { key, day: row.day, dateKey: row.dateKey, rows: [] };
+          days.push(day);
+        }
+        day.rows.push(row);
+      });
+      return days;
+    }
+
+    function renderWeeklyLessonPlanPrintTable(rows) {
+      const days = groupWeeklyLessonPlanRowsByDay(rows);
+      return `
+        <div class="weekly-print-days">
+          ${days.map(day => `
+            <section class="weekly-print-day">
+              <h2>${escapeHtml(day.day || 'Day')} <span>${escapeHtml(formatCurriculumDateLabel(day.dateKey))}</span></h2>
+              ${day.rows.map(renderWeeklyLessonPlanPrintSubject).join('')}
+            </section>
+          `).join('')}
+        </div>
       `;
     }
 
     function renderWeeklyInterventionPrintTable(rows) {
       return `
-        <h2>Reading Intervention</h2>
-        <table style="width:100%;border-collapse:collapse;font-size:11px;line-height:1.3;">
-          <thead>
-            <tr>
-              ${['Day', 'Teacher Group', 'Independent Reading', 'Independent Skill Work'].map(label =>
-                `<th style="border:1px solid #cbd5e1;background:#e8edf2;color:#334155;padding:6px;text-align:left;vertical-align:top;">${escapeHtml(label)}</th>`
-              ).join('')}
-            </tr>
-          </thead>
-          <tbody>
+        <section class="weekly-print-intervention">
+          <h2>Reading Intervention</h2>
+          <div class="weekly-print-intervention-grid">
             ${rows.map(row => `
-              <tr>
-                <td style="border:1px solid #cbd5e1;padding:6px;vertical-align:top;font-weight:700;">${escapeHtml(row.day)}<br><span style="font-weight:400;color:#64748b;">${escapeHtml(formatCurriculumDateLabel(row.dateKey))}</span></td>
-                <td style="border:1px solid #cbd5e1;padding:6px;vertical-align:top;white-space:pre-wrap;">${escapeHtml(row.teacherGroup)}</td>
-                <td style="border:1px solid #cbd5e1;padding:6px;vertical-align:top;white-space:pre-wrap;">${escapeHtml(row.independentReading)}</td>
-                <td style="border:1px solid #cbd5e1;padding:6px;vertical-align:top;white-space:pre-wrap;">${escapeHtml(row.independentSkillWork)}</td>
-              </tr>
+              <section class="weekly-print-intervention-day">
+                <h3>${escapeHtml(row.day)} <span>${escapeHtml(formatCurriculumDateLabel(row.dateKey))}</span></h3>
+                ${renderWeeklyLessonPlanPrintField('Teacher Group', row.teacherGroup, { showEmpty: true })}
+                ${renderWeeklyLessonPlanPrintField('Independent Reading', row.independentReading, { showEmpty: true })}
+                ${renderWeeklyLessonPlanPrintField('Independent Skill Work', row.independentSkillWork, { showEmpty: true })}
+              </section>
             `).join('')}
-          </tbody>
-        </table>
+          </div>
+        </section>
       `;
     }
 
@@ -10572,12 +10731,36 @@
       if (!editor || !editor.querySelector('[data-weekly-lesson-row="true"]')) {
         generateWeeklyLessonPlan();
       }
-      const weekStartKey = getWeeklyLessonPlanWeekStartKey();
-      const title = `Weekly Lesson Plan - ${formatWeeklyLessonPlanWeekLabel(weekStartKey)}`;
+      const range = ensureWeeklyLessonPlanRangeInputs();
+      const title = `Weekly Lesson Plan - ${formatWeeklyLessonPlanRangeLabel(range)}`;
       const rows = collectWeeklyLessonPlanRows();
       const interventionRows = collectWeeklyInterventionRows();
       const body = `
-        <style>@page{size:landscape;margin:.35in;}</style>
+        <style>
+          @page{size:landscape;margin:.28in;}
+          h1{font-size:21px;margin-bottom:3px;}
+          .meta{font-size:10.5px;margin-bottom:6px;}
+          .weekly-print-days{display:block;}
+          .weekly-print-day{border:1px solid #cbd5e1;border-radius:7px;padding:5px;margin:0 0 6px;break-inside:auto;page-break-inside:auto;}
+          .weekly-print-day h2{margin:0 0 4px;font-size:13px;line-height:1.1;color:#334155;border:0;padding:0;}
+          .weekly-print-day h2 span{font-size:10px;font-weight:400;color:#64748b;margin-left:5px;}
+          .weekly-print-subject{border-top:1px solid #e2e8f0;padding:4px 0 3px;break-inside:auto;page-break-inside:auto;}
+          .weekly-print-subject:first-of-type{border-top:0;}
+          .weekly-print-subject h3{margin:0 0 2px;font-size:11.2px;line-height:1.15;color:#be5b45;border:0;padding:0;}
+          .weekly-print-subject.empty{display:grid;grid-template-columns:8rem 1fr;gap:6px;align-items:center;color:#64748b;}
+          .weekly-print-subject.empty p{margin:0;font-size:9.5px;}
+          .weekly-print-identity{display:flex;flex-wrap:wrap;gap:3px 9px;font-size:9.2px;line-height:1.2;color:#475569;margin-bottom:3px;}
+          .weekly-print-identity strong,.weekly-print-field strong{color:#334155;}
+          .weekly-print-fields{display:grid;grid-template-columns:1fr 1fr;gap:3px 9px;}
+          .weekly-print-field{font-size:9.2px;line-height:1.2;white-space:pre-wrap;overflow-wrap:anywhere;}
+          .weekly-print-field.wide{grid-column:1/-1;}
+          .weekly-print-intervention{margin-top:7px;break-inside:auto;page-break-inside:auto;}
+          .weekly-print-intervention h2{margin:0 0 5px;font-size:13px;line-height:1.1;color:#334155;border-bottom:1px solid #f4b56a;padding-bottom:3px;}
+          .weekly-print-intervention-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;}
+          .weekly-print-intervention-day{border:1px solid #cbd5e1;border-radius:6px;padding:4px;min-height:42px;}
+          .weekly-print-intervention-day h3{margin:0 0 3px;font-size:10.2px;line-height:1.1;color:#be5b45;}
+          .weekly-print-intervention-day h3 span{display:block;font-size:8.8px;font-weight:400;color:#64748b;}
+        </style>
         <h1>${escapeHtml(title)}</h1>
         <div class="meta">Generated from scheduled Curriculum Library lessons. Editable Reading Intervention entries are teacher-completed.</div>
         ${renderWeeklyLessonPlanPrintTable(rows)}
@@ -10682,7 +10865,7 @@
     function removeCurriculumPlanFromCalendar(planId) {
       Object.keys(curriculumPlanCalendar.dates || {}).forEach(dateKey => {
         const assignment = curriculumPlanCalendar.dates[dateKey] || {};
-        curriculumSubjects.forEach(subject => {
+        curriculumScheduledSubjects.forEach(subject => {
           if (assignment[subject] === planId) delete assignment[subject];
         });
         if (!Object.keys(assignment).length) delete curriculumPlanCalendar.dates[dateKey];
