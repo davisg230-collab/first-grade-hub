@@ -874,17 +874,22 @@ function loadSkillsStandardsReference() {
   }
 }
 
+function normalizeSkillsStandardLookupCode(code) {
+  return asText(code).replace(/\.([A-Za-z])$/, "$1");
+}
+
 function extractSkillsStandardCodes(sourceText) {
-  const matches = asText(sourceText).match(/\b(?:RL|RF|SL|L)\.\d+\.\d+[a-z]?\b/gi) || [];
-  return Array.from(new Set(matches.map((code) => code.trim())));
+  const matches = asText(sourceText).match(/\b(?:RL|RF|RI|SL|L)\.\d+\.\d+(?:\.?[a-z])?\b/gi) || [];
+  return Array.from(new Set(matches.map(normalizeSkillsStandardLookupCode).filter(Boolean)));
 }
 
 function getSkillsReferenceMatches(sourceText) {
   const reference = loadSkillsStandardsReference();
   const standardsByCode = new Map(reference.standards.map((standard) => [standard.code.toUpperCase(), standard]));
   const codes = Array.from(new Set(extractSkillsStandardCodes(sourceText).map((code) => {
-    const standard = standardsByCode.get(code.toUpperCase());
-    return standard ? standard.code : code;
+    const normalizedCode = normalizeSkillsStandardLookupCode(code);
+    const standard = standardsByCode.get(normalizedCode.toUpperCase());
+    return standard ? standard.code : normalizedCode;
   })));
   return {
     codes,
@@ -894,7 +899,7 @@ function getSkillsReferenceMatches(sourceText) {
 }
 
 function normalizeSkillsStandardCode(code, standardsByCode) {
-  const text = asText(code);
+  const text = normalizeSkillsStandardLookupCode(code);
   return standardsByCode.get(text.toUpperCase())?.code || text;
 }
 
@@ -932,17 +937,18 @@ function selectSkillsPriorityCodes(modelCodes, sourceCodes) {
     .slice(0, 2);
 }
 
-function buildSkillsStandardsContext(sourceText) {
+function buildSkillsStandardsContext(sourceText, label = "Skills") {
   const { codes, matches } = getSkillsReferenceMatches(sourceText);
+  const article = /^[AEIOU]/i.test(label) ? "an" : "a";
   if (!codes.length) {
     return [
-      "Local Skills standards reference lookup: no Skills standard code was found in the lesson source.",
-      "Do not invent a Skills standard code or official wording.",
+      `Local ${label} standards reference lookup: no ${label} standard code was found in the lesson source.`,
+      `Do not invent ${article} ${label} standard code or official wording.`,
     ].join("\n");
   }
 
   const lines = [
-    `Local Skills standards reference lookup for cited codes: ${codes.join(", ")}`,
+    `Local ${label} standards reference lookup for cited codes: ${codes.join(", ")}`,
     "Use this compact lookup instead of reconstructing official standard wording.",
   ];
   matches.forEach((standard, index) => {
@@ -1158,19 +1164,26 @@ function buildCurriculumAnalysisPrompt(data) {
         "For standardNotes, write one short line per cited code explaining how this lesson addresses that standard. Do not repeat or rewrite the official wording in these notes.",
         "For non-math-only fields officialLessonTitle, priorityStandardCode, priorityStandardNumber, priorityStandardWording, supportingStandards, mathematicalPractices, and standardNotes, return empty values when they do not apply.",
       ]
+    : isListening
+      ? [
+        "This is a LISTENING & LEARNING lesson. When the source cites an ELA standard code such as RL.1.1, RI.1.2, SL.1.4, or L.1.6, return the exact compact code in priorityStandardCode and priorityStandardNumber.",
+        "Choose the one comprehension, knowledge-building, vocabulary, or speaking/listening standard most directly assessed by the lesson as the priority standard. Put other cited ELA standard codes separately in supportingStandards.",
+        "The permanent ELA standards reference is authoritative for official wording. Return compact standard codes in the code fields; the server will fill priorityStandardWording, priorityStandard, and supportingStandards with the exact reference wording. Do not invent a code or rewrite official wording.",
+        "If the source provides no standard code, write the main Listening & Learning standard focus in plain language in priorityStandard and leave priorityStandardCode and priorityStandardNumber empty.",
+        "For standardNotes, write one short line per cited code explaining how this lesson addresses that standard. Do not repeat or rewrite the official wording in these notes.",
+        "For Listening & Learning, treat the read-aloud, vocabulary, discussion, checks, and application activity as parts of one lesson when they share the same lesson number or title. Do not tell the teacher to trim the source unless it clearly includes multiple distinct lesson numbers or lesson titles.",
+        "For math-only fields officialLessonTitle and mathematicalPractices, return empty values.",
+      ]
     : [
       "For non-math lessons, look first at the objective or main learning goal and create a short 3-7 word lesson name that says what scholars are learning. Use the printed lesson title only if it is already clear and specific. Never use file names, guide names, internal labels, or generic titles like \"Lesson 1\".",
-      ...(isListening
-        ? ["For Listening & Learning, treat the read-aloud, vocabulary, discussion, checks, and application activity as parts of one lesson when they share the same lesson number or title. Do not tell the teacher to trim the source unless it clearly includes multiple distinct lesson numbers or lesson titles."]
-        : []),
       "For non-math lessons, set officialLessonTitle, priorityStandardCode, priorityStandardNumber, priorityStandardWording, supportingStandards, mathematicalPractices, and standardNotes to empty values unless the source clearly supplies those separate fields.",
       "For priorityStandard, identify the one main standard focus for the lesson, or two if the lesson genuinely has two equal main goals. Prefer standards listed in the source, choosing the one or two that best match the lesson's main teaching point. If the source provides no standard codes, write the main standard skill in plain language instead of inventing a code.",
     ];
 
   const standardsContext = isMath
     ? buildMathStandardsContext(data.sourceText)
-    : isSkills
-      ? buildSkillsStandardsContext(data.sourceText)
+    : (isSkills || isListening)
+      ? buildSkillsStandardsContext(data.sourceText, isListening ? "ELA" : "Skills")
       : "";
   return [
     `Analyze this ${isKindergartenMath ? "Kindergarten Math" : "first grade curriculum"} lesson for a teacher-facing lesson library.`,
@@ -1654,7 +1667,7 @@ function normalizeMathStandardFields(analysis, sourceText) {
   };
 }
 
-function normalizeSkillsStandardFields(analysis, sourceText) {
+function normalizeSkillsStandardFields(analysis, sourceText, options = {}) {
   const { codes, standardsByCode } = getSkillsReferenceMatches(sourceText);
   const modelCodes = extractSkillsStandardCodes([
     analysis.priorityStandardCode,
@@ -1662,6 +1675,17 @@ function normalizeSkillsStandardFields(analysis, sourceText) {
     analysis.priorityStandard,
   ].filter(Boolean).join(" ")).map((code) => normalizeSkillsStandardCode(code, standardsByCode));
   const priorityCodes = selectSkillsPriorityCodes(modelCodes, codes);
+  if (!priorityCodes.length) {
+    return {
+      priorityStandardCode: "",
+      priorityStandardNumber: "",
+      priorityStandardWording: options.preservePlainFallback ? normalizeScholarLanguage(analysis.priorityStandardWording) : "",
+      priorityStandard: options.preservePlainFallback ? normalizeScholarLanguage(analysis.priorityStandard) : "",
+      supportingStandards: options.preservePlainFallback ? normalizeScholarLanguageArray(analysis.supportingStandards) : [],
+      mathematicalPractices: [],
+      standardNotes: options.preservePlainFallback ? normalizeScholarLanguage(analysis.standardNotes) : "",
+    };
+  }
   const unavailableWording = "Official wording unavailable in the standards reference.";
   const getWording = (code) => {
     const standard = standardsByCode.get(asText(code).toUpperCase());
@@ -1686,10 +1710,11 @@ function normalizeCurriculumAnalysis(analysis, sourceText = "") {
   const subject = normalizeCurriculumSubject(analysis.subject);
   const isMath = isMathCurriculumSubject(subject);
   const isSkills = subject === "skills";
+  const isListening = subject === "listening";
   const standardFields = isMath
     ? normalizeMathStandardFields(analysis, sourceText)
-    : isSkills
-      ? normalizeSkillsStandardFields(analysis, sourceText)
+    : (isSkills || isListening)
+      ? normalizeSkillsStandardFields(analysis, sourceText, { preservePlainFallback: isListening })
     : {
       priorityStandardCode: "",
       priorityStandardNumber: "",

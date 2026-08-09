@@ -7237,7 +7237,7 @@
 
     function getEmptyCurriculumWeeklyPlan() {
       return curriculumSubjects.reduce((plan, subject) => {
-        plan[subject] = { dates: {} };
+        plan[subject] = { dates: {}, notes: {} };
         return plan;
       }, {});
     }
@@ -7251,6 +7251,12 @@
           Object.entries(subjectPlan.dates).forEach(([dateKey, lessonId]) => {
             if (isValidCurriculumDateKey(dateKey) && lessonId) plan[subject].dates[dateKey] = lessonId;
           });
+          if (subjectPlan.notes && typeof subjectPlan.notes === 'object') {
+            Object.entries(subjectPlan.notes).forEach(([dateKey, note]) => {
+              const cleanNote = String(note || '').trim();
+              if (isValidCurriculumDateKey(dateKey) && cleanNote) plan[subject].notes[dateKey] = cleanNote;
+            });
+          }
         } else if (subjectPlan && typeof subjectPlan === 'object') {
           Object.entries(subjectPlan).forEach(([dayIndex, lessonId]) => {
             const index = Number(dayIndex);
@@ -7268,7 +7274,10 @@
         curriculumWeeklyPlan = getEmptyCurriculumWeeklyPlan();
       }
       if (!curriculumWeeklyPlan[subject] || !curriculumWeeklyPlan[subject].dates) {
-        curriculumWeeklyPlan[subject] = { dates: {} };
+        curriculumWeeklyPlan[subject] = { dates: {}, notes: {} };
+      }
+      if (!curriculumWeeklyPlan[subject].notes || typeof curriculumWeeklyPlan[subject].notes !== 'object') {
+        curriculumWeeklyPlan[subject].notes = {};
       }
       return curriculumWeeklyPlan[subject];
     }
@@ -7562,14 +7571,14 @@
       ).sort(compareCurriculumLessons);
     }
 
-    function extractCurriculumStandardCodes(value) {
-      const text = String(value || '');
-      const matches = text.match(/\b(?:K|\d+)\.[A-Z]+\.[A-Z]+\.\d+[A-Za-z]?\b|\b(?:RL|RF|SL|L)\.\d+\.\d+[A-Za-z]?\b|\bMP\d+\b/gi) || [];
-      return uniqueList(matches.map(code => code.trim()));
+    function normalizeCurriculumStandardCode(value) {
+      return String(value || '').trim().replace(/\.([A-Za-z])$/, '$1').toUpperCase();
     }
 
-    function normalizeCurriculumStandardCode(value) {
-      return String(value || '').trim().toUpperCase();
+    function extractCurriculumStandardCodes(value) {
+      const text = String(value || '');
+      const matches = text.match(/\b(?:K|\d+)\.[A-Z]+\.[A-Z]+\.\d+[A-Za-z]?\b|\b(?:RL|RF|RI|SL|L)\.\d+\.\d+(?:\.?[A-Za-z])?\b|\bMP\d+\b/gi) || [];
+      return uniqueList(matches.map(normalizeCurriculumStandardCode).filter(Boolean));
     }
 
     async function loadCurriculumElaStandardsReference() {
@@ -10070,11 +10079,35 @@
       });
     }
 
+    function getCurriculumCalendarSubjectNote(subject, dateKey) {
+      const notes = getCurriculumSubjectPlan(subject).notes || {};
+      return String(notes[dateKey] || '').trim();
+    }
+
+    async function saveCurriculumCalendarSubjectNote(dateKey, subject, value) {
+      if (!isValidCurriculumDateKey(dateKey) || !curriculumSubjects.includes(subject)) return;
+      const subjectPlan = getCurriculumSubjectPlan(subject);
+      const cleanNote = String(value || '').trim();
+      if (cleanNote) {
+        subjectPlan.notes[dateKey] = cleanNote;
+      } else {
+        delete subjectPlan.notes[dateKey];
+      }
+      renderCurriculumCalendar();
+      generateWeeklyLessonPlan();
+      await saveCurriculumWeeklyPlanDraft();
+      setCurriculumStatus(cleanNote
+        ? `${getCurriculumSubjectLabel(subject)} calendar note saved for ${formatCurriculumDateLabel(dateKey) || dateKey}.`
+        : `${getCurriculumSubjectLabel(subject)} calendar note cleared for ${formatCurriculumDateLabel(dateKey) || dateKey}.`,
+        'success');
+    }
+
     function getCurriculumLessonsForDate(dateKey) {
       return curriculumSubjects.map(subject => {
-        const lessonId = (getCurriculumSubjectPlan(subject).dates || {})[dateKey] || '';
+        const subjectPlan = getCurriculumSubjectPlan(subject);
+        const lessonId = (subjectPlan.dates || {})[dateKey] || '';
         const lesson = lessonId ? curriculumLessonsCache.find(item => item.id === lessonId) : null;
-        return { subject, lesson: lesson || null };
+        return { subject, lesson: lesson || null, note: getCurriculumCalendarSubjectNote(subject, dateKey) };
       });
     }
 
@@ -10132,16 +10165,19 @@
 
     function renderCurriculumCalendarDayButton(dateKey, currentMonth) {
       const date = parseCurriculumDateKey(dateKey);
-      const lessons = getCurriculumLessonsForDate(dateKey).filter(item => item.lesson);
-      const hasItems = lessons.length;
+      const scheduledItems = getCurriculumLessonsForDate(dateKey);
+      const visibleItems = scheduledItems.filter(item => item.lesson || item.note);
+      const hasItems = visibleItems.length;
       const classes = [
         'curriculum-month-day',
         date.getMonth() + 1 === currentMonth ? '' : 'outside',
         hasItems ? 'has-items' : '',
         dateKey === curriculumActiveCalendarDateKey ? 'active' : ''
       ].filter(Boolean).join(' ');
-      const lessonItems = lessons.map(({ subject, lesson }) => `
-        <span class="curriculum-month-item">${escapeHtml(getCurriculumSubjectLabel(subject))}: ${escapeHtml([formatCurriculumUnitOrModule(lesson.unitOrModule), formatCurriculumLessonNumber(lesson.lessonNumber), getCurriculumCardTitle(lesson)].filter(Boolean).join(' - '))}</span>
+      const lessonItems = visibleItems.map(({ subject, lesson, note }) => `
+        <span class="curriculum-month-item">${escapeHtml(getCurriculumSubjectLabel(subject))}: ${escapeHtml(lesson
+          ? [formatCurriculumUnitOrModule(lesson.unitOrModule), formatCurriculumLessonNumber(lesson.lessonNumber), getCurriculumCardTitle(lesson)].filter(Boolean).join(' - ')
+          : note)}</span>
       `).join('');
       return `
         <button type="button" class="${classes}" onclick="selectCurriculumCalendarDate('${dateKey}')">
@@ -10163,12 +10199,15 @@
       detail.innerHTML = `
         <h4 class="font-display font-bold text-xl mb-2" style="color: var(--md-coral);">${escapeHtml(formatCurriculumLongDateLabel(dateKey))}</h4>
         <div class="grid gap-3">
-          ${curriculumSubjects.map(subject => renderCurriculumCalendarSubjectDetail(subject, lessons.find(item => item.subject === subject)?.lesson || null)).join('')}
+          ${curriculumSubjects.map(subject => {
+            const entry = lessons.find(item => item.subject === subject) || {};
+            return renderCurriculumCalendarSubjectDetail(subject, entry.lesson || null, dateKey, entry.note || '');
+          }).join('')}
         </div>
       `;
     }
 
-    function renderCurriculumCalendarSubjectDetail(subject, lesson) {
+    function renderCurriculumCalendarSubjectDetail(subject, lesson, dateKey, note = '') {
       return `
         <section class="curriculum-detail-section">
           <h4>${escapeHtml(getCurriculumSubjectLabel(subject))}</h4>
@@ -10177,6 +10216,8 @@
             ${renderCurriculumCalendarInlineField('I Can', lesson.iCanStatement)}
             ${renderCurriculumCalendarInlineField('Priority standard', getCurriculumPriorityStandardDisplay(lesson))}
           ` : '<p><strong>Lesson:</strong> No curriculum lesson scheduled.</p>'}
+          <label class="curriculum-builder-label mt-3" for="curriculumCalendarNote-${escapeHtml(subject)}-${escapeHtml(dateKey)}">Calendar note / alternate plan</label>
+          <textarea id="curriculumCalendarNote-${escapeHtml(subject)}-${escapeHtml(dateKey)}" class="curriculum-builder-field" rows="2" placeholder="Example: Assembly, assessment, catch-up day, no curriculum lesson..." onblur="saveCurriculumCalendarSubjectNote('${escapeHtml(dateKey)}', '${escapeHtml(subject)}', this.value)">${escapeHtml(note)}</textarea>
         </section>
       `;
     }
@@ -10215,13 +10256,16 @@
     }
 
     function renderCurriculumCalendarPrintSubject(subject, dateKey) {
-      const lesson = getCurriculumLessonsForDate(dateKey).find(item => item.subject === subject)?.lesson || null;
+      const entry = getCurriculumLessonsForDate(dateKey).find(item => item.subject === subject) || {};
+      const lesson = entry.lesson || null;
+      const note = String(entry.note || '').trim();
       return `
         <div class="field">
           <strong>${escapeHtml(getCurriculumSubjectLabel(subject))}</strong>
           ${lesson ? `Lesson: ${escapeHtml([formatCurriculumUnitOrModule(lesson.unitOrModule), formatCurriculumLessonNumber(lesson.lessonNumber), getCurriculumCardTitle(lesson)].filter(Boolean).join(' - '))}<br>` : 'Lesson: none<br>'}
           ${lesson && lesson.iCanStatement ? `I Can: ${escapeHtml(lesson.iCanStatement)}<br>` : ''}
           ${lesson && getCurriculumPriorityStandardDisplay(lesson) ? `Standard: ${escapeHtml(getCurriculumPriorityStandardDisplay(lesson))}` : ''}
+          ${note ? `${lesson && getCurriculumPriorityStandardDisplay(lesson) ? '<br>' : ''}Note: ${escapeHtml(note)}` : ''}
         </div>
       `;
     }
@@ -10288,13 +10332,16 @@
 
     function renderWeeklyLessonPlanLessonRow(dateKey, day, subject) {
       const lesson = getWeeklyLessonPlanLesson(dateKey, subject);
+      const calendarNote = getCurriculumCalendarSubjectNote(subject, dateKey);
       const unit = lesson ? formatCurriculumUnitOrModule(lesson.unitOrModule) : '';
       const lessonNumber = lesson ? formatCurriculumLessonNumber(lesson.lessonNumber) : '';
-      const title = lesson ? getCurriculumCardTitle(lesson) : 'No scheduled lesson';
+      const title = lesson ? getCurriculumCardTitle(lesson) : (calendarNote ? 'No curriculum lesson scheduled' : 'No scheduled lesson');
       const standard = lesson ? getCurriculumPriorityStandardDisplay(lesson) : '';
       const iCan = lesson ? lesson.iCanStatement || '' : '';
       const focus = lesson ? getCurriculumPrintFocus(lesson) : '';
-      const summary = lesson ? getWeeklyLessonPlanActivitySummary(lesson) : '';
+      const summary = lesson
+        ? [getWeeklyLessonPlanActivitySummary(lesson), calendarNote ? `Calendar note: ${calendarNote}` : ''].filter(Boolean).join('\n')
+        : calendarNote;
       const materialsEvidence = lesson ? getWeeklyLessonPlanMaterialsEvidence(lesson) : '';
       return `
         <tr data-weekly-lesson-row="true" data-date-key="${escapeHtml(dateKey)}" data-day-label="${escapeHtml(day.title)}" data-subject="${escapeHtml(subject)}">
@@ -23704,9 +23751,10 @@ function getDefaultFallbackData() {
     math_lessons_json: JSON.stringify([]),
     listening_lessons_json: JSON.stringify([]),
     curriculum_weekly_plan_json: JSON.stringify({
-      skills: { dates: {} },
-      listening: { dates: {} },
-      math: { dates: {} }
+      skills: { dates: {}, notes: {} },
+      listening: { dates: {}, notes: {} },
+      math: { dates: {}, notes: {} },
+      "kindergarten-math": { dates: {}, notes: {} }
     }),
     skills_units_json: JSON.stringify([]),
     math_modules_json: JSON.stringify([]),
