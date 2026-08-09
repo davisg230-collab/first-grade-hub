@@ -15041,11 +15041,13 @@ function mergeFeatureInfoData(base, incoming) {
     Object.entries(pageData).forEach(([sectionKey, item]) => {
       if (!item || typeof item !== 'object') return;
       const existing = merged[pageKey][sectionKey] || { image: '', description: '' };
+      const incomingImage = typeof item.image === 'string' ? item.image : '';
+      const incomingDescription = typeof item.description === 'string'
+        ? normalizeFeatureInfoDescription(pageKey, sectionKey, item.description)
+        : '';
       merged[pageKey][sectionKey] = {
-        image: typeof item.image === 'string' ? item.image : existing.image || '',
-        description: typeof item.description === 'string'
-          ? normalizeFeatureInfoDescription(pageKey, sectionKey, item.description)
-          : existing.description || ''
+        image: incomingImage || existing.image || '',
+        description: incomingDescription || existing.description || ''
       };
     });
   });
@@ -15073,10 +15075,16 @@ function normalizeFeatureInfoDescription(pageKey, sectionKey, description) {
   return safeDescription;
 }
 
+function shouldSyncFeatureInfoCard(card) {
+  const modal = card.closest('#featureInfoModal');
+  return !modal || modal.classList.contains('open');
+}
+
 function syncFeatureInfoDataFromDom() {
   const nextData = getFeatureInfoData();
 
   document.querySelectorAll('[data-feature-info-card]').forEach(card => {
+    if (!shouldSyncFeatureInfoCard(card)) return;
     const pageKey = card.getAttribute('data-feature-info-page');
     const sectionKey = card.getAttribute('data-feature-info-key');
     if (!pageKey || !sectionKey) return;
@@ -15084,10 +15092,13 @@ function syncFeatureInfoDataFromDom() {
     const imageEl = card.querySelector('[data-feature-info-image]');
     const descriptionEl = card.querySelector('[data-feature-info-description]');
     if (!nextData[pageKey]) nextData[pageKey] = {};
+    const existing = nextData[pageKey][sectionKey] || { image: '', description: '' };
+    const nextImage = imageEl?.getAttribute('data-screenshot-url') || existing.image || '';
+    const nextDescription = normalizeFeatureInfoDescription(pageKey, sectionKey, descriptionEl?.innerHTML || '');
 
     nextData[pageKey][sectionKey] = {
-      image: imageEl?.getAttribute('data-screenshot-url') || '',
-      description: normalizeFeatureInfoDescription(pageKey, sectionKey, descriptionEl?.innerHTML || '')
+      image: nextImage,
+      description: nextDescription || existing.description || ''
     };
   });
 
