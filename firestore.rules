@@ -31,7 +31,7 @@ service cloud.firestore {
         && request.resource.data.scholarName is string
         && request.resource.data.teacherId in ['davis', 'vest']
         && request.resource.data.teacherName is string
-        && request.resource.data.mood in ['great', 'good', 'okay', 'worried', 'sad', 'mad']
+        && request.resource.data.mood in ['great', 'good', 'okay', 'tired', 'worried', 'sad', 'mad']
         && request.resource.data.moodLabel is string
         && request.resource.data.wantsTeacherCheckIn is bool
         && request.resource.data.date is string
