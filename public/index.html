@@ -994,6 +994,7 @@
       flex-direction: column;
       justify-content: center;
       gap: 1.25rem;
+      overflow-y: auto;
     }
     .check-in-prompt {
       color: var(--md-ink);
@@ -1029,6 +1030,16 @@
       padding: 1rem;
       box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--md-pebble) 62%, var(--md-white) 38%), 0 10px 18px rgba(71, 85, 105, .12);
       transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .check-in-mood-grid {
+      grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    }
+    .check-in-mood-grid .check-in-button {
+      min-height: 6.75rem;
+      font-size: clamp(1.15rem, 2vw, 1.55rem);
+    }
+    .check-in-mood-grid .check-in-mood-face {
+      font-size: clamp(2.4rem, 6vw, 4rem);
     }
     .check-in-button:focus-visible,
     .check-in-button:hover {
@@ -6446,7 +6457,14 @@
       chooseMood: '/audio/check-in/choose-mood.mp3',
       teacherHelp: '/audio/check-in/teacher-help.mp3',
       submit: '/audio/check-in/submit.mp3',
-      success: '/audio/check-in/success.mp3'
+      success: '/audio/check-in/success.mp3',
+      mood_great: '/audio/check-in/mood-great.mp3',
+      mood_good: '/audio/check-in/mood-good.mp3',
+      mood_okay: '/audio/check-in/mood-okay.mp3',
+      mood_tired: '/audio/check-in/mood-tired.mp3',
+      mood_worried: '/audio/check-in/mood-worried.mp3',
+      mood_sad: '/audio/check-in/mood-sad.mp3',
+      mood_mad: '/audio/check-in/mood-mad.mp3'
     };
     let scholarCheckInAudioManifestLoaded = false;
     let scholarCheckInCurrentAudioKey = 'chooseTeacher';
@@ -18739,8 +18757,10 @@ async function loadScholarCheckInAudioManifest() {
   }
 }
 
-async function playScholarCheckInAudio(key) {
-  await loadScholarCheckInAudioManifest();
+function playScholarCheckInAudio(key, options = {}) {
+  if (!scholarCheckInAudioManifestLoaded) {
+    loadScholarCheckInAudioManifest();
+  }
   const src = scholarCheckInAudioManifest[key || scholarCheckInCurrentAudioKey];
   if (!src) return;
   try {
@@ -18748,15 +18768,30 @@ async function playScholarCheckInAudio(key) {
     scholarCheckInAudioPlayer.pause();
     scholarCheckInAudioPlayer.src = src;
     scholarCheckInAudioPlayer.currentTime = 0;
-    await scholarCheckInAudioPlayer.play();
+    const playPromise = scholarCheckInAudioPlayer.play();
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch(error => {
+        console.warn('Scholar check-in audio could not play:', error);
+        if (!options.silentBlock) {
+          setScholarCheckInStatus('Tap Replay directions if the sound does not start.', 'info');
+        }
+      });
+    }
   } catch (error) {
     console.warn('Scholar check-in audio could not play:', error);
-    setScholarCheckInStatus('Directions audio is not available yet. You can still use the check-in buttons.', 'info');
+    if (!options.silentBlock) {
+      setScholarCheckInStatus('Tap Replay directions if the sound does not start.', 'info');
+    }
   }
 }
 
 function playScholarCheckInCurrentAudio() {
   playScholarCheckInAudio(scholarCheckInCurrentAudioKey);
+}
+
+function autoPlayScholarCheckInDirections(key) {
+  setScholarCheckInAudioKey(key);
+  playScholarCheckInAudio(key, { silentBlock: true });
 }
 
 function initializeScholarCheckInKiosk() {
@@ -18795,6 +18830,7 @@ function renderScholarCheckInTeacherScreen() {
   content.querySelectorAll('[data-check-in-teacher]').forEach(button => {
     button.addEventListener('click', () => selectScholarCheckInTeacher(button.dataset.checkInTeacher));
   });
+  autoPlayScholarCheckInDirections('chooseTeacher');
 }
 
 function selectScholarCheckInTeacher(teacherId) {
@@ -18803,7 +18839,6 @@ function selectScholarCheckInTeacher(teacherId) {
   scholarCheckInState.mood = null;
   scholarCheckInState.wantsTeacherCheckIn = null;
   renderScholarCheckInScholarScreen();
-  playScholarCheckInAudio('chooseScholar');
 }
 
 function renderScholarCheckInScholarScreen() {
@@ -18833,6 +18868,7 @@ function renderScholarCheckInScholarScreen() {
     button.addEventListener('click', () => selectScholarCheckInScholar(button.dataset.checkInScholar));
   });
   content.querySelector('[data-check-in-back="teacher"]')?.addEventListener('click', renderScholarCheckInTeacherScreen);
+  autoPlayScholarCheckInDirections('chooseScholar');
 }
 
 function selectScholarCheckInScholar(scholarId) {
@@ -18843,7 +18879,6 @@ function selectScholarCheckInScholar(scholarId) {
   scholarCheckInState.mood = null;
   scholarCheckInState.wantsTeacherCheckIn = null;
   renderScholarCheckInMoodScreen();
-  playScholarCheckInAudio('chooseMood');
 }
 
 function renderScholarCheckInMoodScreen() {
@@ -18856,7 +18891,7 @@ function renderScholarCheckInMoodScreen() {
   if (!content) return;
   content.innerHTML = `
     <p class="check-in-prompt">${escapeHtml(scholar?.firstName || 'Scholar')}, how are you feeling today?</p>
-    <div class="check-in-grid">
+    <div class="check-in-grid check-in-mood-grid">
       ${scholarCheckInMoods.map(mood => `
         <button type="button" class="check-in-button" data-check-in-mood="${mood.id}">
           <span class="check-in-mood-face" aria-hidden="true">${mood.face}</span>
@@ -18872,6 +18907,7 @@ function renderScholarCheckInMoodScreen() {
     button.addEventListener('click', () => selectScholarCheckInMood(button.dataset.checkInMood));
   });
   content.querySelector('[data-check-in-back="scholar"]')?.addEventListener('click', renderScholarCheckInScholarScreen);
+  autoPlayScholarCheckInDirections('chooseMood');
 }
 
 function selectScholarCheckInMood(moodId) {
@@ -18879,11 +18915,16 @@ function selectScholarCheckInMood(moodId) {
   if (!mood) return;
   scholarCheckInState.mood = mood;
   scholarCheckInState.wantsTeacherCheckIn = null;
-  renderScholarCheckInSupportScreen();
-  playScholarCheckInAudio('teacherHelp');
+  renderScholarCheckInSupportScreen({ autoPlay: false });
+  playScholarCheckInAudio(`mood_${mood.id}`);
+  setTimeout(() => {
+    if (scholarCheckInState.mood?.id === mood.id) {
+      playScholarCheckInAudio('teacherHelp', { silentBlock: true });
+    }
+  }, 700);
 }
 
-function renderScholarCheckInSupportScreen() {
+function renderScholarCheckInSupportScreen(options = {}) {
   clearScholarCheckInResetTimer();
   const scholar = scholarCheckInState.scholar;
   const mood = scholarCheckInState.mood;
@@ -18906,12 +18947,12 @@ function renderScholarCheckInSupportScreen() {
   content.querySelector('[data-check-in-support="yes"]')?.addEventListener('click', () => selectScholarCheckInSupport(true));
   content.querySelector('[data-check-in-support="no"]')?.addEventListener('click', () => selectScholarCheckInSupport(false));
   content.querySelector('[data-check-in-back="mood"]')?.addEventListener('click', renderScholarCheckInMoodScreen);
+  if (options.autoPlay !== false) autoPlayScholarCheckInDirections('teacherHelp');
 }
 
 function selectScholarCheckInSupport(wantsCheckIn) {
   scholarCheckInState.wantsTeacherCheckIn = wantsCheckIn === true;
   renderScholarCheckInSubmitScreen();
-  playScholarCheckInAudio('submit');
 }
 
 function renderScholarCheckInSubmitScreen() {
@@ -18935,6 +18976,7 @@ function renderScholarCheckInSubmitScreen() {
   content.querySelector('#scholarCheckInSubmitBtn')?.addEventListener('click', submitScholarCheckIn);
   content.querySelector('[data-check-in-back="support"]')?.addEventListener('click', renderScholarCheckInSupportScreen);
   content.querySelector('[data-check-in-start-over]')?.addEventListener('click', renderScholarCheckInTeacherScreen);
+  autoPlayScholarCheckInDirections('submit');
 }
 
 async function ensureScholarCheckInWriteAuth() {
@@ -18979,7 +19021,6 @@ async function submitScholarCheckIn() {
       version: 1
     }, { merge: true });
     renderScholarCheckInSuccessScreen();
-    playScholarCheckInAudio('success');
   } catch (error) {
     console.error('Scholar check-in save failed:', error);
     setScholarCheckInStatus('Check-in could not save. Ask your teacher for help.', 'error');
@@ -19016,6 +19057,7 @@ function renderScholarCheckInSuccessScreen() {
     clearScholarCheckInResetTimer();
     renderScholarCheckInTeacherScreen();
   });
+  autoPlayScholarCheckInDirections('success');
   scholarCheckInResetTimer = setTimeout(() => {
     if (!isScholarCheckInRoute()) return;
     scholarCheckInState = { teacher, scholar: null, mood: null, wantsTeacherCheckIn: null };

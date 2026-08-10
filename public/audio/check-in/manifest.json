@@ -4,5 +4,12 @@
   "chooseMood": "/audio/check-in/choose-mood.mp3",
   "teacherHelp": "/audio/check-in/teacher-help.mp3",
   "submit": "/audio/check-in/submit.mp3",
-  "success": "/audio/check-in/success.mp3"
+  "success": "/audio/check-in/success.mp3",
+  "mood_great": "/audio/check-in/mood-great.mp3",
+  "mood_good": "/audio/check-in/mood-good.mp3",
+  "mood_okay": "/audio/check-in/mood-okay.mp3",
+  "mood_tired": "/audio/check-in/mood-tired.mp3",
+  "mood_worried": "/audio/check-in/mood-worried.mp3",
+  "mood_sad": "/audio/check-in/mood-sad.mp3",
+  "mood_mad": "/audio/check-in/mood-mad.mp3"
 }
