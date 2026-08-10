@@ -1047,6 +1047,11 @@
       transform: translateY(-2px);
       box-shadow: inset 0 0 0 2px var(--md-coral), 0 16px 24px rgba(71, 85, 105, .16);
     }
+    .check-in-button.selected {
+      outline: 4px solid color-mix(in oklab, var(--md-coral) 72%, var(--md-white) 28%);
+      box-shadow: inset 0 0 0 3px var(--md-coral), 0 16px 24px rgba(190, 91, 69, .18);
+      background: color-mix(in oklab, var(--md-white) 72%, var(--md-mustard) 28%);
+    }
     .check-in-teacher-button {
       background: color-mix(in oklab, var(--md-white) 78%, var(--md-pebble) 22%);
       color: var(--md-slate);
@@ -6464,7 +6469,14 @@
       mood_tired: '/audio/check-in/mood-tired.mp3',
       mood_worried: '/audio/check-in/mood-worried.mp3',
       mood_sad: '/audio/check-in/mood-sad.mp3',
-      mood_mad: '/audio/check-in/mood-mad.mp3'
+      mood_mad: '/audio/check-in/mood-mad.mp3',
+      confirm_great: '/audio/check-in/confirm-great.mp3',
+      confirm_good: '/audio/check-in/confirm-good.mp3',
+      confirm_okay: '/audio/check-in/confirm-okay.mp3',
+      confirm_tired: '/audio/check-in/confirm-tired.mp3',
+      confirm_worried: '/audio/check-in/confirm-worried.mp3',
+      confirm_sad: '/audio/check-in/confirm-sad.mp3',
+      confirm_mad: '/audio/check-in/confirm-mad.mp3'
     };
     let scholarCheckInAudioManifestLoaded = false;
     let scholarCheckInCurrentAudioKey = 'chooseTeacher';
@@ -18893,19 +18905,21 @@ function renderScholarCheckInMoodScreen() {
     <p class="check-in-prompt">${escapeHtml(scholar?.firstName || 'Scholar')}, how are you feeling today?</p>
     <div class="check-in-grid check-in-mood-grid">
       ${scholarCheckInMoods.map(mood => `
-        <button type="button" class="check-in-button" data-check-in-mood="${mood.id}">
+        <button type="button" class="check-in-button ${scholarCheckInState.mood?.id === mood.id ? 'selected' : ''}" data-check-in-mood="${mood.id}">
           <span class="check-in-mood-face" aria-hidden="true">${mood.face}</span>
           ${escapeHtml(mood.label)}
         </button>
       `).join('')}
     </div>
     <div class="check-in-action-row">
+      <button id="scholarCheckInMoodContinueBtn" type="button" class="check-in-small-button check-in-submit-button" ${scholarCheckInState.mood ? '' : 'disabled'}>Continue</button>
       <button type="button" class="check-in-small-button" data-check-in-back="scholar">Back</button>
     </div>
   `;
   content.querySelectorAll('[data-check-in-mood]').forEach(button => {
     button.addEventListener('click', () => selectScholarCheckInMood(button.dataset.checkInMood));
   });
+  content.querySelector('#scholarCheckInMoodContinueBtn')?.addEventListener('click', continueFromScholarCheckInMood);
   content.querySelector('[data-check-in-back="scholar"]')?.addEventListener('click', renderScholarCheckInScholarScreen);
   autoPlayScholarCheckInDirections('chooseMood');
 }
@@ -18915,13 +18929,21 @@ function selectScholarCheckInMood(moodId) {
   if (!mood) return;
   scholarCheckInState.mood = mood;
   scholarCheckInState.wantsTeacherCheckIn = null;
-  renderScholarCheckInSupportScreen({ autoPlay: false });
+  document.querySelectorAll('[data-check-in-mood]').forEach(button => {
+    button.classList.toggle('selected', button.dataset.checkInMood === mood.id);
+  });
+  const continueBtn = document.getElementById('scholarCheckInMoodContinueBtn');
+  if (continueBtn) continueBtn.disabled = false;
+  setScholarCheckInStatus(`${mood.label} selected. Tap another feeling to hear it, or tap Continue.`);
   playScholarCheckInAudio(`mood_${mood.id}`);
-  setTimeout(() => {
-    if (scholarCheckInState.mood?.id === mood.id) {
-      playScholarCheckInAudio('teacherHelp', { silentBlock: true });
-    }
-  }, 700);
+}
+
+function continueFromScholarCheckInMood() {
+  if (!scholarCheckInState.mood) {
+    setScholarCheckInStatus('Choose a feeling first.', 'error');
+    return;
+  }
+  renderScholarCheckInSupportScreen();
 }
 
 function renderScholarCheckInSupportScreen(options = {}) {
@@ -18959,24 +18981,23 @@ function renderScholarCheckInSubmitScreen() {
   clearScholarCheckInResetTimer();
   const scholar = scholarCheckInState.scholar;
   const mood = scholarCheckInState.mood;
-  setScholarCheckInHeader('Ready to send', scholar?.firstName || 'Scholar');
-  setScholarCheckInAudioKey('submit');
-  setScholarCheckInStatus('Tap submit when this looks right.');
+  const confirmAudioKey = mood ? `confirm_${mood.id}` : 'submit';
+  setScholarCheckInHeader('Is this correct?', scholar?.firstName || 'Scholar');
+  setScholarCheckInAudioKey(confirmAudioKey);
+  setScholarCheckInStatus('Tap Yes if this is correct. Tap No to start over.');
   const content = document.getElementById('scholarCheckInContent');
   if (!content) return;
   content.innerHTML = `
-    <p class="check-in-prompt">${escapeHtml(scholar?.firstName || 'Scholar')}, you chose ${mood ? mood.face : ''} ${escapeHtml(mood?.label || '')}.</p>
+    <p class="check-in-prompt">${escapeHtml(scholar?.firstName || 'Scholar')}, you chose ${mood ? mood.face : ''} ${escapeHtml(mood?.label || '')}. Is this correct?</p>
     <p class="check-in-subprompt">Teacher check-in: ${scholarCheckInState.wantsTeacherCheckIn ? 'Yes' : 'No'}</p>
     <div class="check-in-action-row">
-      <button id="scholarCheckInSubmitBtn" type="button" class="check-in-small-button check-in-submit-button">Submit</button>
-      <button type="button" class="check-in-small-button" data-check-in-back="support">Back</button>
-      <button type="button" class="check-in-small-button" data-check-in-start-over>Start over</button>
+      <button id="scholarCheckInSubmitBtn" type="button" class="check-in-small-button check-in-submit-button">Yes</button>
+      <button type="button" class="check-in-small-button" data-check-in-start-over>No</button>
     </div>
   `;
   content.querySelector('#scholarCheckInSubmitBtn')?.addEventListener('click', submitScholarCheckIn);
-  content.querySelector('[data-check-in-back="support"]')?.addEventListener('click', renderScholarCheckInSupportScreen);
   content.querySelector('[data-check-in-start-over]')?.addEventListener('click', renderScholarCheckInTeacherScreen);
-  autoPlayScholarCheckInDirections('submit');
+  autoPlayScholarCheckInDirections(confirmAudioKey);
 }
 
 async function ensureScholarCheckInWriteAuth() {

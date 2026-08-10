@@ -11,5 +11,12 @@
   "mood_tired": "/audio/check-in/mood-tired.mp3",
   "mood_worried": "/audio/check-in/mood-worried.mp3",
   "mood_sad": "/audio/check-in/mood-sad.mp3",
-  "mood_mad": "/audio/check-in/mood-mad.mp3"
+  "mood_mad": "/audio/check-in/mood-mad.mp3",
+  "confirm_great": "/audio/check-in/confirm-great.mp3",
+  "confirm_good": "/audio/check-in/confirm-good.mp3",
+  "confirm_okay": "/audio/check-in/confirm-okay.mp3",
+  "confirm_tired": "/audio/check-in/confirm-tired.mp3",
+  "confirm_worried": "/audio/check-in/confirm-worried.mp3",
+  "confirm_sad": "/audio/check-in/confirm-sad.mp3",
+  "confirm_mad": "/audio/check-in/confirm-mad.mp3"
 }
