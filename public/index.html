@@ -917,6 +917,271 @@
         margin: .45in;
       }
     }
+    .scholar-check-in-kiosk[hidden] {
+      display: none !important;
+    }
+    body.scholar-check-in-mode {
+      background: var(--md-cream);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    body.scholar-check-in-mode > header,
+    body.scholar-check-in-mode > .w-full,
+    body.scholar-check-in-mode > main,
+    body.scholar-check-in-mode > #pinOverlay {
+      display: none !important;
+    }
+    .scholar-check-in-kiosk {
+      min-height: 100vh;
+      width: 100%;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      padding: clamp(1rem, 3vw, 2.5rem);
+      background:
+        linear-gradient(135deg, color-mix(in oklab, var(--md-cream) 88%, var(--md-mustard) 12%), var(--md-cream) 45%),
+        var(--md-cream);
+    }
+    .check-in-stage {
+      width: min(74rem, 100%);
+      min-height: calc(100vh - clamp(2rem, 6vw, 5rem));
+      background: var(--card-bg);
+      border: 1px solid color-mix(in oklab, var(--md-pebble) 74%, var(--md-white) 26%);
+      border-radius: 1.5rem;
+      box-shadow: 0 18px 45px rgba(71, 85, 105, .18);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      overflow: hidden;
+    }
+    .check-in-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: clamp(1.25rem, 3vw, 2rem);
+      border-bottom: 1px solid color-mix(in oklab, var(--md-pebble) 62%, var(--md-white) 38%);
+      background: color-mix(in oklab, var(--md-white) 78%, var(--md-pebble) 22%);
+    }
+    .check-in-kicker {
+      color: var(--md-coral);
+      font-size: .85rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin: 0 0 .35rem;
+    }
+    .check-in-title {
+      font-family: var(--font-display, inherit);
+      font-size: clamp(2rem, 5vw, 4.5rem);
+      line-height: .95;
+      color: var(--md-slate);
+      margin: 0;
+    }
+    .check-in-replay {
+      border: 0;
+      border-radius: 999px;
+      background: var(--md-slate);
+      color: var(--md-white);
+      font-weight: 800;
+      padding: .85rem 1rem;
+      min-height: 3rem;
+      white-space: nowrap;
+      box-shadow: 0 10px 20px rgba(71, 85, 105, .18);
+    }
+    .check-in-content {
+      padding: clamp(1.25rem, 4vw, 2.5rem);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 1.25rem;
+    }
+    .check-in-prompt {
+      color: var(--md-ink);
+      font-size: clamp(1.4rem, 3vw, 2.4rem);
+      line-height: 1.15;
+      font-weight: 800;
+      text-align: center;
+      max-width: 58rem;
+      margin: 0 auto;
+    }
+    .check-in-subprompt {
+      color: color-mix(in oklab, var(--md-ink) 78%, var(--md-white));
+      font-size: clamp(1rem, 1.8vw, 1.25rem);
+      font-weight: 700;
+      text-align: center;
+      margin: -.35rem auto .35rem;
+      max-width: 46rem;
+    }
+    .check-in-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+      gap: 1rem;
+      width: 100%;
+    }
+    .check-in-button {
+      border: 0;
+      border-radius: 1.15rem;
+      background: var(--md-white);
+      color: var(--md-ink);
+      font-weight: 900;
+      font-size: clamp(1.3rem, 2.5vw, 2rem);
+      min-height: 8rem;
+      padding: 1rem;
+      box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--md-pebble) 62%, var(--md-white) 38%), 0 10px 18px rgba(71, 85, 105, .12);
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .check-in-button:focus-visible,
+    .check-in-button:hover {
+      outline: 4px solid color-mix(in oklab, var(--md-mustard) 70%, var(--md-white) 30%);
+      transform: translateY(-2px);
+      box-shadow: inset 0 0 0 2px var(--md-coral), 0 16px 24px rgba(71, 85, 105, .16);
+    }
+    .check-in-teacher-button {
+      background: color-mix(in oklab, var(--md-white) 78%, var(--md-pebble) 22%);
+      color: var(--md-slate);
+    }
+    .check-in-mood-face {
+      display: block;
+      font-size: clamp(3rem, 8vw, 5.25rem);
+      line-height: 1;
+      margin-bottom: .5rem;
+    }
+    .check-in-choice-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+      max-width: 40rem;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .check-in-action-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: .75rem;
+      margin-top: .5rem;
+    }
+    .check-in-small-button {
+      border: 0;
+      border-radius: .9rem;
+      background: var(--md-pebble);
+      color: var(--md-ink);
+      font-weight: 800;
+      padding: .85rem 1.1rem;
+      min-height: 2.9rem;
+    }
+    .check-in-submit-button {
+      background: var(--md-coral);
+      color: var(--md-white);
+    }
+    .check-in-footer {
+      min-height: 3.25rem;
+      padding: .85rem clamp(1.25rem, 3vw, 2rem);
+      border-top: 1px solid color-mix(in oklab, var(--md-pebble) 62%, var(--md-white) 38%);
+      color: color-mix(in oklab, var(--md-ink) 76%, var(--md-white));
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .check-in-dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+      gap: .9rem;
+    }
+    .check-in-stat-card,
+    .check-in-panel-card {
+      background: var(--md-white);
+      border: 1px solid color-mix(in oklab, var(--md-pebble) 70%, var(--md-white) 30%);
+      border-radius: 1rem;
+      box-shadow: 0 8px 18px rgba(71, 85, 105, .08);
+    }
+    .check-in-stat-card {
+      padding: 1rem;
+    }
+    .check-in-stat-label {
+      color: color-mix(in oklab, var(--md-ink) 70%, var(--md-white));
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+    .check-in-stat-value {
+      color: var(--md-slate);
+      font-family: var(--font-display, inherit);
+      font-size: 2rem;
+      font-weight: 900;
+      line-height: 1;
+      margin-top: .35rem;
+    }
+    .check-in-dashboard-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .6rem;
+    }
+    .check-in-dashboard-tab {
+      border: 0;
+      border-radius: 999px;
+      background: var(--md-pebble);
+      color: var(--md-ink);
+      font-weight: 800;
+      padding: .7rem 1rem;
+    }
+    .check-in-dashboard-tab.active {
+      background: var(--md-coral);
+      color: var(--md-white);
+    }
+    .check-in-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .92rem;
+    }
+    .check-in-table th,
+    .check-in-table td {
+      border-bottom: 1px solid color-mix(in oklab, var(--md-pebble) 65%, var(--md-white) 35%);
+      padding: .75rem .65rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    .check-in-table th {
+      color: var(--md-slate);
+      background: color-mix(in oklab, var(--md-white) 70%, var(--md-pebble) 30%);
+      font-size: .78rem;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .check-in-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .25rem;
+      border-radius: 999px;
+      background: color-mix(in oklab, var(--md-mustard) 24%, var(--md-white) 76%);
+      color: var(--md-ink);
+      font-size: .78rem;
+      font-weight: 800;
+      padding: .25rem .55rem;
+      margin: .12rem .2rem .12rem 0;
+    }
+    @media (max-width: 720px) {
+      .check-in-header {
+        flex-direction: column;
+      }
+      .check-in-replay {
+        width: 100%;
+      }
+      .check-in-choice-row {
+        grid-template-columns: 1fr;
+      }
+      .check-in-button {
+        min-height: 6.5rem;
+      }
+    }
+    @media print {
+      .check-in-no-print {
+        display: none !important;
+      }
+    }
     /* Photo card and gallery cursor only in edit mode */
     .photo-card{cursor: default;}
     body.editing .photo-card{cursor: pointer;}
@@ -3028,6 +3293,19 @@
   </style>
 </head>
 <body class="bg-[color:var(--md-cream)] text-[color:var(--md-ink)] font-body">
+  <div id="scholarCheckInKiosk" class="scholar-check-in-kiosk" hidden>
+    <div class="check-in-stage" role="application" aria-label="Scholar mood check-in">
+      <div class="check-in-header">
+        <div>
+          <p id="scholarCheckInKicker" class="check-in-kicker">Scholar Check-In</p>
+          <h1 id="scholarCheckInTitle" class="check-in-title">How are you feeling?</h1>
+        </div>
+        <button id="scholarCheckInReplayBtn" type="button" class="check-in-replay" onclick="playScholarCheckInCurrentAudio()">Replay directions</button>
+      </div>
+      <div id="scholarCheckInContent" class="check-in-content"></div>
+      <div id="scholarCheckInStatus" class="check-in-footer" aria-live="polite"></div>
+    </div>
+  </div>
   <!-- HEADER -->
   <header class="relative w-full" style="background: var(--hdr-bg);">
     <!-- Shoutout Button - positioned in top right -->
@@ -4040,6 +4318,10 @@
               <h3 class="font-display font-bold">Roster Tools</h3>
               <p>Manage scholars, dismissal, family contacts, birthdays, and classroom records.</p>
             </button>
+            <button id="teacherCheckInTool" type="button" class="teacher-tool-book" style="background: linear-gradient(90deg, #6d5d39 0 .55rem, var(--md-mustard) .55rem); color: var(--md-ink);" onclick="openScholarCheckInTool()">
+              <h3 class="font-display font-bold">Scholar Check-In</h3>
+              <p>Review daily mood check-ins, teacher check-in requests, and individual scholar history.</p>
+            </button>
             <button type="button" class="teacher-tool-book" style="background: linear-gradient(90deg, #b45309 0 .55rem, var(--md-mustard) .55rem); color: var(--md-ink);" disabled>
               <h3 class="font-display font-bold">Printables</h3>
               <p style="color: color-mix(in oklab, var(--md-ink) 78%, var(--md-white));">Coming later for quick forms, notes, and family handouts.</p>
@@ -4556,6 +4838,53 @@
               <div id="curriculumCalendarDayDetail" class="curriculum-calendar-detail">
                 <p class="text-sm text-gray-500">Choose a day to view scheduled lessons.</p>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- SCHOLAR CHECK-IN DASHBOARD -->
+    <section data-page-panel="check-in-dashboard" class="pagePanel fade-in">
+      <div class="rounded-2xl shadow-soft p-6 sm:p-8 mb-8" style="background: var(--card-bg);">
+        <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-6">
+          <div>
+            <p class="text-sm font-bold uppercase tracking-wide" style="color: var(--md-slate);">Teacher Tools</p>
+            <h2 class="text-3xl font-display font-bold" style="color: var(--md-coral);">Scholar Check-In</h2>
+            <p class="mt-2 text-sm text-[color:var(--md-ink)]/80 max-w-3xl">View today's mood check-ins, teacher check-in requests, and individual scholar history.</p>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-2 check-in-no-print">
+            <button type="button" class="curriculum-builder-button inline-flex px-4 py-2" style="background: var(--md-pebble); color: var(--md-ink);" onclick="returnToTeacherTools()">Back to Tools</button>
+            <a href="/check-in" target="_blank" class="curriculum-builder-button inline-flex px-4 py-2 text-white" style="background: var(--md-mustard); color: var(--md-ink);">Open Kiosk</a>
+            <button type="button" class="curriculum-builder-button inline-flex px-4 py-2 text-white" style="background: var(--md-slate);" onclick="refreshScholarCheckInDashboard()">Refresh</button>
+            <button type="button" class="curriculum-builder-button inline-flex px-4 py-2 text-white" style="background: var(--md-coral);" onclick="printScholarCheckInDashboard()">Print Today</button>
+          </div>
+        </div>
+        <div id="scholarCheckInDashboardStatus" class="mb-4 text-sm font-semibold" aria-live="polite"></div>
+        <div id="scholarCheckInTeacherTabs" class="check-in-dashboard-tabs mb-4"></div>
+        <div id="scholarCheckInStats" class="check-in-dashboard-grid mb-5"></div>
+        <div class="grid lg:grid-cols-[minmax(0,1.2fr)_minmax(20rem,.8fr)] gap-5">
+          <div class="check-in-panel-card p-4 sm:p-5 overflow-x-auto">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+              <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">Today</h3>
+              <span id="scholarCheckInTodayLabel" class="text-sm font-bold text-gray-500"></span>
+            </div>
+            <div id="scholarCheckInTodayList"></div>
+          </div>
+          <div class="grid gap-5">
+            <div class="check-in-panel-card p-4 sm:p-5">
+              <h3 class="text-xl font-display font-bold mb-3" style="color: var(--md-slate);">Teacher Check-In Requests</h3>
+              <div id="scholarCheckInNeedTeacherList" class="text-sm"></div>
+            </div>
+            <div class="check-in-panel-card p-4 sm:p-5">
+              <div class="flex flex-col sm:flex-row sm:items-end gap-3 mb-3">
+                <div class="flex-1">
+                  <label class="curriculum-builder-label" for="scholarCheckInHistorySelect">Scholar history</label>
+                  <select id="scholarCheckInHistorySelect" class="curriculum-builder-field" onchange="selectScholarCheckInHistory(this.value)">
+                    <option value="">Choose scholar</option>
+                  </select>
+                </div>
+              </div>
+              <div id="scholarCheckInHistoryPanel" class="text-sm"></div>
             </div>
           </div>
         </div>
@@ -5194,6 +5523,8 @@
         syncMobileSpecialsCards();
       } else if (pageId === 'curriculum-builder') {
         initializeCurriculumBuilder();
+      } else if (pageId === 'check-in-dashboard') {
+        renderScholarCheckInDashboardShell();
       }
     }
 
@@ -5932,8 +6263,12 @@
       }
     }
     document.addEventListener('DOMContentLoaded',async function(){
-      showPage('home');
-      showHomeSubView('news');
+      if (isScholarCheckInRoute()) {
+        document.body.classList.add('scholar-check-in-mode');
+      } else {
+        showPage('home');
+        showHomeSubView('news');
+      }
       if (typeof renderAnimatedMainHeading === 'function') renderAnimatedMainHeading();
       wireMobileHomeNewsCards();
       wireMobileSnackCards();
@@ -6091,6 +6426,43 @@
     let teacherRosterUnlocked = false;
     let rosterEditMode = false;
     let activeRosterClassTab = 'davis';
+    const SCHOLAR_CHECK_IN_COLLECTION = 'scholarCheckIns';
+    const scholarCheckInTeachers = [
+      { id: 'davis', name: 'Mr. Davis' },
+      { id: 'vest', name: 'Ms. Vest' }
+    ];
+    const scholarCheckInMoods = [
+      { id: 'great', label: 'Great', face: '&#128512;' },
+      { id: 'good', label: 'Good', face: '&#128578;' },
+      { id: 'okay', label: 'Okay', face: '&#128528;' },
+      { id: 'worried', label: 'Worried', face: '&#128543;' },
+      { id: 'sad', label: 'Sad', face: '&#128546;' },
+      { id: 'mad', label: 'Mad', face: '&#128545;' }
+    ];
+    let scholarCheckInAudioManifest = {
+      chooseTeacher: '/audio/check-in/choose-teacher.mp3',
+      chooseScholar: '/audio/check-in/choose-scholar.mp3',
+      chooseMood: '/audio/check-in/choose-mood.mp3',
+      teacherHelp: '/audio/check-in/teacher-help.mp3',
+      submit: '/audio/check-in/submit.mp3',
+      success: '/audio/check-in/success.mp3'
+    };
+    let scholarCheckInAudioManifestLoaded = false;
+    let scholarCheckInCurrentAudioKey = 'chooseTeacher';
+    let scholarCheckInAudioPlayer = null;
+    let scholarCheckInResetTimer = null;
+    let scholarCheckInState = {
+      teacher: null,
+      scholar: null,
+      mood: null,
+      wantsTeacherCheckIn: null
+    };
+    let scholarCheckInDashboardState = {
+      teacherId: 'davis',
+      selectedScholarId: '',
+      todayRecords: [],
+      historyRecords: []
+    };
     let learningMobileActiveDays = { skills: 0, listening: 0, math: 0 };
     let learningLessonDataCache = { skills: null, listening: null, math: null };
 
@@ -15273,6 +15645,9 @@ function populateDataFromSheet(data) {
   }
 
   renderAnimatedMainHeading();
+  if (isScholarCheckInRoute()) {
+    initializeScholarCheckInKiosk();
+  }
 }
 
 // Function to update Learning Hub Info page
@@ -18254,6 +18629,692 @@ function printGuardianFamilySheet() {
     </tr>
   `).join('') : '<tr><td colspan="6">No guardians added yet.</td></tr>';
   const printHtml = `<!doctype html><html><head><title>${escapeHtml(scholar.name)} Family Information</title><style>@page{margin:.45in;}body{font-family:Arial,sans-serif;color:#1f2937;}h1{margin:0;color:#475569;}h2{margin:20px 0 8px;color:#475569;font-size:17px;}p{margin:4px 0 10px;color:#4b5563;}table{width:100%;border-collapse:collapse;font-size:12px;}th{background:#f7efe2;color:#475569;text-align:left;}th,td{border:1px solid #d8c7ad;padding:7px 8px;vertical-align:top;}tr{break-inside:avoid;}</style></head><body><h1>${escapeHtml(scholar.name)}</h1><p>${escapeHtml(getRosterClassLabel(scholar.classKey))}</p><h2>Transportation</h2><p><strong>Current:</strong> ${escapeHtml(getTransportationStatus(scholar))}</p><p><strong>Details:</strong> ${escapeHtml(scholar.details || '')}</p><h2>Family And Guardian Information</h2><table><thead><tr><th>Name</th><th>Relationship</th><th>Phone</th><th>Email</th><th>Pickup</th><th>Transportation Changes</th></tr></thead><tbody>${guardianRows}</tbody></table></body></html>`;
+  printWindow.document.open();
+  printWindow.document.write(printHtml);
+  printWindow.document.close();
+  setTimeout(() => {
+    printWindow.focus();
+    printWindow.print();
+  }, 150);
+}
+
+function isScholarCheckInRoute() {
+  const path = String(window.location.pathname || '').replace(/\/+$/, '');
+  return path === '/check-in';
+}
+
+function getScholarCheckInTodayKey() {
+  if (typeof getTodayDateKey === 'function') return getTodayDateKey();
+  const today = new Date();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${today.getFullYear()}-${month}-${day}`;
+}
+
+function getScholarCheckInTeacherById(teacherId) {
+  const cleanId = normalizeRosterClass(teacherId || 'davis');
+  return scholarCheckInTeachers.find(teacher => teacher.id === cleanId) || scholarCheckInTeachers[0];
+}
+
+function getScholarCheckInMoodById(moodId) {
+  return scholarCheckInMoods.find(mood => mood.id === moodId) || null;
+}
+
+function splitScholarCheckInName(name) {
+  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+  return {
+    firstName: parts[0] || '',
+    lastName: parts.length > 1 ? parts[parts.length - 1] : ''
+  };
+}
+
+function getScholarCheckInRecordFromRosterRow(row) {
+  const name = String(row?.name || '').trim();
+  const names = splitScholarCheckInName(name);
+  return {
+    id: getScholarGuardianKey(row) || normalizeGuardianName(name).replace(/\s+/g, '-') || `scholar-${Date.now()}`,
+    name,
+    firstName: names.firstName,
+    lastName: names.lastName,
+    teacherId: normalizeRosterClass(row?.classKey || 'davis'),
+    transportation: getTransportationStatus(row || {})
+  };
+}
+
+function getScholarCheckInRoster(teacherId = '') {
+  const teacherFilter = teacherId ? normalizeRosterClass(teacherId) : '';
+  const seen = new Set();
+  return getMasterRosterRowData()
+    .map(getScholarCheckInRecordFromRosterRow)
+    .filter(scholar => scholar.name && (!teacherFilter || scholar.teacherId === teacherFilter))
+    .filter(scholar => {
+      if (seen.has(scholar.id)) return false;
+      seen.add(scholar.id);
+      return true;
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function setScholarCheckInStatus(message, type = 'info') {
+  const status = document.getElementById('scholarCheckInStatus');
+  if (!status) return;
+  status.textContent = message || '';
+  status.style.color = type === 'error' ? '#b91c1c' : (type === 'success' ? '#166534' : '');
+}
+
+function setScholarCheckInHeader(title, kicker = 'Scholar Check-In') {
+  const titleEl = document.getElementById('scholarCheckInTitle');
+  const kickerEl = document.getElementById('scholarCheckInKicker');
+  if (titleEl) titleEl.textContent = title;
+  if (kickerEl) kickerEl.textContent = kicker;
+}
+
+function clearScholarCheckInResetTimer() {
+  if (scholarCheckInResetTimer) {
+    clearTimeout(scholarCheckInResetTimer);
+    scholarCheckInResetTimer = null;
+  }
+}
+
+function setScholarCheckInAudioKey(key) {
+  scholarCheckInCurrentAudioKey = key || 'chooseTeacher';
+}
+
+async function loadScholarCheckInAudioManifest() {
+  if (scholarCheckInAudioManifestLoaded) return;
+  scholarCheckInAudioManifestLoaded = true;
+  try {
+    const response = await fetch('/audio/check-in/manifest.json', { cache: 'no-cache' });
+    if (!response.ok) return;
+    const manifest = await response.json();
+    const files = manifest && typeof manifest === 'object' && manifest.files && typeof manifest.files === 'object'
+      ? manifest.files
+      : manifest;
+    if (files && typeof files === 'object') {
+      scholarCheckInAudioManifest = { ...scholarCheckInAudioManifest, ...files };
+    }
+  } catch (error) {
+    console.warn('Scholar check-in audio manifest was not available:', error);
+  }
+}
+
+async function playScholarCheckInAudio(key) {
+  await loadScholarCheckInAudioManifest();
+  const src = scholarCheckInAudioManifest[key || scholarCheckInCurrentAudioKey];
+  if (!src) return;
+  try {
+    if (!scholarCheckInAudioPlayer) scholarCheckInAudioPlayer = new Audio();
+    scholarCheckInAudioPlayer.pause();
+    scholarCheckInAudioPlayer.src = src;
+    scholarCheckInAudioPlayer.currentTime = 0;
+    await scholarCheckInAudioPlayer.play();
+  } catch (error) {
+    console.warn('Scholar check-in audio could not play:', error);
+    setScholarCheckInStatus('Directions audio is not available yet. You can still use the check-in buttons.', 'info');
+  }
+}
+
+function playScholarCheckInCurrentAudio() {
+  playScholarCheckInAudio(scholarCheckInCurrentAudioKey);
+}
+
+function initializeScholarCheckInKiosk() {
+  document.body.classList.add('scholar-check-in-mode');
+  const kiosk = document.getElementById('scholarCheckInKiosk');
+  if (kiosk) kiosk.hidden = false;
+  if (!scholarCheckInState.teacher) {
+    renderScholarCheckInTeacherScreen();
+  } else if (!scholarCheckInState.scholar) {
+    renderScholarCheckInScholarScreen();
+  } else if (!scholarCheckInState.mood) {
+    renderScholarCheckInMoodScreen();
+  } else {
+    renderScholarCheckInSupportScreen();
+  }
+}
+
+function renderScholarCheckInTeacherScreen() {
+  clearScholarCheckInResetTimer();
+  scholarCheckInState = { teacher: null, scholar: null, mood: null, wantsTeacherCheckIn: null };
+  setScholarCheckInHeader('Tap your teacher');
+  setScholarCheckInAudioKey('chooseTeacher');
+  setScholarCheckInStatus('Choose your class to begin.');
+  const content = document.getElementById('scholarCheckInContent');
+  if (!content) return;
+  content.innerHTML = `
+    <p class="check-in-prompt">Who is your teacher?</p>
+    <div class="check-in-grid">
+      ${scholarCheckInTeachers.map(teacher => `
+        <button type="button" class="check-in-button check-in-teacher-button" data-check-in-teacher="${teacher.id}">
+          ${escapeHtml(teacher.name)}
+        </button>
+      `).join('')}
+    </div>
+  `;
+  content.querySelectorAll('[data-check-in-teacher]').forEach(button => {
+    button.addEventListener('click', () => selectScholarCheckInTeacher(button.dataset.checkInTeacher));
+  });
+}
+
+function selectScholarCheckInTeacher(teacherId) {
+  scholarCheckInState.teacher = getScholarCheckInTeacherById(teacherId);
+  scholarCheckInState.scholar = null;
+  scholarCheckInState.mood = null;
+  scholarCheckInState.wantsTeacherCheckIn = null;
+  renderScholarCheckInScholarScreen();
+  playScholarCheckInAudio('chooseScholar');
+}
+
+function renderScholarCheckInScholarScreen() {
+  clearScholarCheckInResetTimer();
+  const teacher = scholarCheckInState.teacher || scholarCheckInTeachers[0];
+  const roster = getScholarCheckInRoster(teacher.id);
+  setScholarCheckInHeader('Tap your name', teacher.name);
+  setScholarCheckInAudioKey('chooseScholar');
+  setScholarCheckInStatus(roster.length ? 'Choose only your own name.' : 'No scholars are listed for this class yet.');
+  const content = document.getElementById('scholarCheckInContent');
+  if (!content) return;
+  content.innerHTML = `
+    <p class="check-in-prompt">Find your name.</p>
+    <p class="check-in-subprompt">${escapeHtml(teacher.name)} class</p>
+    <div class="check-in-grid">
+      ${roster.map(scholar => `
+        <button type="button" class="check-in-button" data-check-in-scholar="${scholar.id}">
+          ${escapeHtml(scholar.firstName || scholar.name)}
+        </button>
+      `).join('') || '<div class="check-in-panel-card p-5 text-center font-bold">Ask your teacher to add the roster first.</div>'}
+    </div>
+    <div class="check-in-action-row">
+      <button type="button" class="check-in-small-button" data-check-in-back="teacher">Back</button>
+    </div>
+  `;
+  content.querySelectorAll('[data-check-in-scholar]').forEach(button => {
+    button.addEventListener('click', () => selectScholarCheckInScholar(button.dataset.checkInScholar));
+  });
+  content.querySelector('[data-check-in-back="teacher"]')?.addEventListener('click', renderScholarCheckInTeacherScreen);
+}
+
+function selectScholarCheckInScholar(scholarId) {
+  const teacher = scholarCheckInState.teacher || scholarCheckInTeachers[0];
+  const scholar = getScholarCheckInRoster(teacher.id).find(item => item.id === scholarId);
+  if (!scholar) return;
+  scholarCheckInState.scholar = scholar;
+  scholarCheckInState.mood = null;
+  scholarCheckInState.wantsTeacherCheckIn = null;
+  renderScholarCheckInMoodScreen();
+  playScholarCheckInAudio('chooseMood');
+}
+
+function renderScholarCheckInMoodScreen() {
+  clearScholarCheckInResetTimer();
+  const scholar = scholarCheckInState.scholar;
+  setScholarCheckInHeader('How are you feeling?', scholar?.firstName || 'Scholar');
+  setScholarCheckInAudioKey('chooseMood');
+  setScholarCheckInStatus('Tap the feeling that is closest to how you feel right now.');
+  const content = document.getElementById('scholarCheckInContent');
+  if (!content) return;
+  content.innerHTML = `
+    <p class="check-in-prompt">${escapeHtml(scholar?.firstName || 'Scholar')}, how are you feeling today?</p>
+    <div class="check-in-grid">
+      ${scholarCheckInMoods.map(mood => `
+        <button type="button" class="check-in-button" data-check-in-mood="${mood.id}">
+          <span class="check-in-mood-face" aria-hidden="true">${mood.face}</span>
+          ${escapeHtml(mood.label)}
+        </button>
+      `).join('')}
+    </div>
+    <div class="check-in-action-row">
+      <button type="button" class="check-in-small-button" data-check-in-back="scholar">Back</button>
+    </div>
+  `;
+  content.querySelectorAll('[data-check-in-mood]').forEach(button => {
+    button.addEventListener('click', () => selectScholarCheckInMood(button.dataset.checkInMood));
+  });
+  content.querySelector('[data-check-in-back="scholar"]')?.addEventListener('click', renderScholarCheckInScholarScreen);
+}
+
+function selectScholarCheckInMood(moodId) {
+  const mood = getScholarCheckInMoodById(moodId);
+  if (!mood) return;
+  scholarCheckInState.mood = mood;
+  scholarCheckInState.wantsTeacherCheckIn = null;
+  renderScholarCheckInSupportScreen();
+  playScholarCheckInAudio('teacherHelp');
+}
+
+function renderScholarCheckInSupportScreen() {
+  clearScholarCheckInResetTimer();
+  const scholar = scholarCheckInState.scholar;
+  const mood = scholarCheckInState.mood;
+  setScholarCheckInHeader('Teacher check-in?', scholar?.firstName || 'Scholar');
+  setScholarCheckInAudioKey('teacherHelp');
+  setScholarCheckInStatus('Tell your teacher if you would like a private check-in.');
+  const content = document.getElementById('scholarCheckInContent');
+  if (!content) return;
+  content.innerHTML = `
+    <p class="check-in-prompt">Do you want your teacher to check in with you today?</p>
+    <p class="check-in-subprompt">You picked: ${mood ? mood.face : ''} ${escapeHtml(mood?.label || '')}</p>
+    <div class="check-in-choice-row">
+      <button type="button" class="check-in-button" data-check-in-support="yes">Yes</button>
+      <button type="button" class="check-in-button" data-check-in-support="no">No</button>
+    </div>
+    <div class="check-in-action-row">
+      <button type="button" class="check-in-small-button" data-check-in-back="mood">Back</button>
+    </div>
+  `;
+  content.querySelector('[data-check-in-support="yes"]')?.addEventListener('click', () => selectScholarCheckInSupport(true));
+  content.querySelector('[data-check-in-support="no"]')?.addEventListener('click', () => selectScholarCheckInSupport(false));
+  content.querySelector('[data-check-in-back="mood"]')?.addEventListener('click', renderScholarCheckInMoodScreen);
+}
+
+function selectScholarCheckInSupport(wantsCheckIn) {
+  scholarCheckInState.wantsTeacherCheckIn = wantsCheckIn === true;
+  renderScholarCheckInSubmitScreen();
+  playScholarCheckInAudio('submit');
+}
+
+function renderScholarCheckInSubmitScreen() {
+  clearScholarCheckInResetTimer();
+  const scholar = scholarCheckInState.scholar;
+  const mood = scholarCheckInState.mood;
+  setScholarCheckInHeader('Ready to send', scholar?.firstName || 'Scholar');
+  setScholarCheckInAudioKey('submit');
+  setScholarCheckInStatus('Tap submit when this looks right.');
+  const content = document.getElementById('scholarCheckInContent');
+  if (!content) return;
+  content.innerHTML = `
+    <p class="check-in-prompt">${escapeHtml(scholar?.firstName || 'Scholar')}, you chose ${mood ? mood.face : ''} ${escapeHtml(mood?.label || '')}.</p>
+    <p class="check-in-subprompt">Teacher check-in: ${scholarCheckInState.wantsTeacherCheckIn ? 'Yes' : 'No'}</p>
+    <div class="check-in-action-row">
+      <button id="scholarCheckInSubmitBtn" type="button" class="check-in-small-button check-in-submit-button">Submit</button>
+      <button type="button" class="check-in-small-button" data-check-in-back="support">Back</button>
+      <button type="button" class="check-in-small-button" data-check-in-start-over>Start over</button>
+    </div>
+  `;
+  content.querySelector('#scholarCheckInSubmitBtn')?.addEventListener('click', submitScholarCheckIn);
+  content.querySelector('[data-check-in-back="support"]')?.addEventListener('click', renderScholarCheckInSupportScreen);
+  content.querySelector('[data-check-in-start-over]')?.addEventListener('click', renderScholarCheckInTeacherScreen);
+}
+
+async function ensureScholarCheckInWriteAuth() {
+  if (!auth) throw new Error('Firebase sign-in is not available.');
+  if (!auth.currentUser) {
+    await auth.signInAnonymously();
+  }
+  return auth.currentUser;
+}
+
+async function submitScholarCheckIn() {
+  const teacher = scholarCheckInState.teacher;
+  const scholar = scholarCheckInState.scholar;
+  const mood = scholarCheckInState.mood;
+  if (!db || !teacher || !scholar || !mood || scholarCheckInState.wantsTeacherCheckIn === null) {
+    setScholarCheckInStatus('Check-in is missing a choice. Please start again.', 'error');
+    return;
+  }
+  const submitBtn = document.getElementById('scholarCheckInSubmitBtn');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+  }
+  try {
+    await ensureScholarCheckInWriteAuth();
+    const dateKey = getScholarCheckInTodayKey();
+    const docId = `${dateKey}_${teacher.id}_${scholar.id}`;
+    await db.collection(SCHOLAR_CHECK_IN_COLLECTION).doc(docId).set({
+      scholarId: scholar.id,
+      scholarName: scholar.name,
+      scholarFirstName: scholar.firstName,
+      scholarLastName: scholar.lastName,
+      teacherId: teacher.id,
+      teacherName: teacher.name,
+      mood: mood.id,
+      moodLabel: mood.label,
+      wantsTeacherCheckIn: scholarCheckInState.wantsTeacherCheckIn === true,
+      date: dateKey,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      source: 'scholar-check-in-kiosk',
+      version: 1
+    }, { merge: true });
+    renderScholarCheckInSuccessScreen();
+    playScholarCheckInAudio('success');
+  } catch (error) {
+    console.error('Scholar check-in save failed:', error);
+    setScholarCheckInStatus('Check-in could not save. Ask your teacher for help.', 'error');
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Submit';
+    }
+  }
+}
+
+function renderScholarCheckInSuccessScreen() {
+  clearScholarCheckInResetTimer();
+  const teacher = scholarCheckInState.teacher;
+  const scholar = scholarCheckInState.scholar;
+  setScholarCheckInHeader('All done', scholar?.firstName || 'Scholar');
+  setScholarCheckInAudioKey('success');
+  setScholarCheckInStatus('Thank you. The next scholar can check in.');
+  const content = document.getElementById('scholarCheckInContent');
+  if (!content) return;
+  content.innerHTML = `
+    <p class="check-in-prompt">Thank you, ${escapeHtml(scholar?.firstName || 'scholar')}.</p>
+    <p class="check-in-subprompt">Your check-in was sent to your teacher.</p>
+    <div class="check-in-action-row">
+      <button type="button" class="check-in-small-button check-in-submit-button" data-check-in-next>Next scholar</button>
+      <button type="button" class="check-in-small-button" data-check-in-switch>Switch class</button>
+    </div>
+  `;
+  content.querySelector('[data-check-in-next]')?.addEventListener('click', () => {
+    clearScholarCheckInResetTimer();
+    scholarCheckInState = { teacher, scholar: null, mood: null, wantsTeacherCheckIn: null };
+    renderScholarCheckInScholarScreen();
+  });
+  content.querySelector('[data-check-in-switch]')?.addEventListener('click', () => {
+    clearScholarCheckInResetTimer();
+    renderScholarCheckInTeacherScreen();
+  });
+  scholarCheckInResetTimer = setTimeout(() => {
+    if (!isScholarCheckInRoute()) return;
+    scholarCheckInState = { teacher, scholar: null, mood: null, wantsTeacherCheckIn: null };
+    renderScholarCheckInScholarScreen();
+  }, 3500);
+}
+
+function getScholarCheckInTeacherScope(user = getApprovedCurriculumUser()) {
+  const email = getEditorUserEmail(user);
+  if (!email) return [];
+  if (email === 'lvest1010@gmail.com' || email === 'lvest@crossroadsschoolskc.org') return ['vest'];
+  return ['davis', 'vest'];
+}
+
+function setScholarCheckInDashboardStatus(message, type = 'info') {
+  const status = document.getElementById('scholarCheckInDashboardStatus');
+  if (!status) return;
+  status.textContent = message || '';
+  status.style.color = type === 'error' ? '#b91c1c' : (type === 'success' ? '#166534' : '#4b5563');
+}
+
+async function openScholarCheckInTool() {
+  try {
+    const user = await ensureCurriculumTeacherUser();
+    if (!user) return;
+    const scope = getScholarCheckInTeacherScope(user);
+    if (!scope.includes(scholarCheckInDashboardState.teacherId)) {
+      scholarCheckInDashboardState.teacherId = scope[0] || 'davis';
+    }
+    showPage('check-in-dashboard');
+    await refreshScholarCheckInDashboard();
+  } catch (error) {
+    console.error('Scholar check-in tool failed:', error);
+    setCurriculumStatus(error.message || 'Scholar Check-In could not open.', 'error');
+  }
+}
+
+function renderScholarCheckInDashboardShell() {
+  const user = getApprovedCurriculumUser();
+  const scope = getScholarCheckInTeacherScope(user);
+  if (!scope.length) {
+    setScholarCheckInDashboardStatus('Sign in through Teacher Tools to view scholar check-ins.', 'error');
+    return;
+  }
+  if (!scope.includes(scholarCheckInDashboardState.teacherId)) {
+    scholarCheckInDashboardState.teacherId = scope[0];
+  }
+  const tabs = document.getElementById('scholarCheckInTeacherTabs');
+  if (tabs) {
+    tabs.innerHTML = scope.map(teacherId => {
+      const teacher = getScholarCheckInTeacherById(teacherId);
+      const active = teacher.id === scholarCheckInDashboardState.teacherId;
+      return `<button type="button" class="check-in-dashboard-tab ${active ? 'active' : ''}" onclick="setScholarCheckInDashboardTeacher('${teacher.id}')">${escapeHtml(teacher.name)}</button>`;
+    }).join('');
+  }
+  renderScholarCheckInHistorySelect();
+  renderScholarCheckInTodayView();
+  renderScholarCheckInHistoryView();
+}
+
+function setScholarCheckInDashboardTeacher(teacherId) {
+  scholarCheckInDashboardState.teacherId = normalizeRosterClass(teacherId);
+  scholarCheckInDashboardState.selectedScholarId = '';
+  scholarCheckInDashboardState.todayRecords = [];
+  scholarCheckInDashboardState.historyRecords = [];
+  renderScholarCheckInDashboardShell();
+  refreshScholarCheckInDashboard();
+}
+
+async function refreshScholarCheckInDashboard() {
+  const user = await ensureCurriculumTeacherUser();
+  if (!user || !db) return;
+  const scope = getScholarCheckInTeacherScope(user);
+  if (!scope.includes(scholarCheckInDashboardState.teacherId)) {
+    scholarCheckInDashboardState.teacherId = scope[0] || 'davis';
+  }
+  renderScholarCheckInDashboardShell();
+  const todayKey = getScholarCheckInTodayKey();
+  setScholarCheckInDashboardStatus('Loading scholar check-ins...');
+  try {
+    const snapshot = await db.collection(SCHOLAR_CHECK_IN_COLLECTION).where('date', '==', todayKey).get();
+    scholarCheckInDashboardState.todayRecords = snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(record => scope.includes(record.teacherId) && record.teacherId === scholarCheckInDashboardState.teacherId);
+    renderScholarCheckInTodayView();
+    await loadScholarCheckInHistoryForSelected();
+    setScholarCheckInDashboardStatus('Check-ins loaded.', 'success');
+  } catch (error) {
+    console.error('Failed to load scholar check-ins:', error);
+    setScholarCheckInDashboardStatus('Scholar check-ins could not load yet. Try Refresh in a moment.', 'error');
+  }
+}
+
+function getScholarCheckInRecordMap() {
+  const map = new Map();
+  scholarCheckInDashboardState.todayRecords.forEach(record => {
+    if (record.scholarId) map.set(record.scholarId, record);
+  });
+  return map;
+}
+
+function renderScholarCheckInHistorySelect() {
+  const select = document.getElementById('scholarCheckInHistorySelect');
+  if (!select) return;
+  const roster = getScholarCheckInRoster(scholarCheckInDashboardState.teacherId);
+  if (roster.length && !roster.some(scholar => scholar.id === scholarCheckInDashboardState.selectedScholarId)) {
+    scholarCheckInDashboardState.selectedScholarId = roster[0].id;
+  }
+  select.innerHTML = '<option value="">Choose scholar</option>' + roster.map(scholar => `
+    <option value="${scholar.id}" ${scholar.id === scholarCheckInDashboardState.selectedScholarId ? 'selected' : ''}>${escapeHtml(scholar.name)}</option>
+  `).join('');
+}
+
+function renderScholarCheckInStats(roster, records) {
+  const stats = document.getElementById('scholarCheckInStats');
+  if (!stats) return;
+  const rosterIds = new Set(roster.map(scholar => scholar.id));
+  const checkedRecords = records.filter(record => rosterIds.has(record.scholarId));
+  const needsTeacher = checkedRecords.filter(record => record.wantsTeacherCheckIn === true);
+  const moodCounts = scholarCheckInMoods.reduce((counts, mood) => {
+    counts[mood.id] = checkedRecords.filter(record => record.mood === mood.id).length;
+    return counts;
+  }, {});
+  const topMood = scholarCheckInMoods
+    .map(mood => ({ mood, count: moodCounts[mood.id] || 0 }))
+    .sort((a, b) => b.count - a.count)[0];
+  const topMoodLabel = topMood && topMood.count ? `${topMood.mood.label} (${topMood.count})` : 'None yet';
+  stats.innerHTML = [
+    { label: 'Checked in', value: `${checkedRecords.length}/${roster.length}` },
+    { label: 'Need check-in', value: String(needsTeacher.length) },
+    { label: 'Still missing', value: String(Math.max(roster.length - checkedRecords.length, 0)) },
+    { label: 'Most common', value: topMoodLabel }
+  ].map(stat => `
+    <div class="check-in-stat-card">
+      <div class="check-in-stat-label">${escapeHtml(stat.label)}</div>
+      <div class="check-in-stat-value">${escapeHtml(stat.value)}</div>
+    </div>
+  `).join('');
+}
+
+function getScholarCheckInMoodDisplay(record) {
+  const mood = getScholarCheckInMoodById(record?.mood);
+  if (!mood) return 'Not checked in';
+  return `${mood.face} ${escapeHtml(record.moodLabel || mood.label)}`;
+}
+
+function getScholarCheckInTimeText(record) {
+  const timestamp = record?.timestamp || record?.updatedAt;
+  if (timestamp && typeof timestamp.toDate === 'function') {
+    return timestamp.toDate().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  }
+  return '';
+}
+
+function renderScholarCheckInTodayView() {
+  const roster = getScholarCheckInRoster(scholarCheckInDashboardState.teacherId);
+  const records = scholarCheckInDashboardState.todayRecords || [];
+  renderScholarCheckInStats(roster, records);
+  renderScholarCheckInHistorySelect();
+  const todayLabel = document.getElementById('scholarCheckInTodayLabel');
+  if (todayLabel) todayLabel.textContent = getScholarCheckInDateLabel(getScholarCheckInTodayKey());
+  const list = document.getElementById('scholarCheckInTodayList');
+  const needsList = document.getElementById('scholarCheckInNeedTeacherList');
+  const recordMap = getScholarCheckInRecordMap();
+  if (list) {
+    if (!roster.length) {
+      list.innerHTML = '<p class="text-sm text-gray-600">No scholars are listed for this class yet.</p>';
+    } else {
+      list.innerHTML = `
+        <table class="check-in-table">
+          <thead><tr><th>Scholar</th><th>Mood</th><th>Teacher check-in</th><th>Time</th></tr></thead>
+          <tbody>
+            ${roster.map(scholar => {
+              const record = recordMap.get(scholar.id);
+              return `
+                <tr>
+                  <td><strong>${escapeHtml(scholar.name)}</strong></td>
+                  <td>${record ? getScholarCheckInMoodDisplay(record) : '<span class="text-gray-500">Not checked in</span>'}</td>
+                  <td>${record?.wantsTeacherCheckIn ? '<span class="check-in-badge">Requested</span>' : '<span class="text-gray-500">No</span>'}</td>
+                  <td>${escapeHtml(getScholarCheckInTimeText(record))}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+  }
+  if (needsList) {
+    const needs = records.filter(record => record.wantsTeacherCheckIn === true);
+    needsList.innerHTML = needs.length
+      ? needs.map(record => `<div class="check-in-badge">${escapeHtml(record.scholarName || 'Scholar')} - ${getScholarCheckInMoodDisplay(record)}</div>`).join('')
+      : '<p class="text-gray-600">No private teacher check-ins requested yet.</p>';
+  }
+}
+
+function getScholarCheckInDateLabel(dateKey) {
+  const clean = String(dateKey || '');
+  const parts = clean.split('-').map(Number);
+  if (parts.length === 3 && parts.every(Number.isFinite)) {
+    return new Date(parts[0], parts[1] - 1, parts[2]).toLocaleDateString(undefined, {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  }
+  return clean;
+}
+
+function selectScholarCheckInHistory(scholarId) {
+  scholarCheckInDashboardState.selectedScholarId = scholarId || '';
+  loadScholarCheckInHistoryForSelected();
+}
+
+async function loadScholarCheckInHistoryForSelected() {
+  const panel = document.getElementById('scholarCheckInHistoryPanel');
+  const roster = getScholarCheckInRoster(scholarCheckInDashboardState.teacherId);
+  if (!roster.length) {
+    if (panel) panel.innerHTML = '<p class="text-gray-600">Add scholars to the roster first.</p>';
+    return;
+  }
+  if (!scholarCheckInDashboardState.selectedScholarId) {
+    scholarCheckInDashboardState.selectedScholarId = roster[0].id;
+  }
+  renderScholarCheckInHistorySelect();
+  if (!panel || !db) return;
+  panel.innerHTML = '<p class="text-gray-600">Loading history...</p>';
+  try {
+    const snapshot = await db.collection(SCHOLAR_CHECK_IN_COLLECTION)
+      .where('scholarId', '==', scholarCheckInDashboardState.selectedScholarId)
+      .get();
+    scholarCheckInDashboardState.historyRecords = snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(record => record.teacherId === scholarCheckInDashboardState.teacherId)
+      .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+    renderScholarCheckInHistoryView();
+  } catch (error) {
+    console.error('Failed to load scholar history:', error);
+    panel.innerHTML = '<p class="text-red-700 font-semibold">History could not load yet.</p>';
+  }
+}
+
+function renderScholarCheckInHistoryView() {
+  const panel = document.getElementById('scholarCheckInHistoryPanel');
+  if (!panel) return;
+  const records = scholarCheckInDashboardState.historyRecords || [];
+  const scholar = getScholarCheckInRoster(scholarCheckInDashboardState.teacherId)
+    .find(item => item.id === scholarCheckInDashboardState.selectedScholarId);
+  if (!scholar) {
+    panel.innerHTML = '<p class="text-gray-600">Choose a scholar to see history.</p>';
+    return;
+  }
+  if (!records.length) {
+    panel.innerHTML = `<p class="text-gray-600">No saved check-ins yet for ${escapeHtml(scholar.name)}.</p>`;
+    return;
+  }
+  const recentChips = records.slice(0, 10).map(record => {
+    const mood = getScholarCheckInMoodById(record.mood);
+    return `<span class="check-in-badge">${escapeHtml(getScholarCheckInDateLabel(record.date))}: ${mood ? mood.face : ''} ${escapeHtml(record.moodLabel || mood?.label || 'Mood')}</span>`;
+  }).join('');
+  panel.innerHTML = `
+    <div class="mb-3">${recentChips}</div>
+    <table class="check-in-table">
+      <thead><tr><th>Date</th><th>Mood</th><th>Teacher check-in</th></tr></thead>
+      <tbody>
+        ${records.slice(0, 20).map(record => `
+          <tr>
+            <td>${escapeHtml(getScholarCheckInDateLabel(record.date))}</td>
+            <td>${getScholarCheckInMoodDisplay(record)}</td>
+            <td>${record.wantsTeacherCheckIn ? 'Yes' : 'No'}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function printScholarCheckInDashboard() {
+  const teacher = getScholarCheckInTeacherById(scholarCheckInDashboardState.teacherId);
+  const roster = getScholarCheckInRoster(teacher.id);
+  const recordMap = getScholarCheckInRecordMap();
+  const rows = roster.map(scholar => {
+    const record = recordMap.get(scholar.id);
+    return `
+      <tr>
+        <td>${escapeHtml(scholar.name)}</td>
+        <td>${record ? getScholarCheckInMoodDisplay(record).replace(/<[^>]+>/g, '') : 'Not checked in'}</td>
+        <td>${record?.wantsTeacherCheckIn ? 'Yes' : 'No'}</td>
+        <td>${escapeHtml(getScholarCheckInTimeText(record))}</td>
+      </tr>
+    `;
+  }).join('');
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) {
+    alert('Your browser blocked the print window. Allow pop-ups for this site and try again.');
+    return;
+  }
+  const title = `${teacher.name} Scholar Check-In - ${getScholarCheckInDateLabel(getScholarCheckInTodayKey())}`;
+  const printHtml = `<!doctype html><html><head><title>${escapeHtml(title)}</title><style>@page{margin:.45in;}body{font-family:Arial,sans-serif;color:#1f2937;}h1{margin:0 0 6px;color:#475569;}p{margin:0 0 14px;color:#64748b;}table{width:100%;border-collapse:collapse;font-size:12px;}th{background:#f7efe2;color:#475569;text-align:left;}th,td{border:1px solid #d8c7ad;padding:7px 8px;vertical-align:top;}tr{break-inside:avoid;}</style></head><body><h1>${escapeHtml(title)}</h1><p>Teacher-only check-in summary</p><table><thead><tr><th>Scholar</th><th>Mood</th><th>Teacher Check-In</th><th>Time</th></tr></thead><tbody>${rows || '<tr><td colspan="4">No roster rows.</td></tr>'}</tbody></table></body></html>`;
   printWindow.document.open();
   printWindow.document.write(printHtml);
   printWindow.document.close();

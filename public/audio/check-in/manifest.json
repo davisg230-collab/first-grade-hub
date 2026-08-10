@@ -1,0 +1,8 @@
+{
+  "chooseTeacher": "/audio/check-in/choose-teacher.mp3",
+  "chooseScholar": "/audio/check-in/choose-scholar.mp3",
+  "chooseMood": "/audio/check-in/choose-mood.mp3",
+  "teacherHelp": "/audio/check-in/teacher-help.mp3",
+  "submit": "/audio/check-in/submit.mp3",
+  "success": "/audio/check-in/success.mp3"
+}

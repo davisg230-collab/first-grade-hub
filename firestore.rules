@@ -10,6 +10,37 @@ service cloud.firestore {
         ];
     }
 
+    function isValidScholarCheckIn(checkInId) {
+      return request.resource.data.keys().hasOnly([
+          'scholarId',
+          'scholarName',
+          'scholarFirstName',
+          'scholarLastName',
+          'teacherId',
+          'teacherName',
+          'mood',
+          'moodLabel',
+          'wantsTeacherCheckIn',
+          'date',
+          'timestamp',
+          'updatedAt',
+          'source',
+          'version'
+        ])
+        && request.resource.data.scholarId is string
+        && request.resource.data.scholarName is string
+        && request.resource.data.teacherId in ['davis', 'vest']
+        && request.resource.data.teacherName is string
+        && request.resource.data.mood in ['great', 'good', 'okay', 'worried', 'sad', 'mad']
+        && request.resource.data.moodLabel is string
+        && request.resource.data.wantsTeacherCheckIn is bool
+        && request.resource.data.date is string
+        && request.resource.data.date.matches('^\\d{4}-\\d{2}-\\d{2}$')
+        && request.resource.data.source == 'scholar-check-in-kiosk'
+        && request.resource.data.version == 1
+        && checkInId == request.resource.data.date + '_' + request.resource.data.teacherId + '_' + request.resource.data.scholarId;
+    }
+
     // Galleries collection - allow anyone to read, restrict writes to authenticated admins.
     match /galleries/{gallery} {
       allow read: if true;
@@ -46,6 +77,13 @@ service cloud.firestore {
     match /teacherActivity/{activityId} {
       allow create: if request.auth != null;
       allow read, update, delete: if request.auth != null;
+    }
+
+    // Student kiosk writes one mood check-in per scholar per day.
+    // Teachers can read history; the kiosk cannot read class mood records.
+    match /scholarCheckIns/{checkInId} {
+      allow create, update: if request.auth != null && isValidScholarCheckIn(checkInId);
+      allow read, delete: if isTeacherEditor();
     }
 
     // Daily visitor totals for the private teacher dashboard.
