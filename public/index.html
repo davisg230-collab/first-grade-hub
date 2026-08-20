@@ -7805,10 +7805,12 @@
           return { ...data, savedLessonId: data.id || '', id: doc.id };
         });
         await loadCurriculumModuleInfo();
-        const lessonIds = new Set(curriculumLessonsCache.map(lesson => lesson.id));
-        curriculumSelectedLessonIds = new Set(Array.from(curriculumSelectedLessonIds).filter(id => lessonIds.has(id)));
-        if (curriculumActiveBrowserLessonId && !lessonIds.has(curriculumActiveBrowserLessonId)) {
+        normalizeCurriculumSelectedLessonKeys();
+        if (curriculumActiveBrowserLessonId && !getCurriculumLessonByBrowserKey(curriculumActiveBrowserLessonId)) {
           curriculumActiveBrowserLessonId = '';
+        }
+        if (curriculumLessonViewModalLessonId && !getCurriculumLessonByBrowserKey(curriculumLessonViewModalLessonId)) {
+          curriculumLessonViewModalLessonId = '';
         }
         await loadCurriculumWeeklyPlan();
         renderCurriculumLibraryList();
@@ -8012,11 +8014,11 @@
     }
 
     function openCurriculumSchedulePicker(lessonId) {
-      const lesson = curriculumLessonsCache.find(item => item.id === lessonId);
+      const lesson = getCurriculumLessonByBrowserKey(lessonId);
       if (!lesson) return;
       const scrollX = window.scrollX;
       const scrollY = window.scrollY;
-      curriculumSchedulePickerLessonId = lessonId;
+      curriculumSchedulePickerLessonId = lesson.id;
       const modal = document.getElementById('curriculumScheduleModal');
       const title = document.getElementById('curriculumScheduleModalTitle');
       const meta = document.getElementById('curriculumScheduleModalMeta');
@@ -8060,8 +8062,9 @@
     }
 
     async function setCurriculumScheduledLessonDate(lessonId, dateKey) {
-      const lesson = curriculumLessonsCache.find(item => item.id === lessonId);
+      const lesson = getCurriculumLessonByBrowserKey(lessonId);
       if (!lesson) return false;
+      const actualLessonId = lesson.id;
       const viewState = getCurriculumBrowserViewState();
       const subject = lesson.subject || 'skills';
       const subjectPlan = getCurriculumSubjectPlan(subject);
@@ -8072,10 +8075,10 @@
         return false;
       }
       Object.keys(subjectPlan.dates).forEach(key => {
-        if (subjectPlan.dates[key] === lessonId) delete subjectPlan.dates[key];
+        if (subjectPlan.dates[key] === actualLessonId) delete subjectPlan.dates[key];
       });
       if (dateKey) {
-        subjectPlan.dates[dateKey] = lessonId;
+        subjectPlan.dates[dateKey] = actualLessonId;
       }
       renderCurriculumLibraryList();
       restoreCurriculumBrowserViewState(viewState);
@@ -8829,6 +8832,49 @@
         .trim();
     }
 
+    function getCurriculumLessonBrowserKey(lesson) {
+      if (!lesson) return '';
+      const cacheIndex = curriculumLessonsCache.indexOf(lesson);
+      return [
+        cacheIndex >= 0 ? cacheIndex : '',
+        lesson.id || '',
+        lesson.subject || '',
+        formatCurriculumUnitOrModule(lesson.unitOrModule || ''),
+        formatCurriculumLessonNumber(lesson.lessonNumber || ''),
+        getCurriculumCardTitle(lesson)
+      ].join('|||');
+    }
+
+    function encodeCurriculumLessonBrowserKey(lesson) {
+      return encodeURIComponent(getCurriculumLessonBrowserKey(lesson));
+    }
+
+    function decodeCurriculumLessonBrowserKey(value) {
+      const text = String(value || '');
+      try {
+        return decodeURIComponent(text);
+      } catch (error) {
+        return text;
+      }
+    }
+
+    function getCurriculumLessonByBrowserKey(value) {
+      const decodedKey = decodeCurriculumLessonBrowserKey(value);
+      return curriculumLessonsCache.find(lesson => getCurriculumLessonBrowserKey(lesson) === decodedKey)
+        || curriculumLessonsCache.find(lesson => lesson.id === decodedKey || lesson.id === String(value || ''))
+        || null;
+    }
+
+    function normalizeCurriculumSelectedLessonKeys() {
+      const visibleKeys = new Set(curriculumLessonsCache.map(getCurriculumLessonBrowserKey));
+      curriculumSelectedLessonIds = new Set(Array.from(curriculumSelectedLessonIds)
+        .map(value => {
+          const lesson = getCurriculumLessonByBrowserKey(value);
+          return lesson ? getCurriculumLessonBrowserKey(lesson) : decodeCurriculumLessonBrowserKey(value);
+        })
+        .filter(key => visibleKeys.has(key)));
+    }
+
     function renderCurriculumLibraryLesson(lesson) {
       const title = getCurriculumCardTitle(lesson);
       const isActive = lesson.id === curriculumActiveLessonId ? ' active' : '';
@@ -8850,8 +8896,7 @@
       const count = document.getElementById('curriculumSelectedLessonCount');
       const selectionTools = document.getElementById('curriculumBrowserSelectionTools');
       if (!list) return;
-      const visibleIds = new Set(curriculumLessonsCache.map(lesson => lesson.id));
-      curriculumSelectedLessonIds = new Set(Array.from(curriculumSelectedLessonIds).filter(id => visibleIds.has(id)));
+      normalizeCurriculumSelectedLessonKeys();
       const selectedCount = curriculumSelectedLessonIds.size;
       if (count) {
         count.textContent = `${selectedCount} selected`;
@@ -8886,39 +8931,43 @@
 
     function renderCurriculumBrowserLesson(lesson) {
       const title = getCurriculumCardTitle(lesson);
-      const isSelected = curriculumSelectedLessonIds.has(lesson.id);
-      const isActive = lesson.id === curriculumActiveBrowserLessonId ? ' active' : '';
+      const lessonKey = getCurriculumLessonBrowserKey(lesson);
+      const encodedLessonKey = encodeCurriculumLessonBrowserKey(lesson);
+      const isSelected = curriculumSelectedLessonIds.has(lessonKey);
+      const isActive = lessonKey === decodeCurriculumLessonBrowserKey(curriculumActiveBrowserLessonId) ? ' active' : '';
       const scheduledDate = getCurriculumPrimaryScheduleDate(lesson);
       const scheduleLabel = scheduledDate ? formatCurriculumDateLabel(scheduledDate) : 'Calendar';
       const scheduleTitle = scheduledDate ? `Scheduled for ${formatCurriculumDateLabel(scheduledDate)}` : 'Schedule lesson';
       return `
-        <div class="curriculum-library-item curriculum-browser-item${isSelected ? ' selected' : ''}${isActive}" role="button" tabindex="0" onclick="viewCurriculumLessonDetail('${lesson.id}')">
-          <input class="curriculum-browser-check" type="checkbox" ${isSelected ? 'checked' : ''} aria-label="Select lesson" onclick="event.stopPropagation(); toggleCurriculumLessonSelection('${lesson.id}', this.checked)">
+        <div class="curriculum-library-item curriculum-browser-item${isSelected ? ' selected' : ''}${isActive}" role="button" tabindex="0" onclick="viewCurriculumLessonDetail('${encodedLessonKey}')">
+          <input class="curriculum-browser-check" type="checkbox" ${isSelected ? 'checked' : ''} aria-label="Select lesson" onclick="event.stopPropagation(); toggleCurriculumLessonSelection('${encodedLessonKey}', this.checked)">
           <div>
             <div class="text-xs font-bold uppercase tracking-wide text-gray-500">${escapeHtml([formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson', getCurriculumSubjectLabel(lesson.subject)].filter(Boolean).join(' - '))}</div>
             <div class="font-display font-bold mt-1" style="color: var(--md-slate);">${escapeHtml(title)}</div>
             <div class="text-sm mt-1 text-[color:var(--md-ink)]/80">${escapeHtml(plainFamilySentence(lesson.iCanStatement || lesson.objective || lesson.parentSummary || '').slice(0, 150))}</div>
             <div class="curriculum-browser-actions">
-              <button type="button" class="curriculum-browser-view-button" style="background: var(--md-slate); color: var(--md-white);" onclick="event.stopPropagation(); openCurriculumLessonViewModal('${lesson.id}')">View</button>
-              <button type="button" style="background: var(--md-coral); color: var(--md-white);" onclick="event.stopPropagation(); loadCurriculumLessonIntoBuilder('${lesson.id}')">Edit</button>
-              <button type="button" title="${escapeHtml(scheduleTitle)}" style="background: var(--md-pebble); color: var(--md-ink);" onclick="event.stopPropagation(); openCurriculumSchedulePicker('${lesson.id}')">${escapeHtml(scheduleLabel)}</button>
-              <button type="button" title="Delete lesson" style="background: #dc2626; color: var(--md-white);" onclick="event.stopPropagation(); deleteCurriculumLesson('${lesson.id}')">Delete</button>
+              <button type="button" class="curriculum-browser-view-button" style="background: var(--md-slate); color: var(--md-white);" onclick="event.stopPropagation(); openCurriculumLessonViewModal('${encodedLessonKey}')">View</button>
+              <button type="button" style="background: var(--md-coral); color: var(--md-white);" onclick="event.stopPropagation(); loadCurriculumLessonIntoBuilder('${encodedLessonKey}')">Edit</button>
+              <button type="button" title="${escapeHtml(scheduleTitle)}" style="background: var(--md-pebble); color: var(--md-ink);" onclick="event.stopPropagation(); openCurriculumSchedulePicker('${encodedLessonKey}')">${escapeHtml(scheduleLabel)}</button>
+              <button type="button" title="Delete lesson" style="background: #dc2626; color: var(--md-white);" onclick="event.stopPropagation(); deleteCurriculumLesson('${encodedLessonKey}')">Delete</button>
             </div>
           </div>
         </div>
       `;
     }
 
-    function setCurriculumLessonSelection(lessonId, isSelected) {
+    function setCurriculumLessonSelection(lessonKey, isSelected) {
+      const lesson = getCurriculumLessonByBrowserKey(lessonKey);
+      const normalizedKey = lesson ? getCurriculumLessonBrowserKey(lesson) : decodeCurriculumLessonBrowserKey(lessonKey);
       if (isSelected) {
-        curriculumSelectedLessonIds.add(lessonId);
+        curriculumSelectedLessonIds.add(normalizedKey);
       } else {
-        curriculumSelectedLessonIds.delete(lessonId);
+        curriculumSelectedLessonIds.delete(normalizedKey);
       }
     }
 
-    function toggleCurriculumLessonSelection(lessonId, isSelected) {
-      setCurriculumLessonSelection(lessonId, isSelected);
+    function toggleCurriculumLessonSelection(lessonKey, isSelected) {
+      setCurriculumLessonSelection(lessonKey, isSelected);
       renderCurriculumLessonBrowser();
     }
 
@@ -8928,19 +8977,20 @@
       setCurriculumStatus('Lesson selection cleared.');
     }
 
-    function viewCurriculumLessonDetail(lessonId) {
+    function viewCurriculumLessonDetail(lessonKey) {
       if (isCurriculumMobileView()) {
-        openCurriculumLessonViewModal(lessonId);
+        openCurriculumLessonViewModal(lessonKey);
         return;
       }
-      curriculumActiveBrowserLessonId = lessonId;
+      const lesson = getCurriculumLessonByBrowserKey(lessonKey);
+      curriculumActiveBrowserLessonId = lesson ? getCurriculumLessonBrowserKey(lesson) : decodeCurriculumLessonBrowserKey(lessonKey);
       renderCurriculumLessonBrowser();
     }
 
     function renderCurriculumLessonDetail() {
       const panel = document.getElementById('curriculumLessonDetailPanel');
       if (!panel) return;
-      const lesson = curriculumLessonsCache.find(item => item.id === curriculumActiveBrowserLessonId);
+      const lesson = getCurriculumLessonByBrowserKey(curriculumActiveBrowserLessonId);
       if (!lesson) {
         panel.innerHTML = '<p class="text-sm text-gray-500">Choose a lesson to view the full saved details.</p>';
         return;
@@ -8978,9 +9028,10 @@
         .flatMap(group => group.lessons);
     }
 
-    function getCurriculumLessonModalNavigation(lessonId) {
+    function getCurriculumLessonModalNavigation(lessonKey) {
       const lessons = getCurriculumBrowserOrderedLessons();
-      const index = lessons.findIndex(lesson => lesson.id === lessonId);
+      const activeKey = decodeCurriculumLessonBrowserKey(lessonKey);
+      const index = lessons.findIndex(lesson => getCurriculumLessonBrowserKey(lesson) === activeKey || lesson.id === activeKey);
       return {
         lessons,
         index,
@@ -8991,12 +9042,12 @@
       };
     }
 
-    function openCurriculumLessonViewModal(lessonId) {
-      const lesson = curriculumLessonsCache.find(item => item.id === lessonId);
+    function openCurriculumLessonViewModal(lessonKey) {
+      const lesson = getCurriculumLessonByBrowserKey(lessonKey);
       const modal = document.getElementById('curriculumLessonViewModal');
       if (!lesson || !modal) return;
-      curriculumLessonViewModalLessonId = lessonId;
-      curriculumActiveBrowserLessonId = lessonId;
+      curriculumLessonViewModalLessonId = getCurriculumLessonBrowserKey(lesson);
+      curriculumActiveBrowserLessonId = curriculumLessonViewModalLessonId;
       renderCurriculumLessonBrowser();
       renderCurriculumLessonViewModal();
       modal.classList.add('open');
@@ -9009,7 +9060,7 @@
     }
 
     function renderCurriculumLessonViewModal() {
-      const lesson = curriculumLessonsCache.find(item => item.id === curriculumLessonViewModalLessonId);
+      const lesson = getCurriculumLessonByBrowserKey(curriculumLessonViewModalLessonId);
       const modal = document.getElementById('curriculumLessonViewModal');
       const title = document.getElementById('curriculumLessonViewModalTitle');
       const meta = document.getElementById('curriculumLessonViewModalMeta');
@@ -9020,33 +9071,39 @@
         closeCurriculumLessonViewModal();
         return;
       }
-      const nav = getCurriculumLessonModalNavigation(lesson.id);
+      const lessonKey = getCurriculumLessonBrowserKey(lesson);
+      const encodedLessonKey = encodeCurriculumLessonBrowserKey(lesson);
+      const nav = getCurriculumLessonModalNavigation(lessonKey);
       const selectedCount = curriculumSelectedLessonIds.size;
-      const isSelected = curriculumSelectedLessonIds.has(lesson.id);
+      const isSelected = curriculumSelectedLessonIds.has(lessonKey);
       const openAllDisabled = selectedCount ? '' : 'disabled';
+      const firstKey = nav.firstLesson ? encodeCurriculumLessonBrowserKey(nav.firstLesson) : encodedLessonKey;
+      const previousKey = nav.previousLesson ? encodeCurriculumLessonBrowserKey(nav.previousLesson) : encodedLessonKey;
+      const nextKey = nav.nextLesson ? encodeCurriculumLessonBrowserKey(nav.nextLesson) : encodedLessonKey;
+      const lastKey = nav.lastLesson ? encodeCurriculumLessonBrowserKey(nav.lastLesson) : encodedLessonKey;
       if (title) title.textContent = getCurriculumCardTitle(lesson);
       if (meta) meta.textContent = `${getCurriculumSubjectLabel(lesson.subject)} - ${formatCurriculumLessonNumber(lesson.lessonNumber) || 'Lesson'}`;
       body.innerHTML = renderCurriculumLessonDetailContent(lesson);
       actions.innerHTML = `
         <label class="curriculum-lesson-modal-select">
-          <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleCurriculumLessonSelectionFromModal('${lesson.id}', this.checked)">
+          <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleCurriculumLessonSelectionFromModal('${encodedLessonKey}', this.checked)">
           Select this lesson
         </label>
         <div class="curriculum-lesson-modal-nav" aria-label="Move through lessons">
-          <button type="button" class="curriculum-lesson-modal-button" style="background: var(--md-pebble); color: var(--md-ink);" ${nav.firstLesson && nav.firstLesson.id !== lesson.id ? '' : 'disabled'} onclick="openCurriculumLessonViewModal('${nav.firstLesson?.id || lesson.id}')">First</button>
-          <button type="button" class="curriculum-lesson-modal-button" style="background: var(--md-pebble); color: var(--md-ink);" ${nav.previousLesson ? '' : 'disabled'} onclick="openCurriculumLessonViewModal('${nav.previousLesson?.id || lesson.id}')">Previous</button>
-          <button type="button" class="curriculum-lesson-modal-button" style="background: var(--md-slate); color: var(--md-white);" ${nav.nextLesson ? '' : 'disabled'} onclick="openCurriculumLessonViewModal('${nav.nextLesson?.id || lesson.id}')">Next</button>
-          <button type="button" class="curriculum-lesson-modal-button" style="background: var(--md-slate); color: var(--md-white);" ${nav.lastLesson && nav.lastLesson.id !== lesson.id ? '' : 'disabled'} onclick="openCurriculumLessonViewModal('${nav.lastLesson?.id || lesson.id}')">Last</button>
+          <button type="button" class="curriculum-lesson-modal-button" style="background: var(--md-pebble); color: var(--md-ink);" ${nav.firstLesson && getCurriculumLessonBrowserKey(nav.firstLesson) !== lessonKey ? '' : 'disabled'} onclick="openCurriculumLessonViewModal('${firstKey}')">First</button>
+          <button type="button" class="curriculum-lesson-modal-button" style="background: var(--md-pebble); color: var(--md-ink);" ${nav.previousLesson ? '' : 'disabled'} onclick="openCurriculumLessonViewModal('${previousKey}')">Previous</button>
+          <button type="button" class="curriculum-lesson-modal-button" style="background: var(--md-slate); color: var(--md-white);" ${nav.nextLesson ? '' : 'disabled'} onclick="openCurriculumLessonViewModal('${nextKey}')">Next</button>
+          <button type="button" class="curriculum-lesson-modal-button" style="background: var(--md-slate); color: var(--md-white);" ${nav.lastLesson && getCurriculumLessonBrowserKey(nav.lastLesson) !== lessonKey ? '' : 'disabled'} onclick="openCurriculumLessonViewModal('${lastKey}')">Last</button>
         </div>
         <div class="curriculum-lesson-modal-open-actions">
-          <button type="button" class="curriculum-lesson-modal-button" style="background: var(--md-coral); color: var(--md-white);" onclick="openSingleCurriculumLesson('${lesson.id}')">Open This</button>
+          <button type="button" class="curriculum-lesson-modal-button" style="background: var(--md-coral); color: var(--md-white);" onclick="openSingleCurriculumLesson('${encodedLessonKey}')">Open This</button>
           <button type="button" class="curriculum-lesson-modal-button" style="background: var(--md-slate); color: var(--md-white);" ${openAllDisabled} onclick="openSelectedCurriculumLessons()">Open All${selectedCount ? ` (${selectedCount})` : ''}</button>
         </div>
       `;
     }
 
-    function toggleCurriculumLessonSelectionFromModal(lessonId, isSelected) {
-      setCurriculumLessonSelection(lessonId, isSelected);
+    function toggleCurriculumLessonSelectionFromModal(lessonKey, isSelected) {
+      setCurriculumLessonSelection(lessonKey, isSelected);
       renderCurriculumLessonBrowser();
       renderCurriculumLessonViewModal();
     }
@@ -9149,25 +9206,27 @@
     }
 
     async function deleteCurriculumLesson(lessonId) {
-      const lesson = curriculumLessonsCache.find(item => item.id === lessonId);
+      const lesson = getCurriculumLessonByBrowserKey(lessonId);
       if (!lesson) return;
+      const actualLessonId = lesson.id;
+      const lessonKey = getCurriculumLessonBrowserKey(lesson);
       const title = getCurriculumCardTitle(lesson);
       const scheduledDates = getCurriculumLessonScheduleDates(lesson);
       const scheduleMessage = scheduledDates.length ? ' Any dates assigned to it will also be cleared.' : '';
       if (!window.confirm(`Delete ${title}?${scheduleMessage}`)) return;
 
-      const wasActiveBuilderLesson = curriculumActiveLessonId === lessonId;
+      const wasActiveBuilderLesson = curriculumActiveLessonId === actualLessonId;
       try {
         const user = await ensureCurriculumTeacherUser();
         if (!user) return;
         if (!db) throw new Error('The lesson library is not available. Please refresh and try again.');
         setCurriculumBusy(true, 'Deleting lesson...');
-        await db.collection('curriculumLessons').doc(lessonId).delete();
-        curriculumSelectedLessonIds.delete(lessonId);
-        if (curriculumActiveBrowserLessonId === lessonId) curriculumActiveBrowserLessonId = '';
-        if (curriculumLessonViewModalLessonId === lessonId) closeCurriculumLessonViewModal();
-        if (curriculumSchedulePickerLessonId === lessonId) closeCurriculumScheduleModal();
-        removeCurriculumLessonFromWeeklyPlan(lessonId);
+        await db.collection('curriculumLessons').doc(actualLessonId).delete();
+        curriculumSelectedLessonIds.delete(lessonKey);
+        if (decodeCurriculumLessonBrowserKey(curriculumActiveBrowserLessonId) === lessonKey) curriculumActiveBrowserLessonId = '';
+        if (decodeCurriculumLessonBrowserKey(curriculumLessonViewModalLessonId) === lessonKey) closeCurriculumLessonViewModal();
+        if (curriculumSchedulePickerLessonId === actualLessonId) closeCurriculumScheduleModal();
+        removeCurriculumLessonFromWeeklyPlan(actualLessonId);
         await saveCurriculumWeeklyPlanDraft();
         await loadCurriculumLessons();
         if (wasActiveBuilderLesson) clearCurriculumBuilderForm();
@@ -9717,7 +9776,7 @@
     function getSelectedCurriculumLessons() {
       const selectedIds = new Set(curriculumSelectedLessonIds);
       return curriculumLessonsCache
-        .filter(lesson => selectedIds.has(lesson.id))
+        .filter(lesson => selectedIds.has(getCurriculumLessonBrowserKey(lesson)) || selectedIds.has(lesson.id))
         .sort(compareCurriculumLessonsForPrint);
     }
 
@@ -9767,7 +9826,7 @@
     }
 
     function openSingleCurriculumLesson(lessonId) {
-      const lesson = curriculumLessonsCache.find(item => item.id === lessonId);
+      const lesson = getCurriculumLessonByBrowserKey(lessonId);
       if (!lesson) return;
       openCurriculumLessonsPrintView([lesson], {
         autoPrint: false,
@@ -9916,7 +9975,7 @@
     }
 
     function loadCurriculumLessonIntoBuilder(lessonId) {
-      const lesson = curriculumLessonsCache.find(item => item.id === lessonId);
+      const lesson = getCurriculumLessonByBrowserKey(lessonId);
       if (!lesson) return;
       curriculumActiveLessonId = lesson.id;
       setInputValue('curriculumSubjectInput', lesson.subject || 'skills');
