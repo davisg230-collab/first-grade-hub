@@ -1179,6 +1179,93 @@
       padding: .25rem .55rem;
       margin: .12rem .2rem .12rem 0;
     }
+    .check-in-history-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      gap: .75rem;
+    }
+    .check-in-history-controls label {
+      color: var(--md-slate);
+      font-size: .78rem;
+      font-weight: 900;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .check-in-history-field {
+      display: block;
+      min-width: 11rem;
+      margin-top: .35rem;
+      padding: .65rem .75rem;
+      border: 1px solid color-mix(in oklab, var(--md-pebble) 70%, var(--md-white) 30%);
+      border-radius: .65rem;
+      background: var(--md-white);
+      color: var(--md-ink);
+      font-weight: 800;
+    }
+    .check-in-summary-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+      gap: .75rem;
+      margin: 1rem 0;
+    }
+    .check-in-summary-tile {
+      border: 1px solid color-mix(in oklab, var(--md-pebble) 70%, var(--md-white) 30%);
+      border-radius: .9rem;
+      background: color-mix(in oklab, var(--md-white) 86%, var(--md-pebble) 14%);
+      padding: .85rem;
+    }
+    .check-in-summary-tile span {
+      display: block;
+      color: color-mix(in oklab, var(--md-ink) 70%, var(--md-white));
+      font-size: .72rem;
+      font-weight: 900;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+    .check-in-summary-tile strong {
+      display: block;
+      color: var(--md-slate);
+      font-family: var(--font-display, inherit);
+      font-size: 1.65rem;
+      line-height: 1.05;
+      margin-top: .25rem;
+    }
+    .check-in-mood-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .35rem;
+      margin: .65rem 0 1rem;
+    }
+    .check-in-history-note {
+      color: color-mix(in oklab, var(--md-ink) 72%, var(--md-white));
+      font-size: .9rem;
+      line-height: 1.45;
+      margin-top: .35rem;
+    }
+    .check-in-history-details {
+      border: 1px solid color-mix(in oklab, var(--md-pebble) 72%, var(--md-white) 28%);
+      border-radius: .85rem;
+      background: color-mix(in oklab, var(--md-white) 92%, var(--md-pebble) 8%);
+      margin-top: .75rem;
+      overflow: hidden;
+    }
+    .check-in-history-details summary {
+      cursor: pointer;
+      color: var(--md-slate);
+      font-weight: 900;
+      padding: .8rem .95rem;
+      user-select: none;
+    }
+    .check-in-history-details[open] summary {
+      border-bottom: 1px solid color-mix(in oklab, var(--md-pebble) 72%, var(--md-white) 28%);
+    }
+    .check-in-history-details-body {
+      padding: .85rem .95rem 1rem;
+    }
+    .check-in-pattern-table {
+      min-width: 42rem;
+    }
     @media (max-width: 720px) {
       .check-in-header {
         flex-direction: column;
@@ -1191,6 +1278,9 @@
       }
       .check-in-button {
         min-height: 6.5rem;
+      }
+      .check-in-history-field {
+        min-width: 100%;
       }
     }
     @media print {
@@ -4000,6 +4090,10 @@
             <button data-roster-edit-control class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="addMasterRosterRow()">Add Scholar</button>
             <button data-roster-edit-control class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="showRosterImportPanel()">Insert Roster</button>
             <button data-roster-edit-control id="saveMasterRosterBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-coral);" onclick="saveRosterField()">Save Roster</button>
+            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold" style="background: color-mix(in oklab, var(--md-white) 82%, var(--md-pebble) 18%); color: var(--md-slate); border: 1px solid color-mix(in oklab, var(--md-slate) 25%, var(--md-white) 75%);">
+              <input id="rosterPrintIncludeLastNames" type="checkbox">
+              Include last names
+            </label>
             <button id="printActiveRosterBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="printRoster(activeRosterClassTab)">Print Mr. Davis Roster</button>
             <button id="printCombinedRosterBtn" class="px-4 py-2 rounded-lg text-white text-sm font-semibold" style="background: var(--md-slate);" onclick="printRoster('')">Print 1st Grade Roster</button>
           </div>
@@ -4867,7 +4961,7 @@
           <div>
             <p class="text-sm font-bold uppercase tracking-wide" style="color: var(--md-slate);">Teacher Tools</p>
             <h2 class="text-3xl font-display font-bold" style="color: var(--md-coral);">Scholar Check-In</h2>
-            <p class="mt-2 text-sm text-[color:var(--md-ink)]/80 max-w-3xl">View today's mood check-ins, teacher check-in requests, and individual scholar history.</p>
+            <p class="mt-2 text-sm text-[color:var(--md-ink)]/80 max-w-3xl">View today's mood check-ins, weekly mood patterns, teacher check-in requests, and individual scholar history for conferences.</p>
           </div>
           <div class="flex flex-col sm:flex-row gap-2 check-in-no-print">
             <button type="button" class="curriculum-builder-button inline-flex px-4 py-2" style="background: var(--md-pebble); color: var(--md-ink);" onclick="returnToTeacherTools()">Back to Tools</button>
@@ -4892,18 +4986,39 @@
               <h3 class="text-xl font-display font-bold mb-3" style="color: var(--md-slate);">Teacher Check-In Requests</h3>
               <div id="scholarCheckInNeedTeacherList" class="text-sm"></div>
             </div>
-            <div class="check-in-panel-card p-4 sm:p-5">
-              <div class="flex flex-col sm:flex-row sm:items-end gap-3 mb-3">
-                <div class="flex-1">
-                  <label class="curriculum-builder-label" for="scholarCheckInHistorySelect">Scholar history</label>
-                  <select id="scholarCheckInHistorySelect" class="curriculum-builder-field" onchange="selectScholarCheckInHistory(this.value)">
-                    <option value="">Choose scholar</option>
-                  </select>
-                </div>
-              </div>
-              <div id="scholarCheckInHistoryPanel" class="text-sm"></div>
+          </div>
+        </div>
+        <div class="check-in-panel-card p-4 sm:p-5 mt-5">
+          <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 mb-3">
+            <div>
+              <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">Mood History</h3>
+              <p class="text-sm text-gray-600 mt-1">A quieter pattern view underneath Today for conferences and follow-up.</p>
+            </div>
+            <div class="check-in-history-controls check-in-no-print">
+              <label for="scholarCheckInClassHistoryRange">
+                Date Range
+                <select id="scholarCheckInClassHistoryRange" class="check-in-history-field" onchange="setScholarCheckInClassHistoryRange(this.value)">
+                  <option value="thisWeek">This Week</option>
+                  <option value="lastWeek">Last Week</option>
+                  <option value="thisMonth">This Month</option>
+                  <option value="last30">Last 30 Days</option>
+                </select>
+              </label>
+              <button type="button" class="curriculum-builder-button inline-flex px-4 py-2 text-white" style="background: var(--md-slate);" onclick="printScholarCheckInClassHistoryReport()">Print History</button>
             </div>
           </div>
+          <div id="scholarCheckInClassHistoryPanel" class="text-sm"></div>
+        </div>
+        <div class="check-in-panel-card p-4 sm:p-5 mt-5">
+          <div class="flex flex-col sm:flex-row sm:items-end gap-3 mb-3">
+            <div class="flex-1">
+              <label class="curriculum-builder-label" for="scholarCheckInHistorySelect">Individual conference history</label>
+              <select id="scholarCheckInHistorySelect" class="curriculum-builder-field" onchange="selectScholarCheckInHistory(this.value)">
+                <option value="">Choose scholar</option>
+              </select>
+            </div>
+          </div>
+          <div id="scholarCheckInHistoryPanel" class="text-sm"></div>
         </div>
       </div>
     </section>
@@ -6494,7 +6609,9 @@
       teacherId: 'davis',
       selectedScholarId: '',
       todayRecords: [],
-      historyRecords: []
+      historyRecords: [],
+      classHistoryRecords: [],
+      classHistoryRange: 'thisWeek'
     };
     let learningMobileActiveDays = { skills: 0, listening: 0, math: 0 };
     let learningLessonDataCache = { skills: null, listening: null, math: null };
@@ -7683,7 +7800,10 @@
         if (!db) throw new Error('The lesson library is not available. Please refresh and try again.');
         showCurriculumWorkspace(true);
         const snapshot = await db.collection('curriculumLessons').orderBy('updatedAt', 'desc').limit(500).get();
-        curriculumLessonsCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        curriculumLessonsCache = snapshot.docs.map(doc => {
+          const data = doc.data() || {};
+          return { ...data, savedLessonId: data.id || '', id: doc.id };
+        });
         await loadCurriculumModuleInfo();
         const lessonIds = new Set(curriculumLessonsCache.map(lesson => lesson.id));
         curriculumSelectedLessonIds = new Set(Array.from(curriculumSelectedLessonIds).filter(id => lessonIds.has(id)));
@@ -16865,6 +16985,10 @@ function getLastNameFromRosterName(name) {
   return String(name || '').trim().split(/\s+/).slice(-1)[0] || '';
 }
 
+function getFirstNameFromRosterName(name) {
+  return String(name || '').trim().split(/\s+/)[0] || '';
+}
+
 function normalizeRosterClass(value) {
   const clean = String(value || '').toLowerCase();
   if (clean.includes('vest') || clean.includes('williams')) return 'vest';
@@ -18426,21 +18550,25 @@ function printRoster(classKey = '') {
   }
   const classLabel = normalizedClass ? getRosterClassLabel(normalizedClass) : '1st Grade';
   const includeClass = !normalizedClass;
+  const includeLastNames = document.getElementById('rosterPrintIncludeLastNames')?.checked === true;
   const printWindow = window.open('', '_blank');
   if (!printWindow) {
     alert('Your browser blocked the print window. Allow pop-ups for this site and try again.');
     return;
   }
-  const rowsHtml = rosterRows.map(row => `
+  const rowsHtml = rosterRows.map((row, index) => {
+    const displayName = includeLastNames
+      ? String(row.name || '').trim()
+      : getFirstNameFromRosterName(row.name);
+    return `
     <tr>
-      <td>${escapeHtml(row.name)}</td>
+      <td>${index + 1}</td>
+      <td>${escapeHtml(displayName || row.name || '')}</td>
       ${includeClass ? `<td>${escapeHtml(getRosterClassLabel(row.classKey))}</td>` : ''}
-      <td>${escapeHtml(getTransportationTypeLabel(row.type))}</td>
-      <td>${escapeHtml(getTransportationDurationLabel(row.duration))}</td>
-      <td>${escapeHtml(row.details || '')}</td>
     </tr>
-  `).join('');
-  const printHtml = `<!doctype html><html><head><title>${escapeHtml(classLabel)} Roster</title><style>@page{margin:.45in;}html,body{margin:0;padding:0;}body{font-family:Arial,sans-serif;color:#1f2937;}h1{margin:0 0 4px;font-size:26px;color:#475569;}p{margin:0 0 14px;color:#64748b;font-size:13px;}table{width:100%;border-collapse:collapse;font-size:12px;}th{background:#f7efe2;color:#475569;text-align:left;}th,td{border:1px solid #d8c7ad;padding:7px 8px;vertical-align:top;}tr{break-inside:avoid;}@media print{html,body{width:auto;height:auto;}}</style></head><body><h1>${escapeHtml(classLabel)} Roster</h1><p>Teacher copy - ${rosterRows.length} scholar${rosterRows.length === 1 ? '' : 's'}</p><table><thead><tr><th>Scholar</th>${includeClass ? '<th>Class</th>' : ''}<th>Dismissal</th><th>Status</th><th>Details</th></tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`;
+  `;
+  }).join('');
+  const printHtml = `<!doctype html><html><head><title>${escapeHtml(classLabel)} Roster</title><style>@page{margin:.45in;}html,body{margin:0;padding:0;}body{font-family:Arial,sans-serif;color:#1f2937;}h1{margin:0 0 4px;font-size:26px;color:#475569;}p{margin:0 0 14px;color:#64748b;font-size:13px;}table{width:100%;border-collapse:collapse;font-size:14px;}th{background:#f7efe2;color:#475569;text-align:left;}th,td{border:1px solid #d8c7ad;padding:9px 10px;vertical-align:top;}td:first-child,th:first-child{width:3.25rem;text-align:center;color:#64748b;}tr{break-inside:avoid;}@media print{html,body{width:auto;height:auto;}}</style></head><body><h1>${escapeHtml(classLabel)} Roster</h1><p>${includeLastNames ? 'First and last names' : 'First names only'} - ${rosterRows.length} scholar${rosterRows.length === 1 ? '' : 's'}</p><table><thead><tr><th>#</th><th>Scholar</th>${includeClass ? '<th>Class</th>' : ''}</tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`;
   printWindow.document.open();
   printWindow.document.write(printHtml);
   printWindow.document.close();
@@ -18691,6 +18819,19 @@ function getScholarCheckInTeacherById(teacherId) {
 
 function getScholarCheckInMoodById(moodId) {
   return scholarCheckInMoods.find(mood => mood.id === moodId) || null;
+}
+
+function getScholarCheckInMoodIds() {
+  return scholarCheckInMoods.map(mood => mood.id);
+}
+
+function getScholarCheckInMoodLabel(moodId, fallback = '') {
+  const mood = getScholarCheckInMoodById(moodId);
+  return mood?.label || fallback || moodId || 'Mood';
+}
+
+function getScholarCheckInMoodFace(moodId) {
+  return getScholarCheckInMoodById(moodId)?.face || '';
 }
 
 function splitScholarCheckInName(name) {
@@ -19181,6 +19322,7 @@ function renderScholarCheckInDashboardShell() {
   }
   renderScholarCheckInHistorySelect();
   renderScholarCheckInTodayView();
+  renderScholarCheckInClassHistoryView();
   renderScholarCheckInHistoryView();
 }
 
@@ -19189,6 +19331,7 @@ function setScholarCheckInDashboardTeacher(teacherId) {
   scholarCheckInDashboardState.selectedScholarId = '';
   scholarCheckInDashboardState.todayRecords = [];
   scholarCheckInDashboardState.historyRecords = [];
+  scholarCheckInDashboardState.classHistoryRecords = [];
   renderScholarCheckInDashboardShell();
   refreshScholarCheckInDashboard();
 }
@@ -19209,7 +19352,10 @@ async function refreshScholarCheckInDashboard() {
       .map(doc => ({ id: doc.id, ...doc.data() }))
       .filter(record => scope.includes(record.teacherId) && record.teacherId === scholarCheckInDashboardState.teacherId);
     renderScholarCheckInTodayView();
-    await loadScholarCheckInHistoryForSelected();
+    await Promise.all([
+      loadScholarCheckInClassHistory(),
+      loadScholarCheckInHistoryForSelected()
+    ]);
     setScholarCheckInDashboardStatus('Check-ins loaded.', 'success');
   } catch (error) {
     console.error('Failed to load scholar check-ins:', error);
@@ -19367,42 +19513,810 @@ async function loadScholarCheckInHistoryForSelected() {
   }
 }
 
-function renderScholarCheckInHistoryView() {
-  const panel = document.getElementById('scholarCheckInHistoryPanel');
-  if (!panel) return;
-  const records = scholarCheckInDashboardState.historyRecords || [];
-  const scholar = getScholarCheckInRoster(scholarCheckInDashboardState.teacherId)
-    .find(item => item.id === scholarCheckInDashboardState.selectedScholarId);
-  if (!scholar) {
-    panel.innerHTML = '<p class="text-gray-600">Choose a scholar to see history.</p>';
-    return;
+
+let scholarCheckInHistoryFilters = {
+  dateRange: 'thisWeek',
+  mood: 'all',
+  teacherCheckIn: 'all',
+  customStart: '',
+  customEnd: ''
+};
+
+function getScholarHistoryLocalDateKey(date) {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getScholarHistoryWeekBounds(offsetWeeks = 0) {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+
+  const day = now.getDay();
+  const mondayOffset = day === 0 ? -6 : 1 - day;
+
+  const start = new Date(now);
+  start.setDate(now.getDate() + mondayOffset + (offsetWeeks * 7));
+
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+
+  return {
+    start: getScholarHistoryLocalDateKey(start),
+    end: getScholarHistoryLocalDateKey(end)
+  };
+}
+
+function getScholarHistoryMonthBounds() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+  return {
+    start: getScholarHistoryLocalDateKey(start),
+    end: getScholarHistoryLocalDateKey(end)
+  };
+}
+
+function getScholarCheckInRangeBounds(range) {
+  if (range === 'lastWeek') {
+    return getScholarHistoryWeekBounds(-1);
   }
-  if (!records.length) {
-    panel.innerHTML = `<p class="text-gray-600">No saved check-ins yet for ${escapeHtml(scholar.name)}.</p>`;
-    return;
+  if (range === 'thisMonth') {
+    return getScholarHistoryMonthBounds();
   }
-  const recentChips = records.slice(0, 10).map(record => {
-    const mood = getScholarCheckInMoodById(record.mood);
-    return `<span class="check-in-badge">${escapeHtml(getScholarCheckInDateLabel(record.date))}: ${mood ? mood.face : ''} ${escapeHtml(record.moodLabel || mood?.label || 'Mood')}</span>`;
+  if (range === 'last30') {
+    const end = new Date();
+    end.setHours(0, 0, 0, 0);
+    const start = new Date(end);
+    start.setDate(end.getDate() - 29);
+    return {
+      start: getScholarHistoryLocalDateKey(start),
+      end: getScholarHistoryLocalDateKey(end)
+    };
+  }
+  return getScholarHistoryWeekBounds(0);
+}
+
+function getScholarCheckInClassHistoryRangeLabel() {
+  const range = scholarCheckInDashboardState.classHistoryRange || 'thisWeek';
+  const bounds = getScholarCheckInRangeBounds(range);
+  if (range === 'thisWeek') return `This Week (${getScholarCheckInDateLabel(bounds.start)} - ${getScholarCheckInDateLabel(bounds.end)})`;
+  if (range === 'lastWeek') return `Last Week (${getScholarCheckInDateLabel(bounds.start)} - ${getScholarCheckInDateLabel(bounds.end)})`;
+  if (range === 'thisMonth') return `This Month (${getScholarCheckInDateLabel(bounds.start)} - ${getScholarCheckInDateLabel(bounds.end)})`;
+  return `Last 30 Days (${getScholarCheckInDateLabel(bounds.start)} - ${getScholarCheckInDateLabel(bounds.end)})`;
+}
+
+function getScholarCheckInDateKeysInRange(start, end) {
+  const startDate = new Date(`${start}T00:00:00`);
+  const endDate = new Date(`${end}T00:00:00`);
+  if (!Number.isFinite(startDate.getTime()) || !Number.isFinite(endDate.getTime()) || startDate > endDate) {
+    return [];
+  }
+  const keys = [];
+  const current = new Date(startDate);
+  while (current <= endDate) {
+    keys.push(getScholarHistoryLocalDateKey(current));
+    current.setDate(current.getDate() + 1);
+  }
+  return keys;
+}
+
+function getScholarCheckInTopMood(records) {
+  const counts = getScholarCheckInMoodIds().reduce((summary, moodId) => {
+    summary[moodId] = records.filter(record => String(record.mood || '') === moodId).length;
+    return summary;
+  }, {});
+  return getScholarCheckInMoodIds()
+    .map(moodId => ({ moodId, count: counts[moodId] || 0 }))
+    .sort((a, b) => b.count - a.count)[0];
+}
+
+function renderScholarCheckInMoodSummary(records) {
+  return getScholarCheckInMoodIds().map(moodId => {
+    const count = records.filter(record => String(record.mood || '') === moodId).length;
+    return `<span class="check-in-badge">${getScholarCheckInMoodFace(moodId)} ${escapeHtml(getScholarCheckInMoodLabel(moodId))}: <strong>${count}</strong></span>`;
   }).join('');
+}
+
+function setScholarCheckInClassHistoryRange(value) {
+  scholarCheckInDashboardState.classHistoryRange = value || 'thisWeek';
+  const select = document.getElementById('scholarCheckInClassHistoryRange');
+  if (select) select.value = scholarCheckInDashboardState.classHistoryRange;
+  loadScholarCheckInClassHistory();
+}
+
+async function loadScholarCheckInClassHistory() {
+  const panel = document.getElementById('scholarCheckInClassHistoryPanel');
+  if (!panel || !db) return;
+  const user = getApprovedCurriculumUser();
+  const scope = getScholarCheckInTeacherScope(user);
+  if (!scope.includes(scholarCheckInDashboardState.teacherId)) {
+    panel.innerHTML = '<p class="text-gray-600">Sign in through Teacher Tools to view history.</p>';
+    return;
+  }
+
+  const rangeSelect = document.getElementById('scholarCheckInClassHistoryRange');
+  if (rangeSelect) rangeSelect.value = scholarCheckInDashboardState.classHistoryRange || 'thisWeek';
+
+  const bounds = getScholarCheckInRangeBounds(scholarCheckInDashboardState.classHistoryRange);
+  panel.innerHTML = '<p class="text-gray-600">Loading class mood history...</p>';
+  try {
+    const snapshot = await db.collection(SCHOLAR_CHECK_IN_COLLECTION)
+      .where('date', '>=', bounds.start)
+      .where('date', '<=', bounds.end)
+      .get();
+    scholarCheckInDashboardState.classHistoryRecords = snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(record => scope.includes(record.teacherId) && record.teacherId === scholarCheckInDashboardState.teacherId)
+      .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
+    renderScholarCheckInClassHistoryView();
+  } catch (error) {
+    console.error('Failed to load class mood history:', error);
+    panel.innerHTML = '<p class="text-red-700 font-semibold">Class mood history could not load yet.</p>';
+  }
+}
+
+function getScholarCheckInClassHistorySummaries(roster, records) {
+  return roster.map(scholar => {
+    const scholarRecords = records.filter(record => record.scholarId === scholar.id);
+    const topMood = getScholarCheckInTopMood(scholarRecords);
+    const tiredCount = scholarRecords.filter(record => record.mood === 'tired').length;
+    const worriedCount = scholarRecords.filter(record => record.mood === 'worried').length;
+    const sadCount = scholarRecords.filter(record => record.mood === 'sad').length;
+    const madCount = scholarRecords.filter(record => record.mood === 'mad').length;
+    const requestCount = scholarRecords.filter(record => record.wantsTeacherCheckIn === true).length;
+    return {
+      scholar,
+      total: scholarRecords.length,
+      topMood,
+      tiredCount,
+      worriedCount,
+      sadCount,
+      madCount,
+      requestCount,
+      supportMoodCount: tiredCount + worriedCount + sadCount + madCount
+    };
+  });
+}
+
+function renderScholarCheckInClassHistoryView() {
+  const panel = document.getElementById('scholarCheckInClassHistoryPanel');
+  if (!panel) return;
+
+  const roster = getScholarCheckInRoster(scholarCheckInDashboardState.teacherId);
+  const rosterIds = new Set(roster.map(scholar => scholar.id));
+  const records = (scholarCheckInDashboardState.classHistoryRecords || [])
+    .filter(record => rosterIds.has(record.scholarId));
+  const bounds = getScholarCheckInRangeBounds(scholarCheckInDashboardState.classHistoryRange);
+  const dateKeys = getScholarCheckInDateKeysInRange(bounds.start, bounds.end);
+  const teacher = getScholarCheckInTeacherById(scholarCheckInDashboardState.teacherId);
+
+  const requestedCount = records.filter(record => record.wantsTeacherCheckIn === true).length;
+  const tiredCount = records.filter(record => record.mood === 'tired').length;
+  const topMood = getScholarCheckInTopMood(records);
+  const topMoodText = topMood && topMood.count
+    ? `${getScholarCheckInMoodLabel(topMood.moodId)} (${topMood.count})`
+    : 'None yet';
+
+  const dailyRows = dateKeys.map(dateKey => {
+    const dayRecords = records.filter(record => record.date === dateKey);
+    const dayTopMood = getScholarCheckInTopMood(dayRecords);
+    const dayTopMoodText = dayTopMood && dayTopMood.count
+      ? `${getScholarCheckInMoodFace(dayTopMood.moodId)} ${escapeHtml(getScholarCheckInMoodLabel(dayTopMood.moodId))} (${dayTopMood.count})`
+      : 'None';
+    const dayRequests = dayRecords.filter(record => record.wantsTeacherCheckIn === true).length;
+    return `
+      <tr>
+        <td><strong>${escapeHtml(getScholarCheckInDateLabel(dateKey))}</strong></td>
+        <td>${dayRecords.length}/${roster.length}</td>
+        <td>${dayTopMoodText}</td>
+        <td>${renderScholarCheckInMoodSummary(dayRecords)}</td>
+        <td>${dayRequests}</td>
+      </tr>
+    `;
+  }).join('');
+
+  const patternSummaries = getScholarCheckInClassHistorySummaries(roster, records)
+    .filter(summary => summary.total > 0)
+    .sort((a, b) =>
+      b.tiredCount - a.tiredCount
+      || b.supportMoodCount - a.supportMoodCount
+      || b.requestCount - a.requestCount
+      || b.total - a.total
+    );
+
+  const patternRows = patternSummaries.length ? patternSummaries.map(summary => {
+    const top = summary.topMood && summary.topMood.count
+      ? `${getScholarCheckInMoodFace(summary.topMood.moodId)} ${escapeHtml(getScholarCheckInMoodLabel(summary.topMood.moodId))} (${summary.topMood.count})`
+      : 'None';
+    return `
+      <tr>
+        <td><strong>${escapeHtml(summary.scholar.name)}</strong></td>
+        <td>${summary.total}</td>
+        <td>${top}</td>
+        <td>${summary.tiredCount}</td>
+        <td>${summary.worriedCount + summary.sadCount + summary.madCount}</td>
+        <td>${summary.requestCount}</td>
+      </tr>
+    `;
+  }).join('') : '<tr><td colspan="6">No check-ins in this range yet.</td></tr>';
+
+  if (!roster.length) {
+    panel.innerHTML = '<p class="text-gray-600">Add scholars to the roster first.</p>';
+    return;
+  }
+
   panel.innerHTML = `
-    <div class="mb-3">${recentChips}</div>
-    <table class="check-in-table">
-      <thead><tr><th>Date</th><th>Mood</th><th>Teacher check-in</th></tr></thead>
-      <tbody>
-        ${records.slice(0, 20).map(record => `
-          <tr>
-            <td>${escapeHtml(getScholarCheckInDateLabel(record.date))}</td>
-            <td>${getScholarCheckInMoodDisplay(record)}</td>
-            <td>${record.wantsTeacherCheckIn ? 'Yes' : 'No'}</td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
+    <div class="text-sm text-gray-600 mb-2">${escapeHtml(teacher.name)} - ${escapeHtml(getScholarCheckInClassHistoryRangeLabel())}</div>
+    <div class="check-in-summary-strip">
+      <div class="check-in-summary-tile"><span>Total check-ins</span><strong>${records.length}</strong></div>
+      <div class="check-in-summary-tile"><span>Teacher requests</span><strong>${requestedCount}</strong></div>
+      <div class="check-in-summary-tile"><span>Tired mornings</span><strong>${tiredCount}</strong></div>
+      <div class="check-in-summary-tile"><span>Most common mood</span><strong>${escapeHtml(topMoodText)}</strong></div>
+    </div>
+    <p class="check-in-history-note">The detailed history stays tucked away until you need it for a conference or follow-up conversation.</p>
+    <details class="check-in-history-details">
+      <summary>Show mood totals</summary>
+      <div class="check-in-history-details-body">
+        <div class="check-in-mood-summary">${renderScholarCheckInMoodSummary(records)}</div>
+      </div>
+    </details>
+    <details class="check-in-history-details">
+      <summary>Show daily summary</summary>
+      <div class="check-in-history-details-body overflow-x-auto">
+        <table class="check-in-table check-in-pattern-table">
+          <thead><tr><th>Date</th><th>Checked In</th><th>Top Mood</th><th>Mood Counts</th><th>Requests</th></tr></thead>
+          <tbody>${dailyRows || '<tr><td colspan="5">No dates in this range.</td></tr>'}</tbody>
+        </table>
+      </div>
+    </details>
+    <details class="check-in-history-details">
+      <summary>Show scholar patterns</summary>
+      <div class="check-in-history-details-body overflow-x-auto">
+        <table class="check-in-table check-in-pattern-table">
+          <thead><tr><th>Scholar</th><th>Check-ins</th><th>Most Common</th><th>Tired</th><th>Worried/Sad/Mad</th><th>Requests</th></tr></thead>
+          <tbody>${patternRows}</tbody>
+        </table>
+      </div>
+    </details>
   `;
 }
 
+function getScholarHistoryFilteredRecords() {
+  let records = [...(scholarCheckInDashboardState.historyRecords || [])];
+  const filters = scholarCheckInHistoryFilters;
+
+  let start = '';
+  let end = '';
+
+  if (filters.dateRange === 'thisWeek') {
+    ({ start, end } = getScholarHistoryWeekBounds(0));
+  } else if (filters.dateRange === 'lastWeek') {
+    ({ start, end } = getScholarHistoryWeekBounds(-1));
+  } else if (filters.dateRange === 'thisMonth') {
+    ({ start, end } = getScholarHistoryMonthBounds());
+  } else if (filters.dateRange === 'custom') {
+    start = filters.customStart || '';
+    end = filters.customEnd || '';
+  }
+
+  if (start) records = records.filter(record => String(record.date || '') >= start);
+  if (end) records = records.filter(record => String(record.date || '') <= end);
+
+  if (filters.mood !== 'all') {
+    records = records.filter(record => String(record.mood || '') === filters.mood);
+  }
+
+  if (filters.teacherCheckIn === 'yes') {
+    records = records.filter(record => record.wantsTeacherCheckIn === true);
+  } else if (filters.teacherCheckIn === 'no') {
+    records = records.filter(record => record.wantsTeacherCheckIn !== true);
+  }
+
+  return records;
+}
+
+function getScholarHistoryDateRangeLabel() {
+  const filters = scholarCheckInHistoryFilters;
+
+  if (filters.dateRange === 'all') return 'All Time';
+
+  let bounds = null;
+
+  if (filters.dateRange === 'thisWeek') {
+    bounds = getScholarHistoryWeekBounds(0);
+  } else if (filters.dateRange === 'lastWeek') {
+    bounds = getScholarHistoryWeekBounds(-1);
+  } else if (filters.dateRange === 'thisMonth') {
+    bounds = getScholarHistoryMonthBounds();
+  } else if (filters.dateRange === 'custom') {
+    if (!filters.customStart && !filters.customEnd) return 'Custom Dates';
+    const startText = filters.customStart ? getScholarCheckInDateLabel(filters.customStart) : 'Beginning';
+    const endText = filters.customEnd ? getScholarCheckInDateLabel(filters.customEnd) : 'Today';
+    return `${startText} - ${endText}`;
+  }
+
+  if (!bounds) return 'All Time';
+
+  return `${getScholarCheckInDateLabel(bounds.start)} - ${getScholarCheckInDateLabel(bounds.end)}`;
+}
+
+function setScholarHistoryDateRange(value) {
+  scholarCheckInHistoryFilters.dateRange = value || 'thisWeek';
+  renderScholarCheckInHistoryView();
+}
+
+function setScholarHistoryMood(value) {
+  scholarCheckInHistoryFilters.mood = value || 'all';
+  renderScholarCheckInHistoryView();
+}
+
+function setScholarHistoryTeacherCheckIn(value) {
+  scholarCheckInHistoryFilters.teacherCheckIn = value || 'all';
+  renderScholarCheckInHistoryView();
+}
+
+function setScholarHistoryCustomDate(which, value) {
+  if (which === 'start') {
+    scholarCheckInHistoryFilters.customStart = value || '';
+  } else {
+    scholarCheckInHistoryFilters.customEnd = value || '';
+  }
+  renderScholarCheckInHistoryView();
+}
+
+function resetScholarHistoryFilters() {
+  scholarCheckInHistoryFilters = {
+    dateRange: 'thisWeek',
+    mood: 'all',
+    teacherCheckIn: 'all',
+    customStart: '',
+    customEnd: ''
+  };
+  renderScholarCheckInHistoryView();
+}
+
+function renderScholarCheckInHistoryView() {
+  const panel = document.getElementById('scholarCheckInHistoryPanel');
+  if (!panel) return;
+
+  const allRecords = scholarCheckInDashboardState.historyRecords || [];
+  const scholar = getScholarCheckInRoster(scholarCheckInDashboardState.teacherId)
+    .find(item => item.id === scholarCheckInDashboardState.selectedScholarId);
+
+  if (!scholar) {
+    panel.innerHTML = 'Choose a scholar to see history.';
+    return;
+  }
+
+  if (!allRecords.length) {
+    panel.innerHTML = `<p class="text-gray-600">No saved check-ins yet for ${escapeHtml(scholar.name)}.</p>`;
+    return;
+  }
+
+  const records = getScholarHistoryFilteredRecords();
+
+  const moodIds = getScholarCheckInMoodIds();
+
+  const moodOptions = moodIds.map(moodId => {
+    const mood = getScholarCheckInMoodById(moodId);
+    if (!mood) return '';
+    const label = mood.label || moodId;
+    const face = mood.face || '';
+    return `<option value="${escapeHtml(moodId)}" ${scholarCheckInHistoryFilters.mood === moodId ? 'selected' : ''}>${face} ${escapeHtml(label)}</option>`;
+  }).join('');
+
+  const moodCounts = {};
+  records.forEach(record => {
+    const moodId = String(record.mood || '');
+    if (!moodId) return;
+    moodCounts[moodId] = (moodCounts[moodId] || 0) + 1;
+  });
+
+  const summaryChips = moodIds.map(moodId => {
+    const mood = getScholarCheckInMoodById(moodId);
+    if (!mood) return '';
+    const label = mood.label || moodId;
+    const face = mood.face || '';
+    return `<span class="check-in-badge">${face} ${escapeHtml(label)}: <strong>${moodCounts[moodId] || 0}</strong></span>`;
+  }).join('');
+
+  const requestedCount = records.filter(record => record.wantsTeacherCheckIn === true).length;
+
+  const customDates = scholarCheckInHistoryFilters.dateRange === 'custom'
+    ? `
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+        <label style="font-size:13px;font-weight:600;">
+          Start Date
+          <input type="date"
+            value="${escapeHtml(scholarCheckInHistoryFilters.customStart)}"
+            onchange="setScholarHistoryCustomDate('start', this.value)"
+            style="display:block;margin-top:4px;padding:7px;border:1px solid #cbd5e1;border-radius:8px;">
+        </label>
+        <label style="font-size:13px;font-weight:600;">
+          End Date
+          <input type="date"
+            value="${escapeHtml(scholarCheckInHistoryFilters.customEnd)}"
+            onchange="setScholarHistoryCustomDate('end', this.value)"
+            style="display:block;margin-top:4px;padding:7px;border:1px solid #cbd5e1;border-radius:8px;">
+        </label>
+      </div>
+    `
+    : '';
+
+  const tableRows = records.map(record => `
+    <tr>
+      <td>${escapeHtml(getScholarCheckInDateLabel(record.date))}</td>
+      <td>${getScholarCheckInMoodDisplay(record)}</td>
+      <td>${record.wantsTeacherCheckIn ? 'Yes' : 'No'}</td>
+    </tr>
+  `).join('');
+
+  panel.innerHTML = `
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:14px;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:18px;font-weight:700;color:#334155;">
+            ${escapeHtml(scholar.name)}
+          </div>
+          <div style="font-size:13px;color:#64748b;margin-top:2px;">
+            ${escapeHtml(getScholarHistoryDateRangeLabel())}
+          </div>
+        </div>
+
+        <button type="button"
+          onclick="printScholarCheckInHistoryReport()"
+          ${records.length ? '' : 'disabled'}
+          style="padding:9px 14px;border-radius:9px;border:0;background:#475569;color:white;font-weight:700;cursor:${records.length ? 'pointer' : 'not-allowed'};opacity:${records.length ? '1' : '.45'};">
+          Print Report
+        </button>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+        <label style="font-size:13px;font-weight:600;">
+          Date Range
+          <select onchange="setScholarHistoryDateRange(this.value)"
+            style="display:block;margin-top:4px;padding:7px;border:1px solid #cbd5e1;border-radius:8px;">
+            <option value="thisWeek" ${scholarCheckInHistoryFilters.dateRange === 'thisWeek' ? 'selected' : ''}>This Week</option>
+            <option value="lastWeek" ${scholarCheckInHistoryFilters.dateRange === 'lastWeek' ? 'selected' : ''}>Last Week</option>
+            <option value="thisMonth" ${scholarCheckInHistoryFilters.dateRange === 'thisMonth' ? 'selected' : ''}>This Month</option>
+            <option value="all" ${scholarCheckInHistoryFilters.dateRange === 'all' ? 'selected' : ''}>All Time</option>
+            <option value="custom" ${scholarCheckInHistoryFilters.dateRange === 'custom' ? 'selected' : ''}>Custom Dates</option>
+          </select>
+        </label>
+
+        <label style="font-size:13px;font-weight:600;">
+          Mood
+          <select onchange="setScholarHistoryMood(this.value)"
+            style="display:block;margin-top:4px;padding:7px;border:1px solid #cbd5e1;border-radius:8px;">
+            <option value="all" ${scholarCheckInHistoryFilters.mood === 'all' ? 'selected' : ''}>All Moods</option>
+            ${moodOptions}
+          </select>
+        </label>
+
+        <label style="font-size:13px;font-weight:600;">
+          Teacher Check-In
+          <select onchange="setScholarHistoryTeacherCheckIn(this.value)"
+            style="display:block;margin-top:4px;padding:7px;border:1px solid #cbd5e1;border-radius:8px;">
+            <option value="all" ${scholarCheckInHistoryFilters.teacherCheckIn === 'all' ? 'selected' : ''}>All</option>
+            <option value="yes" ${scholarCheckInHistoryFilters.teacherCheckIn === 'yes' ? 'selected' : ''}>Requested</option>
+            <option value="no" ${scholarCheckInHistoryFilters.teacherCheckIn === 'no' ? 'selected' : ''}>Not Requested</option>
+          </select>
+        </label>
+
+        <div style="display:flex;align-items:flex-end;">
+          <button type="button"
+            onclick="resetScholarHistoryFilters()"
+            style="padding:8px 12px;border-radius:8px;border:1px solid #cbd5e1;background:white;color:#475569;font-weight:600;cursor:pointer;">
+            Reset
+          </button>
+        </div>
+      </div>
+
+      ${customDates}
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <div style="font-size:14px;font-weight:700;color:#475569;margin-bottom:8px;">
+        Filtered Summary
+      </div>
+
+      <div style="display:flex;gap:7px;flex-wrap:wrap;">
+        <span class="check-in-badge">Total Check-Ins: <strong>${records.length}</strong></span>
+        ${summaryChips}
+        <span class="check-in-badge">Teacher Check-In Requested: <strong>${requestedCount}</strong></span>
+      </div>
+    </div>
+
+    ${records.length
+      ? `
+        <table class="check-in-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Mood</th>
+              <th>Teacher check-in</th>
+            </tr>
+          </thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      `
+      : `
+        <div style="padding:18px;text-align:center;color:#64748b;background:#f8fafc;border-radius:10px;">
+          No check-ins match these filters.
+        </div>
+      `
+    }
+  `;
+}
+
+function printScholarCheckInHistoryReport() {
+  const records = getScholarHistoryFilteredRecords();
+  if (!records.length) {
+    alert('No check-ins match these filters.');
+    return;
+  }
+
+  const teacher = getScholarCheckInTeacherById(scholarCheckInDashboardState.teacherId);
+  const scholar = getScholarCheckInRoster(scholarCheckInDashboardState.teacherId)
+    .find(item => item.id === scholarCheckInDashboardState.selectedScholarId);
+
+  if (!teacher || !scholar) return;
+
+  const allRecords = scholarCheckInDashboardState.historyRecords || [];
+  const moodIds = getScholarCheckInMoodIds();
+
+  const moodSummaryRows = moodIds.map(moodId => {
+    const mood = getScholarCheckInMoodById(moodId);
+    const label = mood?.label || allRecords.find(record => String(record.mood || '') === moodId)?.moodLabel || moodId;
+    const face = mood?.face || '';
+    const count = records.filter(record => String(record.mood || '') === moodId).length;
+
+    return `<tr>
+      <td>${escapeHtml(face)} ${escapeHtml(label)}</td>
+      <td>${count}</td>
+    </tr>`;
+  }).join('');
+
+  const requestedCount = records.filter(record => record.wantsTeacherCheckIn === true).length;
+
+  const historyRows = records.map(record => {
+    const mood = getScholarCheckInMoodById(record.mood);
+    const moodText = `${mood?.face || ''} ${record.moodLabel || mood?.label || 'Mood'}`.trim();
+
+    return `<tr>
+      <td>${escapeHtml(getScholarCheckInDateLabel(record.date))}</td>
+      <td>${escapeHtml(moodText)}</td>
+      <td>${record.wantsTeacherCheckIn ? 'Yes' : 'No'}</td>
+    </tr>`;
+  }).join('');
+
+  let moodFilterText = 'All Moods';
+  if (scholarCheckInHistoryFilters.mood !== 'all') {
+    const selectedMood = getScholarCheckInMoodById(scholarCheckInHistoryFilters.mood);
+    moodFilterText = selectedMood?.label || scholarCheckInHistoryFilters.mood;
+  }
+
+  let requestFilterText = 'All';
+  if (scholarCheckInHistoryFilters.teacherCheckIn === 'yes') requestFilterText = 'Requested';
+  if (scholarCheckInHistoryFilters.teacherCheckIn === 'no') requestFilterText = 'Not Requested';
+
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) {
+    alert('Your browser blocked the print window. Allow pop-ups for this site and try again.');
+    return;
+  }
+
+  const reportDate = new Date().toLocaleDateString(undefined, {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  });
+
+  const title = `${scholar.name} - Scholar Check-In Report`;
+
+  const printHtml = `<!doctype html>
+<html>
+<head>
+  <title>${escapeHtml(title)}</title>
+  <style>
+    @page { margin: .55in; }
+    body { font-family: Arial, sans-serif; color: #1f2937; margin: 0; }
+    h1 { margin: 0; color: #475569; font-size: 24px; }
+    h2 { margin: 24px 0 8px; color: #475569; font-size: 16px; }
+    .sub { margin: 5px 0; color: #64748b; font-size: 13px; }
+    .report-box { margin-top: 18px; padding: 12px 14px; border: 1px solid #d8c7ad; border-radius: 8px; background: #fafafa; }
+    .report-box div { margin: 4px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+    th { background: #f7efe2; color: #475569; text-align: left; }
+    th, td { border: 1px solid #d8c7ad; padding: 7px 8px; vertical-align: top; }
+    tr { break-inside: avoid; }
+    .footer { margin-top: 24px; padding-top: 8px; border-top: 1px solid #d1d5db; color: #64748b; font-size: 11px; }
+  </style>
+</head>
+<body>
+  <h1>Scholar Check-In Report</h1>
+  <div class="sub"><strong>Scholar:</strong> ${escapeHtml(scholar.name)}</div>
+  <div class="sub"><strong>Teacher:</strong> ${escapeHtml(teacher.name)}</div>
+
+  <div class="report-box">
+    <div><strong>Date Range:</strong> ${escapeHtml(getScholarHistoryDateRangeLabel())}</div>
+    <div><strong>Mood Filter:</strong> ${escapeHtml(moodFilterText)}</div>
+    <div><strong>Teacher Check-In Filter:</strong> ${escapeHtml(requestFilterText)}</div>
+    <div><strong>Total Matching Check-Ins:</strong> ${records.length}</div>
+    <div><strong>Teacher Check-Ins Requested:</strong> ${requestedCount}</div>
+  </div>
+
+  <h2>Mood Summary</h2>
+  <table>
+    <thead><tr><th>Mood</th><th>Count</th></tr></thead>
+    <tbody>${moodSummaryRows}</tbody>
+  </table>
+
+  <h2>Check-In History</h2>
+  <table>
+    <thead><tr><th>Date</th><th>Mood</th><th>Teacher Check-In Requested</th></tr></thead>
+    <tbody>${historyRows}</tbody>
+  </table>
+
+  <div class="footer">Report printed: ${escapeHtml(reportDate)}</div>
+</body>
+</html>`;
+
+  printWindow.document.open();
+  printWindow.document.write(printHtml);
+  printWindow.document.close();
+
+  setTimeout(() => {
+    printWindow.focus();
+    printWindow.print();
+  }, 150);
+}
+
+function printScholarCheckInClassHistoryReport() {
+  const teacher = getScholarCheckInTeacherById(scholarCheckInDashboardState.teacherId);
+  const roster = getScholarCheckInRoster(teacher.id);
+  const rosterIds = new Set(roster.map(scholar => scholar.id));
+  const records = (scholarCheckInDashboardState.classHistoryRecords || [])
+    .filter(record => rosterIds.has(record.scholarId));
+  if (!records.length) {
+    alert('No class check-ins are saved for this date range yet.');
+    return;
+  }
+
+  const bounds = getScholarCheckInRangeBounds(scholarCheckInDashboardState.classHistoryRange);
+  const dateKeys = getScholarCheckInDateKeysInRange(bounds.start, bounds.end);
+  const requestedCount = records.filter(record => record.wantsTeacherCheckIn === true).length;
+  const tiredCount = records.filter(record => record.mood === 'tired').length;
+  const topMood = getScholarCheckInTopMood(records);
+  const topMoodText = topMood && topMood.count
+    ? `${getScholarCheckInMoodLabel(topMood.moodId)} (${topMood.count})`
+    : 'None yet';
+
+  const moodSummaryRows = getScholarCheckInMoodIds().map(moodId => {
+    const count = records.filter(record => record.mood === moodId).length;
+    return `<tr><td>${escapeHtml(getScholarCheckInMoodLabel(moodId))}</td><td>${count}</td></tr>`;
+  }).join('');
+
+  const dailyRows = dateKeys.map(dateKey => {
+    const dayRecords = records.filter(record => record.date === dateKey);
+    const dayTopMood = getScholarCheckInTopMood(dayRecords);
+    const dayTopMoodText = dayTopMood && dayTopMood.count
+      ? `${getScholarCheckInMoodLabel(dayTopMood.moodId)} (${dayTopMood.count})`
+      : 'None';
+    const dayRequests = dayRecords.filter(record => record.wantsTeacherCheckIn === true).length;
+    return `<tr>
+      <td>${escapeHtml(getScholarCheckInDateLabel(dateKey))}</td>
+      <td>${dayRecords.length}/${roster.length}</td>
+      <td>${escapeHtml(dayTopMoodText)}</td>
+      <td>${dayRequests}</td>
+    </tr>`;
+  }).join('');
+
+  const scholarRows = getScholarCheckInClassHistorySummaries(roster, records)
+    .filter(summary => summary.total > 0)
+    .sort((a, b) =>
+      b.tiredCount - a.tiredCount
+      || b.supportMoodCount - a.supportMoodCount
+      || b.requestCount - a.requestCount
+      || b.total - a.total
+    )
+    .map(summary => {
+      const top = summary.topMood && summary.topMood.count
+        ? `${getScholarCheckInMoodLabel(summary.topMood.moodId)} (${summary.topMood.count})`
+        : 'None';
+      return `<tr>
+        <td>${escapeHtml(summary.scholar.name)}</td>
+        <td>${summary.total}</td>
+        <td>${escapeHtml(top)}</td>
+        <td>${summary.tiredCount}</td>
+        <td>${summary.worriedCount}</td>
+        <td>${summary.sadCount}</td>
+        <td>${summary.madCount}</td>
+        <td>${summary.requestCount}</td>
+      </tr>`;
+    }).join('');
+
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) {
+    alert('Your browser blocked the print window. Allow pop-ups for this site and try again.');
+    return;
+  }
+
+  const title = `${teacher.name} - Class Mood History`;
+  const reportDate = new Date().toLocaleDateString(undefined, {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  });
+  const printHtml = `<!doctype html>
+<html>
+<head>
+  <title>${escapeHtml(title)}</title>
+  <style>
+    @page { margin: .55in; }
+    body { font-family: Arial, sans-serif; color: #1f2937; margin: 0; }
+    h1 { margin: 0; color: #475569; font-size: 24px; }
+    h2 { margin: 24px 0 8px; color: #475569; font-size: 16px; }
+    .sub { margin: 5px 0; color: #64748b; font-size: 13px; }
+    .report-box { margin-top: 18px; padding: 12px 14px; border: 1px solid #d8c7ad; border-radius: 8px; background: #fafafa; }
+    .report-box div { margin: 4px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 8px; }
+    th { background: #f7efe2; color: #475569; text-align: left; }
+    th, td { border: 1px solid #d8c7ad; padding: 6px 7px; vertical-align: top; }
+    tr { break-inside: avoid; }
+    .footer { margin-top: 24px; padding-top: 8px; border-top: 1px solid #d1d5db; color: #64748b; font-size: 11px; }
+  </style>
+</head>
+<body>
+  <h1>Class Mood History</h1>
+  <div class="sub"><strong>Teacher:</strong> ${escapeHtml(teacher.name)}</div>
+  <div class="sub"><strong>Date Range:</strong> ${escapeHtml(getScholarCheckInClassHistoryRangeLabel())}</div>
+
+  <div class="report-box">
+    <div><strong>Total Check-Ins:</strong> ${records.length}</div>
+    <div><strong>Teacher Check-Ins Requested:</strong> ${requestedCount}</div>
+    <div><strong>Tired Mornings:</strong> ${tiredCount}</div>
+    <div><strong>Most Common Mood:</strong> ${escapeHtml(topMoodText)}</div>
+  </div>
+
+  <h2>Mood Summary</h2>
+  <table>
+    <thead><tr><th>Mood</th><th>Count</th></tr></thead>
+    <tbody>${moodSummaryRows}</tbody>
+  </table>
+
+  <h2>Daily Summary</h2>
+  <table>
+    <thead><tr><th>Date</th><th>Checked In</th><th>Most Common Mood</th><th>Teacher Requests</th></tr></thead>
+    <tbody>${dailyRows}</tbody>
+  </table>
+
+  <h2>Scholar Patterns</h2>
+  <table>
+    <thead><tr><th>Scholar</th><th>Total</th><th>Most Common</th><th>Tired</th><th>Worried</th><th>Sad</th><th>Mad</th><th>Requests</th></tr></thead>
+    <tbody>${scholarRows || '<tr><td colspan="8">No scholar check-ins in this range.</td></tr>'}</tbody>
+  </table>
+
+  <div class="footer">Report printed: ${escapeHtml(reportDate)}</div>
+</body>
+</html>`;
+
+  printWindow.document.open();
+  printWindow.document.write(printHtml);
+  printWindow.document.close();
+
+  setTimeout(() => {
+    printWindow.focus();
+    printWindow.print();
+  }, 150);
+}
+
 function printScholarCheckInDashboard() {
+
   const teacher = getScholarCheckInTeacherById(scholarCheckInDashboardState.teacherId);
   const roster = getScholarCheckInRoster(teacher.id);
   const recordMap = getScholarCheckInRecordMap();
@@ -20595,6 +21509,7 @@ function openCreateShoutoutModal() {
   if (modal) {
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
+    updateCreateShoutoutTeacherSelector();
     // Clear form
     document.getElementById('scholarNameInput').value = '';
     document.getElementById('fromInput').value = '';
@@ -20709,6 +21624,32 @@ function getShoutoutChannelName(channel) {
   return getShoutoutChannelLabel(channel) + ' Channel';
 }
 
+function setCreateShoutoutTeacher(channel) {
+  switchShoutoutChannel(channel);
+  updateCreateShoutoutTeacherSelector();
+}
+
+function updateCreateShoutoutTeacherSelector() {
+  const davisButton = document.getElementById('createShoutoutTeacherDavisBtn');
+  const vestButton = document.getElementById('createShoutoutTeacherVestBtn');
+  const helper = document.getElementById('createShoutoutTeacherConfirmText');
+  const buttons = [davisButton, vestButton].filter(Boolean);
+  buttons.forEach(button => {
+    button.style.background = 'var(--md-white)';
+    button.style.color = 'var(--md-slate)';
+    button.style.border = '1px solid color-mix(in oklab, var(--md-slate) 45%, var(--md-white) 55%)';
+  });
+  const activeButton = activeShoutoutChannel === 'vest' ? vestButton : davisButton;
+  if (activeButton) {
+    activeButton.style.background = 'var(--md-coral)';
+    activeButton.style.color = 'var(--md-white)';
+    activeButton.style.border = '1px solid var(--md-coral)';
+  }
+  if (helper) {
+    helper.textContent = `This shoutout will be sent to ${getShoutoutChannelLabel(activeShoutoutChannel)}.`;
+  }
+}
+
 function getActiveShoutoutTvImageUrl() {
   return shoutoutTvImageUrls[activeShoutoutChannel] || '';
 }
@@ -20764,6 +21705,7 @@ function updateShoutoutChannelUI() {
   const channelName = getShoutoutChannelName(activeShoutoutChannel);
   if (activeLabel) activeLabel.textContent = 'Now watching: ' + channelName;
   if (createLabel) createLabel.textContent = channelName;
+  updateCreateShoutoutTeacherSelector();
   updateShoutoutHelpText();
 }
 
@@ -20889,76 +21831,102 @@ function refreshAdminShoutouts(filter = 'all') {
 }
 
 async function approveShoutout(id) {
-  const shoutout = allShoutouts.find(s => s.id === id);
-  if (shoutout) {
+  await saveSingleShoutoutAdminChange(id, function(shoutout) {
     shoutout.approved = true;
-    const saveSuccess = await saveShoutoutsToFirebase();
-    if (!saveSuccess) {
-      // Revert the change if save failed
-      shoutout.approved = false;
-    }
-    updateApprovedShoutouts();
-    refreshAdminShoutouts();
-  }
+    return shoutout;
+  });
 }
 
 async function archiveShoutout(id) {
-  const shoutout = allShoutouts.find(s => s.id === id);
-  if (shoutout) {
+  await saveSingleShoutoutAdminChange(id, function(shoutout) {
     shoutout.archived = true;
-    const saveSuccess = await saveShoutoutsToFirebase();
-    if (!saveSuccess) {
-      // Revert the change if save failed
-      delete shoutout.archived;
-    }
-    updateApprovedShoutouts();
-    refreshAdminShoutouts();
-  }
+    return shoutout;
+  });
 }
 
 async function unarchiveShoutout(id) {
-  const shoutout = allShoutouts.find(s => s.id === id);
-  if (shoutout) {
+  await saveSingleShoutoutAdminChange(id, function(shoutout) {
     shoutout.archived = false;
-    const saveSuccess = await saveShoutoutsToFirebase();
-    if (!saveSuccess) {
-      // Revert the change if save failed
-      shoutout.archived = true;
-    }
-    updateApprovedShoutouts();
-    refreshAdminShoutouts();
-  }
+    return shoutout;
+  });
 }
 
 async function deleteShoutout(id) {
   if (confirm('Delete this shoutout?')) {
-    const originalShoutouts = [...allShoutouts]; // Keep backup
-    allShoutouts = allShoutouts.filter(s => s.id !== id);
-    const saveSuccess = await saveShoutoutsToFirebase();
-    if (!saveSuccess) {
-      // Restore original data if save failed
-      allShoutouts = originalShoutouts;
-    }
-    updateApprovedShoutouts();
-    refreshAdminShoutouts();
+    await saveSingleShoutoutAdminChange(id, function() {
+      return null;
+    });
   }
 }
 
-function editShoutoutAdmin(id) {
+async function editShoutoutAdmin(id) {
   const shoutout = allShoutouts.find(s => s.id === id);
   if (!shoutout) return;
   
-  const originalMessage = shoutout.message;
   const newMessage = prompt('Edit message:', shoutout.message);
   if (newMessage !== null && newMessage.trim()) {
-    shoutout.message = newMessage.trim();
-    saveShoutoutsToFirebase().then(saveSuccess => {
-      if (!saveSuccess) {
-        // Revert the change if save failed
-        shoutout.message = originalMessage;
-      }
-      refreshAdminShoutouts();
+    await saveSingleShoutoutAdminChange(id, function(latestShoutout) {
+      latestShoutout.message = newMessage.trim();
+      return latestShoutout;
     });
+  }
+}
+
+async function saveSingleShoutoutAdminChange(id, changeShoutout) {
+  if (!db) {
+    showShoutoutError('Not connected to Firebase. Your shoutout update was not saved.');
+    return false;
+  }
+
+  try {
+    await ensureAuthenticated();
+    const shoutoutsRef = db.collection('shoutouts').doc('data');
+    const nextShoutouts = await db.runTransaction(async function(transaction) {
+      const doc = await transaction.get(shoutoutsRef);
+      const latestData = doc.exists ? doc.data() : {};
+      const latestShoutouts = Array.isArray(latestData.shoutouts) ? latestData.shoutouts : [];
+      let found = false;
+
+      const updatedShoutouts = latestShoutouts.reduce(function(list, shoutout) {
+        if (shoutout && shoutout.id === id) {
+          found = true;
+          const changedShoutout = changeShoutout(Object.assign({}, shoutout));
+          if (changedShoutout) {
+            list.push(changedShoutout);
+          }
+        } else {
+          list.push(shoutout);
+        }
+        return list;
+      }, []);
+
+      if (!found) {
+        throw new Error('shoutout-not-found');
+      }
+
+      transaction.set(shoutoutsRef, {
+        shoutouts: updatedShoutouts,
+        lastUpdated: new Date().toISOString()
+      }, { merge: true });
+
+      return updatedShoutouts;
+    });
+
+    allShoutouts = nextShoutouts;
+    updateApprovedShoutouts();
+    refreshAdminShoutouts();
+    console.log('Shoutout admin change saved with latest Firebase data');
+    return true;
+  } catch (error) {
+    console.error('Failed to save shoutout admin change:', error);
+    if (error && error.message === 'shoutout-not-found') {
+      showShoutoutError('That shoutout is no longer in Firebase. The list has been refreshed.');
+    } else {
+      showShoutoutError('Failed to save shoutout update. The list has been refreshed so new submissions are not overwritten.');
+    }
+    await loadShoutoutsFromFirebase();
+    refreshAdminShoutouts();
+    return false;
   }
 }
 
@@ -21027,12 +21995,39 @@ async function saveShoutoutsToFirebase(showErrorPopup = true, requireAuth = true
       }, { merge: true });
       console.log('Shoutout appended to Firebase using arrayUnion');
     } else {
-      // For admin operations (approve/delete/edit), replace entire array
-      await db.collection('shoutouts').doc('data').set({
-        shoutouts: allShoutouts,
-        lastUpdated: new Date().toISOString()
+      // Legacy fallback: merge the local list with the latest Firebase list so
+      // a stale teacher tab cannot erase new parent submissions.
+      const shoutoutsRef = db.collection('shoutouts').doc('data');
+      const mergedShoutouts = await db.runTransaction(async function(transaction) {
+        const doc = await transaction.get(shoutoutsRef);
+        const latestData = doc.exists ? doc.data() : {};
+        const latestShoutouts = Array.isArray(latestData.shoutouts) ? latestData.shoutouts : [];
+        const localById = new Map(allShoutouts.filter(Boolean).map(function(shoutout) {
+          return [shoutout.id, shoutout];
+        }));
+        const seenIds = new Set();
+        const merged = latestShoutouts.map(function(shoutout) {
+          if (shoutout && localById.has(shoutout.id)) {
+            seenIds.add(shoutout.id);
+            return localById.get(shoutout.id);
+          }
+          return shoutout;
+        });
+        allShoutouts.forEach(function(shoutout) {
+          if (shoutout && shoutout.id && !seenIds.has(shoutout.id) && !latestShoutouts.some(function(existing) {
+            return existing && existing.id === shoutout.id;
+          })) {
+            merged.push(shoutout);
+          }
+        });
+        transaction.set(shoutoutsRef, {
+          shoutouts: merged,
+          lastUpdated: new Date().toISOString()
+        }, { merge: true });
+        return merged;
       });
-      console.log('Shoutouts saved to Firebase');
+      allShoutouts = mergedShoutouts;
+      console.log('Shoutouts merged with latest Firebase data');
     }
     return true;
   } catch (error) {
@@ -26632,6 +27627,14 @@ document.head.appendChild(style);
           <div id="createShoutoutChannelLabel" class="text-lg font-bold" style="color: var(--md-coral);">Mr. Davis Channel</div>
         </div>
         <form id="shoutoutForm" class="space-y-4 text-left">
+          <div class="rounded-xl p-3" style="background: color-mix(in oklab, var(--md-white) 80%, var(--md-pebble) 20%); border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
+            <label class="block text-sm font-semibold mb-2 text-center" style="color: var(--md-slate);">Confirm your teacher</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button id="createShoutoutTeacherDavisBtn" type="button" class="px-4 py-3 rounded-xl font-semibold" onclick="setCreateShoutoutTeacher('davis')">Mr. Davis</button>
+              <button id="createShoutoutTeacherVestBtn" type="button" class="px-4 py-3 rounded-xl font-semibold" onclick="setCreateShoutoutTeacher('vest')">Ms. Vest</button>
+            </div>
+            <p id="createShoutoutTeacherConfirmText" class="text-xs text-center mt-2" style="color: var(--md-slate);">This shoutout will be sent to Mr. Davis.</p>
+          </div>
           <div>
             <label class="block text-sm font-semibold mb-2" style="color: var(--md-slate);">Scholar's Name</label>
             <input id="scholarNameInput" type="text" placeholder="e.g. Giovanni" class="w-full px-4 py-3 rounded-xl border text-center" style="font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif;">
