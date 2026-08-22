@@ -2475,6 +2475,106 @@
       line-height: 1.35;
       color: rgba(255,255,255,.86);
     }
+    .teacher-workspace-link,
+    .teacher-workspace-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .45rem;
+      min-height: 2.75rem;
+      border: 0;
+      border-radius: .8rem;
+      padding: .65rem 1rem;
+      background: var(--md-slate);
+      color: var(--md-white);
+      font-size: .95rem;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(43,43,43,.12);
+    }
+    .teacher-workspace-link:hover,
+    .teacher-workspace-action:hover {
+      transform: translateY(-1px);
+    }
+    .teacher-workspace-folder-list,
+    .teacher-workspace-resource-list {
+      display: grid;
+      gap: .75rem;
+    }
+    .teacher-workspace-folder {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .6rem;
+      border: 1px solid color-mix(in oklab, var(--md-slate) 18%, var(--md-white));
+      border-radius: .8rem;
+      background: color-mix(in oklab, var(--md-white) 90%, var(--md-pebble));
+      padding: .7rem .8rem;
+      text-align: left;
+      color: var(--md-ink);
+      font-weight: 800;
+    }
+    .teacher-workspace-folder.active {
+      border-color: var(--md-coral);
+      background: color-mix(in oklab, var(--md-white) 82%, var(--md-coral));
+    }
+    .teacher-workspace-folder-main {
+      flex: 1;
+      border: 0;
+      background: transparent;
+      text-align: left;
+      font: inherit;
+      color: inherit;
+      cursor: pointer;
+    }
+    .teacher-workspace-delete {
+      border: 0;
+      border-radius: 999px;
+      background: color-mix(in oklab, var(--md-white) 78%, var(--md-coral));
+      color: #9f2f24;
+      font-weight: 900;
+      width: 2rem;
+      height: 2rem;
+      cursor: pointer;
+    }
+    .teacher-workspace-resource {
+      border: 1px solid color-mix(in oklab, var(--md-slate) 16%, var(--md-white));
+      border-radius: .9rem;
+      background: color-mix(in oklab, var(--md-white) 94%, var(--md-pebble));
+      padding: .9rem;
+    }
+    .teacher-workspace-resource-title {
+      color: var(--md-slate);
+      font-family: "Nunito", "Inter", sans-serif;
+      font-size: 1.05rem;
+      font-weight: 900;
+    }
+    .teacher-workspace-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 1.65rem;
+      border-radius: 999px;
+      background: color-mix(in oklab, var(--md-pebble) 82%, var(--md-white));
+      color: var(--md-slate);
+      padding: .2rem .55rem;
+      font-size: .75rem;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+    .teacher-workspace-resource-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin-top: .7rem;
+    }
+    .teacher-workspace-empty {
+      border: 1px dashed color-mix(in oklab, var(--md-slate) 22%, var(--md-white));
+      border-radius: .9rem;
+      padding: 1rem;
+      color: #64748b;
+      font-size: .95rem;
+    }
     .curriculum-library-list {
       max-height: 28rem;
       overflow-y: auto;
@@ -4421,6 +4521,10 @@
               <h3 class="font-display font-bold">Curriculum Library</h3>
               <p>Upload lessons, save AI drafts, schedule parent pages, and print weekly plans.</p>
             </button>
+            <button id="teacherWorkspaceTool" type="button" class="teacher-tool-book" style="background: linear-gradient(90deg, #3b5f75 0 .55rem, #6f8fa3 .55rem);" onclick="openTeacherWorkspaceTool()">
+              <h3 class="font-display font-bold">Teacher Workspace</h3>
+              <p>Open Learning Games and organize private folders, notes, links, files, resources, and data.</p>
+            </button>
             <button id="teacherEditWebsiteTool" type="button" class="teacher-tool-book" style="background: linear-gradient(90deg, #2f6f73 0 .55rem, #3f8f8b .55rem);" onclick="openTeacherEditTool()">
               <h3 id="teacherEditWebsiteTitle" class="font-display font-bold">Edit Website</h3>
               <p id="teacherEditWebsiteDesc">Unlock the public site editor for photos, text, tabs, calendars, and classroom updates.</p>
@@ -4437,6 +4541,73 @@
               <h3 class="font-display font-bold">Printables</h3>
               <p style="color: color-mix(in oklab, var(--md-ink) 78%, var(--md-white));">Coming later for quick forms, notes, and family handouts.</p>
             </button>
+          </div>
+        </div>
+
+        <div id="teacherWorkspace" class="space-y-4" style="display: none;">
+          <div id="teacherWorkspaceStatus" class="mb-3 text-sm font-semibold text-gray-600" aria-live="polite"></div>
+          <div class="curriculum-builder-panel rounded-2xl p-5">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <div>
+                <h3 class="text-2xl font-display font-bold" style="color: var(--md-slate);">Teacher Workspace</h3>
+                <p class="mt-2 text-sm text-gray-600 max-w-3xl">A private teacher-only place for folders, planning notes, resource links, useful files, and classroom data you want close to the Hub.</p>
+              </div>
+              <a class="teacher-workspace-link" href="https://firstgradelearninggames.web.app/" target="_blank" rel="noopener noreferrer">Open Learning Games</a>
+            </div>
+          </div>
+
+          <div class="grid lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] gap-4">
+            <section class="curriculum-builder-panel rounded-2xl p-5">
+              <h3 class="text-xl font-display font-bold mb-3" style="color: var(--md-coral);">Folders</h3>
+              <div class="flex flex-col sm:flex-row lg:flex-col gap-2">
+                <input id="teacherWorkspaceFolderInput" class="curriculum-builder-field" type="text" placeholder="New folder name">
+                <button type="button" class="teacher-workspace-action" style="background: var(--md-coral);" onclick="createTeacherWorkspaceFolder()">Add Folder</button>
+              </div>
+              <div id="teacherWorkspaceFolderList" class="teacher-workspace-folder-list mt-4"></div>
+            </section>
+
+            <section class="curriculum-builder-panel rounded-2xl p-5">
+              <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-4">
+                <div>
+                  <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">Resources</h3>
+                  <p class="text-sm text-gray-600">Save notes, links, file URLs, data notes, or anything you want grouped for teaching.</p>
+                </div>
+              </div>
+              <div class="grid md:grid-cols-2 gap-3 mb-4">
+                <div>
+                  <label class="curriculum-builder-label" for="teacherWorkspaceResourceType">Type</label>
+                  <select id="teacherWorkspaceResourceType" class="curriculum-builder-field">
+                    <option value="note">Note</option>
+                    <option value="link">Link</option>
+                    <option value="file">File / resource link</option>
+                    <option value="data">Data note</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="curriculum-builder-label" for="teacherWorkspaceResourceFolder">Folder</label>
+                  <select id="teacherWorkspaceResourceFolder" class="curriculum-builder-field"></select>
+                </div>
+                <div>
+                  <label class="curriculum-builder-label" for="teacherWorkspaceResourceTitle">Title</label>
+                  <input id="teacherWorkspaceResourceTitle" class="curriculum-builder-field" type="text" placeholder="Resource title">
+                </div>
+                <div>
+                  <label class="curriculum-builder-label" for="teacherWorkspaceResourceUrl">Link or file URL</label>
+                  <input id="teacherWorkspaceResourceUrl" class="curriculum-builder-field" type="url" placeholder="https://...">
+                </div>
+                <div class="md:col-span-2">
+                  <label class="curriculum-builder-label" for="teacherWorkspaceResourceNotes">Notes</label>
+                  <textarea id="teacherWorkspaceResourceNotes" class="curriculum-builder-field" rows="4" placeholder="Notes, directions, data, resource details..."></textarea>
+                </div>
+              </div>
+              <button type="button" class="teacher-workspace-action" style="background: var(--md-slate);" onclick="saveTeacherWorkspaceResource()">Save Resource</button>
+              <div id="teacherWorkspaceResourceList" class="teacher-workspace-resource-list mt-5"></div>
+            </section>
+          </div>
+
+          <div class="curriculum-builder-panel rounded-2xl p-5">
+            <h3 class="text-xl font-display font-bold" style="color: var(--md-coral);">Future Recommendation Space</h3>
+            <p class="mt-2 text-sm text-gray-600">Learning Games can keep scholar performance and skill data while the Hub keeps curriculum lessons and resources. This space is ready for future curriculum recommendations that link back to saved Hub lessons.</p>
           </div>
         </div>
 
@@ -5488,6 +5659,9 @@
     let approvedShoutouts = []; // Only approved shoutouts for shuffle
     let currentShoutoutIndex = 0; // For shuffling through approved shoutouts
     let activeShoutoutChannel = 'davis'; // Which class channel is showing on Shoutout TV
+    let activeAdminShoutoutStatusFilter = 'all';
+    let activeAdminShoutoutTeacherFilter = 'all';
+    let activeAdminShoutoutEditId = '';
     let mainTVMessage = 'Welcome to our amazing first grade classroom! Keep being awesome, scholars!'; // Main TV message
     let shoutoutTvImageUrls = { davis: '', vest: '' }; // Optional TV images by Shoutout TV channel
     
@@ -5616,6 +5790,15 @@
       { id: 'unit-11', name: 'Unit 11: Year-End Review and Assessment' }
     ];
     
+    function scrollPagePanelIntoView(pageId) {
+      window.requestAnimationFrame(() => {
+        const panel = document.querySelector(`[data-page-panel="${pageId}"]`);
+        if (panel && typeof panel.scrollIntoView === 'function') {
+          panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    }
+
     // Tab navigation
     function showPage(pageId) {
       if (pageId === 'roster' && !document.body.classList.contains('editing') && !teacherRosterUnlocked) {
@@ -5655,6 +5838,7 @@
         syncMobileSpecialsCards();
       } else if (pageId === 'curriculum-builder') {
         initializeCurriculumBuilder();
+        scrollPagePanelIntoView('curriculum-builder');
       } else if (pageId === 'check-in-dashboard') {
         renderScholarCheckInDashboardShell();
       }
@@ -6530,6 +6714,9 @@
       'lvest1010@gmail.com',
       'lvest@crossroadsschoolskc.org'
     ];
+    const LEARNING_GAMES_URL = 'https://firstgradelearninggames.web.app/';
+    const TEACHER_WORKSPACE_COLLECTION = 'teacherWorkspace';
+    const TEACHER_WORKSPACE_DOC_ID = 'current';
     let curriculumLessonsCache = [];
     let curriculumPlansCache = [];
     let curriculumModuleInfoCache = Object.create(null);
@@ -6555,6 +6742,10 @@
     let curriculumSelectedPlanDateKeys = new Set();
     let curriculumActiveCalendarDateKey = '';
     let curriculumActiveLibraryTab = 'upload';
+    let teacherWorkspaceData = getEmptyTeacherWorkspaceData();
+    let teacherWorkspaceLoaded = false;
+    let teacherWorkspaceActiveFolderId = 'all';
+    let teacherWorkspaceEditingResourceId = '';
     let teacherRosterUnlocked = false;
     let rosterEditMode = false;
     let activeRosterClassTab = 'davis';
@@ -6914,6 +7105,311 @@
       if (curriculumActiveLibraryTab === 'upload') collapseCurriculumMobileSections();
     }
 
+    function getEmptyTeacherWorkspaceData() {
+      return { folders: [], resources: [] };
+    }
+
+    function createTeacherWorkspaceId(prefix = 'item') {
+      return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+    }
+
+    function normalizeTeacherWorkspaceData(data = {}) {
+      const folders = Array.isArray(data.folders) ? data.folders : [];
+      const resources = Array.isArray(data.resources) ? data.resources : [];
+      return {
+        folders: folders
+          .map(folder => ({
+            id: String(folder.id || createTeacherWorkspaceId('folder')),
+            title: String(folder.title || '').trim(),
+            createdAtLocal: String(folder.createdAtLocal || '')
+          }))
+          .filter(folder => folder.title),
+        resources: resources
+          .map(resource => ({
+            id: String(resource.id || createTeacherWorkspaceId('resource')),
+            type: ['note', 'link', 'file', 'data'].includes(resource.type) ? resource.type : 'note',
+            folderId: String(resource.folderId || ''),
+            title: String(resource.title || '').trim(),
+            url: String(resource.url || '').trim(),
+            notes: String(resource.notes || ''),
+            createdAtLocal: String(resource.createdAtLocal || ''),
+            updatedAtLocal: String(resource.updatedAtLocal || '')
+          }))
+          .filter(resource => resource.title || resource.notes || resource.url)
+      };
+    }
+
+    function setTeacherWorkspaceStatus(message, type = 'info') {
+      const status = document.getElementById('teacherWorkspaceStatus');
+      if (!status) return;
+      status.textContent = message || '';
+      status.style.color = type === 'error' ? '#dc2626' : (type === 'success' ? '#15803d' : '#4b5563');
+    }
+
+    function getTeacherWorkspaceTypeLabel(type) {
+      const labels = {
+        note: 'Note',
+        link: 'Link',
+        file: 'File',
+        data: 'Data'
+      };
+      return labels[type] || 'Note';
+    }
+
+    function getTeacherWorkspaceFolderLabel(folderId) {
+      if (!folderId) return 'No folder';
+      return teacherWorkspaceData.folders.find(folder => folder.id === folderId)?.title || 'No folder';
+    }
+
+    function isSafeTeacherWorkspaceUrl(value) {
+      const url = String(value || '').trim();
+      return !url || /^(https?:\/\/|mailto:|tel:)/i.test(url);
+    }
+
+    async function openTeacherWorkspaceTool() {
+      try {
+        const user = await ensureCurriculumTeacherUser();
+        if (!user) return;
+        curriculumToolView = 'teacher-workspace';
+        showCurriculumWorkspace(true);
+        await loadTeacherWorkspace();
+      } catch (error) {
+        console.error('Teacher Workspace failed:', error);
+        setCurriculumStatus(error.message || 'Teacher Workspace could not open.', 'error');
+      }
+    }
+
+    async function loadTeacherWorkspace() {
+      if (teacherWorkspaceLoaded) {
+        renderTeacherWorkspace();
+        return;
+      }
+      if (!db) throw new Error('Teacher Workspace storage is not available. Please refresh and try again.');
+      setTeacherWorkspaceStatus('Loading workspace...');
+      const snapshot = await db.collection(TEACHER_WORKSPACE_COLLECTION).doc(TEACHER_WORKSPACE_DOC_ID).get();
+      teacherWorkspaceData = normalizeTeacherWorkspaceData(snapshot.exists ? snapshot.data() : {});
+      teacherWorkspaceLoaded = true;
+      renderTeacherWorkspace();
+      setTeacherWorkspaceStatus(snapshot.exists ? 'Workspace loaded.' : 'Start by creating a folder or saving a resource.', snapshot.exists ? 'success' : 'info');
+    }
+
+    async function saveTeacherWorkspaceData(successMessage = 'Workspace saved.') {
+      const user = await ensureCurriculumTeacherUser();
+      if (!user) return;
+      if (!db) throw new Error('Teacher Workspace storage is not available. Please refresh and try again.');
+      teacherWorkspaceData = normalizeTeacherWorkspaceData(teacherWorkspaceData);
+      await db.collection(TEACHER_WORKSPACE_COLLECTION).doc(TEACHER_WORKSPACE_DOC_ID).set({
+        ...teacherWorkspaceData,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedBy: getEditorUserEmail(user),
+        version: 1
+      }, { merge: true });
+      teacherWorkspaceLoaded = true;
+      setTeacherWorkspaceStatus(successMessage, 'success');
+    }
+
+    function renderTeacherWorkspace() {
+      const folderList = document.getElementById('teacherWorkspaceFolderList');
+      const folderSelect = document.getElementById('teacherWorkspaceResourceFolder');
+      const resourceList = document.getElementById('teacherWorkspaceResourceList');
+      if (!folderList || !folderSelect || !resourceList) return;
+
+      const folderExists = teacherWorkspaceData.folders.some(folder => folder.id === teacherWorkspaceActiveFolderId);
+      if (teacherWorkspaceActiveFolderId !== 'all' && !folderExists) teacherWorkspaceActiveFolderId = 'all';
+      const allActive = teacherWorkspaceActiveFolderId === 'all';
+      const allButton = `
+        <div class="teacher-workspace-folder${allActive ? ' active' : ''}">
+          <button type="button" class="teacher-workspace-folder-main" onclick="selectTeacherWorkspaceFolder('all')">
+            All Resources <span class="text-xs text-gray-500">(${teacherWorkspaceData.resources.length})</span>
+          </button>
+        </div>`;
+      const folderButtons = teacherWorkspaceData.folders.map(folder => {
+        const encodedId = encodeURIComponent(folder.id);
+        const count = teacherWorkspaceData.resources.filter(resource => resource.folderId === folder.id).length;
+        return `
+          <div class="teacher-workspace-folder${teacherWorkspaceActiveFolderId === folder.id ? ' active' : ''}">
+            <button type="button" class="teacher-workspace-folder-main" onclick="selectTeacherWorkspaceFolder(decodeURIComponent('${encodedId}'))">
+              ${escapeHtml(folder.title)} <span class="text-xs text-gray-500">(${count})</span>
+            </button>
+            <button type="button" class="teacher-workspace-delete" title="Delete folder" aria-label="Delete ${escapeHtml(folder.title)}" onclick="deleteTeacherWorkspaceFolder(decodeURIComponent('${encodedId}'))">&times;</button>
+          </div>`;
+      }).join('');
+      folderList.innerHTML = allButton + folderButtons;
+
+      folderSelect.innerHTML = '<option value="">No folder</option>'
+        + teacherWorkspaceData.folders.map(folder => `<option value="${escapeHtml(folder.id)}">${escapeHtml(folder.title)}</option>`).join('');
+
+      const resources = teacherWorkspaceData.resources.filter(resource =>
+        teacherWorkspaceActiveFolderId === 'all' || resource.folderId === teacherWorkspaceActiveFolderId
+      );
+      if (!resources.length) {
+        resourceList.innerHTML = '<div class="teacher-workspace-empty">No resources here yet. Save a note, link, file URL, or data note above.</div>';
+        return;
+      }
+      resourceList.innerHTML = resources.map(resource => {
+        const encodedId = encodeURIComponent(resource.id);
+        const safeUrl = isSafeTeacherWorkspaceUrl(resource.url) ? resource.url : '';
+        const link = safeUrl
+          ? `<a class="teacher-workspace-link" style="min-height:2.25rem; padding:.45rem .8rem; background: var(--md-coral);" href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer">Open</a>`
+          : '';
+        return `
+          <article class="teacher-workspace-resource">
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+              <div>
+                <div class="teacher-workspace-resource-title">${escapeHtml(resource.title || 'Untitled resource')}</div>
+                <div class="flex flex-wrap gap-2 mt-2">
+                  <span class="teacher-workspace-pill">${escapeHtml(getTeacherWorkspaceTypeLabel(resource.type))}</span>
+                  <span class="teacher-workspace-pill">${escapeHtml(getTeacherWorkspaceFolderLabel(resource.folderId))}</span>
+                </div>
+              </div>
+              ${link}
+            </div>
+            ${resource.notes ? `<p class="mt-3 text-sm text-gray-700 whitespace-pre-wrap">${escapeHtml(resource.notes)}</p>` : ''}
+            ${resource.url && !safeUrl ? `<p class="mt-3 text-sm font-semibold text-red-600">This saved link needs http, https, mailto, or tel before it can open.</p>` : ''}
+            <div class="teacher-workspace-resource-actions">
+              <button type="button" class="teacher-workspace-action" style="min-height:2.25rem; padding:.45rem .8rem; background: var(--md-slate);" onclick="editTeacherWorkspaceResource(decodeURIComponent('${encodedId}'))">Edit</button>
+              <button type="button" class="teacher-workspace-action" style="min-height:2.25rem; padding:.45rem .8rem; background: var(--md-pebble); color: var(--md-ink);" onclick="deleteTeacherWorkspaceResource(decodeURIComponent('${encodedId}'))">Remove</button>
+            </div>
+          </article>`;
+      }).join('');
+    }
+
+    async function createTeacherWorkspaceFolder() {
+      try {
+        const input = document.getElementById('teacherWorkspaceFolderInput');
+        const title = String(input?.value || '').replace(/\s+/g, ' ').trim();
+        if (!title) {
+          setTeacherWorkspaceStatus('Enter a folder name first.', 'error');
+          return;
+        }
+        if (teacherWorkspaceData.folders.some(folder => folder.title.toLowerCase() === title.toLowerCase())) {
+          setTeacherWorkspaceStatus('That folder already exists.', 'error');
+          return;
+        }
+        const folder = { id: createTeacherWorkspaceId('folder'), title, createdAtLocal: new Date().toISOString() };
+        teacherWorkspaceData.folders.push(folder);
+        teacherWorkspaceActiveFolderId = folder.id;
+        if (input) input.value = '';
+        renderTeacherWorkspace();
+        await saveTeacherWorkspaceData('Folder saved.');
+      } catch (error) {
+        console.error('Teacher Workspace folder save failed:', error);
+        setTeacherWorkspaceStatus(error.message || 'Folder could not save.', 'error');
+      }
+    }
+
+    function selectTeacherWorkspaceFolder(folderId) {
+      teacherWorkspaceActiveFolderId = folderId || 'all';
+      renderTeacherWorkspace();
+    }
+
+    async function deleteTeacherWorkspaceFolder(folderId) {
+      try {
+        const folder = teacherWorkspaceData.folders.find(item => item.id === folderId);
+        if (!folder) return;
+        if (!confirm(`Delete "${folder.title}"? Resources in it will move to No folder.`)) return;
+        teacherWorkspaceData.folders = teacherWorkspaceData.folders.filter(item => item.id !== folderId);
+        teacherWorkspaceData.resources = teacherWorkspaceData.resources.map(resource =>
+          resource.folderId === folderId ? { ...resource, folderId: '' } : resource
+        );
+        if (teacherWorkspaceActiveFolderId === folderId) teacherWorkspaceActiveFolderId = 'all';
+        renderTeacherWorkspace();
+        await saveTeacherWorkspaceData('Folder removed. Resources were kept.');
+      } catch (error) {
+        console.error('Teacher Workspace folder delete failed:', error);
+        setTeacherWorkspaceStatus(error.message || 'Folder could not be removed.', 'error');
+      }
+    }
+
+    function clearTeacherWorkspaceResourceForm() {
+      teacherWorkspaceEditingResourceId = '';
+      const type = document.getElementById('teacherWorkspaceResourceType');
+      const folder = document.getElementById('teacherWorkspaceResourceFolder');
+      const title = document.getElementById('teacherWorkspaceResourceTitle');
+      const url = document.getElementById('teacherWorkspaceResourceUrl');
+      const notes = document.getElementById('teacherWorkspaceResourceNotes');
+      if (type) type.value = 'note';
+      if (folder) folder.value = teacherWorkspaceActiveFolderId === 'all' ? '' : teacherWorkspaceActiveFolderId;
+      if (title) title.value = '';
+      if (url) url.value = '';
+      if (notes) notes.value = '';
+    }
+
+    async function saveTeacherWorkspaceResource() {
+      try {
+        const type = document.getElementById('teacherWorkspaceResourceType')?.value || 'note';
+        const folderId = document.getElementById('teacherWorkspaceResourceFolder')?.value || '';
+        const title = String(document.getElementById('teacherWorkspaceResourceTitle')?.value || '').replace(/\s+/g, ' ').trim();
+        const url = String(document.getElementById('teacherWorkspaceResourceUrl')?.value || '').trim();
+        const notes = String(document.getElementById('teacherWorkspaceResourceNotes')?.value || '').trim();
+        if (!title && !notes && !url) {
+          setTeacherWorkspaceStatus('Add a title, notes, or a link before saving.', 'error');
+          return;
+        }
+        if (!isSafeTeacherWorkspaceUrl(url)) {
+          setTeacherWorkspaceStatus('Links should start with http, https, mailto, or tel.', 'error');
+          return;
+        }
+        const existingIndex = teacherWorkspaceData.resources.findIndex(resource => resource.id === teacherWorkspaceEditingResourceId);
+        const existing = existingIndex >= 0 ? teacherWorkspaceData.resources[existingIndex] : null;
+        const resource = {
+          id: existing?.id || createTeacherWorkspaceId('resource'),
+          type: ['note', 'link', 'file', 'data'].includes(type) ? type : 'note',
+          folderId,
+          title: title || notes.slice(0, 48) || url,
+          url,
+          notes,
+          createdAtLocal: existing?.createdAtLocal || new Date().toISOString(),
+          updatedAtLocal: new Date().toISOString()
+        };
+        if (existingIndex >= 0) {
+          teacherWorkspaceData.resources[existingIndex] = resource;
+        } else {
+          teacherWorkspaceData.resources.unshift(resource);
+        }
+        teacherWorkspaceActiveFolderId = folderId || 'all';
+        clearTeacherWorkspaceResourceForm();
+        renderTeacherWorkspace();
+        await saveTeacherWorkspaceData(existing ? 'Resource updated.' : 'Resource saved.');
+      } catch (error) {
+        console.error('Teacher Workspace resource save failed:', error);
+        setTeacherWorkspaceStatus(error.message || 'Resource could not save.', 'error');
+      }
+    }
+
+    function editTeacherWorkspaceResource(resourceId) {
+      const resource = teacherWorkspaceData.resources.find(item => item.id === resourceId);
+      if (!resource) return;
+      teacherWorkspaceEditingResourceId = resource.id;
+      const type = document.getElementById('teacherWorkspaceResourceType');
+      const folder = document.getElementById('teacherWorkspaceResourceFolder');
+      const title = document.getElementById('teacherWorkspaceResourceTitle');
+      const url = document.getElementById('teacherWorkspaceResourceUrl');
+      const notes = document.getElementById('teacherWorkspaceResourceNotes');
+      if (type) type.value = resource.type || 'note';
+      if (folder) folder.value = resource.folderId || '';
+      if (title) title.value = resource.title || '';
+      if (url) url.value = resource.url || '';
+      if (notes) notes.value = resource.notes || '';
+      if (title) title.focus();
+      setTeacherWorkspaceStatus('Editing resource. Make changes above, then save.', 'info');
+    }
+
+    async function deleteTeacherWorkspaceResource(resourceId) {
+      try {
+        const resource = teacherWorkspaceData.resources.find(item => item.id === resourceId);
+        if (!resource) return;
+        if (!confirm(`Remove "${resource.title || 'this resource'}" from Teacher Workspace?`)) return;
+        teacherWorkspaceData.resources = teacherWorkspaceData.resources.filter(item => item.id !== resourceId);
+        if (teacherWorkspaceEditingResourceId === resourceId) clearTeacherWorkspaceResourceForm();
+        renderTeacherWorkspace();
+        await saveTeacherWorkspaceData('Resource removed.');
+      } catch (error) {
+        console.error('Teacher Workspace resource delete failed:', error);
+        setTeacherWorkspaceStatus(error.message || 'Resource could not be removed.', 'error');
+      }
+    }
+
     async function signInForCurriculumBuilder() {
       try {
         const user = await ensureCurriculumTeacherUser();
@@ -6952,10 +7448,15 @@
       teacherRosterUnlocked = false;
       setRosterEditMode(false);
       curriculumWeeklyPlan = getEmptyCurriculumWeeklyPlan();
+      teacherWorkspaceData = getEmptyTeacherWorkspaceData();
+      teacherWorkspaceLoaded = false;
+      teacherWorkspaceActiveFolderId = 'all';
+      teacherWorkspaceEditingResourceId = '';
       curriculumToolView = 'shelf';
       showCurriculumWorkspace(false);
       setCurriculumPdfStatus('');
       setCurriculumStatus('');
+      setTeacherWorkspaceStatus('');
       const list = document.getElementById('curriculumLibraryList');
       const browserList = document.getElementById('curriculumLessonBrowserList');
       const browserDetail = document.getElementById('curriculumLessonDetailPanel');
@@ -6967,6 +7468,8 @@
       const calendarDetail = document.getElementById('curriculumCalendarDayDetail');
       const weeklyEditor = document.getElementById('weeklyLessonPlanEditor');
       const weeklySummary = document.getElementById('weeklyLessonPlanSummary');
+      const workspaceFolders = document.getElementById('teacherWorkspaceFolderList');
+      const workspaceResources = document.getElementById('teacherWorkspaceResourceList');
       closeCurriculumLessonViewModal();
       if (count) count.textContent = '0';
       if (selectedCount) selectedCount.textContent = '0 selected';
@@ -6979,6 +7482,8 @@
       if (calendarDetail) calendarDetail.innerHTML = '<p class="text-sm text-gray-500">Choose a day to view scheduled lessons.</p>';
       if (weeklyEditor) weeklyEditor.innerHTML = '<p class="text-sm text-gray-500">Select a date range, then generate a principal-facing lesson plan from scheduled curriculum lessons.</p>';
       if (weeklySummary) weeklySummary.textContent = 'Choose a date range to organize scheduled curriculum lessons.';
+      if (workspaceFolders) workspaceFolders.innerHTML = '';
+      if (workspaceResources) workspaceResources.innerHTML = '';
       if (document.querySelector('[data-page-panel="roster"].active')) showPage('home');
     }
 
@@ -7014,7 +7519,7 @@
     async function initializeCurriculumBuilder() {
       const hasAccess = !!getApprovedCurriculumUser();
       if (hasAccess) rememberTeacherDevice(auth.currentUser);
-      if (hasAccess && curriculumToolView !== 'curriculum') {
+      if (hasAccess && !['curriculum', 'teacher-workspace'].includes(curriculumToolView)) {
         curriculumToolView = 'shelf';
       }
       showCurriculumWorkspace(hasAccess);
@@ -7028,16 +7533,23 @@
       const workspaceHeader = document.getElementById('curriculumWorkspaceHeader');
       const toolShelf = document.getElementById('curriculumToolShelf');
       const workspace = document.getElementById('curriculumWorkspace');
+      const teacherWorkspace = document.getElementById('teacherWorkspace');
       const backBtn = document.getElementById('curriculumBackToToolsBtn');
       const refreshBtn = document.getElementById('curriculumRefreshLibraryBtn');
+      const isCurriculumView = curriculumToolView === 'curriculum';
+      const isTeacherWorkspaceView = curriculumToolView === 'teacher-workspace';
       if (accessPanel) accessPanel.style.display = show ? 'none' : 'block';
       if (workspaceHeader) workspaceHeader.style.display = show ? 'flex' : 'none';
       if (toolShelf) toolShelf.style.display = show && curriculumToolView === 'shelf' ? 'block' : 'none';
-      if (workspace) workspace.style.display = show && curriculumToolView === 'curriculum' ? 'block' : 'none';
-      if (backBtn) backBtn.style.display = show && curriculumToolView === 'curriculum' ? 'inline-flex' : 'none';
-      if (refreshBtn) refreshBtn.style.display = show && curriculumToolView === 'curriculum' ? 'inline-flex' : 'none';
-      if (show && curriculumToolView === 'curriculum') {
+      if (workspace) workspace.style.display = show && isCurriculumView ? 'block' : 'none';
+      if (teacherWorkspace) teacherWorkspace.style.display = show && isTeacherWorkspaceView ? 'block' : 'none';
+      if (backBtn) backBtn.style.display = show && curriculumToolView !== 'shelf' ? 'inline-flex' : 'none';
+      if (refreshBtn) refreshBtn.style.display = show && isCurriculumView ? 'inline-flex' : 'none';
+      if (show && isCurriculumView) {
         showCurriculumLibraryTab(curriculumActiveLibraryTab);
+      }
+      if (show && isTeacherWorkspaceView) {
+        renderTeacherWorkspace();
       }
       updateCurriculumToolHeader();
       updateTeacherEditToolState();
@@ -7106,6 +7618,9 @@
       if (curriculumToolView === 'curriculum') {
         title.textContent = 'Curriculum Library';
         description.textContent = 'Use lesson analyzers, saved lesson libraries, scheduling, calendar views, and weekly principal plans from one private teacher workspace.';
+      } else if (curriculumToolView === 'teacher-workspace') {
+        title.textContent = 'Teacher Workspace';
+        description.textContent = 'Organize teacher-only folders, notes, links, resources, files, and planning data.';
       } else {
         title.textContent = 'Teacher Tools';
         description.textContent = 'Choose a tool from your private teacher shelf.';
@@ -21837,45 +22352,82 @@ function closeAdminShoutsModal() {
     modal.style.display = 'none';
     document.body.style.overflow = '';
   }
+  closeAdminShoutoutEditModal();
 }
 
 function filterShoutouts(filter) {
-  // Update filter buttons
-  document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-  document.getElementById('filter' + filter.charAt(0).toUpperCase() + filter.slice(1)).classList.add('active');
-  
-  refreshAdminShoutouts(filter);
+  activeAdminShoutoutStatusFilter = filter || 'all';
+  refreshAdminShoutouts();
 }
 
-function refreshAdminShoutouts(filter = 'all') {
-  const container = document.getElementById('adminShoutsContainer');
-  if (!container) return;
-  
-  let shoutsToShow = allShoutouts;
-  if (filter === 'pending') {
-    shoutsToShow = allShoutouts.filter(s => !s.approved && !s.archived);
-  } else if (filter === 'approved') {
-    shoutsToShow = allShoutouts.filter(s => s.approved && !s.archived);
-  } else if (filter === 'archived') {
-    shoutsToShow = allShoutouts.filter(s => s.archived);
-  } else if (filter === 'all') {
-    shoutsToShow = allShoutouts.filter(s => !s.archived);
-  }
-  
-  if (shoutsToShow.length === 0) {
-    container.innerHTML = '<div class="text-center text-gray-500 py-8">No shoutouts found.</div>';
-    return;
-  }
-  
-  container.innerHTML = shoutsToShow.map(shoutout => `
+function filterShoutoutTeacher(filter) {
+  activeAdminShoutoutTeacherFilter = filter === 'davis' || filter === 'vest' ? filter : 'all';
+  refreshAdminShoutouts();
+}
+
+function updateAdminShoutoutFilterButtons() {
+  document.querySelectorAll('[data-shoutout-status-filter]').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-shoutout-status-filter') === activeAdminShoutoutStatusFilter);
+  });
+  document.querySelectorAll('[data-shoutout-teacher-filter]').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-shoutout-teacher-filter') === activeAdminShoutoutTeacherFilter);
+  });
+}
+
+function getAdminShoutoutStatusLabel(shoutout) {
+  if (shoutout.archived) return 'Archived';
+  if (shoutout.approved) return 'Approved';
+  return 'Pending';
+}
+
+function getAdminShoutoutFilterLabel(filter) {
+  if (filter === 'pending') return 'Pending';
+  if (filter === 'approved') return 'Approved';
+  if (filter === 'archived') return 'Archived';
+  return 'Active';
+}
+
+function getAdminShoutoutTeacherFilterLabel(filter) {
+  if (filter === 'davis' || filter === 'vest') return getShoutoutChannelLabel(filter);
+  return 'All Teachers';
+}
+
+function getAdminShoutoutDateMs(shoutout) {
+  const date = new Date(shoutout.timestamp || shoutout.createdAt || shoutout.updatedAt || 0);
+  return Number.isFinite(date.getTime()) ? date.getTime() : 0;
+}
+
+function getFilteredAdminShoutouts() {
+  return allShoutouts
+    .filter(shoutout => {
+      if (!shoutout) return false;
+      if (activeAdminShoutoutStatusFilter === 'pending') return !shoutout.approved && !shoutout.archived;
+      if (activeAdminShoutoutStatusFilter === 'approved') return shoutout.approved && !shoutout.archived;
+      if (activeAdminShoutoutStatusFilter === 'archived') return shoutout.archived;
+      return !shoutout.archived;
+    })
+    .filter(shoutout => activeAdminShoutoutTeacherFilter === 'all' || getShoutoutClass(shoutout) === activeAdminShoutoutTeacherFilter)
+    .sort((a, b) => getAdminShoutoutDateMs(b) - getAdminShoutoutDateMs(a));
+}
+
+function renderAdminShoutoutCard(shoutout) {
+  const channel = getShoutoutClass(shoutout);
+  const status = getAdminShoutoutStatusLabel(shoutout);
+  const date = new Date(shoutout.timestamp || shoutout.updatedAt || Date.now());
+  const dateLabel = Number.isFinite(date.getTime()) ? date.toLocaleDateString() : 'No date';
+  const statusColor = shoutout.archived ? '#6b7280' : shoutout.approved ? '#16a34a' : '#ca8a04';
+  return `
     <div class="bg-white rounded-lg p-4 border ${shoutout.archived ? 'border-gray-300 bg-gray-50' : shoutout.approved ? 'border-green-200 bg-green-50' : 'border-yellow-200 bg-yellow-50'}">
-      <div class="flex justify-between items-start mb-2">
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-2">
         <div>
-          <strong style="color: var(--md-slate);">${escapeShoutoutText(shoutout.scholarName)}</strong>
-          <span class="text-sm text-gray-500"> from ${escapeShoutoutText(shoutout.from)}</span>
-          <span class="ml-2 px-2 py-1 rounded-full text-xs font-semibold" style="background: color-mix(in oklab, var(--md-white) 70%, var(--md-pebble) 30%); color: var(--md-slate);">${getShoutoutChannelLabel(getShoutoutClass(shoutout))}</span>
+          <div class="flex flex-wrap items-center gap-2">
+            <strong style="color: var(--md-slate);">${escapeShoutoutText(shoutout.scholarName)}</strong>
+            <span class="px-2 py-1 rounded-full text-xs font-semibold" style="background: ${channel === 'vest' ? 'var(--md-mustard)' : 'var(--md-coral)'}; color: var(--md-white);">${getShoutoutChannelLabel(channel)}</span>
+            <span class="px-2 py-1 rounded-full text-xs font-semibold" style="background: color-mix(in oklab, var(--md-white) 78%, var(--md-pebble) 22%); color: ${statusColor};">${status}</span>
+          </div>
+          <div class="text-sm text-gray-500 mt-1">From ${escapeShoutoutText(shoutout.from)}</div>
         </div>
-        <div class="flex gap-1">
+        <div class="flex flex-wrap gap-1">
           ${!shoutout.approved && !shoutout.archived ? `<button onclick="approveShoutout('${shoutout.id}')" class="px-2 py-1 bg-green-500 text-white rounded text-xs">Approve</button>` : ''}
           ${!shoutout.archived ? `<button onclick="archiveShoutout('${shoutout.id}')" class="px-2 py-1 bg-gray-500 text-white rounded text-xs">Archive</button>` : ''}
           ${shoutout.archived ? `<button onclick="unarchiveShoutout('${shoutout.id}')" class="px-2 py-1 bg-blue-500 text-white rounded text-xs">Unarchive</button>` : ''}
@@ -21884,9 +22436,47 @@ function refreshAdminShoutouts(filter = 'all') {
         </div>
       </div>
       <div class="text-sm mb-2" style="font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif;">${escapeShoutoutText(shoutout.message)}</div>
-      <div class="text-xs text-gray-400">${new Date(shoutout.timestamp).toLocaleDateString()}</div>
+      <div class="text-xs text-gray-400">${dateLabel}</div>
     </div>
-  `).join('');
+  `;
+}
+
+function renderAdminShoutoutGroup(channel, shouts) {
+  const groupShouts = shouts.filter(shoutout => getShoutoutClass(shoutout) === channel);
+  return `
+    <section class="rounded-xl p-3" style="background: color-mix(in oklab, var(--md-white) 88%, var(--md-pebble) 12%); border: 1px solid color-mix(in oklab, var(--md-slate) 20%, var(--md-white) 80%);">
+      <div class="flex items-center justify-between gap-3 mb-3">
+        <h4 class="font-display font-bold text-lg" style="color: var(--md-slate);">${getShoutoutChannelLabel(channel)}</h4>
+        <span class="px-3 py-1 rounded-full text-xs font-bold" style="background: ${channel === 'vest' ? 'var(--md-mustard)' : 'var(--md-coral)'}; color: var(--md-white);">${groupShouts.length}</span>
+      </div>
+      <div class="space-y-3">
+        ${groupShouts.length ? groupShouts.map(renderAdminShoutoutCard).join('') : '<p class="text-sm text-gray-500">No shoutouts for this teacher in the current filter.</p>'}
+      </div>
+    </section>
+  `;
+}
+
+function refreshAdminShoutouts() {
+  const container = document.getElementById('adminShoutsContainer');
+  if (!container) return;
+
+  updateAdminShoutoutFilterButtons();
+  const summary = document.getElementById('adminShoutoutSummary');
+  const shoutsToShow = getFilteredAdminShoutouts();
+  if (summary) {
+    summary.textContent = `${getAdminShoutoutFilterLabel(activeAdminShoutoutStatusFilter)} shoutouts - ${getAdminShoutoutTeacherFilterLabel(activeAdminShoutoutTeacherFilter)} - ${shoutsToShow.length} total`;
+  }
+
+  if (shoutsToShow.length === 0) {
+    container.innerHTML = '<div class="text-center text-gray-500 py-8">No shoutouts found.</div>';
+    return;
+  }
+
+  if (activeAdminShoutoutTeacherFilter === 'all') {
+    container.innerHTML = ['davis', 'vest'].map(channel => renderAdminShoutoutGroup(channel, shoutsToShow)).join('');
+  } else {
+    container.innerHTML = renderAdminShoutoutGroup(activeAdminShoutoutTeacherFilter, shoutsToShow);
+  }
 }
 
 async function approveShoutout(id) {
@@ -21919,15 +22509,61 @@ async function deleteShoutout(id) {
 }
 
 async function editShoutoutAdmin(id) {
+  openAdminShoutoutEditModal(id);
+}
+
+function openAdminShoutoutEditModal(id) {
   const shoutout = allShoutouts.find(s => s.id === id);
-  if (!shoutout) return;
-  
-  const newMessage = prompt('Edit message:', shoutout.message);
-  if (newMessage !== null && newMessage.trim()) {
-    await saveSingleShoutoutAdminChange(id, function(latestShoutout) {
-      latestShoutout.message = newMessage.trim();
-      return latestShoutout;
-    });
+  const modal = document.getElementById('adminShoutoutEditModal');
+  if (!shoutout || !modal) return;
+
+  activeAdminShoutoutEditId = id;
+  const scholarInput = document.getElementById('adminShoutoutEditScholarInput');
+  const fromInput = document.getElementById('adminShoutoutEditFromInput');
+  const messageInput = document.getElementById('adminShoutoutEditMessageInput');
+  const currentTeacher = getShoutoutClass(shoutout);
+  if (scholarInput) scholarInput.value = shoutout.scholarName || '';
+  if (fromInput) fromInput.value = shoutout.from || '';
+  if (messageInput) messageInput.value = shoutout.message || '';
+  document.querySelectorAll('input[name="adminShoutoutEditTeacher"]').forEach(input => {
+    input.checked = input.value === currentTeacher;
+  });
+  modal.style.display = 'flex';
+}
+
+function closeAdminShoutoutEditModal() {
+  const modal = document.getElementById('adminShoutoutEditModal');
+  if (modal) modal.style.display = 'none';
+  activeAdminShoutoutEditId = '';
+}
+
+async function saveAdminShoutoutEdit() {
+  if (!activeAdminShoutoutEditId) return;
+  const scholarName = document.getElementById('adminShoutoutEditScholarInput')?.value.trim() || '';
+  const from = document.getElementById('adminShoutoutEditFromInput')?.value.trim() || '';
+  const message = document.getElementById('adminShoutoutEditMessageInput')?.value.trim() || '';
+  const teacher = document.querySelector('input[name="adminShoutoutEditTeacher"]:checked')?.value === 'vest' ? 'vest' : 'davis';
+
+  if (!scholarName || !from || !message) {
+    alert('Please keep the scholar name, sender, and message filled in.');
+    return;
+  }
+
+  const savedId = activeAdminShoutoutEditId;
+  const saved = await saveSingleShoutoutAdminChange(savedId, function(latestShoutout) {
+    latestShoutout.scholarName = scholarName;
+    latestShoutout.from = from;
+    latestShoutout.message = message;
+    latestShoutout.class = teacher;
+    latestShoutout.classroom = teacher;
+    latestShoutout.teacher = teacher;
+    latestShoutout.classLabel = getShoutoutChannelLabel(teacher);
+    latestShoutout.updatedAt = new Date().toISOString();
+    return latestShoutout;
+  });
+
+  if (saved) {
+    closeAdminShoutoutEditModal();
   }
 }
 
@@ -27737,12 +28373,18 @@ document.head.appendChild(style);
     <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden" onclick="event.stopPropagation();" style="border: 3px solid var(--md-slate);">
       <div class="text-center mb-6">
         <h3 class="text-2xl font-display font-bold" style="color: var(--md-slate);">📋 Manage Shoutouts</h3>
-        <div class="flex gap-2 justify-center mt-4">
-          <button id="filterAll" class="px-3 py-1 rounded-lg text-sm font-semibold filter-btn active" onclick="filterShoutouts('all')">All</button>
-          <button id="filterPending" class="px-3 py-1 rounded-lg text-sm font-semibold filter-btn" onclick="filterShoutouts('pending')">Pending</button>
-          <button id="filterApproved" class="px-3 py-1 rounded-lg text-sm font-semibold filter-btn" onclick="filterShoutouts('approved')">Approved</button>
-          <button id="filterArchived" class="px-3 py-1 rounded-lg text-sm font-semibold filter-btn" onclick="filterShoutouts('archived')">Archived</button>
+        <div id="adminShoutoutStatusFilters" class="flex flex-wrap gap-2 justify-center mt-4">
+          <button id="filterAll" data-shoutout-status-filter="all" class="px-3 py-1 rounded-lg text-sm font-semibold filter-btn active" onclick="filterShoutouts('all')">Active</button>
+          <button id="filterPending" data-shoutout-status-filter="pending" class="px-3 py-1 rounded-lg text-sm font-semibold filter-btn" onclick="filterShoutouts('pending')">Pending</button>
+          <button id="filterApproved" data-shoutout-status-filter="approved" class="px-3 py-1 rounded-lg text-sm font-semibold filter-btn" onclick="filterShoutouts('approved')">Approved</button>
+          <button id="filterArchived" data-shoutout-status-filter="archived" class="px-3 py-1 rounded-lg text-sm font-semibold filter-btn" onclick="filterShoutouts('archived')">Archived</button>
         </div>
+        <div id="adminShoutoutTeacherFilters" class="flex flex-wrap gap-2 justify-center mt-2">
+          <button data-shoutout-teacher-filter="all" class="px-3 py-1 rounded-lg text-sm font-semibold filter-btn active" onclick="filterShoutoutTeacher('all')">All Teachers</button>
+          <button data-shoutout-teacher-filter="davis" class="px-3 py-1 rounded-lg text-sm font-semibold filter-btn" onclick="filterShoutoutTeacher('davis')">Mr. Davis</button>
+          <button data-shoutout-teacher-filter="vest" class="px-3 py-1 rounded-lg text-sm font-semibold filter-btn" onclick="filterShoutoutTeacher('vest')">Ms. Vest</button>
+        </div>
+        <p id="adminShoutoutSummary" class="text-sm text-gray-500 mt-3">Active shoutouts - All Teachers</p>
       </div>
       
       <!-- Main TV Message Section -->
@@ -27767,6 +28409,44 @@ document.head.appendChild(style);
         <button onclick="closeAdminShoutsModal()" class="px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-slate);">
           Close
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Shoutout Modal -->
+  <div id="adminShoutoutEditModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.72); z-index: 10000; justify-content: center; align-items: center;" onclick="closeAdminShoutoutEditModal()">
+    <div class="bg-[color:var(--card-bg)] rounded-2xl shadow-soft p-6 max-w-lg w-full mx-4" onclick="event.stopPropagation();" style="border: 3px solid var(--md-coral);">
+      <h3 class="text-2xl font-display font-bold text-center mb-4" style="color: var(--md-slate);">Edit Shoutout</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-semibold mb-2" style="color: var(--md-slate);" for="adminShoutoutEditScholarInput">Scholar</label>
+          <input id="adminShoutoutEditScholarInput" class="w-full px-4 py-3 rounded-xl border" type="text">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold mb-2" style="color: var(--md-slate);" for="adminShoutoutEditFromInput">From</label>
+          <input id="adminShoutoutEditFromInput" class="w-full px-4 py-3 rounded-xl border" type="text">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold mb-2" style="color: var(--md-slate);" for="adminShoutoutEditMessageInput">Message</label>
+          <textarea id="adminShoutoutEditMessageInput" class="w-full px-4 py-3 rounded-xl border resize-none" rows="4" style="font-family: 'Comic Sans MS', 'Comic Neue', cursive, sans-serif;"></textarea>
+        </div>
+        <fieldset class="rounded-xl p-3" style="background: color-mix(in oklab, var(--md-white) 82%, var(--md-pebble) 18%); border: 1px solid color-mix(in oklab, var(--md-slate) 30%, var(--md-white) 70%);">
+          <legend class="text-sm font-semibold px-1" style="color: var(--md-slate);">Send to teacher/channel</legend>
+          <div class="grid grid-cols-2 gap-2 mt-2">
+            <label class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold" style="background: var(--md-white); color: var(--md-slate); border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
+              <input type="radio" name="adminShoutoutEditTeacher" value="davis">
+              Mr. Davis
+            </label>
+            <label class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold" style="background: var(--md-white); color: var(--md-slate); border: 1px solid color-mix(in oklab, var(--md-slate) 35%, var(--md-white) 65%);">
+              <input type="radio" name="adminShoutoutEditTeacher" value="vest">
+              Ms. Vest
+            </label>
+          </div>
+        </fieldset>
+      </div>
+      <div class="flex gap-3 justify-center mt-6">
+        <button onclick="closeAdminShoutoutEditModal()" class="px-5 py-3 rounded-xl border font-semibold">Cancel</button>
+        <button onclick="saveAdminShoutoutEdit()" class="px-5 py-3 rounded-xl text-white font-semibold hover:opacity-90" style="background: var(--md-coral);">Save Changes</button>
       </div>
     </div>
   </div>
