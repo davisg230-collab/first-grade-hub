@@ -2533,6 +2533,11 @@
       display: grid;
       gap: .75rem;
     }
+    .teacher-workspace-resource-list {
+      max-height: 34rem;
+      overflow-y: auto;
+      padding-right: .25rem;
+    }
     .teacher-workspace-folder {
       display: flex;
       align-items: center;
@@ -2581,6 +2586,23 @@
       font-size: 1.05rem;
       font-weight: 900;
     }
+    .teacher-workspace-resource-preview {
+      display: -webkit-box;
+      margin-top: .75rem;
+      overflow: hidden;
+      color: #526173;
+      font-size: .88rem;
+      line-height: 1.45;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
+      white-space: pre-wrap;
+    }
+    .teacher-workspace-search-meta {
+      margin-top: .5rem;
+      color: #64748b;
+      font-size: .82rem;
+      font-weight: 800;
+    }
     .teacher-workspace-pill {
       display: inline-flex;
       align-items: center;
@@ -2605,6 +2627,18 @@
       padding: 1rem;
       color: #64748b;
       font-size: .95rem;
+    }
+    .teacher-workspace-document {
+      max-height: min(68vh, 42rem);
+      overflow-y: auto;
+      border: 1px solid color-mix(in oklab, var(--md-slate) 15%, var(--md-white));
+      border-radius: .9rem;
+      background: color-mix(in oklab, var(--md-white) 96%, var(--md-pebble));
+      padding: 1rem;
+      color: var(--md-ink);
+      font-size: .94rem;
+      line-height: 1.55;
+      white-space: pre-wrap;
     }
     .curriculum-library-list {
       max-height: 28rem;
@@ -4603,6 +4637,11 @@
                   <h3 class="text-xl font-display font-bold" style="color: var(--md-slate);">Resources</h3>
                   <p class="text-sm text-gray-600">Save notes, links, file URLs, data notes, or anything you want grouped for teaching.</p>
                 </div>
+                <div class="w-full md:max-w-xs">
+                  <label class="curriculum-builder-label" for="teacherWorkspaceSearchInput">Search this folder</label>
+                  <input id="teacherWorkspaceSearchInput" class="curriculum-builder-field" type="search" placeholder="Search d, QPS, phonics..." oninput="setTeacherWorkspaceSearchQuery(this.value)">
+                  <div id="teacherWorkspaceSearchMeta" class="teacher-workspace-search-meta"></div>
+                </div>
               </div>
               <div class="grid md:grid-cols-2 gap-3 mb-4">
                 <div>
@@ -4639,6 +4678,25 @@
           <div class="curriculum-builder-panel rounded-2xl p-5">
             <h3 class="text-xl font-display font-bold" style="color: var(--md-coral);">Future Recommendation Space</h3>
             <p class="mt-2 text-sm text-gray-600">Learning Games can keep scholar performance and skill data while the Hub keeps curriculum lessons and resources. This space is ready for future curriculum recommendations that link back to saved Hub lessons.</p>
+          </div>
+        </div>
+
+        <div id="teacherWorkspaceResourceModal" class="lesson-detail-modal" onclick="if(event.target === this) closeTeacherWorkspaceResourceModal()">
+          <div class="lesson-detail-card p-5 sm:p-6" onclick="event.stopPropagation();">
+            <div class="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <p id="teacherWorkspaceResourceModalMeta" class="text-sm font-bold uppercase tracking-wide" style="color: var(--md-coral);">Teacher Workspace</p>
+                <h3 id="teacherWorkspaceResourceModalTitle" class="text-2xl font-display font-bold" style="color: var(--md-slate);">Resource</h3>
+              </div>
+              <button type="button" class="w-9 h-9 rounded-full text-white font-bold" style="background: var(--md-slate);" onclick="closeTeacherWorkspaceResourceModal()" aria-label="Close workspace resource">&times;</button>
+            </div>
+            <div id="teacherWorkspaceResourceModalBody" class="teacher-workspace-document"></div>
+            <div class="flex flex-col sm:flex-row gap-2 mt-5">
+              <button type="button" class="curriculum-builder-button inline-flex px-4 py-2 text-white" style="background: var(--md-coral);" onclick="printTeacherWorkspaceResource()">Print</button>
+              <a id="teacherWorkspaceResourceModalLink" class="curriculum-builder-button inline-flex px-4 py-2 text-white" style="background: var(--md-slate); display: none;" href="#" target="_blank" rel="noopener noreferrer">Open Link</a>
+              <button type="button" class="curriculum-builder-button inline-flex px-4 py-2" style="background: var(--md-pebble); color: var(--md-ink);" onclick="editTeacherWorkspaceResourceFromModal()">Edit</button>
+              <button type="button" class="curriculum-builder-button inline-flex px-4 py-2" style="background: var(--md-pebble); color: var(--md-ink);" onclick="closeTeacherWorkspaceResourceModal()">Close</button>
+            </div>
           </div>
         </div>
 
@@ -6783,6 +6841,8 @@
     let teacherWorkspaceLoaded = false;
     let teacherWorkspaceActiveFolderId = 'all';
     let teacherWorkspaceEditingResourceId = '';
+    let teacherWorkspaceModalResourceId = '';
+    let teacherWorkspaceSearchQuery = '';
     let teacherRosterUnlocked = false;
     let rosterEditMode = false;
     let activeRosterClassTab = 'davis';
@@ -7205,6 +7265,100 @@
       return !url || /^(https?:\/\/|mailto:|tel:)/i.test(url);
     }
 
+    function escapeRegExpText(value) {
+      return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function getTeacherWorkspaceResourceSearchText(resource) {
+      return [
+        resource.title,
+        resource.notes,
+        resource.url,
+        getTeacherWorkspaceTypeLabel(resource.type),
+        getTeacherWorkspaceFolderLabel(resource.folderId)
+      ].join(' ').toLowerCase();
+    }
+
+    function teacherWorkspaceTermMatches(text, term) {
+      const cleanTerm = String(term || '').trim().toLowerCase();
+      if (!cleanTerm) return true;
+      if (cleanTerm.length === 1) {
+        return new RegExp(`(^|[^a-z0-9])${escapeRegExpText(cleanTerm)}([^a-z0-9]|$)`, 'i').test(text);
+      }
+      return text.includes(cleanTerm);
+    }
+
+    function scoreTeacherWorkspaceResource(resource, query) {
+      const terms = String(query || '').trim().toLowerCase().split(/\s+/).filter(Boolean);
+      if (!terms.length) return 1;
+      const title = String(resource.title || '').toLowerCase();
+      const notes = String(resource.notes || '').toLowerCase();
+      const url = String(resource.url || '').toLowerCase();
+      const folder = getTeacherWorkspaceFolderLabel(resource.folderId).toLowerCase();
+      let score = 0;
+      for (const term of terms) {
+        let termScore = 0;
+        if (teacherWorkspaceTermMatches(title, term)) termScore += title.startsWith(term) ? 14 : 8;
+        if (teacherWorkspaceTermMatches(notes, term)) termScore += 5;
+        if (teacherWorkspaceTermMatches(folder, term)) termScore += 3;
+        if (teacherWorkspaceTermMatches(url, term)) termScore += 2;
+        if (!termScore) return 0;
+        score += termScore;
+      }
+      return score;
+    }
+
+    function getTeacherWorkspaceResourcePreview(resource) {
+      const text = String(resource.notes || resource.url || '').replace(/\s+/g, ' ').trim();
+      if (!text) return '';
+      return text.length > 280 ? `${text.slice(0, 280).trim()}...` : text;
+    }
+
+    function findTeacherWorkspaceFolderByTitle(title) {
+      const cleanTitle = String(title || '').trim().toLowerCase();
+      return teacherWorkspaceData.folders.find(folder => folder.title.trim().toLowerCase() === cleanTitle);
+    }
+
+    function ensureTeacherWorkspaceFolderTitle(title) {
+      const cleanTitle = String(title || '').replace(/\s+/g, ' ').trim();
+      if (!cleanTitle) return '';
+      const existing = findTeacherWorkspaceFolderByTitle(cleanTitle);
+      if (existing) return existing.id;
+      const folder = { id: createTeacherWorkspaceId('folder'), title: cleanTitle, createdAtLocal: new Date().toISOString() };
+      teacherWorkspaceData.folders.push(folder);
+      return folder.id;
+    }
+
+    function inferTeacherWorkspaceFolderTitle(resource) {
+      const text = `${resource.title || ''}\n${resource.notes || ''}`.toLowerCase();
+      if (text.includes('qps screener summary')) return 'QPS';
+      if (!text.includes('small-group curriculum plan') && !text.includes('small group:')) return '';
+      if (text.includes('subject: math')) return 'Small Group Math Plans';
+      if (text.includes('subject: listening')) return 'Small Group Listening Plans';
+      if (text.includes('subject: ckla skills') || text.includes('subject: skills')) return 'Small Group Skills Plans';
+      return '';
+    }
+
+    function organizeTeacherWorkspaceResources() {
+      let changed = false;
+      teacherWorkspaceData.resources = teacherWorkspaceData.resources.map(resource => {
+        const currentFolderExists = resource.folderId && teacherWorkspaceData.folders.some(folder => folder.id === resource.folderId);
+        if (currentFolderExists) return resource;
+        const inferredFolderTitle = inferTeacherWorkspaceFolderTitle(resource);
+        if (!inferredFolderTitle) return resource;
+        const folderId = ensureTeacherWorkspaceFolderTitle(inferredFolderTitle);
+        if (resource.folderId === folderId) return resource;
+        changed = true;
+        return { ...resource, folderId };
+      });
+      return changed;
+    }
+
+    function setTeacherWorkspaceSearchQuery(value) {
+      teacherWorkspaceSearchQuery = String(value || '');
+      renderTeacherWorkspace();
+    }
+
     async function openTeacherWorkspaceTool() {
       try {
         const user = await ensureCurriculumTeacherUser();
@@ -7227,9 +7381,14 @@
       setTeacherWorkspaceStatus('Loading workspace...');
       const snapshot = await db.collection(TEACHER_WORKSPACE_COLLECTION).doc(TEACHER_WORKSPACE_DOC_ID).get();
       teacherWorkspaceData = normalizeTeacherWorkspaceData(snapshot.exists ? snapshot.data() : {});
+      const organized = organizeTeacherWorkspaceResources();
       teacherWorkspaceLoaded = true;
       renderTeacherWorkspace();
-      setTeacherWorkspaceStatus(snapshot.exists ? 'Workspace loaded.' : 'Start by creating a folder or saving a resource.', snapshot.exists ? 'success' : 'info');
+      if (organized) {
+        await saveTeacherWorkspaceData('Workspace loaded and organized.');
+      } else {
+        setTeacherWorkspaceStatus(snapshot.exists ? 'Workspace loaded.' : 'Start by creating a folder or saving a resource.', snapshot.exists ? 'success' : 'info');
+      }
     }
 
     async function saveTeacherWorkspaceData(successMessage = 'Workspace saved.') {
@@ -7237,6 +7396,7 @@
       if (!user) return;
       if (!db) throw new Error('Teacher Workspace storage is not available. Please refresh and try again.');
       teacherWorkspaceData = normalizeTeacherWorkspaceData(teacherWorkspaceData);
+      organizeTeacherWorkspaceResources();
       await db.collection(TEACHER_WORKSPACE_COLLECTION).doc(TEACHER_WORKSPACE_DOC_ID).set({
         ...teacherWorkspaceData,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -7251,10 +7411,14 @@
       const folderList = document.getElementById('teacherWorkspaceFolderList');
       const folderSelect = document.getElementById('teacherWorkspaceResourceFolder');
       const resourceList = document.getElementById('teacherWorkspaceResourceList');
+      const searchInput = document.getElementById('teacherWorkspaceSearchInput');
+      const searchMeta = document.getElementById('teacherWorkspaceSearchMeta');
       if (!folderList || !folderSelect || !resourceList) return;
 
+      organizeTeacherWorkspaceResources();
       const folderExists = teacherWorkspaceData.folders.some(folder => folder.id === teacherWorkspaceActiveFolderId);
       if (teacherWorkspaceActiveFolderId !== 'all' && !folderExists) teacherWorkspaceActiveFolderId = 'all';
+      if (searchInput && searchInput.value !== teacherWorkspaceSearchQuery) searchInput.value = teacherWorkspaceSearchQuery;
       const allActive = teacherWorkspaceActiveFolderId === 'all';
       const allButton = `
         <div class="teacher-workspace-folder${allActive ? ' active' : ''}">
@@ -7278,19 +7442,39 @@
       folderSelect.innerHTML = '<option value="">No folder</option>'
         + teacherWorkspaceData.folders.map(folder => `<option value="${escapeHtml(folder.id)}">${escapeHtml(folder.title)}</option>`).join('');
 
-      const resources = teacherWorkspaceData.resources.filter(resource =>
+      const folderResources = teacherWorkspaceData.resources.filter(resource =>
         teacherWorkspaceActiveFolderId === 'all' || resource.folderId === teacherWorkspaceActiveFolderId
       );
+      const searchQuery = teacherWorkspaceSearchQuery.trim();
+      const resources = (searchQuery
+        ? folderResources
+          .map(resource => ({ resource, score: scoreTeacherWorkspaceResource(resource, searchQuery) }))
+          .filter(item => item.score > 0)
+          .sort((a, b) => b.score - a.score || String(b.resource.updatedAtLocal || '').localeCompare(String(a.resource.updatedAtLocal || '')))
+          .map(item => item.resource)
+        : folderResources
+      ).slice(0, 40);
+      if (searchMeta) {
+        const folderLabel = teacherWorkspaceActiveFolderId === 'all'
+          ? 'all folders'
+          : getTeacherWorkspaceFolderLabel(teacherWorkspaceActiveFolderId);
+        searchMeta.textContent = searchQuery
+          ? `${resources.length} match${resources.length === 1 ? '' : 'es'} in ${folderLabel}. Best matches show first.`
+          : `${folderResources.length} item${folderResources.length === 1 ? '' : 's'} in ${folderLabel}.`;
+      }
       if (!resources.length) {
-        resourceList.innerHTML = '<div class="teacher-workspace-empty">No resources here yet. Save a note, link, file URL, or data note above.</div>';
+        resourceList.innerHTML = searchQuery
+          ? '<div class="teacher-workspace-empty">No matching resources in this folder. Try a different keyword, letter, or folder.</div>'
+          : '<div class="teacher-workspace-empty">No resources here yet. Save a note, link, file URL, or data note above.</div>';
         return;
       }
       resourceList.innerHTML = resources.map(resource => {
         const encodedId = encodeURIComponent(resource.id);
         const safeUrl = isSafeTeacherWorkspaceUrl(resource.url) ? resource.url : '';
-        const link = safeUrl
-          ? `<a class="teacher-workspace-link" style="min-height:2.25rem; padding:.45rem .8rem; background: var(--md-coral);" href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer">Open</a>`
+        const linkButton = safeUrl
+          ? `<a class="teacher-workspace-link" style="min-height:2.25rem; padding:.45rem .8rem; background: var(--md-pebble); color: var(--md-ink);" href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer">Open Link</a>`
           : '';
+        const preview = getTeacherWorkspaceResourcePreview(resource);
         return `
           <article class="teacher-workspace-resource">
             <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
@@ -7301,11 +7485,12 @@
                   <span class="teacher-workspace-pill">${escapeHtml(getTeacherWorkspaceFolderLabel(resource.folderId))}</span>
                 </div>
               </div>
-              ${link}
+              <button type="button" class="teacher-workspace-action" style="min-height:2.25rem; padding:.45rem .8rem; background: var(--md-coral);" onclick="openTeacherWorkspaceResource(decodeURIComponent('${encodedId}'))">Open</button>
             </div>
-            ${resource.notes ? `<p class="mt-3 text-sm text-gray-700 whitespace-pre-wrap">${escapeHtml(resource.notes)}</p>` : ''}
+            ${preview ? `<p class="teacher-workspace-resource-preview">${escapeHtml(preview)}</p>` : ''}
             ${resource.url && !safeUrl ? `<p class="mt-3 text-sm font-semibold text-red-600">This saved link needs http, https, mailto, or tel before it can open.</p>` : ''}
             <div class="teacher-workspace-resource-actions">
+              ${linkButton}
               <button type="button" class="teacher-workspace-action" style="min-height:2.25rem; padding:.45rem .8rem; background: var(--md-slate);" onclick="editTeacherWorkspaceResource(decodeURIComponent('${encodedId}'))">Edit</button>
               <button type="button" class="teacher-workspace-action" style="min-height:2.25rem; padding:.45rem .8rem; background: var(--md-pebble); color: var(--md-ink);" onclick="deleteTeacherWorkspaceResource(decodeURIComponent('${encodedId}'))">Remove</button>
             </div>
@@ -7339,7 +7524,79 @@
 
     function selectTeacherWorkspaceFolder(folderId) {
       teacherWorkspaceActiveFolderId = folderId || 'all';
+      teacherWorkspaceSearchQuery = '';
       renderTeacherWorkspace();
+    }
+
+    function findTeacherWorkspaceResource(resourceId) {
+      return teacherWorkspaceData.resources.find(item => item.id === resourceId) || null;
+    }
+
+    function formatTeacherWorkspaceResourceMeta(resource) {
+      return [
+        getTeacherWorkspaceTypeLabel(resource.type),
+        getTeacherWorkspaceFolderLabel(resource.folderId),
+        resource.updatedAtLocal ? `Updated ${new Date(resource.updatedAtLocal).toLocaleDateString()}` : ''
+      ].filter(Boolean).join(' - ');
+    }
+
+    function openTeacherWorkspaceResource(resourceId) {
+      const resource = findTeacherWorkspaceResource(resourceId);
+      if (!resource) {
+        setTeacherWorkspaceStatus('That workspace item could not be found.', 'error');
+        return;
+      }
+      teacherWorkspaceModalResourceId = resource.id;
+      const modal = document.getElementById('teacherWorkspaceResourceModal');
+      const title = document.getElementById('teacherWorkspaceResourceModalTitle');
+      const meta = document.getElementById('teacherWorkspaceResourceModalMeta');
+      const body = document.getElementById('teacherWorkspaceResourceModalBody');
+      const link = document.getElementById('teacherWorkspaceResourceModalLink');
+      if (title) title.textContent = resource.title || 'Untitled resource';
+      if (meta) meta.textContent = formatTeacherWorkspaceResourceMeta(resource) || 'Teacher Workspace';
+      if (body) {
+        body.textContent = resource.notes || resource.url || 'No notes were saved for this workspace item yet.';
+      }
+      const safeUrl = isSafeTeacherWorkspaceUrl(resource.url) ? resource.url : '';
+      if (link) {
+        if (safeUrl) {
+          link.href = safeUrl;
+          link.style.display = 'inline-flex';
+        } else {
+          link.removeAttribute('href');
+          link.style.display = 'none';
+        }
+      }
+      if (modal) modal.classList.add('open');
+    }
+
+    function closeTeacherWorkspaceResourceModal() {
+      const modal = document.getElementById('teacherWorkspaceResourceModal');
+      if (modal) modal.classList.remove('open');
+    }
+
+    function editTeacherWorkspaceResourceFromModal() {
+      const resourceId = teacherWorkspaceModalResourceId;
+      closeTeacherWorkspaceResourceModal();
+      if (resourceId) editTeacherWorkspaceResource(resourceId);
+    }
+
+    function printTeacherWorkspaceResource(resourceId = teacherWorkspaceModalResourceId) {
+      const resource = findTeacherWorkspaceResource(resourceId);
+      if (!resource) {
+        setTeacherWorkspaceStatus('That workspace item could not be found.', 'error');
+        return;
+      }
+      const title = resource.title || 'Teacher Workspace Resource';
+      const bodyHtml = `
+        <h1>${escapeHtml(title)}</h1>
+        <div class="meta">${escapeHtml(formatTeacherWorkspaceResourceMeta(resource) || 'Teacher Workspace')}</div>
+        <section class="lesson">
+          <div class="field" style="white-space:pre-wrap;">${escapeHtml(resource.notes || resource.url || 'No notes were saved for this workspace item yet.')}</div>
+          ${resource.url ? `<div class="field" style="margin-top:10px;"><strong>Link</strong>${escapeHtml(resource.url)}</div>` : ''}
+        </section>
+      `;
+      openCurriculumPrintWindow(title, bodyHtml, 'Print view opened for the workspace item.', { autoPrint: false });
     }
 
     async function deleteTeacherWorkspaceFolder(folderId) {
