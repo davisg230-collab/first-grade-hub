@@ -21,12 +21,19 @@ const CURRICULUM_LONG_SINGLE_LESSON_SOURCE_LIMIT = 45000;
 const HUB_PUBLIC_URL = "https://first-grade-news-hub-mrdavis.web.app/";
 const CURRICULUM_RECOMMENDATION_ALLOWED_ORIGINS = new Set([
   "https://firstgradelearninggames.web.app",
+  "https://firstgradelearninggames.firebaseapp.com",
+  "https://stgradelearninggames.web.app",
+  "https://stgradelearninggames.firebaseapp.com",
   "https://first-grade-news-hub-mrdavis.web.app",
 ]);
+const LEARNING_GAMES_PROJECT_ID = "stgradelearninggames";
+const LEARNING_GAMES_AUTH_APP_NAME = "learning-games-auth";
 const MAIL_COLLECTION = process.env.MAIL_COLLECTION || "mail";
 const APPROVED_EDITOR_EMAILS = new Set([
   "davisg230@gmail.com",
   "lvest1010@gmail.com",
+  "lvest1@crossroadsschoolskc.org",
+  "lvest@crossroadsschoolskc.org",
 ]);
 const DEFAULT_TEACHER_EMAILS = [
   "dgonzalezjr@crossroadsschoolskc.org",
@@ -635,6 +642,93 @@ exports.recommendCurriculumLessons = onRequest(
         message: error && error.message,
       });
       response.status(500).json({ error: "Curriculum recommendations could not load yet." });
+    }
+  }
+);
+
+exports.saveTeacherWorkspaceResource = onRequest(
+  {
+    timeoutSeconds: 30,
+    memory: "256MiB",
+  },
+  async (request, response) => {
+    setCurriculumRecommendationCorsHeaders(request, response);
+
+    if (request.method === "OPTIONS") {
+      response.status(204).send("");
+      return;
+    }
+
+    if (request.method !== "POST") {
+      response.status(405).json({ error: "Use POST to save a Teacher Workspace resource." });
+      return;
+    }
+
+    try {
+      const teacher = await verifyLearningGamesTeacherRequest(request);
+      const data = getCurriculumRecommendationRequestData(request);
+      const folderTitle = normalizeTeacherWorkspaceTitle(data.folderTitle);
+      const resource = normalizeTeacherWorkspaceResource(data.resource);
+
+      if (!folderTitle) {
+        response.status(400).json({ error: "Choose a Teacher Workspace folder before saving." });
+        return;
+      }
+
+      if (!resource.title && !resource.notes && !resource.url) {
+        response.status(400).json({ error: "There was no plan or report content to save." });
+        return;
+      }
+
+      const docRef = admin.firestore().collection("teacherWorkspace").doc("current");
+      const savedResource = await admin.firestore().runTransaction(async (transaction) => {
+        const snapshot = await transaction.get(docRef);
+        const workspaceData = normalizeTeacherWorkspaceData(snapshot.exists ? snapshot.data() : {});
+        const folderId = ensureTeacherWorkspaceFolder(workspaceData, folderTitle);
+        const nextResource = {
+          ...resource,
+          folderId,
+          updatedAtLocal: new Date().toISOString(),
+        };
+        const existingIndex = workspaceData.resources.findIndex((item) => item.id === nextResource.id);
+
+        if (existingIndex >= 0) {
+          nextResource.createdAtLocal =
+            workspaceData.resources[existingIndex].createdAtLocal || nextResource.createdAtLocal;
+          workspaceData.resources[existingIndex] = nextResource;
+        } else {
+          workspaceData.resources.unshift(nextResource);
+        }
+
+        transaction.set(docRef, {
+          ...workspaceData,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedBy: teacher.email,
+          version: 1,
+        }, { merge: true });
+
+        return nextResource;
+      });
+
+      response.status(200).json({
+        folderTitle,
+        resource: {
+          id: savedResource.id,
+          title: savedResource.title,
+        },
+        saved: true,
+      });
+    } catch (error) {
+      const statusCode = Number(error && error.statusCode) || 500;
+      logger.error("Teacher Workspace save failed.", {
+        message: error && error.message,
+        statusCode,
+      });
+      response.status(statusCode).json({
+        error: statusCode === 500
+          ? "The Hub could not save that Teacher Workspace resource yet."
+          : error.message,
+      });
     }
   }
 );
@@ -1414,8 +1508,112 @@ function setCurriculumRecommendationCorsHeaders(request, response) {
   }
   response.set("Vary", "Origin");
   response.set("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-  response.set("Access-Control-Allow-Headers", "Content-Type");
+  response.set("Access-Control-Allow-Headers", "Authorization, Content-Type");
   response.set("Access-Control-Max-Age", "3600");
+}
+
+function learningGamesAuthApp() {
+  const existing = admin.apps.find((app) => app && app.name === LEARNING_GAMES_AUTH_APP_NAME);
+  if (existing) return existing;
+  return admin.initializeApp({ projectId: LEARNING_GAMES_PROJECT_ID }, LEARNING_GAMES_AUTH_APP_NAME);
+}
+
+function httpError(statusCode, message) {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
+}
+
+async function verifyLearningGamesTeacherRequest(request) {
+  const authorization = asText(request.get && request.get("authorization"));
+  const match = authorization.match(/^Bearer\s+(.+)$/i);
+
+  if (!match) {
+    throw httpError(401, "Sign in to the Learning Games teacher tools before saving to the Hub.");
+  }
+
+  let decoded;
+  try {
+    decoded = await admin.auth(learningGamesAuthApp()).verifyIdToken(match[1]);
+  } catch (error) {
+    logger.warn("Learning Games teacher token verification failed.", { message: error && error.message });
+    throw httpError(401, "Your teacher sign-in expired. Sign in again, then save to the Hub.");
+  }
+
+  const email = asText(decoded.email).toLowerCase();
+  if (!APPROVED_EDITOR_EMAILS.has(email)) {
+    throw httpError(403, "Only an authorized teacher account can save to the Hub Teacher Workspace.");
+  }
+
+  return { email };
+}
+
+function safeTeacherWorkspaceId(value, fallback) {
+  return (asText(value) || fallback || "resource")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 180) || "resource";
+}
+
+function normalizeTeacherWorkspaceTitle(value) {
+  return asText(value)
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 120);
+}
+
+function normalizeTeacherWorkspaceData(data) {
+  const folders = Array.isArray(data && data.folders) ? data.folders : [];
+  const resources = Array.isArray(data && data.resources) ? data.resources : [];
+
+  return {
+    folders: folders
+      .map((folder) => ({
+        createdAtLocal: asText(folder && folder.createdAtLocal),
+        id: asText(folder && folder.id),
+        title: normalizeTeacherWorkspaceTitle(folder && folder.title),
+      }))
+      .filter((folder) => folder.id && folder.title),
+    resources: resources
+      .map((resource) => normalizeTeacherWorkspaceResource(resource))
+      .filter((resource) => resource.id && (resource.title || resource.notes || resource.url)),
+  };
+}
+
+function normalizeTeacherWorkspaceResource(resource) {
+  const source = resource && typeof resource === "object" ? resource : {};
+  const type = asText(source.type);
+  return {
+    createdAtLocal: asText(source.createdAtLocal) || new Date().toISOString(),
+    folderId: asText(source.folderId),
+    id: safeTeacherWorkspaceId(source.id, source.title),
+    notes: asText(source.notes).slice(0, 45000),
+    title: normalizeTeacherWorkspaceTitle(source.title),
+    type: ["note", "link", "file", "data"].includes(type) ? type : "note",
+    updatedAtLocal: asText(source.updatedAtLocal) || new Date().toISOString(),
+    url: asText(source.url).trim().slice(0, 1200),
+  };
+}
+
+function ensureTeacherWorkspaceFolder(workspaceData, title) {
+  const normalizedTitle = normalizeTeacherWorkspaceTitle(title);
+  const existing = workspaceData.folders.find((folder) =>
+    folder.title.trim().toLowerCase() === normalizedTitle.toLowerCase()
+  );
+
+  if (existing) return existing.id;
+
+  const folder = {
+    createdAtLocal: new Date().toISOString(),
+    id: `folder-${safeTeacherWorkspaceId(normalizedTitle, "workspace")}-${Date.now().toString(36)}`,
+    title: normalizedTitle,
+  };
+
+  workspaceData.folders.push(folder);
+  return folder.id;
 }
 
 function getCurriculumRecommendationRequestData(request) {
