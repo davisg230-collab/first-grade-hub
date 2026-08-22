@@ -6582,8 +6582,11 @@
       if (isScholarCheckInRoute()) {
         document.body.classList.add('scholar-check-in-mode');
       } else {
-        showPage('home');
-        showHomeSubView('news');
+        const openedCurriculumDeepLink = handleCurriculumRecommendationDeepLink();
+        if (!openedCurriculumDeepLink) {
+          showPage('home');
+          showHomeSubView('news');
+        }
       }
       if (typeof renderAnimatedMainHeading === 'function') renderAnimatedMainHeading();
       wireMobileHomeNewsCards();
@@ -6742,6 +6745,7 @@
     let curriculumSelectedPlanDateKeys = new Set();
     let curriculumActiveCalendarDateKey = '';
     let curriculumActiveLibraryTab = 'upload';
+    let pendingCurriculumRecommendationLessonId = '';
     let teacherWorkspaceData = getEmptyTeacherWorkspaceData();
     let teacherWorkspaceLoaded = false;
     let teacherWorkspaceActiveFolderId = 'all';
@@ -7103,6 +7107,7 @@
       }
       showCurriculumLibraryTab(curriculumActiveLibraryTab);
       if (curriculumActiveLibraryTab === 'upload') collapseCurriculumMobileSections();
+      await openPendingCurriculumRecommendationLesson();
     }
 
     function getEmptyTeacherWorkspaceData() {
@@ -7414,9 +7419,10 @@
       try {
         const user = await ensureCurriculumTeacherUser();
         if (user) {
-          curriculumToolView = 'shelf';
+          curriculumToolView = pendingCurriculumRecommendationLessonId ? 'curriculum' : 'shelf';
           showCurriculumWorkspace(true);
           await loadCurriculumLessons();
+          await openPendingCurriculumRecommendationLesson();
         }
       } catch (error) {
         console.error('Teacher Tools sign-in failed:', error);
@@ -7514,6 +7520,63 @@
       }
       rememberTeacherDevice(user);
       return user;
+    }
+
+    function getCurriculumRecommendationLessonIdFromUrl() {
+      try {
+        const params = new URLSearchParams(window.location.search || '');
+        const tool = String(params.get('teacherTool') || params.get('tool') || '').trim().toLowerCase();
+        if (tool && !['curriculum', 'curriculum-library', 'lesson'].includes(tool)) return '';
+        return String(params.get('lessonId') || params.get('curriculumLessonId') || '').trim();
+      } catch (error) {
+        return '';
+      }
+    }
+
+    function handleCurriculumRecommendationDeepLink() {
+      const lessonId = getCurriculumRecommendationLessonIdFromUrl();
+      if (!lessonId) return false;
+      pendingCurriculumRecommendationLessonId = lessonId;
+      curriculumToolView = 'curriculum';
+      curriculumActiveLibraryTab = 'browse';
+      showPage('curriculum-builder');
+      if (getApprovedCurriculumUser()) {
+        showCurriculumWorkspace(true);
+        loadCurriculumLessons().catch(error => {
+          console.error('Recommended lesson could not load:', error);
+          setCurriculumStatus(error.message || 'Recommended lesson could not load yet.', 'error');
+        });
+      } else {
+        showCurriculumWorkspace(false);
+        setCurriculumStatus('Sign in with a teacher account to open the recommended curriculum lesson.', 'info');
+      }
+      return true;
+    }
+
+    async function openPendingCurriculumRecommendationLesson() {
+      if (!pendingCurriculumRecommendationLessonId || !getApprovedCurriculumUser()) return false;
+      const lessonId = pendingCurriculumRecommendationLessonId;
+      const lesson = curriculumLessonsCache.find(item =>
+        item.id === lessonId || item.savedLessonId === lessonId || String(item.id || '') === String(lessonId)
+      );
+      if (!lesson) {
+        if (curriculumLessonsCache.length) {
+          pendingCurriculumRecommendationLessonId = '';
+          setCurriculumStatus('That recommended lesson is not in this teacher account yet.', 'error');
+        }
+        return false;
+      }
+      pendingCurriculumRecommendationLessonId = '';
+      curriculumToolView = 'curriculum';
+      curriculumActiveLibraryTab = 'browse';
+      showCurriculumWorkspace(true);
+      showCurriculumLibraryTab('browse');
+      const lessonKey = getCurriculumLessonBrowserKey(lesson);
+      curriculumActiveBrowserLessonId = lessonKey;
+      renderCurriculumLessonBrowser();
+      openCurriculumLessonViewModal(lessonKey);
+      setCurriculumStatus('Opened the recommended curriculum lesson from Learning Games.', 'success');
+      return true;
     }
 
     async function initializeCurriculumBuilder() {
@@ -8333,6 +8396,7 @@
         renderCurriculumPlanCalendar();
         ensureWeeklyLessonPlanWeekInput();
         generateWeeklyLessonPlan();
+        await openPendingCurriculumRecommendationLesson();
       } catch (error) {
         console.error('Loading curriculum library failed:', error);
         setCurriculumStatus(error.message || 'Could not load saved lessons.', 'error');

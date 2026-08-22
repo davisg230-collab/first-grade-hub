@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const { logger } = require("firebase-functions");
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
-const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
 
@@ -18,6 +18,11 @@ const CURRICULUM_LESSON_SUBJECTS = ["skills", "listening", "math", KINDERGARTEN_
 const CURRICULUM_PLAN_SUBJECTS = ["skills", "listening", "math"];
 const CURRICULUM_DEFAULT_LESSON_SOURCE_LIMIT = 20000;
 const CURRICULUM_LONG_SINGLE_LESSON_SOURCE_LIMIT = 45000;
+const HUB_PUBLIC_URL = "https://first-grade-news-hub-mrdavis.web.app/";
+const CURRICULUM_RECOMMENDATION_ALLOWED_ORIGINS = new Set([
+  "https://firstgradelearninggames.web.app",
+  "https://first-grade-news-hub-mrdavis.web.app",
+]);
 const MAIL_COLLECTION = process.env.MAIL_COLLECTION || "mail";
 const APPROVED_EDITOR_EMAILS = new Set([
   "davisg230@gmail.com",
@@ -569,6 +574,68 @@ exports.generateCurriculumSpotlight = onCall(
       generatedAt: new Date().toISOString(),
       model,
     };
+  }
+);
+
+exports.recommendCurriculumLessons = onRequest(
+  {
+    timeoutSeconds: 30,
+    memory: "256MiB",
+  },
+  async (request, response) => {
+    setCurriculumRecommendationCorsHeaders(request, response);
+
+    if (request.method === "OPTIONS") {
+      response.status(204).send("");
+      return;
+    }
+
+    if (!["GET", "POST"].includes(request.method)) {
+      response.status(405).json({ error: "Use GET or POST to request curriculum recommendations." });
+      return;
+    }
+
+    try {
+      const data = getCurriculumRecommendationRequestData(request);
+      const needs = normalizeCurriculumRecommendationNeeds(data.needs);
+      const subject = normalizeCurriculumRecommendationSubject(data.subject);
+      const limit = normalizeCurriculumRecommendationLimit(data.limit);
+
+      if (!needs.length) {
+        response.status(400).json({ error: "Send at least one skill or need to match against the Curriculum Library." });
+        return;
+      }
+
+      const snapshot = await admin.firestore().collection("curriculumLessons").limit(700).get();
+      const recommendations = snapshot.docs
+        .map((doc) => {
+          const lesson = doc.data() || {};
+          const match = scoreCurriculumRecommendationLesson(lesson, needs, subject);
+          if (!match.score) return null;
+          return buildCurriculumRecommendationPayload(doc.id, lesson, match);
+        })
+        .filter(Boolean)
+        .sort((a, b) =>
+          b.score - a.score
+          || a.subjectLabel.localeCompare(b.subjectLabel)
+          || a.unitOrModule.localeCompare(b.unitOrModule)
+          || getLessonNumberValue(a.lessonNumber) - getLessonNumberValue(b.lessonNumber)
+          || a.lessonTitle.localeCompare(b.lessonTitle)
+        )
+        .slice(0, limit);
+
+      response.status(200).json({
+        needs,
+        subject,
+        count: recommendations.length,
+        recommendations,
+      });
+    } catch (error) {
+      logger.error("Curriculum recommendation lookup failed.", {
+        message: error && error.message,
+      });
+      response.status(500).json({ error: "Curriculum recommendations could not load yet." });
+    }
   }
 );
 
@@ -1337,6 +1404,253 @@ function labelForCurriculumSubject(subject) {
     default:
       return "First Grade";
   }
+}
+
+function setCurriculumRecommendationCorsHeaders(request, response) {
+  const origin = asText(request.get && request.get("origin"));
+  const isLocalhost = /^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/i.test(origin);
+  if (CURRICULUM_RECOMMENDATION_ALLOWED_ORIGINS.has(origin) || isLocalhost) {
+    response.set("Access-Control-Allow-Origin", origin);
+  }
+  response.set("Vary", "Origin");
+  response.set("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  response.set("Access-Control-Allow-Headers", "Content-Type");
+  response.set("Access-Control-Max-Age", "3600");
+}
+
+function getCurriculumRecommendationRequestData(request) {
+  if (request.method === "GET") return request.query || {};
+  if (!request.body) return {};
+  if (typeof request.body === "string") {
+    try {
+      return JSON.parse(request.body);
+    } catch (error) {
+      return {};
+    }
+  }
+  return request.body;
+}
+
+function normalizeCurriculumRecommendationNeeds(value) {
+  const rawNeeds = Array.isArray(value)
+    ? value
+    : asText(value).split(/[,;\n]/);
+  const seen = new Set();
+  return rawNeeds
+    .map(normalizeCurriculumRecommendationNeed)
+    .filter((need) => {
+      const key = need.toLowerCase();
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 24);
+}
+
+function normalizeCurriculumRecommendationNeed(value) {
+  return asText(value)
+    .replace(/[`"“”]/g, "")
+    .replace(/[|_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 90);
+}
+
+function normalizeCurriculumRecommendationSubject(value) {
+  const subject = normalizeCurriculumSubject(asText(value));
+  if (subject === KINDERGARTEN_MATH_SUBJECT) return "math";
+  return ["skills", "listening", "math"].includes(subject) ? subject : "";
+}
+
+function normalizeCurriculumRecommendationLimit(value) {
+  const limit = Number(value);
+  if (!Number.isFinite(limit) || limit <= 0) return 8;
+  return Math.min(12, Math.max(1, Math.floor(limit)));
+}
+
+function curriculumRecommendationSubjectMatches(lessonSubject, requestedSubject) {
+  const subject = normalizeCurriculumSubject(lessonSubject);
+  if (!requestedSubject) return true;
+  if (requestedSubject === "math") {
+    return subject === "math" || subject === KINDERGARTEN_MATH_SUBJECT;
+  }
+  return subject === requestedSubject;
+}
+
+function labelForCurriculumRecommendationSubject(subject) {
+  const normalized = normalizeCurriculumSubject(subject);
+  if (normalized === KINDERGARTEN_MATH_SUBJECT) return "Math";
+  return labelForCurriculumSubject(normalized);
+}
+
+function scoreCurriculumRecommendationLesson(lesson, needs, requestedSubject) {
+  if (!curriculumRecommendationSubjectMatches(lesson.subject, requestedSubject)) {
+    return { score: 0, matchedNeeds: [] };
+  }
+
+  const highValueText = normalizeCurriculumRecommendationSearchText([
+    lesson.priorityStandard,
+    lesson.priorityStandardCode,
+    lesson.priorityStandardNumber,
+    lesson.priorityStandardWording,
+    lesson.supportingStandards,
+    lesson.standardNotes,
+    lesson.vocabulary,
+    lesson.soundSpellings,
+  ]);
+  const lessonIdentityText = normalizeCurriculumRecommendationSearchText([
+    lesson.subject,
+    lesson.unitOrModule,
+    lesson.lessonNumber,
+    lesson.lessonTitle,
+    lesson.officialLessonTitle,
+  ]);
+  const learningText = normalizeCurriculumRecommendationSearchText([
+    lesson.iCanStatement,
+    lesson.objective,
+    lesson.parentSummary,
+    lesson.teacherNotes,
+    lesson.familyQuestions,
+  ]);
+  const sourceText = normalizeCurriculumRecommendationSearchText(asText(lesson.sourceText).slice(0, 12000));
+  const matchedNeeds = [];
+  let score = 0;
+
+  needs.forEach((need) => {
+    const variants = getCurriculumRecommendationNeedVariants(need);
+    let bestScore = 0;
+    variants.forEach((variant) => {
+      if (!variant) return;
+      if (curriculumRecommendationSearchIncludes(highValueText, variant)) bestScore = Math.max(bestScore, 36);
+      if (curriculumRecommendationSearchIncludes(lessonIdentityText, variant)) bestScore = Math.max(bestScore, 24);
+      if (curriculumRecommendationSearchIncludes(learningText, variant)) bestScore = Math.max(bestScore, 18);
+      if (curriculumRecommendationSearchIncludes(sourceText, variant)) bestScore = Math.max(bestScore, 8);
+    });
+    if (bestScore > 0) {
+      matchedNeeds.push(need);
+      score += bestScore;
+    }
+  });
+
+  if (!matchedNeeds.length) return { score: 0, matchedNeeds: [] };
+
+  const subject = normalizeCurriculumSubject(lesson.subject);
+  if (requestedSubject && curriculumRecommendationSubjectMatches(subject, requestedSubject)) score += 12;
+  if (lesson.priorityStandard || lesson.priorityStandardWording) score += 3;
+  if (lesson.iCanStatement || lesson.objective) score += 3;
+
+  return {
+    score,
+    matchedNeeds: matchedNeeds.slice(0, 8),
+  };
+}
+
+function getCurriculumRecommendationNeedVariants(need) {
+  const normalized = normalizeCurriculumRecommendationSearchText(need);
+  const variants = new Set([normalized]);
+
+  normalized
+    .split(/\s+-\s+|\s+:\s+|\s+\/\s+/)
+    .map((part) => part.trim())
+    .filter((part) => part && !isGenericCurriculumRecommendationTerm(part))
+    .forEach((part) => variants.add(part));
+
+  const skillMatches = normalized.match(/\b(?:sh|ch|th|wh|ph|ng|ck)\b|\bshort vowel [a-z]\b|\b[a-z]\b|\bsegment\w*\b|\bblend\w*\b|\baddition\b|\bsubtraction\b|\bwithin 5\b|\bretell\w*\b|\bkey details?\b|\bcentral message\b|\bfeelings?\b|\bsenses?\b/gi) || [];
+  skillMatches
+    .map(normalizeCurriculumRecommendationSearchText)
+    .filter((part) => part && !isGenericCurriculumRecommendationTerm(part))
+    .forEach((part) => variants.add(part));
+
+  return Array.from(variants)
+    .map((variant) => variant.trim())
+    .filter((variant) => variant.length >= 1 && !isGenericCurriculumRecommendationTerm(variant))
+    .slice(0, 12);
+}
+
+function isGenericCurriculumRecommendationTerm(value) {
+  return [
+    "question",
+    "questions",
+    "needs",
+    "practice",
+    "review",
+    "needs review",
+    "assessment",
+    "game",
+    "lesson",
+    "level",
+    "unit",
+    "module",
+  ].includes(value);
+}
+
+function normalizeCurriculumRecommendationSearchText(value) {
+  if (Array.isArray(value)) {
+    return value.map(normalizeCurriculumRecommendationSearchText).filter(Boolean).join(" ");
+  }
+  if (value && typeof value === "object") {
+    return normalizeCurriculumRecommendationSearchText(Object.values(value));
+  }
+  return asText(value)
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[\u2010-\u2015]/g, "-")
+    .replace(/[^a-z0-9.]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function curriculumRecommendationSearchIncludes(searchText, term) {
+  const value = asText(term);
+  if (!value) return false;
+  if (/^[a-z]{1,2}$/i.test(value)) {
+    return new RegExp(`(^|\\s)${escapeRegExp(value)}($|\\s)`, "i").test(searchText);
+  }
+  return searchText.includes(value);
+}
+
+function buildCurriculumRecommendationPayload(id, lesson, match) {
+  const subject = normalizeCurriculumSubject(lesson.subject);
+  const lessonNumber = asText(lesson.lessonNumber);
+  const unitOrModule = normalizeCurriculumUnitOrModule(lesson.unitOrModule);
+  const lessonTitle = asText(lesson.lessonTitle || lesson.officialLessonTitle || lesson.title)
+    || [unitOrModule, formatCurriculumRecommendationLessonNumber(lessonNumber)].filter(Boolean).join(" - ")
+    || "Saved curriculum lesson";
+  const priorityStandard = asText(lesson.priorityStandard)
+    || [lesson.priorityStandardCode || lesson.priorityStandardNumber, lesson.priorityStandardWording].map(asText).filter(Boolean).join(" - ");
+  const matchedNeeds = match.matchedNeeds || [];
+  return {
+    id,
+    subject: subject === KINDERGARTEN_MATH_SUBJECT ? "math" : subject,
+    subjectLabel: labelForCurriculumRecommendationSubject(subject),
+    unitOrModule,
+    lessonNumber,
+    lessonTitle,
+    priorityStandard,
+    iCanStatement: asText(lesson.iCanStatement),
+    objective: asText(lesson.objective),
+    parentSummary: asText(lesson.parentSummary),
+    matchedNeeds,
+    score: match.score,
+    reason: matchedNeeds.length
+      ? `Matches ${matchedNeeds.slice(0, 3).join(", ")}.`
+      : "Matches the selected class need.",
+    url: `${HUB_PUBLIC_URL}?teacherTool=curriculum&lessonId=${encodeURIComponent(id)}`,
+  };
+}
+
+function formatCurriculumRecommendationLessonNumber(value) {
+  const text = asText(value).replace(/^lesson\s*#?\s*/i, "");
+  return text ? `Lesson ${text}` : "";
+}
+
+function getLessonNumberValue(value) {
+  const match = asText(value).match(/\d+/);
+  return match ? Number(match[0]) : 9999;
+}
+
+function escapeRegExp(value) {
+  return asText(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 async function readJsonResponse(response) {
