@@ -1485,18 +1485,20 @@ function labelForCurriculumRecommendationSubject(subject) {
 
 function scoreCurriculumRecommendationLesson(lesson, needs, requestedSubject) {
   if (!curriculumRecommendationSubjectMatches(lesson.subject, requestedSubject)) {
-    return { score: 0, matchedNeeds: [] };
+    return { score: 0, matchedNeeds: [], matchDetails: [] };
   }
 
-  const highValueText = normalizeCurriculumRecommendationSearchText([
+  const directSkillText = normalizeCurriculumRecommendationSearchText([
+    lesson.vocabulary,
+    lesson.soundSpellings,
+  ]);
+  const standardText = normalizeCurriculumRecommendationSearchText([
     lesson.priorityStandard,
     lesson.priorityStandardCode,
     lesson.priorityStandardNumber,
     lesson.priorityStandardWording,
     lesson.supportingStandards,
     lesson.standardNotes,
-    lesson.vocabulary,
-    lesson.soundSpellings,
   ]);
   const lessonIdentityText = normalizeCurriculumRecommendationSearchText([
     lesson.subject,
@@ -1514,25 +1516,62 @@ function scoreCurriculumRecommendationLesson(lesson, needs, requestedSubject) {
   ]);
   const sourceText = normalizeCurriculumRecommendationSearchText(asText(lesson.sourceText).slice(0, 12000));
   const matchedNeeds = [];
+  const matchDetails = [];
   let score = 0;
 
   needs.forEach((need) => {
     const variants = getCurriculumRecommendationNeedVariants(need);
-    let bestScore = 0;
+    let bestMatch = { score: 0, matchType: "", reason: "" };
     variants.forEach((variant) => {
       if (!variant) return;
-      if (curriculumRecommendationSearchIncludes(highValueText, variant)) bestScore = Math.max(bestScore, 36);
-      if (curriculumRecommendationSearchIncludes(lessonIdentityText, variant)) bestScore = Math.max(bestScore, 24);
-      if (curriculumRecommendationSearchIncludes(learningText, variant)) bestScore = Math.max(bestScore, 18);
-      if (curriculumRecommendationSearchIncludes(sourceText, variant)) bestScore = Math.max(bestScore, 8);
+      if (curriculumRecommendationSearchIncludes(directSkillText, variant) && bestMatch.score < 44) {
+        bestMatch = {
+          score: 44,
+          matchType: "direct",
+          reason: `The need "${need}" appears in the lesson's vocabulary or sound/spelling targets.`,
+        };
+      }
+      if (curriculumRecommendationSearchIncludes(standardText, variant) && bestMatch.score < 36) {
+        bestMatch = {
+          score: 36,
+          matchType: "standard",
+          reason: `The need "${need}" matches the lesson's standard, prerequisite standard, or standard notes.`,
+        };
+      }
+      if (curriculumRecommendationSearchIncludes(lessonIdentityText, variant) && bestMatch.score < 24) {
+        bestMatch = {
+          score: 24,
+          matchType: "lesson",
+          reason: `The need "${need}" appears in the lesson title, number, unit, or module identity.`,
+        };
+      }
+      if (curriculumRecommendationSearchIncludes(learningText, variant) && bestMatch.score < 18) {
+        bestMatch = {
+          score: 18,
+          matchType: "related",
+          reason: `The need "${need}" appears in the lesson objective, I Can statement, family summary, or teacher notes.`,
+        };
+      }
+      if (curriculumRecommendationSearchIncludes(sourceText, variant) && bestMatch.score < 8) {
+        bestMatch = {
+          score: 8,
+          matchType: "source",
+          reason: `The need "${need}" appears in the saved lesson source text.`,
+        };
+      }
     });
-    if (bestScore > 0) {
+    if (bestMatch.score > 0) {
       matchedNeeds.push(need);
-      score += bestScore;
+      matchDetails.push({
+        need,
+        matchType: bestMatch.matchType,
+        reason: bestMatch.reason,
+      });
+      score += bestMatch.score;
     }
   });
 
-  if (!matchedNeeds.length) return { score: 0, matchedNeeds: [] };
+  if (!matchedNeeds.length) return { score: 0, matchedNeeds: [], matchDetails: [] };
 
   const subject = normalizeCurriculumSubject(lesson.subject);
   if (requestedSubject && curriculumRecommendationSubjectMatches(subject, requestedSubject)) score += 12;
@@ -1541,6 +1580,7 @@ function scoreCurriculumRecommendationLesson(lesson, needs, requestedSubject) {
 
   return {
     score,
+    matchDetails: matchDetails.slice(0, 8),
     matchedNeeds: matchedNeeds.slice(0, 8),
   };
 }
@@ -1631,6 +1671,7 @@ function buildCurriculumRecommendationPayload(id, lesson, match) {
     objective: asText(lesson.objective),
     parentSummary: asText(lesson.parentSummary),
     matchedNeeds,
+    matchDetails: match.matchDetails || [],
     score: match.score,
     reason: matchedNeeds.length
       ? `Matches ${matchedNeeds.slice(0, 3).join(", ")}.`

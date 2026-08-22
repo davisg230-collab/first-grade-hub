@@ -2337,6 +2337,37 @@
       display: grid;
       gap: .7rem;
     }
+    .curriculum-group-upload-context {
+      display: grid;
+      gap: .55rem;
+      margin-bottom: 1rem;
+      border: 1px solid color-mix(in oklab, var(--md-blue) 28%, var(--md-white));
+      border-radius: .9rem;
+      background: color-mix(in oklab, var(--md-blue) 8%, var(--md-white));
+      padding: .9rem;
+      color: var(--md-slate);
+      font-weight: 750;
+    }
+    .curriculum-group-upload-context[hidden] {
+      display: none;
+    }
+    .curriculum-group-upload-context h4 {
+      margin: 0;
+      color: var(--md-slate);
+      font-size: 1rem;
+      font-weight: 900;
+    }
+    .curriculum-group-upload-context p {
+      margin: 0;
+      color: #4b5563;
+      font-size: .9rem;
+      line-height: 1.45;
+    }
+    .curriculum-group-upload-context-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+    }
     .curriculum-builder-output {
       min-height: 4.2rem;
       resize: vertical;
@@ -4701,6 +4732,7 @@
                   </span>
                 </button>
                 <div class="curriculum-mobile-section-body">
+                <div id="curriculumGroupUploadContextPanel" class="curriculum-group-upload-context" hidden></div>
                 <div class="grid sm:grid-cols-3 gap-3 mb-4">
                   <div>
                     <label class="curriculum-builder-label" for="curriculumSubjectInput">Subject</label>
@@ -6746,6 +6778,7 @@
     let curriculumActiveCalendarDateKey = '';
     let curriculumActiveLibraryTab = 'upload';
     let pendingCurriculumRecommendationLessonId = '';
+    let pendingCurriculumGroupUploadContext = null;
     let teacherWorkspaceData = getEmptyTeacherWorkspaceData();
     let teacherWorkspaceLoaded = false;
     let teacherWorkspaceActiveFolderId = 'all';
@@ -7108,6 +7141,7 @@
       showCurriculumLibraryTab(curriculumActiveLibraryTab);
       if (curriculumActiveLibraryTab === 'upload') collapseCurriculumMobileSections();
       await openPendingCurriculumRecommendationLesson();
+      applyPendingCurriculumGroupUploadContext();
     }
 
     function getEmptyTeacherWorkspaceData() {
@@ -7419,10 +7453,11 @@
       try {
         const user = await ensureCurriculumTeacherUser();
         if (user) {
-          curriculumToolView = pendingCurriculumRecommendationLessonId ? 'curriculum' : 'shelf';
+          curriculumToolView = (pendingCurriculumRecommendationLessonId || pendingCurriculumGroupUploadContext) ? 'curriculum' : 'shelf';
           showCurriculumWorkspace(true);
           await loadCurriculumLessons();
           await openPendingCurriculumRecommendationLesson();
+          applyPendingCurriculumGroupUploadContext();
         }
       } catch (error) {
         console.error('Teacher Tools sign-in failed:', error);
@@ -7451,6 +7486,7 @@
       curriculumLessonViewModalLessonId = '';
       curriculumActiveCalendarDateKey = '';
       curriculumActiveLibraryTab = 'upload';
+      pendingCurriculumGroupUploadContext = null;
       teacherRosterUnlocked = false;
       setRosterEditMode(false);
       curriculumWeeklyPlan = getEmptyCurriculumWeeklyPlan();
@@ -7533,22 +7569,346 @@
       }
     }
 
+    function getCurriculumGroupUploadContextFromUrl() {
+      try {
+        const params = new URLSearchParams(window.location.search || '');
+        const tool = String(params.get('teacherTool') || params.get('tool') || '').trim().toLowerCase();
+        if (tool && !['curriculum', 'curriculum-library', 'lesson'].includes(tool)) return null;
+        const need = String(params.get('uploadNeed') || params.get('groupNeed') || '').trim();
+        if (!need) return null;
+        const subject = String(params.get('groupSubject') || '').trim();
+        const cleanSubject = curriculumSubjects.includes(subject) ? subject : 'skills';
+        const scholars = String(params.get('groupScholars') || '')
+          .split('|')
+          .map(item => item.trim())
+          .filter(Boolean);
+        const searchTerms = String(params.get('groupTerms') || '')
+          .split('|')
+          .map(item => item.trim())
+          .filter(Boolean);
+        return {
+          need,
+          subject: cleanSubject,
+          source: String(params.get('groupSource') || 'Learning Games data').trim() || 'Learning Games data',
+          scholars,
+          searchTerms
+        };
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function getCurriculumGroupUploadContextNote(context) {
+      if (!context) return '';
+      const lines = [
+        `Small-group planning need from Learning Games: ${context.need}`,
+        `Evidence source: ${context.source || 'Learning Games data'}`
+      ];
+      if (context.scholars && context.scholars.length) {
+        lines.push(`Scholars: ${context.scholars.join(', ')}`);
+      }
+      if (context.searchTerms && context.searchTerms.length) {
+        lines.push(`Related search terms: ${context.searchTerms.join(', ')}`);
+      }
+      return lines.join('\n');
+    }
+
+    function getCurriculumGroupDraftLesson() {
+      try {
+        return collectCurriculumLessonDraft();
+      } catch (error) {
+        const teacherNotes = linesToList(document.getElementById('curriculumTeacherNotesOutput')?.value || '');
+        const contextNote = getCurriculumGroupUploadContextNote(pendingCurriculumGroupUploadContext);
+        if (contextNote) {
+          contextNote.split('\n').forEach(line => {
+            const cleanLine = line.trim();
+            if (cleanLine && !teacherNotes.some(note => note.toLowerCase() === cleanLine.toLowerCase())) {
+              teacherNotes.push(cleanLine);
+            }
+          });
+        }
+        return {
+          subject: pendingCurriculumGroupUploadContext?.subject || 'skills',
+          unitOrModule: document.getElementById('curriculumUnitInput')?.value.trim() || '',
+          lessonNumber: document.getElementById('curriculumLessonNumberInput')?.value.trim() || '',
+          lessonTitle: document.getElementById('curriculumLessonTitleInput')?.value.trim() || '',
+          iCanStatement: document.getElementById('curriculumICanOutput')?.value.trim() || '',
+          priorityStandard: document.getElementById('curriculumStandardOutput')?.value.trim() || '',
+          objective: document.getElementById('curriculumObjectiveOutput')?.value.trim() || '',
+          parentSummary: document.getElementById('curriculumParentSummaryOutput')?.value.trim() || '',
+          materials: linesToList(document.getElementById('curriculumMaterialsOutput')?.value || ''),
+          teacherNotes
+        };
+      }
+    }
+
+    function getCurriculumGroupLessonTitle(lesson) {
+      return [
+        getCurriculumSubjectLabel(lesson.subject || pendingCurriculumGroupUploadContext?.subject || 'skills'),
+        formatCurriculumUnitOrModule(lesson.unitOrModule || ''),
+        formatCurriculumLessonNumber(lesson.lessonNumber || ''),
+        lesson.lessonTitle || lesson.officialLessonTitle || ''
+      ].filter(Boolean).join(' - ');
+    }
+
+    function getCurriculumGroupFamilyTips(context, lesson) {
+      const need = String(context?.need || '').toLowerCase();
+      const subject = lesson.subject || context?.subject || 'skills';
+      if (isCurriculumMathSubject(subject)) {
+        return {
+          lookFor: 'Your child can show the math idea with objects, drawings, words, or numbers.',
+          steps: [
+            `Practice ${context.need} with small objects at home.`,
+            'Ask your child to tell a quick math story, act it out, draw it, and explain what the numbers mean.',
+            'Keep the numbers small at first. If it feels easy, ask your child to explain the answer in a full sentence.'
+          ],
+          prompt: 'Tell a math story, show it, and explain how you know.'
+        };
+      }
+      if (subject === 'listening') {
+        return {
+          lookFor: 'Your child can talk about the story or topic using details from what they heard.',
+          steps: [
+            `Read or listen to a short story together and focus on ${context.need}.`,
+            'Pause to ask who, what, where, when, why, and how questions.',
+            'Have your child answer in a complete sentence and use one important word from the lesson or story.'
+          ],
+          prompt: 'Tell me the most important part and one detail that helped you know.'
+        };
+      }
+      if (need.includes('segment') || need.includes('blend')) {
+        return {
+          lookFor: 'Your child can hear each sound in a word and put the sounds back together.',
+          steps: [
+            'Say a short word slowly and have your child tap one finger for each sound.',
+            'Then have your child blend the sounds back together to say the whole word.',
+            'Try 5 words, then stop while it still feels successful.'
+          ],
+          prompt: 'Tap the sounds, blend the word, then say the word in a sentence.'
+        };
+      }
+      if (need.includes('ch') || need.includes('sh') || need.includes('th') || need.includes('digraph')) {
+        return {
+          lookFor: 'Your child can notice the two-letter sound, say it, read it in words, and write it.',
+          steps: [
+            `Look for ${context.need} in books, signs, or words around the house.`,
+            'Have your child underline the sound, say the sound, then read the whole word.',
+            'Ask your child to write 3 words with that sound and read them back to you.'
+          ],
+          prompt: 'Find the sound, say the sound, read the word, and write one more word like it.'
+        };
+      }
+      return {
+        lookFor: 'Your child can show the skill, explain their thinking, and try one more example.',
+        steps: [
+          `Practice ${context.need} for 5 to 10 minutes.`,
+          'Ask your child to show the skill and explain what they are doing.',
+          'Keep it short and positive. A little correct practice is better than a long frustrating session.'
+        ],
+        prompt: 'Show me how you know, then try one more.'
+      };
+    }
+
+    function printCurriculumGroupTeacherPlan() {
+      const context = pendingCurriculumGroupUploadContext;
+      if (!context) {
+        setCurriculumStatus('Open this from a Learning Games small-group upload link first.', 'error');
+        return;
+      }
+      const lesson = getCurriculumGroupDraftLesson();
+      const win = window.open('', '_blank');
+      if (!win) {
+        window.print();
+        return;
+      }
+      const lessonTitle = getCurriculumGroupLessonTitle(lesson) || 'Uploaded lesson draft';
+      const focus = lesson.objective || lesson.iCanStatement || lesson.parentSummary || context.need;
+      win.document.write(`
+        <!doctype html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>${escapeHtml(context.need)} Teacher Small-Group Plan</title>
+          <style>
+            body{font-family:Arial,Helvetica,sans-serif;margin:28px;color:#223044}
+            h1{margin:0 0 6px;font-size:26px} h2{margin:20px 0 8px;font-size:18px} p,li{font-size:13px;line-height:1.45}
+            .quiet{color:#65758b;font-weight:700}.box{break-inside:avoid;border:1px solid #d8e2ec;border-radius:10px;padding:12px;margin:12px 0}
+            .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.label{font-weight:700;color:#334155}
+            @media print{body{margin:12mm}.box{break-inside:avoid}}
+          </style>
+        </head>
+        <body>
+          <h1>Small-Group Teacher Plan</h1>
+          <p class="quiet">${escapeHtml(lessonTitle)}</p>
+          <div class="box">
+            <p><span class="label">Target need:</span> ${escapeHtml(context.need)}</p>
+            <p><span class="label">Evidence source:</span> ${escapeHtml(context.source || 'Learning Games data')}</p>
+            ${context.scholars.length ? `<p><span class="label">Scholars:</span> ${escapeHtml(context.scholars.join(', '))}</p>` : ''}
+          </div>
+          <div class="grid">
+            <section class="box">
+              <h2>Lesson Focus</h2>
+              ${lesson.priorityStandard ? `<p><span class="label">Standard:</span> ${escapeHtml(lesson.priorityStandard)}</p>` : ''}
+              ${lesson.iCanStatement ? `<p><span class="label">I Can:</span> ${escapeHtml(lesson.iCanStatement)}</p>` : ''}
+              <p>${escapeHtml(focus)}</p>
+            </section>
+            <section class="box">
+              <h2>Materials / Notes</h2>
+              ${lesson.materials && lesson.materials.length ? `<ul>${lesson.materials.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>` : '<p>Use the uploaded lesson materials or simple classroom tools that match the skill.</p>'}
+            </section>
+          </div>
+          <section class="box">
+            <h2>Small-Group Flow</h2>
+            <ol>
+              <li><strong>Warm up:</strong> Name the target skill and complete one quick review example.</li>
+              <li><strong>Model:</strong> Use the lesson example to show exactly how to solve, read, explain, or respond.</li>
+              <li><strong>Guided practice:</strong> Scholars try 2 to 3 examples with teacher prompts and immediate feedback.</li>
+              <li><strong>Quick evidence check:</strong> Each scholar completes one independent example so you can decide who needs another round.</li>
+              <li><strong>Next step:</strong> Record who is secure, who is almost there, and who needs reteaching.</li>
+            </ol>
+          </section>
+        </body>
+        </html>
+      `);
+      win.document.close();
+      win.focus();
+      setTimeout(() => win.print(), 100);
+    }
+
+    function printCurriculumGroupFamilyPlan() {
+      const context = pendingCurriculumGroupUploadContext;
+      if (!context) {
+        setCurriculumStatus('Open this from a Learning Games small-group upload link first.', 'error');
+        return;
+      }
+      const lesson = getCurriculumGroupDraftLesson();
+      const tips = getCurriculumGroupFamilyTips(context, lesson);
+      const lessonFocus = lesson.iCanStatement || lesson.parentSummary || lesson.objective || context.need;
+      const win = window.open('', '_blank');
+      if (!win) {
+        window.print();
+        return;
+      }
+      win.document.write(`
+        <!doctype html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>${escapeHtml(context.need)} Family Practice</title>
+          <style>
+            body{font-family:Arial,Helvetica,sans-serif;margin:28px;color:#223044}
+            main{max-width:760px;margin:0 auto} h1{margin:0 0 6px;font-size:28px} h2{margin:22px 0 8px;font-size:18px}
+            p,li{font-size:15px;line-height:1.55}.quiet{color:#65758b;font-weight:700}.box{break-inside:avoid;border:1px solid #d8e2ec;border-radius:12px;padding:14px;margin:16px 0;background:#f8fbff}
+            .steps{background:#fff8f0;border-color:#f1d6bf}.prompt{border-left:5px solid #f9735b;background:#fff3ef;padding:12px 14px;font-weight:700}
+            @media print{body{margin:12mm}.box,.prompt{break-inside:avoid}}
+          </style>
+        </head>
+        <body>
+          <main>
+            <h1>Family Practice: ${escapeHtml(context.need)}</h1>
+            <p class="quiet">A short, simple way to help your child practice at home.</p>
+            <section class="box">
+              <h2>What We Are Practicing</h2>
+              <p>${escapeHtml(lessonFocus)}</p>
+            </section>
+            <section class="box steps">
+              <h2>Try This At Home</h2>
+              <ul>${tips.steps.map(step => `<li>${escapeHtml(step)}</li>`).join('')}</ul>
+            </section>
+            <section>
+              <h2>What To Listen Or Look For</h2>
+              <p>${escapeHtml(tips.lookFor)}</p>
+              <p class="prompt">${escapeHtml(tips.prompt)}</p>
+            </section>
+            <p class="quiet">Keep practice short and encouraging. If your child gets stuck, model one example, then let them try again.</p>
+          </main>
+        </body>
+        </html>
+      `);
+      win.document.close();
+      win.focus();
+      setTimeout(() => win.print(), 100);
+    }
+
+    function renderCurriculumGroupUploadContext() {
+      const panel = document.getElementById('curriculumGroupUploadContextPanel');
+      if (!panel) return;
+      const context = pendingCurriculumGroupUploadContext;
+      if (!context) {
+        panel.hidden = true;
+        panel.innerHTML = '';
+        return;
+      }
+      panel.hidden = false;
+      panel.innerHTML = `
+        <h4>Small-group lesson upload from Learning Games</h4>
+        <p><strong>Target need:</strong> ${escapeHtml(context.need)}</p>
+        <p><strong>Evidence:</strong> ${escapeHtml(context.source || 'Learning Games data')}</p>
+        ${context.scholars && context.scholars.length ? `<p><strong>Scholars:</strong> ${escapeHtml(context.scholars.join(', '))}</p>` : ''}
+        <p>Upload or paste the lesson source you want to use. After analysis, print the teacher plan, the family help page, both, or neither. When you save, this group context stays attached in the teacher notes.</p>
+        <div class="curriculum-group-upload-context-actions">
+          <button type="button" class="curriculum-builder-button inline-flex items-center px-4 py-2 text-white" style="background: var(--md-coral);" onclick="printCurriculumGroupTeacherPlan()">Print Teacher Plan</button>
+          <button type="button" class="curriculum-builder-button inline-flex items-center px-4 py-2 text-white" style="background: var(--md-blue);" onclick="printCurriculumGroupFamilyPlan()">Print Family Help</button>
+          <button type="button" class="curriculum-builder-button inline-flex items-center px-4 py-2 text-white" style="background: var(--md-slate);" onclick="clearCurriculumGroupUploadContext()">Clear Group Context</button>
+        </div>
+      `;
+    }
+
+    function clearCurriculumGroupUploadContext() {
+      const contextNote = getCurriculumGroupUploadContextNote(pendingCurriculumGroupUploadContext);
+      const notesEl = document.getElementById('curriculumTeacherNotesOutput');
+      if (contextNote && notesEl) {
+        const removeLines = new Set(contextNote.split('\n').map(line => line.trim().toLowerCase()).filter(Boolean));
+        notesEl.value = linesToList(notesEl.value)
+          .filter(line => !removeLines.has(line.toLowerCase()))
+          .join('\n');
+      }
+      pendingCurriculumGroupUploadContext = null;
+      renderCurriculumGroupUploadContext();
+      setCurriculumStatus('Small-group upload context cleared.', 'info');
+    }
+
+    function applyPendingCurriculumGroupUploadContext() {
+      const context = pendingCurriculumGroupUploadContext;
+      if (!context || !getApprovedCurriculumUser()) return false;
+      curriculumToolView = 'curriculum';
+      curriculumActiveLibraryTab = 'upload';
+      showCurriculumWorkspace(true);
+      showCurriculumLibraryTab('upload');
+      setInputValue('curriculumSubjectInput', context.subject || 'skills');
+      const currentNotes = document.getElementById('curriculumTeacherNotesOutput')?.value.trim() || '';
+      const contextNote = getCurriculumGroupUploadContextNote(context);
+      if (contextNote && !currentNotes.includes(contextNote)) {
+        setInputValue('curriculumTeacherNotesOutput', [currentNotes, contextNote].filter(Boolean).join('\n'));
+      }
+      renderCurriculumGroupUploadContext();
+      openCurriculumMobileSection('source');
+      setCurriculumStatus('Ready to upload a lesson source for the Learning Games small group.', 'success');
+      return true;
+    }
+
     function handleCurriculumRecommendationDeepLink() {
       const lessonId = getCurriculumRecommendationLessonIdFromUrl();
-      if (!lessonId) return false;
+      const uploadContext = getCurriculumGroupUploadContextFromUrl();
+      if (!lessonId && !uploadContext) return false;
       pendingCurriculumRecommendationLessonId = lessonId;
+      pendingCurriculumGroupUploadContext = uploadContext;
       curriculumToolView = 'curriculum';
-      curriculumActiveLibraryTab = 'browse';
+      curriculumActiveLibraryTab = lessonId ? 'browse' : 'upload';
       showPage('curriculum-builder');
       if (getApprovedCurriculumUser()) {
         showCurriculumWorkspace(true);
-        loadCurriculumLessons().catch(error => {
-          console.error('Recommended lesson could not load:', error);
-          setCurriculumStatus(error.message || 'Recommended lesson could not load yet.', 'error');
-        });
+        if (lessonId) {
+          loadCurriculumLessons().catch(error => {
+            console.error('Recommended lesson could not load:', error);
+            setCurriculumStatus(error.message || 'Recommended lesson could not load yet.', 'error');
+          });
+        } else {
+          applyPendingCurriculumGroupUploadContext();
+        }
       } else {
         showCurriculumWorkspace(false);
-        setCurriculumStatus('Sign in with a teacher account to open the recommended curriculum lesson.', 'info');
+        setCurriculumStatus('Sign in with a teacher account to open this Learning Games curriculum link.', 'info');
       }
       return true;
     }
@@ -7632,6 +7992,9 @@
       });
       const filterPanel = document.getElementById('curriculumLessonFilterPanel');
       if (filterPanel) filterPanel.style.display = activeTab === 'browse' ? 'block' : 'none';
+      if (activeTab === 'upload') {
+        renderCurriculumGroupUploadContext();
+      }
       if (activeTab === 'browse') {
         renderCurriculumLibraryList();
         renderCurriculumWeekPreview();
@@ -8307,6 +8670,16 @@
 
     function collectCurriculumLessonDraft() {
       const request = collectCurriculumRequestPayload();
+      const teacherNotes = linesToList(document.getElementById('curriculumTeacherNotesOutput')?.value || '');
+      const contextNote = getCurriculumGroupUploadContextNote(pendingCurriculumGroupUploadContext);
+      if (contextNote) {
+        contextNote.split('\n').forEach(line => {
+          const cleanLine = line.trim();
+          if (cleanLine && !teacherNotes.some(note => note.toLowerCase() === cleanLine.toLowerCase())) {
+            teacherNotes.push(cleanLine);
+          }
+        });
+      }
       return {
         subject: request.subject,
         unitOrModule: request.unitOrModule,
@@ -8329,8 +8702,15 @@
         materials: linesToList(document.getElementById('curriculumMaterialsOutput')?.value || ''),
         videoLinks: linesToVideoLinks(document.getElementById('curriculumVideoLinksOutput')?.value || ''),
         familyQuestions: linesToList(document.getElementById('curriculumFamilyQuestionsOutput')?.value || ''),
-        teacherNotes: linesToList(document.getElementById('curriculumTeacherNotesOutput')?.value || ''),
-        missingInformation: linesToList(document.getElementById('curriculumMissingOutput')?.value || '')
+        teacherNotes,
+        missingInformation: linesToList(document.getElementById('curriculumMissingOutput')?.value || ''),
+        smallGroupPlanningContext: pendingCurriculumGroupUploadContext ? {
+          need: pendingCurriculumGroupUploadContext.need || '',
+          source: pendingCurriculumGroupUploadContext.source || '',
+          scholars: Array.isArray(pendingCurriculumGroupUploadContext.scholars) ? pendingCurriculumGroupUploadContext.scholars : [],
+          searchTerms: Array.isArray(pendingCurriculumGroupUploadContext.searchTerms) ? pendingCurriculumGroupUploadContext.searchTerms : [],
+          subject: pendingCurriculumGroupUploadContext.subject || request.subject
+        } : null
       };
     }
 
@@ -8339,6 +8719,7 @@
         const user = await ensureCurriculumTeacherUser();
         if (!user) return;
         if (!db) throw new Error('The lesson library is not available. Please refresh and try again.');
+        const hadGroupUploadContext = !!pendingCurriculumGroupUploadContext;
         const lesson = await normalizeCurriculumLessonDraftForSave(collectCurriculumLessonDraft());
         if (!lesson.unitOrModule || !lesson.lessonNumber) {
           throw new Error('Add the unit/module and lesson number before saving.');
@@ -8360,9 +8741,12 @@
         }
         await docRef.set(payload, { merge: true });
         curriculumActiveLessonId = docRef.id;
+        if (hadGroupUploadContext) pendingCurriculumGroupUploadContext = null;
         await loadCurriculumLessons();
         clearCurriculumBuilderForm();
-        setCurriculumStatus('Lesson saved to the private curriculum library. The form is ready for the next lesson.', 'success');
+        setCurriculumStatus(hadGroupUploadContext
+          ? 'Lesson saved with the Learning Games small-group context. The form is ready for the next lesson.'
+          : 'Lesson saved to the private curriculum library. The form is ready for the next lesson.', 'success');
       } catch (error) {
         console.error('Saving curriculum lesson failed:', error);
         setCurriculumStatus(error.message || 'Lesson save failed.', 'error');
@@ -8397,6 +8781,7 @@
         ensureWeeklyLessonPlanWeekInput();
         generateWeeklyLessonPlan();
         await openPendingCurriculumRecommendationLesson();
+        applyPendingCurriculumGroupUploadContext();
       } catch (error) {
         console.error('Loading curriculum library failed:', error);
         setCurriculumStatus(error.message || 'Could not load saved lessons.', 'error');
@@ -10594,6 +10979,7 @@
         'curriculumMissingOutput'
       ].forEach(id => setInputValue(id, ''));
       renderCurriculumLibraryList();
+      renderCurriculumGroupUploadContext();
       collapseCurriculumMobileSections();
       setCurriculumPdfStatus('');
       setCurriculumStatus('Ready for a new lesson.');
