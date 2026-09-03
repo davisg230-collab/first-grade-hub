@@ -236,11 +236,9 @@
     clearDavisGoogleSpeechReplay();
     setScholarCheckInAudioKey(key);
 
-    setTimeout(() => {
-      playScholarCheckInAudio(key, {
-        silentBlock: true
-      });
-    }, 40);
+    playScholarCheckInAudio(key, {
+      silentBlock: true
+    });
   }
 
   function resetDavisMorningState() {
@@ -412,6 +410,15 @@
     content
   ) {
     const gateId = ++davisAudioGateId;
+    const audioSource = getDavisAudioSource(audioKey);
+
+    if (!audioSource) {
+      console.warn(
+        "Davis check-in audio key is missing:",
+        audioKey
+      );
+      return;
+    }
 
     const getButtons = () =>
       selectors.flatMap(selector =>
@@ -448,11 +455,43 @@
     autoSpeak(audioKey);
 
     let attachedPlayer = null;
+    let watchForAudio = null;
+    let fallbackUnlockTimer = null;
 
-    const watchForAudio = window.setInterval(
+    const finishGate = () => {
+      if (watchForAudio) {
+        clearInterval(watchForAudio);
+      }
+
+      if (fallbackUnlockTimer) {
+        clearTimeout(fallbackUnlockTimer);
+      }
+
+      unlockButtons();
+    };
+
+    fallbackUnlockTimer = window.setTimeout(
+      () => {
+        if (gateId !== davisAudioGateId) {
+          return;
+        }
+
+        console.warn(
+          "Davis check-in audio did not finish in time:",
+          audioKey,
+          audioSource
+        );
+
+        finishGate();
+      },
+      20000
+    );
+
+    watchForAudio = window.setInterval(
       () => {
         if (gateId !== davisAudioGateId) {
           clearInterval(watchForAudio);
+          clearTimeout(fallbackUnlockTimer);
           return;
         }
 
@@ -486,11 +525,7 @@
               if (
                 gateId === davisAudioGateId
               ) {
-                clearInterval(
-                  watchForAudio
-                );
-
-                unlockButtons();
+                finishGate();
               }
             },
             {
@@ -504,11 +539,13 @@
               if (
                 gateId === davisAudioGateId
               ) {
-                clearInterval(
-                  watchForAudio
+                console.warn(
+                  "Davis check-in audio file could not play:",
+                  audioKey,
+                  audioSource
                 );
 
-                unlockButtons();
+                finishGate();
               }
             },
             {
@@ -518,8 +555,7 @@
         }
 
         if (player.ended) {
-          clearInterval(watchForAudio);
-          unlockButtons();
+          finishGate();
         }
       },
       80
