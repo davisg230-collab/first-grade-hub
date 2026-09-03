@@ -452,7 +452,48 @@
 
     lockButtons();
 
-    autoSpeak(audioKey);
+    clearDavisAudioSequenceReplay();
+    clearDavisGoogleSpeechReplay();
+    setScholarCheckInAudioKey(audioKey);
+
+    try {
+      if (
+        typeof scholarCheckInAudioPlayer !== "undefined" &&
+        scholarCheckInAudioPlayer
+      ) {
+        scholarCheckInAudioPlayer.pause();
+        scholarCheckInAudioPlayer.removeAttribute("src");
+        scholarCheckInAudioPlayer.load();
+      }
+
+      scholarCheckInAudioPlayer = new Audio(audioSource);
+      scholarCheckInAudioPlayer.preload = "auto";
+      scholarCheckInAudioPlayer.volume = 1;
+
+      const playPromise =
+        scholarCheckInAudioPlayer.play();
+
+      if (
+        playPromise &&
+        typeof playPromise.catch === "function"
+      ) {
+        playPromise.catch(error => {
+          console.warn(
+            "Davis direct audio could not play:",
+            audioKey,
+            audioSource,
+            error
+          );
+        });
+      }
+    } catch (error) {
+      console.warn(
+        "Davis direct audio failed:",
+        audioKey,
+        audioSource,
+        error
+      );
+    }
 
     let attachedPlayer = null;
     let watchForAudio = null;
