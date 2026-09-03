@@ -3077,54 +3077,33 @@
   // ----------------------------------------------------------
 
   function formatMorningRecord(record) {
-    if (!record) {
+    if (
+      !record ||
+      Number(record.morningRoutineVersion || 0) < 2
+    ) {
       return "—";
     }
-
-    const duty =
-      record.dutyConfirmations &&
-      typeof record.dutyConfirmations === "object"
-        ? record.dutyConfirmations
-        : {};
 
     const lunch =
       record.lunchType === "home"
         ? "Home lunch"
         : record.lunchType === "school"
           ? "School lunch"
-          : duty.homeLunchStored === true
-            ? "Home lunch"
-            : duty.schoolLunchLanyardReady === true
-              ? "School lunch"
-              : "";
-
-    const minutesBefore900 =
-      record.minutesAvailableBefore900 === null ||
-      record.minutesAvailableBefore900 === undefined ||
-      record.minutesAvailableBefore900 === ""
-        ? null
-        : Number(record.minutesAvailableBefore900);
+          : "Lunch";
 
     const timing =
-      record.completedBefore900 === true &&
-      Number.isFinite(minutesBefore900)
-        ? record.checkInCompletionTime
-          ? `${record.checkInCompletionTime} (${minutesBefore900} min before 9:00)`
-          : `${minutesBefore900} min before 9:00`
-        : record.completedBefore900 === false
-          ? record.checkInCompletionTime
-            ? `${record.checkInCompletionTime} (after 9:00)`
-            : "After 9:00"
-          : record.checkInCompletionTime
-            ? `Finished ${record.checkInCompletionTime}`
-            : "";
+      record.completedBefore900 === true
+        ? `${Number(
+            record.minutesAvailableBefore900 || 0
+          )} min before 9:00`
+        : "After 9:00";
 
     const breakfast =
       record.hasBreakfast === true
         ? "Yes"
         : record.hasBreakfast === false
           ? "No"
-          : "";
+          : "—";
 
     const stemValue =
       record.minutesAvailableBefore905;
@@ -3136,18 +3115,6 @@
         ? null
         : Number(stemValue);
 
-    const hasMorningDetails =
-      breakfast ||
-      lunch ||
-      timing ||
-      Number.isFinite(stemMinutes) ||
-      record.hadTimeForWeeklyStory === true ||
-      record.hadTimeForWeeklyStory === false;
-
-    if (!hasMorningDetails) {
-      return "—";
-    }
-
     return `
       <div
         style="
@@ -3156,41 +3123,23 @@
           white-space:nowrap;
         "
       >
-        ${
-          breakfast
-            ? `
-              <div>
-                Breakfast: ${breakfast}
-              </div>
-            `
-            : ""
-        }
+        <div>
+          🍳 Breakfast: ${breakfast}
+        </div>
 
-        ${
-          lunch
-            ? `
-              <div>
-                Lunch: ${escapeHtml(lunch)}
-              </div>
-            `
-            : ""
-        }
+        <div>
+          🎒 ✓ &nbsp; ${escapeHtml(lunch)}
+        </div>
 
-        ${
-          timing
-            ? `
-              <div>
-                Time: ${escapeHtml(timing)}
-              </div>
-            `
-            : ""
-        }
+        <div>
+          ⏰ ${escapeHtml(timing)}
+        </div>
 
         ${
           Number.isFinite(stemMinutes)
             ? `
               <div>
-                STEM: ${stemMinutes} min before 9:05
+                🔬 ${stemMinutes} min before STEM
               </div>
             `
             : ""
@@ -3200,13 +3149,13 @@
           record.hadTimeForWeeklyStory === true
             ? `
               <div>
-                Weekly Story: Yes
+                📓 Story time: Yes
               </div>
             `
             : record.hadTimeForWeeklyStory === false
               ? `
                 <div>
-                  Weekly Story: No
+                  📓 Story time: No
                 </div>
               `
               : ""
@@ -3214,9 +3163,6 @@
       </div>
     `;
   }
-
-  window.formatDavisMorningRecordForReports =
-    formatMorningRecord;
 
 if (legacyRenderScholarCheckInTodayView) {
     window.renderScholarCheckInTodayView = function () {
