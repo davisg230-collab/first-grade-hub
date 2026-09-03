@@ -411,8 +411,7 @@
     selectors,
     content
   ) {
-    const source =
-      getDavisAudioSource(audioKey);
+    const gateId = ++davisAudioGateId;
 
     const getButtons = () =>
       selectors.flatMap(selector =>
@@ -446,87 +445,85 @@
 
     lockButtons();
 
-    setDavisAudioSequenceReplay(
-      [audioKey],
-      selectors,
-      content
-    );
+    autoSpeak(audioKey);
 
-    setScholarCheckInAudioKey(audioKey);
-    davisStopCurrentCheckInAudio();
+    let attachedPlayer = null;
 
-    const gateId =
-      ++davisAudioGateId;
-
-    if (!source) {
-      setScholarCheckInStatus(
-        "The sound did not start. Please tell your teacher.",
-        "info"
-      );
-      return;
-    }
-
-    const player =
-      new Audio(source);
-
-    scholarCheckInAudioPlayer =
-      player;
-
-    player.preload =
-      "auto";
-
-    player.volume =
-      1;
-
-    player.addEventListener(
-      "ended",
-      unlockButtons,
-      {
-        once: true
-      }
-    );
-
-    player.addEventListener(
-      "error",
+    const watchForAudio = window.setInterval(
       () => {
         if (gateId !== davisAudioGateId) {
+          clearInterval(watchForAudio);
           return;
         }
 
-        setScholarCheckInStatus(
-          "The sound did not start. Tap Hear Again or tell your teacher.",
-          "info"
-        );
+        let player = null;
+
+        try {
+          player =
+            typeof scholarCheckInAudioPlayer !==
+              "undefined"
+              ? scholarCheckInAudioPlayer
+              : null;
+        } catch (error) {
+          player = null;
+        }
+
+        if (!player) {
+          return;
+        }
+
+        /*
+         * This matters for the speaker/replay button:
+         * replay creates another Audio player, so if it
+         * changes, we attach the gate to that player too.
+         */
+        if (player !== attachedPlayer) {
+          attachedPlayer = player;
+
+          player.addEventListener(
+            "ended",
+            () => {
+              if (
+                gateId === davisAudioGateId
+              ) {
+                clearInterval(
+                  watchForAudio
+                );
+
+                unlockButtons();
+              }
+            },
+            {
+              once: true
+            }
+          );
+
+          player.addEventListener(
+            "error",
+            () => {
+              if (
+                gateId === davisAudioGateId
+              ) {
+                clearInterval(
+                  watchForAudio
+                );
+
+                unlockButtons();
+              }
+            },
+            {
+              once: true
+            }
+          );
+        }
+
+        if (player.ended) {
+          clearInterval(watchForAudio);
+          unlockButtons();
+        }
       },
-      {
-        once: true
-      }
+      80
     );
-
-    const playPromise =
-      player.play();
-
-    if (
-      playPromise &&
-      typeof playPromise.catch ===
-        "function"
-    ) {
-      playPromise.catch(error => {
-        if (gateId !== davisAudioGateId) {
-          return;
-        }
-
-        console.warn(
-          "Davis check-in audio could not play:",
-          error
-        );
-
-        setScholarCheckInStatus(
-          "Tap Hear Again to hear the direction.",
-          "info"
-        );
-      });
-    }
   }
 
   function davisPlayAudioSequence(
@@ -631,8 +628,10 @@
             sources[index]
           );
 
+          unlockButtons();
+
           setScholarCheckInStatus(
-            "The sound did not start. Tap Hear Again or tell your teacher.",
+            "The sound did not start. Please tell your teacher.",
             "info"
           );
         },
@@ -654,6 +653,8 @@
             "Davis check-in audio sequence could not play:",
             error
           );
+
+          unlockButtons();
 
           setScholarCheckInStatus(
             "Tap Hear Again to hear the direction.",
@@ -926,19 +927,7 @@
 
       player.addEventListener(
         "error",
-        () => {
-          if (
-            activeGateId !==
-            davisAudioGateId
-          ) {
-            return;
-          }
-
-          setScholarCheckInStatus(
-            "The sound did not start. Tap Hear Again or tell your teacher.",
-            "info"
-          );
-        },
+        finish,
         {
           once: true
         }
@@ -960,10 +949,7 @@
             error
           );
 
-          setScholarCheckInStatus(
-            "Tap Hear Again to hear the direction.",
-            "info"
-          );
+          finish();
         });
       }
 
@@ -978,8 +964,12 @@
        * IMPORTANT:
        * No ugly browser voice fallback.
        */
+      buttons.forEach(button => {
+        button.disabled = false;
+      });
+
       setScholarCheckInStatus(
-        "The sound did not start. Tap Hear Again or tell your teacher.",
+        "The sound did not start. Please tell your teacher.",
         "info"
       );
     }
